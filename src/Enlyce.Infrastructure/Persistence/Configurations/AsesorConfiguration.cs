@@ -24,6 +24,5 @@ public class AsesorConfiguration : IEntityTypeConfiguration<Asesor>
         builder.Property(a => a.PasswordHash).HasMaxLength(500).IsRequired();
         builder.Property(a => a.Rol).HasMaxLength(50).IsRequired();
         builder.Property(a => a.Activo).IsRequired();
-
     }
 }

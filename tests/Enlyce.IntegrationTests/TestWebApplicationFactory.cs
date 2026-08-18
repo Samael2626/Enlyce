@@ -1,3 +1,4 @@
+using Enlyce.Application.Auth;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
@@ -7,6 +8,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace Enlyce.IntegrationTests;
 
@@ -43,6 +45,15 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             // Add SQLite DbContext using the shared in-memory connection
             services.AddDbContext<EnlyceDbContext>(options =>
                 options.UseSqlite(_connection));
+
+            // Configurar JWT para tests
+            services.AddSingleton(Options.Create(new JwtSettings
+            {
+                SecretKey = "TestSecretKeyForTests123456789012345",
+                Issuer = "EnlyceTest",
+                Audience = "EnlyceTest",
+                ExpirationMinutes = 60
+            }));
         });
 
         var host = base.CreateHost(builder);

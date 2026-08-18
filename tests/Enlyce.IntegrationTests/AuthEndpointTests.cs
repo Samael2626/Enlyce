@@ -144,4 +144,34 @@ public class AuthEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Register_AsAsesor_ReturnsForbidden()
+    {
+        // Crear asesor con rol Asesor
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        var correoAsesor = "asesor@test.com";
+        if (!db.Asesores.Any(a => a.Correo.Value == correoAsesor))
+        {
+            var hash = BCrypt.Net.BCrypt.HashPassword("Asesor123!");
+            var asesor = Asesor.Crear("Asesor Test", Email.Create(correoAsesor), hash, "Asesor");
+            db.Asesores.Add(asesor);
+            db.SaveChanges();
+        }
+
+        // Login como asesor
+        var loginRequest = new { Correo = correoAsesor, Password = "Asesor123!" };
+        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+        var loginJson = await loginResponse.Content.ReadAsStringAsync();
+        var loginDoc = JsonDocument.Parse(loginJson);
+        var token = loginDoc.RootElement.GetProperty("token").GetString()!;
+        SetAuthHeader(token);
+
+        // Intentar register — debe retornar 403
+        var request = new { Nombre = "Nuevo", Correo = "nuevo@test.com", Password = "Test123!" };
+        var response = await _client.PostAsJsonAsync("/api/auth/register", request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
 }
