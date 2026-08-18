@@ -8,11 +8,19 @@ namespace Enlyce.Application.UseCases.CreateLead;
 public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadResponse>
 {
     private readonly ILeadRepository _leadRepo;
+    private readonly IConsentimientoRepository _consentimientoRepo;
+    private readonly IPoliticaTratamientoRepository _politicaRepo;
     private readonly IEmailSender _emailSender;
 
-    public CreateLeadHandler(ILeadRepository leadRepo, IEmailSender emailSender)
+    public CreateLeadHandler(
+        ILeadRepository leadRepo,
+        IConsentimientoRepository consentimientoRepo,
+        IPoliticaTratamientoRepository politicaRepo,
+        IEmailSender emailSender)
     {
         _leadRepo = leadRepo;
+        _consentimientoRepo = consentimientoRepo;
+        _politicaRepo = politicaRepo;
         _emailSender = emailSender;
     }
 
@@ -28,6 +36,20 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             command.AutorizacionDatos);
 
         var saved = await _leadRepo.SaveAsync(lead);
+
+        if (command.AutorizacionDatos)
+        {
+            var politica = await _politicaRepo.ObtenerActivaAsync();
+            if (politica is not null)
+            {
+                var consentimiento = Consentimiento.Registrar(
+                    saved.Id,
+                    politica.TextoCompleto,
+                    politica.Version,
+                    "formulario_web");
+                await _consentimientoRepo.AgregarAsync(consentimiento);
+            }
+        }
 
         await _emailSender.SendAsync(
             command.Email,

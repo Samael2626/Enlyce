@@ -9,6 +9,9 @@ public class EnlyceDbContext : DbContext
     public DbSet<Inmueble> Inmuebles => Set<Inmueble>();
     public DbSet<Propietario> Propietarios => Set<Propietario>();
     public DbSet<Asesor> Asesores => Set<Asesor>();
+    public DbSet<Consentimiento> Consentimientos => Set<Consentimiento>();
+    public DbSet<PoliticaTratamiento> PoliticasTratamiento => Set<PoliticaTratamiento>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     public EnlyceDbContext(DbContextOptions<EnlyceDbContext> options) : base(options) { }
 

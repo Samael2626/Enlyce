@@ -65,6 +65,80 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("Asesores", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.AuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DireccionIp")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<string>("Entidad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("EntidadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Entidad", "EntidadId");
+
+                    b.ToTable("AuditLogs", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Consentimiento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DireccionIp")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("LeadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Metodo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TextoConsentido")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("VersionPolitica")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeadId");
+
+                    b.ToTable("Consentimientos", (string)null);
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.Inmueble", b =>
                 {
                     b.Property<Guid>("Id")
@@ -236,6 +310,35 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("Leads", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.PoliticaTratamiento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("FechaVigencia")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TextoCompleto")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Version")
+                        .IsUnique();
+
+                    b.ToTable("PoliticasTratamiento", (string)null);
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.Propietario", b =>
                 {
                     b.Property<Guid>("Id")
@@ -275,6 +378,15 @@ namespace Enlyce.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Propietarios", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Consentimiento", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

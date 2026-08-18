@@ -1,6 +1,10 @@
 using Enlyce.Application.Abstractions;
+using Enlyce.Application.Commands.Consentimiento;
+using Enlyce.Application.Commands.Lead;
 using Enlyce.Application.Commands.Login;
 using Enlyce.Application.Commands.RegisterAsesor;
+using Enlyce.Application.Queries.Lead;
+using Enlyce.Application.Queries.Politica;
 using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.CreateLead;
 using Enlyce.Application.UseCases.GetInmuebleById;
@@ -20,6 +24,11 @@ public static class DependencyInjection
 
         services.AddScoped<LoginCommandHandler>();
         services.AddScoped<RegisterAsesorCommandHandler>();
+
+        services.AddScoped<RegistrarConsentimientoHandler>();
+        services.AddScoped<ObtenerPoliticaActivaHandler>();
+        services.AddScoped<ConsultarDatosLeadHandler>();
+        services.AddScoped<SuprimirDatosLeadHandler>();
 
         return services;
     }

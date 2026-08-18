@@ -29,7 +29,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureServices(services =>
         {
-            // Remove ALL DbContext registrations (Npgsql from Infrastructure)
             var descriptors = services.Where(d =>
                 d.ServiceType == typeof(DbContextOptions<EnlyceDbContext>) ||
                 d.ServiceType == typeof(EnlyceDbContext) ||
@@ -42,11 +41,9 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             foreach (var d in descriptors)
                 services.Remove(d);
 
-            // Add SQLite DbContext using the shared in-memory connection
             services.AddDbContext<EnlyceDbContext>(options =>
                 options.UseSqlite(_connection));
 
-            // Configurar JWT para tests
             services.AddSingleton(Options.Create(new JwtSettings
             {
                 SecretKey = "TestSecretKeyForTests123456789012345",
@@ -64,6 +61,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
             db.Database.EnsureCreated();
             SeedPropietario(db);
+            SeedPolitica(db);
             _schemaCreated = true;
         }
 
@@ -84,6 +82,20 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             true);
 
         db.Propietarios.Add(propietario);
+        db.SaveChanges();
+    }
+
+    private static void SeedPolitica(EnlyceDbContext db)
+    {
+        if (db.PoliticasTratamiento.Any())
+            return;
+
+        var politica = PoliticaTratamiento.Crear(
+            "1.0",
+            "Politica de tratamiento de datos personales conforme a la Ley 1581 de 2012.",
+            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
+        db.PoliticasTratamiento.Add(politica);
         db.SaveChanges();
     }
 
