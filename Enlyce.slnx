@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Enlyce.Api/Enlyce.Api.csproj" />
+    <Project Path="src/Enlyce.Application/Enlyce.Application.csproj" />
+    <Project Path="src/Enlyce.Domain/Enlyce.Domain.csproj" />
+    <Project Path="src/Enlyce.Infrastructure/Enlyce.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Enlyce.Application.Tests/Enlyce.Application.Tests.csproj" />
+    <Project Path="tests/Enlyce.Domain.Tests/Enlyce.Domain.Tests.csproj" />
+    <Project Path="tests/Enlyce.IntegrationTests/Enlyce.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

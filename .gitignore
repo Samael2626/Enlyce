@@ -1,0 +1,52 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+
+## NuGet
+packages/
+
+## IDE
+.idea/
+*.swp
+*~
+
+## OS
+Thumbs.db
+.DS_Store
+
+## User secrets
+secrets.json
+
+## EF Migrations (keep code, ignore designer files if needed)
+*.Designer.cs
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio
+*.rsuser
+*.sln.docuser
+
+## Windows
+*.pdb
+
+## Publish
+publish/
+
+## Node (web/)
+web/node_modules/
+web/dist/

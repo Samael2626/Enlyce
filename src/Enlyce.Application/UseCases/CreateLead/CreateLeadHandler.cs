@@ -1,0 +1,41 @@
+using Enlyce.Application.Abstractions;
+using Enlyce.Domain.Entities;
+using Enlyce.Domain.Ports;
+using Enlyce.Domain.ValueObjects;
+
+namespace Enlyce.Application.UseCases.CreateLead;
+
+public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadResponse>
+{
+    private readonly ILeadRepository _leadRepo;
+    private readonly IEmailSender _emailSender;
+
+    public CreateLeadHandler(ILeadRepository leadRepo, IEmailSender emailSender)
+    {
+        _leadRepo = leadRepo;
+        _emailSender = emailSender;
+    }
+
+    public async Task<CreateLeadResponse> HandleAsync(CreateLeadCommand command, CancellationToken ct = default)
+    {
+        var email = Email.Create(command.Email);
+        var telefono = command.Telefono is not null ? Telefono.Create(command.Telefono) : null;
+
+        if (await _leadRepo.ExistsByEmailAsync(email))
+            throw new InvalidOperationException($"Ya existe un lead con email {command.Email}");
+
+        var lead = Lead.Crear(command.Nombre, email, telefono, command.Fuente ?? "Manual",
+            command.AutorizacionDatos);
+
+        var saved = await _leadRepo.SaveAsync(lead);
+
+        await _emailSender.SendAsync(
+            command.Email,
+            "Bienvenido a Enlyce",
+            $"Hola {command.Nombre}, tu lead fue registrado exitosamente.");
+
+        return new CreateLeadResponse(
+            saved.Id, saved.Nombre, saved.Email.Value,
+            saved.Estado.ToString(), saved.FechaCreacion);
+    }
+}
