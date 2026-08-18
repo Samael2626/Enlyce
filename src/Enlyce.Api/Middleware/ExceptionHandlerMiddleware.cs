@@ -33,6 +33,7 @@ public class ExceptionHandlerMiddleware
         var (statusCode, message) = exception switch
         {
             DomainError e => (HttpStatusCode.BadRequest, e.Message),
+            UnauthorizedAccessException e => (HttpStatusCode.Unauthorized, e.Message),
             InvalidOperationException e => (HttpStatusCode.Conflict, e.Message),
             _ => (HttpStatusCode.InternalServerError, "Error interno del servidor.")
         };

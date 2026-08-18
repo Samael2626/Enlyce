@@ -1,4 +1,6 @@
+using Enlyce.Application.Auth;
 using Enlyce.Domain.Ports;
+using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Email;
 using Enlyce.Infrastructure.Persistence;
 using Enlyce.Infrastructure.Persistence.Repositories;
@@ -19,7 +21,9 @@ public static class DependencyInjection
         services.AddScoped<ILeadRepository, LeadRepository>();
         services.AddScoped<IInmuebleRepository, InmuebleRepository>();
         services.AddScoped<IPropietarioRepository, PropietarioRepository>();
+        services.AddScoped<IAsesorRepository, AsesorRepository>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<ITokenService, JwtTokenService>();
 
         return services;
     }

@@ -4,9 +4,10 @@ namespace Enlyce.Domain.ValueObjects;
 
 public sealed record Dinero
 {
-    public decimal Monto { get; }
-    public string Moneda { get; }
+    public decimal Monto { get; private set; }
+    public string Moneda { get; private set; }
 
+    private Dinero() { }
     private Dinero(decimal monto, string moneda)
     {
         Monto = monto;

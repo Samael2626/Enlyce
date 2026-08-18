@@ -4,10 +4,11 @@ namespace Enlyce.Domain.ValueObjects;
 
 public sealed record Direccion
 {
-    public string Calle { get; }
-    public string Ciudad { get; }
-    public string? Barrio { get; }
+    public string Calle { get; private set; }
+    public string Ciudad { get; private set; }
+    public string? Barrio { get; private set; }
 
+    private Direccion() { }
     private Direccion(string calle, string ciudad, string? barrio)
     {
         Calle = calle;

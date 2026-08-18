@@ -4,8 +4,9 @@ namespace Enlyce.Domain.ValueObjects;
 
 public sealed record Telefono
 {
-    public string Value { get; }
+    public string Value { get; private set; }
 
+    private Telefono() { }
     private Telefono(string value) => Value = value;
 
     public static Telefono Create(string value)

@@ -26,20 +26,23 @@ public enum MotivoCierre
 
 public sealed class Lead
 {
-    public Guid Id { get; }
-    public string Nombre { get; }
-    public Email Email { get; }
-    public Telefono? Telefono { get; }
-    public string Fuente { get; }
+    public Guid Id { get; private set; }
+    public string Nombre { get; private set; }
+    public Email Email { get; private set; }
+    public Telefono? Telefono { get; private set; }
+    public string Fuente { get; private set; }
     public EstadoLead Estado { get; private set; }
     public MotivoCierre MotivoCierre { get; private set; }
-    public string? NotasCierre { get; }
+    public string? NotasCierre { get; private set; }
     public Guid? AsesorAsignadoId { get; private set; }
-    public DateTime FechaCreacion { get; }
+    public DateTime FechaCreacion { get; private set; }
     public DateTime? FechaUltimoContacto { get; private set; }
     public DateTime? FechaAsignacion { get; private set; }
-    public bool AutorizacionDatos { get; }
+    public bool AutorizacionDatos { get; private set; }
     public bool Activo { get; private set; }
+
+    // EF Core constructor
+    private Lead() { }
 
     private Lead(Guid id, string nombre, Email email, Telefono? telefono,
         string fuente, EstadoLead estado, MotivoCierre motivoCierre,

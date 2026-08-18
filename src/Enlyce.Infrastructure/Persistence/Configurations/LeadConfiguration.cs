@@ -20,6 +20,13 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
                 .IsRequired();
         });
 
+        builder.ComplexProperty(l => l.Telefono, tb =>
+        {
+            tb.Property(t => t.Value)
+                .HasColumnName("Telefono")
+                .HasMaxLength(20);
+        });
+
         builder.Property(l => l.Nombre).HasMaxLength(200).IsRequired();
         builder.Property(l => l.Fuente).HasMaxLength(100);
         builder.Property(l => l.Estado).HasConversion<string>().HasMaxLength(30);

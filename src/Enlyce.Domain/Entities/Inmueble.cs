@@ -32,24 +32,27 @@ public enum EstadoInmueble
 
 public sealed class Inmueble
 {
-    public Guid Id { get; }
-    public string Nombre { get; }
-    public string Descripcion { get; }
-    public TipoInmueble Tipo { get; }
-    public ModalidadInmueble Modalidad { get; }
+    public Guid Id { get; private set; }
+    public string Nombre { get; private set; }
+    public string Descripcion { get; private set; }
+    public TipoInmueble Tipo { get; private set; }
+    public ModalidadInmueble Modalidad { get; private set; }
     public EstadoInmueble Estado { get; private set; }
-    public Direccion Direccion { get; }
-    public Dinero Precio { get; }
-    public int MetrosCuadrados { get; }
-    public int Habitaciones { get; }
-    public int Banos { get; }
-    public int Parqueaderos { get; }
+    public Direccion Direccion { get; private set; }
+    public Dinero Precio { get; private set; }
+    public int MetrosCuadrados { get; private set; }
+    public int Habitaciones { get; private set; }
+    public int Banos { get; private set; }
+    public int Parqueaderos { get; private set; }
     public int FotosRequeridas { get; } = 3;
-    public int FotosCount { get; }
-    public Guid PropietarioId { get; }
-    public DateTime FechaCreacion { get; }
+    public int FotosCount { get; private set; }
+    public Guid PropietarioId { get; private set; }
+    public DateTime FechaCreacion { get; private set; }
     public DateTime? FechaVentaArriendo { get; private set; }
     public bool Activo { get; private set; }
+
+    // EF Core constructor
+    private Inmueble() { }
 
     private Inmueble(Guid id, string nombre, string descripcion, TipoInmueble tipo,
         ModalidadInmueble modalidad, EstadoInmueble estado, Direccion direccion,

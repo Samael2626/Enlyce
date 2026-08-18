@@ -9,8 +9,9 @@ public sealed record Email
         @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    public string Value { get; }
+    public string Value { get; private set; }
 
+    private Email() { }
     private Email(string value) => Value = value;
 
     public static Email Create(string value)
