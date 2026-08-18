@@ -1,5 +1,6 @@
 using Enlyce.Application.Abstractions;
 using Enlyce.Application.UseCases.CreateInmueble;
+using Enlyce.Application.UseCases.GetInmuebleById;
 using Enlyce.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +11,17 @@ public static class InmueblesModule
     public static void MapInmuebles(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/inmuebles").WithTags("Inmuebles");
+
+        group.MapGet("/{id:guid}", async (
+            Guid id,
+            IQueryHandler<GetInmuebleByIdQuery, GetInmuebleByIdResponse?> handler) =>
+        {
+            var result = await handler.HandleAsync(new GetInmuebleByIdQuery(id));
+            return result is not null ? Results.Ok(result) : Results.NotFound();
+        })
+        .WithName("GetInmuebleById")
+        .Produces<GetInmuebleByIdResponse>()
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/", async (
             [FromBody] CreateInmuebleRequest request,

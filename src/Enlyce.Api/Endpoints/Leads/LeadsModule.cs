@@ -1,5 +1,6 @@
 using Enlyce.Application.Abstractions;
 using Enlyce.Application.UseCases.CreateLead;
+using Enlyce.Application.UseCases.GetLeadById;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Enlyce.Api.Endpoints.Leads;
@@ -9,6 +10,17 @@ public static class LeadsModule
     public static void MapLeads(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/leads").WithTags("Leads");
+
+        group.MapGet("/{id:guid}", async (
+            Guid id,
+            IQueryHandler<GetLeadByIdQuery, GetLeadByIdResponse?> handler) =>
+        {
+            var result = await handler.HandleAsync(new GetLeadByIdQuery(id));
+            return result is not null ? Results.Ok(result) : Results.NotFound();
+        })
+        .WithName("GetLeadById")
+        .Produces<GetLeadByIdResponse>()
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/", async (
             [FromBody] CreateLeadRequest request,

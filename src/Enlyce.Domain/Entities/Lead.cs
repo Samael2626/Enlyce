@@ -77,7 +77,7 @@ public sealed class Lead
             nombre.Trim(),
             email,
             telefono,
-            fuente?.Trim() ?? "Manual",
+            string.IsNullOrWhiteSpace(fuente) ? "Manual" : fuente.Trim(),
             EstadoLead.Nuevo,
             MotivoCierre.Ninguno,
             null,
