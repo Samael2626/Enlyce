@@ -33,7 +33,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             throw new InvalidOperationException($"Ya existe un lead con email {command.Email}");
 
         var lead = Lead.Crear(command.Nombre, email, telefono, command.Fuente ?? "Manual",
-            command.AutorizacionDatos);
+            command.AutorizacionDatos, command.TipoOperacion);
 
         var saved = await _leadRepo.SaveAsync(lead);
 

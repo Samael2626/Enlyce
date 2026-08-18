@@ -25,6 +25,8 @@ public static class DependencyInjection
         services.AddScoped<IConsentimientoRepository, ConsentimientoRepository>();
         services.AddScoped<IPoliticaTratamientoRepository, PoliticaTratamientoRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IInteraccionRepository, InteraccionRepository>();
+        services.AddScoped<IVisitaRepository, VisitaRepository>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddScoped<ITokenService, JwtTokenService>();
 

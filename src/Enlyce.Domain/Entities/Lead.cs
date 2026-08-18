@@ -26,29 +26,37 @@ public enum MotivoCierre
 
 public sealed class Lead
 {
-    public Guid Id { get; private set; }
-    public string Nombre { get; private set; }
-    public Email Email { get; private set; }
-    public Telefono? Telefono { get; private set; }
-    public string Fuente { get; private set; }
-    public EstadoLead Estado { get; private set; }
-    public MotivoCierre MotivoCierre { get; private set; }
-    public string? NotasCierre { get; private set; }
-    public Guid? AsesorAsignadoId { get; private set; }
-    public DateTime FechaCreacion { get; private set; }
-    public DateTime? FechaUltimoContacto { get; private set; }
-    public DateTime? FechaAsignacion { get; private set; }
-    public bool AutorizacionDatos { get; private set; }
-    public bool Activo { get; private set; }
+    public Guid Id { get; internal set; }
+    public string Nombre { get; internal set; }
+    public Email Email { get; internal set; }
+    public Telefono? Telefono { get; internal set; }
+    public string Fuente { get; internal set; }
+    public EstadoLead Estado { get; internal set; }
+    public MotivoCierre MotivoCierre { get; internal set; }
+    public string? NotasCierre { get; internal set; }
+    public Guid? AsesorAsignadoId { get; internal set; }
+    public DateTime FechaCreacion { get; internal set; }
+    public DateTime? FechaUltimoContacto { get; internal set; }
+    public DateTime? FechaAsignacion { get; internal set; }
+    public bool AutorizacionDatos { get; internal set; }
+    public bool Activo { get; internal set; }
 
-    // EF Core constructor
+    public string TipoOperacion { get; internal set; } = "Venta";
+    public string EtapaPipeline { get; internal set; } = EtapasPipeline.LeadNuevo;
+    public int InteraccionesCount { get; internal set; }
+    public DateTime? FechaUltimaInteraccion { get; internal set; }
+    public DateTime FechaActualizacion { get; internal set; }
+
     private Lead() { }
 
     private Lead(Guid id, string nombre, Email email, Telefono? telefono,
         string fuente, EstadoLead estado, MotivoCierre motivoCierre,
         string? notasCierre, Guid? asesorAsignadoId, DateTime fechaCreacion,
         DateTime? fechaUltimoContacto, DateTime? fechaAsignacion,
-        bool autorizacionDatos, bool activo)
+        bool autorizacionDatos, bool activo,
+        string tipoOperacion, string etapaPipeline,
+        int interaccionesCount, DateTime? fechaUltimaInteraccion,
+        DateTime fechaActualizacion)
     {
         Id = id;
         Nombre = nombre;
@@ -64,16 +72,26 @@ public sealed class Lead
         FechaAsignacion = fechaAsignacion;
         AutorizacionDatos = autorizacionDatos;
         Activo = activo;
+        TipoOperacion = tipoOperacion;
+        EtapaPipeline = etapaPipeline;
+        InteraccionesCount = interaccionesCount;
+        FechaUltimaInteraccion = fechaUltimaInteraccion;
+        FechaActualizacion = fechaActualizacion;
     }
 
     public static Lead Crear(string nombre, Email email, Telefono? telefono,
-        string fuente, bool autorizacionDatos)
+        string fuente, bool autorizacionDatos, string tipoOperacion = "Venta")
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del lead no puede ser vacio.");
 
         if (!autorizacionDatos)
             throw new DomainError("Se requiere autorizacion de tratamiento de datos (Ley 1581).");
+
+        if (!EtapasPipeline.EsTipoOperacionValida(tipoOperacion))
+            throw new DomainError($"Tipo de operacion no valido: {tipoOperacion}");
+
+        var now = DateTime.UtcNow;
 
         return new Lead(
             Guid.NewGuid(),
@@ -85,40 +103,69 @@ public sealed class Lead
             MotivoCierre.Ninguno,
             null,
             null,
-            DateTime.UtcNow,
+            now,
             null,
             null,
             autorizacionDatos,
-            true);
+            true,
+            tipoOperacion,
+            EtapasPipeline.LeadNuevo,
+            0,
+            null,
+            now);
     }
 
     public static Lead Reconstituir(Guid id, string nombre, Email email, Telefono? telefono,
         string fuente, EstadoLead estado, MotivoCierre motivoCierre,
         string? notasCierre, Guid? asesorAsignadoId, DateTime fechaCreacion,
         DateTime? fechaUltimoContacto, DateTime? fechaAsignacion,
-        bool autorizacionDatos, bool activo)
+        bool autorizacionDatos, bool activo,
+        string? tipoOperacion = null, string? etapaPipeline = null,
+        int interaccionesCount = 0, DateTime? fechaUltimaInteraccion = null,
+        DateTime? fechaActualizacion = null)
     {
         return new Lead(id, nombre, email, telefono, fuente, estado, motivoCierre,
             notasCierre, asesorAsignadoId, fechaCreacion, fechaUltimoContacto,
-            fechaAsignacion, autorizacionDatos, activo);
+            fechaAsignacion, autorizacionDatos, activo,
+            tipoOperacion ?? "Venta",
+            etapaPipeline ?? EtapasPipeline.LeadNuevo,
+            interaccionesCount,
+            fechaUltimaInteraccion,
+            fechaActualizacion ?? fechaCreacion);
     }
 
     public void AsignarAsesor(Guid asesorId)
     {
-        if (Estado != EstadoLead.Nuevo)
-            throw new DomainError("Solo se puede asignar asesor a leads en estado Nuevo.");
-
         AsesorAsignadoId = asesorId;
         FechaAsignacion = DateTime.UtcNow;
         Estado = EstadoLead.Contactado;
+        FechaActualizacion = DateTime.UtcNow;
     }
 
     public void RegistrarContacto()
     {
         FechaUltimoContacto = DateTime.UtcNow;
+        FechaActualizacion = DateTime.UtcNow;
 
         if (Estado == EstadoLead.Contactado)
             Estado = EstadoLead.Interesado;
+    }
+
+    public void MoverEtapa(string nuevaEtapa)
+    {
+        if (!TransicionesPipeline.EsTransicionValida(EtapaPipeline, nuevaEtapa, TipoOperacion))
+            throw new DomainError($"Transicion no valida: {EtapaPipeline} -> {nuevaEtapa}");
+
+        if (nuevaEtapa == EtapasPipeline.VisitaAgendada && InteraccionesCount == 0)
+            throw new DomainError("Se requiere al menos una interaccion antes de agendar visita.");
+
+        EtapaPipeline = nuevaEtapa;
+        FechaActualizacion = DateTime.UtcNow;
+
+        if (nuevaEtapa == EtapasPipeline.CerradoGanado)
+            Estado = EstadoLead.CerradoGanado;
+        else if (nuevaEtapa == EtapasPipeline.CerradoPerdido)
+            Estado = EstadoLead.CerradoPerdido;
     }
 
     public void AgendarVisita()
@@ -147,6 +194,13 @@ public sealed class Lead
             : EstadoLead.CerradoPerdido;
 
         MotivoCierre = motivo;
+    }
+
+    public void IncrementarInteracciones()
+    {
+        InteraccionesCount++;
+        FechaUltimaInteraccion = DateTime.UtcNow;
+        FechaActualizacion = DateTime.UtcNow;
     }
 
     public void Desactivar()

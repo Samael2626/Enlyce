@@ -53,15 +53,18 @@ public class LeadTests
     }
 
     [Fact]
-    public void AsignarAsesor_NoEnNuevo_ThrowsDomainError()
+    public void AsignarAsesor_Reasignar_CambiaAsesor()
     {
         var lead = CrearLead();
-        lead.RegistrarContacto(); // Nuevo -> Nuevo (no cambia, sigue Nuevo)
-        // Forzar estado a Contactado via Reconstituir
-        var leadForzado = Lead.Reconstituir(lead.Id, lead.Nombre, lead.Email, lead.Telefono,
-            lead.Fuente, EstadoLead.Contactado, MotivoCierre.Ninguno, null, null,
-            lead.FechaCreacion, null, null, true, true);
-        Assert.Throws<DomainError>(() => leadForzado.AsignarAsesor(Guid.NewGuid()));
+        var primerAsesor = Guid.NewGuid();
+        lead.AsignarAsesor(primerAsesor);
+        Assert.Equal(EstadoLead.Contactado, lead.Estado);
+        Assert.Equal(primerAsesor, lead.AsesorAsignadoId);
+
+        var segundoAsesor = Guid.NewGuid();
+        lead.AsignarAsesor(segundoAsesor);
+        Assert.Equal(segundoAsesor, lead.AsesorAsignadoId);
+        Assert.NotNull(lead.FechaAsignacion);
     }
 
     [Fact]

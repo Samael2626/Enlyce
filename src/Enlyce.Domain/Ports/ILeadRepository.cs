@@ -11,4 +11,8 @@ public interface ILeadRepository
     Task<IReadOnlyList<Lead>> GetByAsesorIdAsync(Guid asesorId);
     Task<Lead> SaveAsync(Lead lead);
     Task<bool> ExistsByEmailAsync(Email email);
+    Task<List<Lead>> ObtenerPorEtapaAsync(string etapa);
+    Task<List<Lead>> ObtenerSinAsignarAsync();
+    Task<int> ContarPorAsesorAsync(Guid asesorId);
+    Task<int> ContarPorEtapaAsync(string etapa);
 }

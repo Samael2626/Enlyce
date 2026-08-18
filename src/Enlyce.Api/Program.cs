@@ -1,10 +1,14 @@
 using System.Text;
+using Enlyce.Api.Endpoints.Alertas;
 using Enlyce.Api.Endpoints.Auth;
 using Enlyce.Api.Endpoints.DatosPersonales;
 using Enlyce.Api.Endpoints.Health;
 using Enlyce.Api.Endpoints.Inmuebles;
+using Enlyce.Api.Endpoints.Interacciones;
 using Enlyce.Api.Endpoints.Leads;
+using Enlyce.Api.Endpoints.Pipeline;
 using Enlyce.Api.Endpoints.Politica;
+using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
 using Enlyce.Application;
 using Enlyce.Application.Auth;
@@ -89,6 +93,10 @@ app.MapInmuebles();
 app.MapAuth();
 app.MapPolitica();
 app.MapDatosPersonales();
+app.MapPipeline();
+app.MapInteracciones();
+app.MapVisitas();
+app.MapAlertas();
 
 app.Run();
 

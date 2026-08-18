@@ -28,6 +28,8 @@ public class GetLeadByIdHandler : IQueryHandler<GetLeadByIdQuery, GetLeadByIdRes
             lead.FechaCreacion,
             lead.FechaUltimoContacto,
             lead.AutorizacionDatos,
-            lead.Activo);
+            lead.Activo,
+            lead.EtapaPipeline,
+            lead.TipoOperacion);
     }
 }

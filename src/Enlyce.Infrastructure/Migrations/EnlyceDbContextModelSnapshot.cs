@@ -238,6 +238,37 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("Inmuebles", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.Interaccion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AsesorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("LeadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Resumen")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeadId");
+
+                    b.ToTable("Interacciones", (string)null);
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.Lead", b =>
                 {
                     b.Property<Guid>("Id")
@@ -257,10 +288,21 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string>("EtapaPipeline")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("FechaAsignacion")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaUltimaInteraccion")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("FechaUltimoContacto")
@@ -270,6 +312,9 @@ namespace Enlyce.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("InteraccionesCount")
+                        .HasColumnType("integer");
 
                     b.Property<string>("MotivoCierre")
                         .IsRequired()
@@ -284,6 +329,11 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<string>("NotasCierre")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("TipoOperacion")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Email", "Enlyce.Domain.Entities.Lead.Email#Email", b1 =>
                         {
@@ -306,6 +356,10 @@ namespace Enlyce.Infrastructure.Migrations
                         });
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AsesorAsignadoId");
+
+                    b.HasIndex("EtapaPipeline");
 
                     b.ToTable("Leads", (string)null);
                 });
@@ -380,7 +434,64 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("Propietarios", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.Visita", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AsesorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("FechaProgramada")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaRealizada")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("InmuebleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LeadId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AsesorId");
+
+                    b.HasIndex("LeadId");
+
+                    b.ToTable("Visitas", (string)null);
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.Consentimiento", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Interaccion", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Visita", b =>
                 {
                     b.HasOne("Enlyce.Domain.Entities.Lead", null)
                         .WithMany()

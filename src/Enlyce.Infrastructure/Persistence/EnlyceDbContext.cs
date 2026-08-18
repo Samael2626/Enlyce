@@ -12,6 +12,8 @@ public class EnlyceDbContext : DbContext
     public DbSet<Consentimiento> Consentimientos => Set<Consentimiento>();
     public DbSet<PoliticaTratamiento> PoliticasTratamiento => Set<PoliticaTratamiento>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Interaccion> Interacciones => Set<Interaccion>();
+    public DbSet<Visita> Visitas => Set<Visita>();
 
     public EnlyceDbContext(DbContextOptions<EnlyceDbContext> options) : base(options) { }
 

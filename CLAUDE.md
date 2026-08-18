@@ -7,11 +7,17 @@ Arquitectura: Clean Architecture / Hexagonal (ardalis).
 
 ## Comandos
 ```bash
-dotnet build                    # Compilar todo
-dotnet test                     # Correr todos los tests
-dotnet run --project src/Enlyce.Api  # Levantar API
+dotnet build                                            # Compilar todo
+dotnet test                                             # Correr todos los tests (91: 78 dominio + 13 integracion)
+dotnet run --project src/Enlyce.Api --no-launch-profile  # Levantar API (puerto 5000, Postgres en 5435)
 dotnet ef migrations add <Nombre> --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
 dotnet ef database update --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
+```
+
+## Docker
+```bash
+docker start enlyce-db   # PostgreSQL 17-alpine, puerto 5435->5432
+docker stop enlyce-db
 ```
 
 ## Convenciones
@@ -44,3 +50,9 @@ tests/
 - `Api/` es el punto de entrada, wiring via DI nativo de .NET.
 - Nada se elimina: baja logica con auditoria.
 - Todo lead requiere autorizacion de tratamiento de datos (Ley 1581).
+
+## Estado actual
+- 91 tests pasando (78 dominio + 13 integracion)
+- PostgreSQL: container Docker `enlyce-db` en puerto 5435
+- Migracion: InitialCreate (Leads, Inmuebles, Propietarios)
+- Actividad 1: docs/actividad-1/ (modelo-negocio.md, canvas.xlsx, presentacion.pptx)

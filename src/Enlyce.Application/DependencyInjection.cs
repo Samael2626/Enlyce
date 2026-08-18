@@ -30,6 +30,14 @@ public static class DependencyInjection
         services.AddScoped<ConsultarDatosLeadHandler>();
         services.AddScoped<SuprimirDatosLeadHandler>();
 
+        services.AddScoped<MoverEtapaHandler>();
+        services.AddScoped<AsignarLeadHandler>();
+        services.AddScoped<ReasignarLeadHandler>();
+        services.AddScoped<RegistrarInteraccionHandler>();
+        services.AddScoped<RegistrarVisitaHandler>();
+        services.AddScoped<ConsultarPipelineHandler>();
+        services.AddScoped<ObtenerAlertasHandler>();
+
         return services;
     }
 }

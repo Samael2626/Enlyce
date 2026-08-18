@@ -5,4 +5,5 @@ public record CreateLeadCommand(
     string Email,
     string? Telefono,
     string? Fuente,
-    bool AutorizacionDatos);
+    bool AutorizacionDatos,
+    string TipoOperacion = "Venta");

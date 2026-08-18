@@ -34,5 +34,14 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(l => l.NotasCierre).HasMaxLength(1000);
         builder.Property(l => l.AutorizacionDatos).IsRequired();
         builder.Property(l => l.Activo).IsRequired();
+
+        builder.Property(l => l.TipoOperacion).HasMaxLength(30).IsRequired();
+        builder.Property(l => l.EtapaPipeline).HasMaxLength(50).IsRequired();
+        builder.Property(l => l.InteraccionesCount).IsRequired();
+        builder.Property(l => l.FechaUltimaInteraccion);
+        builder.Property(l => l.FechaActualizacion).IsRequired();
+
+        builder.HasIndex(l => l.EtapaPipeline);
+        builder.HasIndex(l => l.AsesorAsignadoId);
     }
 }

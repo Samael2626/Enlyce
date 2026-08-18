@@ -11,4 +11,6 @@ public record GetLeadByIdResponse(
     DateTime FechaCreacion,
     DateTime? FechaUltimoContacto,
     bool AutorizacionDatos,
-    bool Activo);
+    bool Activo,
+    string EtapaPipeline,
+    string TipoOperacion);

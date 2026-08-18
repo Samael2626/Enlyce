@@ -28,7 +28,8 @@ public static class LeadsModule
         {
             var command = new CreateLeadCommand(
                 request.Nombre, request.Email, request.Telefono,
-                request.Fuente, request.AutorizacionDatos);
+                request.Fuente, request.AutorizacionDatos,
+                request.TipoOperacion);
 
             var result = await handler.HandleAsync(command);
             return Results.Created($"/api/leads/{result.Id}", result);
@@ -44,4 +45,5 @@ public record CreateLeadRequest(
     string Email,
     string? Telefono,
     string? Fuente,
-    bool AutorizacionDatos);
+    bool AutorizacionDatos,
+    string TipoOperacion = "Venta");
