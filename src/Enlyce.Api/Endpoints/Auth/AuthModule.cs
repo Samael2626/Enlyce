@@ -2,6 +2,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Enlyce.Application.Commands.Login;
 using Enlyce.Application.Commands.RegisterAsesor;
+using Enlyce.Domain.Entities;
+using Enlyce.Domain.ValueObjects;
+using Enlyce.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Enlyce.Api.Endpoints.Auth;
 
@@ -64,5 +68,33 @@ public static class AuthModule
         })
         .RequireAuthorization()
         .WithName("Me");
+
+        // Seed endpoint - crear admin por defecto si no existe.
+        // Solo en Development: crea un admin con credenciales conocidas sin autenticacion.
+        group.MapPost("/seed", async (EnlyceDbContext db, IWebHostEnvironment env) =>
+        {
+            if (!env.IsDevelopment())
+                return Results.NotFound();
+
+            var adminEmail = "admin@enlyce.com";
+            var adminPassword = "Admin123!";
+
+            if (await db.Asesores.AnyAsync(a => a.Correo.Value == adminEmail))
+                return Results.Ok(new { message = "Admin ya existe.", email = adminEmail });
+
+            var correo = Email.Create(adminEmail);
+            var hash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+            var admin = Asesor.Crear("Administrador", correo, hash, "Administrador");
+            db.Asesores.Add(admin);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                message = "Admin creado.",
+                email = adminEmail,
+                password = adminPassword
+            });
+        })
+        .WithName("SeedAdmin");
     }
 }

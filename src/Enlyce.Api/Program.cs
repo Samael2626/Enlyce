@@ -68,11 +68,20 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        // Origenes explicitos: AllowAnyOrigin es incompatible con AllowCredentials
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:4173")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
 var app = builder.Build();
+
+app.UseCors();
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseMiddleware<CookieAuthenticationMiddleware>();
@@ -83,7 +92,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

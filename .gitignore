@@ -22,8 +22,9 @@ Thumbs.db
 ## User secrets
 secrets.json
 
-## EF Migrations (keep code, ignore designer files if needed)
-*.Designer.cs
+## EF Migrations: los .Designer.cs son OBLIGATORIOS.
+## Llevan el atributo [Migration] y el snapshot del modelo destino;
+## sin ellos EF ignora la migracion y no aplica los cambios.
 
 ## Build results
 [Dd]ebug/
@@ -48,6 +49,8 @@ bld/
 ## Publish
 publish/
 
-## Node (web/)
+## Node
 web/node_modules/
 web/dist/
+frontend/node_modules/
+frontend/dist/
