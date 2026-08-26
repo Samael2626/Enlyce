@@ -16,13 +16,13 @@ Las inmobiliarias pequenas y medianas en Colombia (1-8 asesores, menos de 50 inm
 - **Sin asignacion por asesor:** Cuando un cliente escribe por WhatsApp, cualquier asesor puede responder, generando duplicidad, conflictos y mala experiencia.
 - **Cumplimiento normativo manual:** La Ley 1581/2012 de proteccion de datos personales exige autorizacion previa, politica de tratamiento y registro en el RNBD. LYC no tiene automatizacion de estos procesos.
 
-Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma integral para el segmento de micro-inmobiliarias colombianas.
+Los competidores actuales (Wasi, Tokko, Witei) no resuelvenestos problemas de forma integral para el segmento de micro-inmobiliarias colombianas.
 
 ---
 
 ## 2. Solucion Propuesta
 
-**Enlyce** es un CRM inmobiliario web diseno especifico para inmobiliarias colombianas pequenas. Proporciona:
+**Enlyce** es un CRM inmobiliario web disenado especificamente para inmobiliarias colombianas pequenas. Proporciona:
 
 ### Funcionalidades Principales
 
@@ -40,7 +40,7 @@ Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma
 
 - **Listo en 1 dia:** Onboarding simplificado. La inmobiliaria opera en menos de 24 horas.
 - **Multi-espanol:** Interfaz 100% en espanol colombiano, sin traducciones literales.
-- **Multi-agente nativo:** Diseado desde el dia 1 para equipos, no para usuarios individuales.
+- **Multi-agente nativo:** Disenado desde el dia 1 para equipos, no para usuarios individuales.
 - **Cumplimiento normativo integrado:** No es un add-on, es parte del flujo core.
 
 ---
@@ -100,7 +100,7 @@ Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma
 
 1. **Asesores independientes** que quieren escalar a equipo pequeno
 2. **Franchises de grandes inmobiliarias** que necesitan autonomia local
-3. **Constructoras pequenas** con venta directa de.units nuevos
+3. **Constructoras pequenas** con venta directa de unidades nuevas
 
 ---
 
@@ -109,7 +109,7 @@ Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma
 | Factor | Enlyce | Wasi | Tokko | Witei |
 |--------|--------|------|-------|-------|
 | **Idioma** | Espanol colombiano nativo | Espanol | Espanol | Espanol (neutral) |
-| **Multi-agente** | Si (core del diseño) | No (1 usuario) | Si (pero costoso) | Si |
+| **Multi-agente** | Si (nucleo del diseno) | No (1 usuario) | Si (pero costoso) | Si |
 | **Tiempo de setup** | < 24 horas | Inmediato (gratis) | 1-2 semanas | Dias |
 | **Cumplimiento Ley 1581** | Integrado | No | Parcial | No |
 | **Precio (equipo 4 asesores)** | ~$158.000/mes | Gratis (limitado) | $313k-$667k/mes | EUR 25-65/mes |
@@ -122,7 +122,7 @@ Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma
 2. **Precio just-right:** Ni gratis (sin valor) ni costoso (inaccesible). El punto medio para micro-inmobiliarias.
 3. **Velocidad de adopcion:** Setup en 1 dia reduce la friccion de cambio.
 4. **Cumplimiento normativo:** Unica solucion que integra Ley 1581 desde el inicio, no como add-on.
-5. **Arquitectura moderna:** ASP.NET Core 10 + Clean Architecture = escalable, mantenible, testeable.
+5. **Arquitectura moderna:** ASP.NET Core 10 + Clean Architecture = escalable, mantenible, testeable. 172 pruebas automatizadas en verde (133 de dominio + 39 de integracion).
 
 ---
 
@@ -131,10 +131,10 @@ Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma
 | Elemento | Razon de exclusion |
 |----------|-------------------|
 | **Pasarela de pagos** | Complejidad regulatoria adicional (Ley 1258/2008, Puente Financiero). Fase 2. |
-| **Contratos digitales** | Requiere integracion con firmas digitales (e签宝, DocuSign). Fase 2. |
+| **Contratos digitales** | Requiere integracion con firmas digitales (DocuSign). Fase 2. |
 | **App movil nativa** | React Native o Flutter demanda stack adicional. PWA como alternativa temporal. |
-| **Integracion portales** |Ciencuadras, Properati requieren acuerdos comerciales y APIs privadas. Fase 3. |
-| **Multi-idioma** | El mercado target es hispanohablante. Inglés/pt-BR en fase futura. |
+| **Integracion portales** | Ciencuadras, Properati requieren acuerdos comerciales y APIs privadas. Fase 3. |
+| **Multi-idioma** | El mercado target es hispanohablante. ingles y portugues en fase futura. |
 | **Multi-tenant completo** | Por ahora, una instancia por cliente. Shared infrastructure en fase 2. |
 
 ---
@@ -160,12 +160,12 @@ Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma
 - **Modelo:** Suscripcion EUR 25-65/mes (~$120k-$310k COP).
 - **Fortalezas:** Precio competitivo, interfaz moderna, portales.
 - **Debilidades:** No esta en Colombia, soporte en espanol limitado, sin cumplimiento Ley 1581 local.
-- **Target:** Mercado europeo, expansion.latam incipiente.
+- **Target:** Mercado europeo, expansion latam incipiente.
 
 ### Zoho CRM (alternativa general)
 
 - **Modelo:** $14-$52 USD/usuario/mes.
-- **Fortalezas:** Extremely customizable, integraciones masivas, escala.
+- **Fortalezas:** Altamente personalizable, integraciones masivas, escala.
 - **Debilidades:** No especializado en inmobiliario, requiere configuracion pesada, soporte en ingles.
 - **Target:** Empresas de cualquier sector que necesiten CRM generico.
 
@@ -239,7 +239,7 @@ Los competidores actuales (Wasi, Tokko, Witei) no resuelven这些问题 de forma
 | **Leads registrados en LYC** | 50+ |
 | **Tiempo de respuesta promedio** | < 2 horas |
 | **Cobertura Ley 1581** | 100% de leads con autorizacion |
-| **Tests passing** | > 80% cobertura en Domain |
+| **Tests passing** | 100% en verde (hoy 172: 133 dominio + 39 integracion) |
 | **Uptime** | > 99% |
 
 ---
