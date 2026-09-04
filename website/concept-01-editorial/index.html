@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Encuentra inmuebles para comprar o arrendar en Medellín con L&C Propiedad Raíz.">
+  <title>L&C Propiedad Raíz — Medellín bien elegida</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../shared/app.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="../index.html" aria-label="L&C Propiedad Raíz, volver a conceptos"><span>L&C</span><small>PROPIEDAD RAÍZ</small></a>
+    <button class="menu-button" type="button" data-menu-button aria-controls="main-nav" aria-expanded="false">Menú</button>
+    <nav id="main-nav" class="nav" aria-label="Principal">
+      <a href="#properties">Comprar</a><a href="#properties">Arrendar</a><a href="#areas">Barrios</a><a href="#owners">Vender mi inmueble</a>
+    </nav>
+    <a class="header-cta" href="#contact">Hablar con un asesor</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-image" role="img" aria-label="Arquitectura residencial entre las montañas de Medellín"></div>
+      <div class="hero-copy">
+        <span class="kicker">Medellín · Colombia</span>
+        <h1>Elegir bien también es sentirse en casa.</h1>
+        <p>Propiedades seleccionadas y asesoría clara para comprar, arrendar o poner tu inmueble en buenas manos.</p>
+      </div>
+      <form class="search" data-search>
+        <label><span>Quiero</span><select name="intent"><option>Comprar</option><option>Arrendar</option></select></label>
+        <label><span>Tipo</span><select name="type"><option>Cualquier inmueble</option><option>Apartamento</option><option>Casa</option><option>Local</option><option>Oficina</option></select></label>
+        <label class="location"><span>Ubicación</span><input name="location" value="Medellín" placeholder="Barrio, zona o código"></label>
+        <button type="submit">Buscar propiedades</button>
+      </form>
+    </section>
+
+    <section id="properties" class="section properties">
+      <div class="section-head"><div><span class="kicker">Selección L&C</span><h2>Espacios que merecen una visita.</h2></div><a href="#properties">Ver todos <span>→</span></a></div>
+      <div class="cards">
+        <article class="property-card">
+          <div class="listing-photo listing-photo--one"><span class="tag">Venta</span><button class="favorite" aria-label="Guardar apartamento en favoritos" aria-pressed="false">♡</button></div>
+          <div class="card-copy"><p class="place">El Poblado · Medellín</p><h3>Apartamento entre verde y ciudad</h3><strong>$980.000.000</strong><div class="facts"><span>148 m²</span><span>3 hab.</span><span>3 baños</span></div></div>
+        </article>
+        <article class="property-card feature">
+          <div class="listing-photo listing-photo--two"><span class="tag">Arriendo</span><button class="favorite" aria-label="Guardar apartamento en favoritos" aria-pressed="false">♡</button></div>
+          <div class="card-copy"><p class="place">Laureles · Medellín</p><h3>Luz, calma y vida de barrio</h3><strong>$4.600.000 / mes</strong><div class="facts"><span>116 m²</span><span>3 hab.</span><span>2 baños</span></div></div>
+        </article>
+        <article class="property-card">
+          <div class="listing-photo listing-photo--three"><span class="tag">Venta</span><button class="favorite" aria-label="Guardar casa en favoritos" aria-pressed="false">♡</button></div>
+          <div class="card-copy"><p class="place">Envigado · Antioquia</p><h3>Casa contemporánea con jardín</h3><strong>$1.480.000.000</strong><div class="facts"><span>240 m²</span><span>4 hab.</span><span>4 baños</span></div></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="areas" class="areas">
+      <div class="area-intro"><span class="kicker">Conoce la ciudad</span><h2>No eliges metros cuadrados. Eliges cómo vivir.</h2><p>Explora sectores por ritmo, cercanía, naturaleza y presupuesto.</p></div>
+      <div class="area-list"><a href="#properties"><span>01</span>El Poblado<em>42 propiedades</em></a><a href="#properties"><span>02</span>Laureles<em>31 propiedades</em></a><a href="#properties"><span>03</span>Envigado<em>28 propiedades</em></a><a href="#properties"><span>04</span>Belén<em>24 propiedades</em></a></div>
+    </section>
+
+    <section id="owners" class="owners">
+      <div><span class="kicker">Para propietarios</span><h2>Tu inmueble no necesita más ruido. Necesita estrategia.</h2></div>
+      <div><p>Valoración, fotografía, publicación, filtro de interesados y acompañamiento hasta el cierre.</p><button type="button" data-scroll-to="#contact">Quiero vender o arrendar</button></div>
+    </section>
+
+    <section id="contact" class="contact">
+      <div><span class="kicker">Conversemos</span><h2>Cuéntanos qué estás buscando.</h2><p>Un asesor de Medellín revisará tu caso. Sin respuestas automáticas disfrazadas de servicio.</p></div>
+      <form data-lead><label>Nombre<input name="name" required placeholder="Tu nombre"></label><label>Celular<input name="phone" required inputmode="tel" placeholder="300 000 0000"></label><label>¿Qué necesitas?<select name="need"><option>Comprar</option><option>Arrendar</option><option>Vender mi inmueble</option><option>Arrendar mi inmueble</option></select></label><label class="consent"><input type="checkbox" required> Autorizo el tratamiento de mis datos personales.</label><button type="submit">Solicitar asesoría</button></form>
+    </section>
+  </main>
+
+  <footer><a class="brand" href="../index.html"><span>L&C</span><small>PROPIEDAD RAÍZ</small></a><p>Medellín, Colombia · <span data-year></span></p><a href="../index.html">Ver otros conceptos</a></footer>
+  <div class="toast" data-toast role="status" aria-live="polite"></div>
+</body>
+</html>

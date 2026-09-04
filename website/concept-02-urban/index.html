@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Marketplace de inmuebles en Medellín de L&C Propiedad Raíz.">
+  <title>L&C — Encuentra inmueble en Medellín</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../shared/app.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="../index.html"><b>L&C</b><span>Propiedad Raíz</span></a>
+    <button class="menu-button" type="button" data-menu-button aria-controls="main-nav" aria-expanded="false">☰</button>
+    <nav id="main-nav" class="nav"><a href="#results">Comprar</a><a href="#results">Arrendar</a><a href="#services">Servicios</a><a href="#owners">Publicar inmueble</a></nav>
+    <div class="actions"><button aria-label="Ver favoritos">♡</button><a href="#owners">Soy propietario</a></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy"><span class="eyebrow">Medellín se mueve. Tú también.</span><h1>Encuentra dónde sigue tu historia.</h1><p>Compara propiedades verificadas, explora el mapa y agenda tu visita con asesores locales.</p></div>
+      <form class="search" data-search>
+        <div class="intent" role="group" aria-label="Tipo de negocio"><button type="button" data-chip aria-pressed="true">Comprar</button><button type="button" data-chip aria-pressed="false">Arrendar</button></div>
+        <label><span class="sr-only">Ubicación</span><input name="location" value="Medellín, Antioquia" placeholder="Ciudad, barrio o sector"></label>
+        <label><span class="sr-only">Tipo de inmueble</span><select name="type"><option>Todos los inmuebles</option><option>Apartamento</option><option>Casa</option><option>Oficina</option><option>Local</option><option>Lote</option></select></label>
+        <button class="search-button" type="submit">Buscar</button>
+      </form>
+      <div class="quick"><span>Búsquedas rápidas</span><button data-chip aria-pressed="false">El Poblado</button><button data-chip aria-pressed="false">Hasta $600 M</button><button data-chip aria-pressed="false">3 habitaciones</button><button data-chip aria-pressed="false">Con parqueadero</button></div>
+    </section>
+
+    <section id="results" class="marketplace">
+      <div class="result-panel">
+        <div class="result-head"><div><span>326 inmuebles</span><h2>Oportunidades en Medellín</h2></div><select aria-label="Ordenar resultados"><option>Más relevantes</option><option>Menor precio</option><option>Mayor precio</option><option>Más recientes</option></select></div>
+        <div class="filters" aria-label="Filtros"><button data-chip aria-pressed="false">Tipo</button><button data-chip aria-pressed="false">Precio</button><button data-chip aria-pressed="false">Habitaciones</button><button data-chip aria-pressed="false">Área</button><button data-chip aria-pressed="false">Más filtros +</button></div>
+        <div class="cards">
+          <article class="property-card"><div class="listing-photo listing-photo--one"><span class="badge">Verificado</span><button class="favorite" aria-label="Guardar inmueble" aria-pressed="false">♡</button></div><div class="card-copy"><div class="meta"><span>Venta</span><span>Cód. LC-1042</span></div><h3>Apartamento en El Poblado</h3><strong>$980.000.000</strong><p>148 m² · 3 hab. · 3 baños · 2 parq.</p><button class="visit" type="button" data-scroll-to="#owners">Agendar visita</button></div></article>
+          <article class="property-card"><div class="listing-photo listing-photo--two"><span class="badge new">Nuevo</span><button class="favorite" aria-label="Guardar inmueble" aria-pressed="false">♡</button></div><div class="card-copy"><div class="meta"><span>Arriendo</span><span>Cód. LC-1078</span></div><h3>Apartamento en Laureles</h3><strong>$4.600.000 <small>/mes</small></strong><p>116 m² · 3 hab. · 2 baños · 1 parq.</p><button class="visit" type="button" data-scroll-to="#owners">Agendar visita</button></div></article>
+          <article class="property-card"><div class="listing-photo listing-photo--three"><span class="badge">Verificado</span><button class="favorite" aria-label="Guardar inmueble" aria-pressed="false">♡</button></div><div class="card-copy"><div class="meta"><span>Venta</span><span>Cód. LC-1091</span></div><h3>Casa en Envigado</h3><strong>$1.480.000.000</strong><p>240 m² · 4 hab. · 4 baños · 2 parq.</p><button class="visit" type="button" data-scroll-to="#owners">Agendar visita</button></div></article>
+        </div>
+      </div>
+      <aside class="map" aria-label="Mapa ilustrativo de propiedades">
+        <svg viewBox="0 0 620 720" role="img" aria-label="Mapa conceptual de Medellín con propiedades">
+          <rect width="620" height="720" fill="#e9eee9"/>
+          <path d="M-20 92C120 70 176 160 288 143s168-91 356-48M-5 318c116-82 174-37 273-1s186 13 367-84M-18 565c136 63 219 18 320-38s199-39 340 24" fill="none" stroke="#fff" stroke-width="28"/>
+          <path d="M35 0c29 117 12 206 87 287s55 184 23 433M401-8c-26 134 46 231 16 348s49 190 112 388" fill="none" stroke="#cfd9d2" stroke-width="12"/>
+          <g fill="#ea5a35" stroke="#fff" stroke-width="6"><circle cx="184" cy="210" r="18"/><circle cx="380" cy="164" r="18"/><circle cx="461" cy="370" r="18"/><circle cx="260" cy="450" r="18"/><circle cx="385" cy="590" r="18"/></g>
+        </svg>
+        <div class="map-card"><span>Zona actual</span><strong>El Poblado</strong><small>42 propiedades</small></div>
+        <button class="map-search" type="button">Buscar al mover el mapa</button>
+      </aside>
+    </section>
+
+    <section id="services" class="services"><div><span>01</span><h2>Busca con precisión</h2><p>Filtros útiles, códigos directos y resultados por mapa.</p></div><div><span>02</span><h2>Compara sin ruido</h2><p>Datos claros, favoritos y alertas sobre cambios de precio.</p></div><div><span>03</span><h2>Visita con respaldo</h2><p>Agenda con un asesor y recibe trazabilidad de tu proceso.</p></div></section>
+
+    <section id="owners" class="owners"><div><span class="eyebrow">Propietarios</span><h2>¿Quieres vender o arrendar?</h2><p>Publicamos, filtramos interesados y llevamos el proceso desde el CRM de L&C.</p></div><form data-lead><input name="name" required placeholder="Nombre"><input name="phone" required inputmode="tel" placeholder="Celular"><select name="need"><option>Quiero vender</option><option>Quiero arrendar</option><option>Quiero una valoración</option></select><label><input type="checkbox" required> Autorizo tratamiento de datos.</label><button type="submit">Recibir asesoría</button></form></section>
+  </main>
+
+  <footer><a class="brand" href="../index.html"><b>L&C</b><span>Propiedad Raíz</span></a><p>Marketplace inmobiliario de Medellín · <span data-year></span></p><a href="../index.html">Ver conceptos</a></footer>
+  <div class="toast" data-toast role="status" aria-live="polite"></div>
+</body>
+</html>

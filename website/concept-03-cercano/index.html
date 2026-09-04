@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="L&C Propiedad Raíz te acompaña a comprar, arrendar, vender o administrar inmuebles en Medellín.">
+  <title>L&C Propiedad Raíz — Hagámoslo fácil</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../shared/app.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="../index.html"><span class="mark">L&C</span><span class="name">Propiedad<br>Raíz</span></a>
+    <button class="menu-button" type="button" data-menu-button aria-controls="main-nav" aria-expanded="false">Menú</button>
+    <nav id="main-nav" class="nav"><a href="#homes">Inmuebles</a><a href="#neighborhoods">Zonas</a><a href="#owners">Propietarios</a><a href="#contact">Nosotros</a></nav>
+    <a class="whatsapp" href="#contact">Escríbenos <span>→</span></a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy"><span class="eyebrow">Propiedad raíz sin enredos</span><h1>Tu próximo lugar está más cerca de lo que crees.</h1><p>Te acompañamos a encontrar, vender o arrendar en Medellín con información clara y una persona real al otro lado.</p><div class="hero-actions"><button data-scroll-to="#search">Buscar inmueble</button><button class="ghost" data-scroll-to="#owners">Ofrecer mi propiedad</button></div></div>
+      <div class="hero-visual"><img src="../assets/medellin-hero.png" alt="Vista residencial de Medellín entre montañas"><div class="bubble"><strong>+120</strong><span>familias acompañadas*</span></div><small>*Dato ilustrativo para el prototipo</small></div>
+    </section>
+
+    <section id="search" class="search-wrap">
+      <form class="search" data-search>
+        <div class="search-title"><span>¿Qué necesitas?</span><strong>Yo quiero...</strong></div>
+        <label>Acción<select name="intent"><option>Comprar</option><option>Arrendar</option></select></label>
+        <label>Inmueble<select name="type"><option>Cualquier tipo</option><option>Apartamento</option><option>Casa</option><option>Local</option><option>Oficina</option></select></label>
+        <label>Zona<input name="location" value="Medellín" placeholder="Barrio o municipio"></label>
+        <button type="submit">Encontrar →</button>
+      </form>
+    </section>
+
+    <section id="homes" class="homes">
+      <div class="section-title"><span class="eyebrow">Recién llegados</span><h2>Casas con algo que contar.</h2><p>No llenamos el catálogo por llenarlo. Mostramos lo importante para que decidas mejor.</p></div>
+      <div class="cards">
+        <article class="property-card"><div class="listing-photo listing-photo--one"><span class="number">01</span><button class="favorite" aria-label="Guardar inmueble" aria-pressed="false">♡</button></div><div class="card-copy"><span>El Poblado · Venta</span><h3>Verde afuera. Calma adentro.</h3><strong>$980 millones</strong><p>148 m² · 3 habitaciones · 3 baños</p><a href="#contact">Quiero conocerlo →</a></div></article>
+        <article class="property-card reverse"><div class="listing-photo listing-photo--two"><span class="number">02</span><button class="favorite" aria-label="Guardar inmueble" aria-pressed="false">♡</button></div><div class="card-copy"><span>Laureles · Arriendo</span><h3>Todo caminando. Luz de sobra.</h3><strong>$4,6 millones / mes</strong><p>116 m² · 3 habitaciones · 2 baños</p><a href="#contact">Quiero conocerlo →</a></div></article>
+        <article class="property-card"><div class="listing-photo listing-photo--three"><span class="number">03</span><button class="favorite" aria-label="Guardar inmueble" aria-pressed="false">♡</button></div><div class="card-copy"><span>Envigado · Venta</span><h3>Una casa para echar raíces.</h3><strong>$1.480 millones</strong><p>240 m² · 4 habitaciones · 4 baños</p><a href="#contact">Quiero conocerlo →</a></div></article>
+      </div>
+    </section>
+
+    <section id="neighborhoods" class="neighborhoods"><div class="section-title"><span class="eyebrow">El barrio importa</span><h2>¿Cómo quieres vivir Medellín?</h2></div><div class="moods"><button data-chip aria-pressed="false"><span>Quiero caminar a todo</span><strong>Laureles</strong></button><button data-chip aria-pressed="false"><span>Busco verde y privacidad</span><strong>El Poblado</strong></button><button data-chip aria-pressed="false"><span>Quiero ambiente familiar</span><strong>Envigado</strong></button><button data-chip aria-pressed="false"><span>Necesito conexión y comercio</span><strong>Belén</strong></button></div></section>
+
+    <section id="owners" class="owners"><div class="owners-copy"><span class="eyebrow">También cuidamos lo tuyo</span><h2>Poner tu inmueble en el mercado no debería quitarte el sueño.</h2><p>Valoramos, preparamos, publicamos, filtramos y acompañamos. Tú ves el avance; nosotros movemos el proceso.</p><ul><li>Valoración comercial</li><li>Fotografía y publicación</li><li>Filtro de interesados</li><li>Visitas y seguimiento</li></ul></div><form data-lead><h3>Hablemos de tu inmueble</h3><label>Tu nombre<input name="name" required placeholder="Nombre y apellido"></label><label>Tu celular<input name="phone" required inputmode="tel" placeholder="300 000 0000"></label><label>Quiero<select name="need"><option>Vender</option><option>Arrendar</option><option>Administrar</option><option>Recibir una valoración</option></select></label><label class="consent"><input type="checkbox" required> Autorizo el tratamiento de mis datos.</label><button type="submit">Quiero que me llamen</button></form></section>
+
+    <section id="contact" class="contact"><div><span class="eyebrow">L&C Propiedad Raíz</span><h2>Primero escuchamos. Luego buscamos.</h2></div><div><p>Cuéntanos qué necesitas y en qué momento estás. Una conversación corta evita semanas de búsquedas inútiles.</p><a href="#owners">Hablar con un asesor →</a></div></section>
+  </main>
+
+  <footer><a class="brand" href="../index.html"><span class="mark">L&C</span><span class="name">Propiedad<br>Raíz</span></a><span>Medellín, Colombia · <span data-year></span></span><a href="../index.html">Ver otros conceptos</a></footer>
+  <div class="toast" data-toast role="status" aria-live="polite"></div>
+</body>
+</html>

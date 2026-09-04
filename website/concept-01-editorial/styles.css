@@ -1,0 +1,89 @@
+:root {
+  --c-bg:#f2efe7; --c-surface:#fbfaf6; --c-accent:#ae6b48; --c-text:#183127; --c-muted:#68716c;
+  --f-display:'Fraunces',serif; --f-body:'DM Sans',sans-serif;
+  --sp-xs:4px; --sp-sm:8px; --sp-md:16px; --sp-lg:32px; --sp-xl:64px; --sp-2xl:128px;
+  --r-sm:2px; --r-md:6px; --r-lg:16px; --shadow-sm:0 8px 26px rgb(24 49 39 / 8%); --shadow-md:0 22px 60px rgb(24 49 39 / 14%);
+}
+body { color:var(--c-text); background:var(--c-bg); font-family:var(--f-body); }
+.header { position:absolute; z-index:5; top:0; left:0; display:grid; width:100%; grid-template-columns:1fr auto 1fr; align-items:center; padding:26px 4vw; color:#fff; }
+.brand { display:inline-flex; width:max-content; flex-direction:column; line-height:.85; }
+.brand span { font:600 2rem/1 var(--f-display); letter-spacing:-.05em; }
+.brand small { margin-top:6px; font-size:.52rem; font-weight:700; letter-spacing:.18em; }
+.nav { display:flex; gap:28px; font-size:.9rem; }
+.nav a { border-bottom:1px solid transparent; padding:5px 0; }
+.nav a:hover { border-color:currentColor; }
+.header-cta { justify-self:end; border:1px solid rgb(255 255 255 / 55%); padding:11px 16px; font-size:.82rem; }
+.menu-button { display:none; color:inherit; background:none; border:0; }
+.hero { position:relative; min-height:840px; padding:170px 5vw 60px; color:#fff; background:#153127; }
+.hero::after { position:absolute; inset:0; content:''; background:linear-gradient(90deg,rgb(9 29 21 / 82%) 0%,rgb(9 29 21 / 35%) 48%,rgb(9 29 21 / 3%) 80%); }
+.hero-image { position:absolute; inset:0; background:url('../assets/medellin-hero.png') center/cover; }
+.hero-copy { position:relative; z-index:1; max-width:720px; }
+.kicker { color:var(--c-accent); font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+.hero .kicker { color:#e7b99f; }
+h1,h2,h3 { font-family:var(--f-display); font-weight:500; letter-spacing:-.035em; }
+h1 { margin:18px 0 24px; font-size:clamp(3.4rem,7.8vw,7rem); line-height:.91; }
+.hero-copy p { max-width:590px; color:rgb(255 255 255 / 78%); font-size:1.1rem; line-height:1.65; }
+.search { position:absolute; z-index:2; right:5vw; bottom:-46px; left:5vw; display:grid; grid-template-columns:.8fr 1fr 1.6fr auto; padding:18px; color:var(--c-text); background:var(--c-surface); box-shadow:var(--shadow-md); }
+.search label { display:flex; flex-direction:column; gap:7px; padding:0 18px; border-right:1px solid #d7d4cb; }
+.search label span { color:var(--c-muted); font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+.search select,.search input { width:100%; padding:6px 0; color:var(--c-text); background:transparent; border:0; outline:0; }
+.search button,.owners button,.contact button { padding:15px 22px; color:#fff; background:var(--c-text); border:0; cursor:pointer; }
+.section { width:min(1240px,90%); margin:auto; padding:150px 0 120px; }
+.section-head { display:flex; align-items:end; justify-content:space-between; gap:30px; margin-bottom:40px; }
+h2 { max-width:720px; margin:10px 0 0; font-size:clamp(2.5rem,5vw,4.7rem); line-height:1; }
+.section-head > a { padding-bottom:9px; border-bottom:1px solid var(--c-text); }
+.cards { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:start; }
+.property-card { background:var(--c-surface); }
+.property-card.feature { margin-top:52px; }
+.listing-photo { position:relative; height:370px; }
+.tag { position:absolute; top:16px; left:16px; padding:7px 10px; color:#fff; background:rgb(24 49 39 / 85%); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; }
+.favorite { position:absolute; top:14px; right:14px; width:38px; height:38px; color:#fff; background:rgb(15 26 21 / 55%); border:0; border-radius:50%; font-size:1.35rem; cursor:pointer; }
+.card-copy { padding:23px; }
+.place { margin:0 0 9px; color:var(--c-accent); font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.card-copy h3 { margin:0 0 18px; font-size:1.55rem; }
+.card-copy strong { font-size:1.05rem; }
+.facts { display:flex; gap:14px; margin-top:18px; padding-top:16px; color:var(--c-muted); border-top:1px solid #dedbd2; font-size:.78rem; }
+.areas { display:grid; grid-template-columns:1fr 1fr; gap:9vw; padding:120px 6vw; color:#f5f1e7; background:var(--c-text); }
+.area-intro p { max-width:470px; color:rgb(255 255 255 / 62%); line-height:1.7; }
+.area-list a { display:grid; grid-template-columns:42px 1fr auto; align-items:center; padding:23px 0; border-bottom:1px solid rgb(255 255 255 / 18%); font:500 1.7rem var(--f-display); }
+.area-list a span,.area-list a em { color:rgb(255 255 255 / 45%); font:normal .7rem var(--f-body); }
+.owners { display:grid; grid-template-columns:1.2fr .8fr; gap:10vw; padding:120px 6vw; background:#dfddd3; }
+.owners p { color:var(--c-muted); line-height:1.7; }
+.owners button { margin-top:22px; }
+.contact { display:grid; grid-template-columns:1fr 1fr; gap:9vw; padding:120px 6vw; background:var(--c-surface); }
+.contact > div p { max-width:520px; color:var(--c-muted); line-height:1.7; }
+.contact form { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.contact label { display:flex; flex-direction:column; gap:8px; color:var(--c-muted); font-size:.75rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+.contact input,.contact select { padding:14px 0; background:transparent; border:0; border-bottom:1px solid #aeb1aa; outline:0; }
+.contact .consent { grid-column:1/-1; flex-direction:row; align-items:center; font-size:.7rem; text-transform:none; }
+.contact .consent input { width:18px; height:18px; }
+.contact button { grid-column:1/-1; }
+footer { display:flex; align-items:center; justify-content:space-between; padding:42px 6vw; color:#fff; background:#10221a; font-size:.78rem; }
+
+@media(max-width:900px){
+  .header { grid-template-columns:1fr auto; }
+  .menu-button { display:block; justify-self:end; }
+  .nav { position:absolute; top:84px; right:20px; display:none; flex-direction:column; gap:16px; padding:22px; color:var(--c-text); background:var(--c-surface); box-shadow:var(--shadow-sm); }
+  .nav.is-open { display:flex; }
+  .header-cta { display:none; }
+  .hero { min-height:760px; padding-top:150px; }
+  .search { grid-template-columns:1fr 1fr; }
+  .search label { border:0; }
+  .search button { grid-column:1/-1; }
+  .section { padding-top:180px; }
+  .cards { grid-template-columns:1fr; }
+  .property-card.feature { margin-top:0; }
+  .listing-photo { height:440px; }
+  .areas,.owners,.contact { grid-template-columns:1fr; }
+}
+@media(max-width:560px){
+  .hero { min-height:850px; padding-right:24px; padding-left:24px; }
+  .search { right:20px; bottom:-140px; left:20px; grid-template-columns:1fr; }
+  .search button { grid-column:auto; }
+  .section { padding-top:240px; }
+  .section-head { align-items:start; flex-direction:column; }
+  .listing-photo { height:350px; }
+  .contact form { grid-template-columns:1fr; }
+  .contact label,.contact .consent,.contact button { grid-column:1; }
+  footer { align-items:flex-start; flex-direction:column; gap:24px; }
+}
