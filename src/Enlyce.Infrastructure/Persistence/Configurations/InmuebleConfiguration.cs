@@ -33,5 +33,8 @@ public class InmuebleConfiguration : IEntityTypeConfiguration<Inmueble>
 
         builder.Property(i => i.PropietarioId).IsRequired();
         builder.Property(i => i.Activo).IsRequired();
+
+        builder.HasIndex(i => i.Tipo);
+        builder.HasIndex(i => i.Modalidad);
     }
 }
