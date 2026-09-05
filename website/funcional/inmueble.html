@@ -16,7 +16,7 @@
       <span>Propiedad<br>Raíz</span>
     </a>
     <nav aria-label="Principal"><a href="index.html">← Inmuebles</a><a href="propietarios.html">Propietarios</a></nav>
-    <span class="header-label">Ficha pública</span>
+    <a class="header-label" href="favoritos.html">Favoritos <span class="favorites-count" hidden data-favorites-count>0</span></a>
   </header>
 
   <main>
@@ -42,6 +42,7 @@
         <div class="detail-price-block">
           <strong data-detail-price></strong>
           <span data-detail-admin></span>
+          <button class="detail-favorite" type="button" aria-pressed="false" data-favorite></button>
         </div>
       </div>
 

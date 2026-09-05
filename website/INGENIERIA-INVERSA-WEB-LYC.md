@@ -1,12 +1,12 @@
 # Ingenieria inversa web LYC
 
-Fecha de observación: 2026-09-04.
+Fecha de observación: 2026-09-05.
 
 ## Veredicto
 
 L&C no debe construir un Fincaraíz pequeño. Debe tomar su recorrido eficiente de búsqueda y la ficha rica de ambos portales, reducir el ruido comercial y cerrar cada inmueble con una persona real. La ventaja defendible no es volumen: es inventario publicado desde Enlyce, lectura local de Medellín y seguimiento después del contacto.
 
-La primera versión productiva necesita tres superficies: portada, resultados y ficha. Mapa, favoritos, alertas y páginas editoriales llegan después. Herramientas financieras y publicación autoservicio se rechazan por ahora.
+El laboratorio ya cubre resultados, ficha y captación de propietarios. La siguiente pieza es retorno sin fricción: favoritos locales sin cuenta. Mapa, alertas y páginas editoriales llegan después. Herramientas financieras y publicación autoservicio se rechazan por ahora.
 
 ## Consejo de producto
 
@@ -28,14 +28,27 @@ La primera versión productiva necesita tres superficies: portada, resultados y 
 
 ## Alcance y limites
 
-Se revisaron las superficies públicas accesibles de Fincaraíz y Metrocuadrado: portada, resultados de apartamentos en venta en Medellín y una ficha de inmueble. Se contrastaron contra los prototipos de `website/`, el contrato público y los endpoints actuales de Enlyce.
+Se revisaron las superficies públicas accesibles de Fincaraíz, Metrocuadrado y Ciencuadras: portada, resultados de apartamentos en venta en Medellín y fichas de inmueble. Se contrastaron contra `website/`, el contrato público y los endpoints actuales de Enlyce.
 
 Límites:
 
 - No se tuvo acceso a analítica, experimentos, lógica de ranking ni tasas de conversión.
 - La extracción de Metrocuadrado no expuso el detalle completo de cada filtro.
 - No se validó el comportamiento visual en dispositivos reales.
-- Tecnología interna, popularidad y eficacia comercial de cada patrón quedan `NO COMPROBADO`.
+- La tecnología se identificó solo por huellas públicas del HTML; arquitectura interna, popularidad y eficacia comercial quedan `NO COMPROBADO`.
+
+## Revalidación técnica del código público
+
+Observación directa del HTML descargado el 2026-09-05:
+
+- Fincaraíz expone `__NEXT_DATA__`, rutas `/_next/`, chunks de Webpack y JSON-LD: huellas compatibles con Next.js. `CONFIRMADO`.
+- Metrocuadrado entrega chunks `/_next/static/` y `main-app`: huellas compatibles con Next.js App Router. `CONFIRMADO` para el frontend público; versión y arquitectura interna `NO COMPROBADO`.
+- Ciencuadras expone `ng-version` y bundles `runtime`, `polyfills` y `main`: huellas compatibles con Angular. `CONFIRMADO`.
+- Fincaraíz y Ciencuadras incluyen JSON-LD en el HTML observado. Metrocuadrado entrega título, precio y atributos de la ficha en HTML rastreable, aunque no se confirmó JSON-LD en la muestra.
+
+Decisión: no escoger framework por imitación. Tres competidores resuelven recorridos parecidos con tecnologías distintas. Mantener HTML/CSS/JS mientras se estabilizan rutas, estados y eventos; la selección posterior debe medir SEO indexable, rendimiento, mantenimiento y ajuste con Enlyce.Api.
+
+Para favoritos se verificó Web Storage con MDN vía Context7: `localStorage` persiste por origen entre sesiones, pero puede lanzar `SecurityError` o estar deshabilitado. L&C guarda solo slugs, limita la selección a 24 y mantiene un fallback temporal en memoria.
 
 ## Matriz de superficies
 
@@ -155,14 +168,14 @@ No crear miles de combinaciones indexables vacías. Facetas sin valor deben usar
 
 | Capacidad | Estado actual | Capa responsable | Siguiente cambio |
 |---|---|---|---|
-| Listado público con filtros, orden y paginación | Soportada | API/Application | Conectar `website/` y traducir filtros a query string. |
-| Ficha pública por slug | Soportada | API/Application | Crear ruta real y renderizar el contrato sin serialización interna. |
+| Listado público con filtros, orden y paginación | Soportada | API/Application/Web | Conectado en `website/funcional/`; falta URL productiva. |
+| Ficha pública por slug | Soportada | API/Application/Web | Conectada por slug; falta renderizado inicial indexable. |
 | Ubicación aproximada | Soportada | Contrato/API | Elegir proveedor y política visual del mapa. |
-| Estados carga/vacío/error | Ausente | Web | Diseñar e implementar cada estado. |
+| Estados carga/vacío/error | Soportada | Web | Mantener cobertura al agregar superficies. |
 | Código humano corto | Ausente | Dominio/API/Web | Definir formato estable e índice; no reutilizar `Guid`. |
 | Lead ligado a publicación | Parcial | Domain/Application/API | Añadir referencia pública, canal, URL/campaña y versión del consentimiento. |
-| Formulario real | Parcial | Web/API | El prototipo simula éxito; integrar y manejar errores/idempotencia. |
-| Favoritos sin cuenta | Ausente | Web | Persistir slugs en almacenamiento local y tolerar retirados. |
+| Formulario real | Soportada | Web/API | Catálogo y propietarios crean leads; falta idempotencia y relación explícita con publicación. |
+| Favoritos sin cuenta | Soportada | Web | Slugs locales, sincronización entre pestañas y retirados visibles; falta prueba con usuarios. |
 | Alertas guardadas | Ausente | Backend/Web | Posponer hasta tener envío, baja y consentimiento verificables. |
 | SEO por ficha | Parcial | Web | Renderizado indexable, canonical, metadata social y JSON-LD. |
 | SEO por zona/faceta | Ausente | Web/API | Crear solo páginas con inventario y contenido útil. |
@@ -172,9 +185,9 @@ No crear miles de combinaciones indexables vacías. Facetas sin valor deben usar
 
 ### P0 - buscar, evaluar y contactar
 
-1. **Conectar listado a la API.** Evidencia: ambos competidores llevan la búsqueda a resultados filtrables. Aceptación: filtros y orden producen la misma consulta al recargar o compartir URL.
-2. **Crear ficha real por slug.** Evidencia: la ficha concentra datos, confianza y contacto. Aceptación: HTML inicial contiene título, precio y ubicación; 404 no revela publicaciones pausadas.
-3. **Diseñar estados operativos.** Aceptación: carga, vacío, error, foto ausente y 404 tienen comportamiento y texto definidos en móvil y escritorio.
+1. **Listado conectado a la API — HECHO.** Filtros, orden y página sobreviven en la URL.
+2. **Ficha real por slug — PARCIAL.** Datos y 404 funcionan; el HTML inicial todavía no contiene el inmueble para indexación.
+3. **Estados operativos — HECHO.** Catálogo, ficha y favoritos cubren carga, vacío, error y publicaciones retiradas.
 4. **Cerrar captación contextual.** Aceptación: visita o WhatsApp incluye publicación, fuente, campaña, canal y consentimiento; error no duplica ni borra el formulario.
 5. **Aplicar SEO técnico mínimo.** Aceptación: title, description, canonical, Open Graph, sitemap y schema válido para fichas publicadas. `RealEstateListing` existe en Schema.org, pero sigue marcado como tipo nuevo y Google no ofrece un resultado enriquecido inmobiliario general; no prometerlo como ventaja visual en búsqueda.
 6. **Medir el embudo.** Aceptación: búsqueda, apertura de ficha e inicio/éxito de contacto emiten eventos sin datos personales.
@@ -182,7 +195,7 @@ No crear miles de combinaciones indexables vacías. Facetas sin valor deben usar
 ### P1 - comparación, confianza y retorno
 
 1. Código humano y búsqueda directa.
-2. Favoritos locales sin registro.
+2. Favoritos locales sin registro — HECHO en laboratorio; pendiente validación visual y con usuarios.
 3. Mapa de resultados con sincronización tarjeta/marcador.
 4. Páginas de zonas de Medellín con inventario real.
 5. Propiedades relacionadas basadas en modalidad, barrio y rango de precio.
@@ -227,6 +240,8 @@ No crear miles de combinaciones indexables vacías. Facetas sin valor deben usar
 
 - Fincaraíz: [portada](https://www.fincaraiz.com.co/), [resultados en Medellín](https://www.fincaraiz.com.co/venta/apartamentos/medellin/antioquia) y [ficha observada](https://www.fincaraiz.com.co/apartamento-en-venta-en-castropol-medellin/193379731).
 - Metrocuadrado: [portada](https://www.metrocuadrado.com/), [resultados en Medellín](https://www.metrocuadrado.com/apartamentos/venta/medellin/colombia/) y [ficha observada](https://www.metrocuadrado.com/inmueble/venta-apartamento-medellin-san-diego-3-habitaciones-2-banos-1-garajes/17166-M6462716).
+- Ciencuadras: [resultados en Medellín](https://www.ciencuadras.com/venta/venta/medellin/apartamento), [ficha observada](https://www.ciencuadras.com/inmueble/apartamento-en-venta-en-alejandria-medellin-3362949%26q) y [guía de La Candelaria](https://www.ciencuadras.com/blog/guia-de-barrio-la-candelaria-medellin).
+- Persistencia local: [MDN localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage), consultado mediante Context7 `/mdn/content`.
 - SEO estructurado: [RealEstateListing en Schema.org](https://schema.org/RealEstateListing) y [galería de datos estructurados compatibles con Google](https://developers.google.com/search/docs/appearance/structured-data/search-gallery).
 - L&C: `website/`, `docs/web/contrato-publicacion-inmueble.md` y `src/Enlyce.Api/Endpoints/PublicCatalog/PublicCatalogModule.cs`.
 

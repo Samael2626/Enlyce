@@ -1,11 +1,6 @@
 import { PublicCatalogClient, resolveApiBase } from './api.js';
-import {
-  formatCurrency,
-  formatLocation,
-  formatPropertyFacts,
-  formatPublishedAt,
-  safeMediaUrl,
-} from './format.js';
+import { FavoritesStore, FAVORITES_STORAGE_KEY, updateFavoriteCounts } from './favorites.js';
+import { createPropertyCard } from './property-card.js';
 
 const filterNames = [
   'operation', 'propertyType', 'municipality', 'neighborhood',
@@ -25,6 +20,7 @@ const errorPanel = document.querySelector('[data-error]');
 const emptyPanel = document.querySelector('[data-empty]');
 const grid = document.querySelector('[data-property-grid]');
 const template = document.querySelector('#property-card-template');
+const favorites = new FavoritesStore();
 let activeRequest;
 let currentPage = positiveInteger(search.get('page'), 1);
 let totalPages = 1;
@@ -84,33 +80,13 @@ function propertyHref(slug) {
 }
 
 function renderProperty(property) {
-  const card = template.content.firstElementChild.cloneNode(true);
-  const href = propertyHref(property.slug);
-  for (const link of card.querySelectorAll('[data-property-link]')) link.href = href;
-
-  card.querySelector('[data-operation]').textContent = property.operation;
-  card.querySelector('[data-location]').textContent = formatLocation(property.location);
-  card.querySelector('[data-title]').textContent = property.publicTitle;
-  card.querySelector('[data-price]').textContent = formatCurrency(property.price);
-  card.querySelector('[data-facts]').textContent = formatPropertyFacts(property);
-  card.querySelector('[data-published]').textContent = `Publicado ${formatPublishedAt(property.publishedAt)}`;
-
-  const image = card.querySelector('[data-property-image]');
-  const fallback = card.querySelector('[data-image-fallback]');
-  const imageUrl = safeMediaUrl(property.coverPhoto?.url);
-  if (imageUrl) {
-    image.src = imageUrl;
-    image.alt = property.coverPhoto.altText || property.publicTitle;
-    fallback.hidden = true;
-    image.addEventListener('error', () => {
-      image.hidden = true;
-      fallback.hidden = false;
-    }, { once: true });
-  } else {
-    image.hidden = true;
-  }
-
-  return card;
+  return createPropertyCard({
+    property,
+    template,
+    href: propertyHref(property.slug),
+    favorites,
+    onFavoriteChange: () => updateFavoriteCounts(favorites),
+  });
 }
 
 function showState(state) {
@@ -183,4 +159,11 @@ document.querySelector('[data-filter-toggle]').addEventListener('click', (event)
 });
 
 fillForms();
+updateFavoriteCounts(favorites);
+window.addEventListener('storage', (event) => {
+  if (event.key !== FAVORITES_STORAGE_KEY) return;
+  favorites.reload();
+  updateFavoriteCounts(favorites);
+  loadCatalog();
+});
 loadCatalog();

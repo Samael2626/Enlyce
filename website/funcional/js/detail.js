@@ -1,6 +1,7 @@
 import { ApiError, PublicCatalogClient, resolveApiBase } from './api.js';
 import { buildWhatsAppUrl, resolveWhatsAppNumber } from './contact.js';
 import { formatCurrency, formatLocation, safeMediaUrl } from './format.js';
+import { FavoritesStore, FAVORITES_STORAGE_KEY, updateFavoriteButton, updateFavoriteCounts } from './favorites.js';
 import { siteSettings } from './settings.js';
 
 const params = new URLSearchParams(window.location.search);
@@ -11,6 +12,7 @@ const loading = document.querySelector('[data-detail-loading]');
 const errorPanel = document.querySelector('[data-detail-error]');
 const leadForm = document.querySelector('[data-lead-form]');
 const whatsappNumber = resolveWhatsAppNumber(window.location.search, siteSettings.whatsappNumber);
+const favorites = new FavoritesStore();
 let property;
 
 function setText(selector, value) {
@@ -62,6 +64,9 @@ function renderProperty() {
   setText('[data-advisor-name]', property.advisor.displayName);
   setText('[data-mobile-price]', formatCurrency(property.price));
 
+  const favoriteButton = document.querySelector('[data-favorite]');
+  updateFavoriteButton(favoriteButton, favorites.has(property.slug));
+
   const advisorContact = document.querySelector('[data-advisor-contact]');
   if (property.advisor.publicPhone) {
     advisorContact.textContent = property.advisor.publicPhone;
@@ -91,6 +96,20 @@ function renderProperty() {
   detail.hidden = false;
   document.querySelector('[data-mobile-contact]').hidden = false;
 }
+
+document.querySelector('[data-favorite]').addEventListener('click', (event) => {
+  if (!property) return;
+  const result = favorites.toggle(property.slug);
+  updateFavoriteButton(event.currentTarget, result.isFavorite);
+  updateFavoriteCounts(favorites);
+});
+
+window.addEventListener('storage', (event) => {
+  if (event.key !== FAVORITES_STORAGE_KEY) return;
+  favorites.reload();
+  updateFavoriteCounts(favorites);
+  if (property) updateFavoriteButton(document.querySelector('[data-favorite]'), favorites.has(property.slug));
+});
 
 function showError(error) {
   loading.hidden = true;
@@ -144,4 +163,5 @@ leadForm.addEventListener('submit', async (event) => {
   }
 });
 
+updateFavoriteCounts(favorites);
 loadProperty();

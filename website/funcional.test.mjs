@@ -15,6 +15,17 @@ import {
 } from './funcional/js/format.js';
 import { buildOwnerWhatsAppUrl, buildWhatsAppUrl, resolveWhatsAppNumber } from './funcional/js/contact.js';
 import { buildOwnerLeadPayload } from './funcional/js/owner-inquiry.js';
+import { FavoritesStore, MAX_FAVORITES, normalizeFavoriteSlugs } from './funcional/js/favorites.js';
+import { toPropertyCardModel } from './funcional/js/property-card.js';
+
+function createMemoryStorage(initial = {}) {
+  const values = new Map(Object.entries(initial));
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+  };
+}
 
 test('buildCatalogUrl serializa solo filtros con valor', () => {
   const url = buildCatalogUrl('http://localhost:5019/', {
@@ -110,6 +121,43 @@ test('buildOwnerWhatsAppUrl crea mensaje para administracion', () => {
     buildOwnerWhatsAppUrl('573001234567', 'Administrar'),
     'https://wa.me/573001234567?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20administrar%20mi%20inmueble%20con%20L%26C.',
   );
+});
+
+test('normalizeFavoriteSlugs limpia duplicados y limita almacenamiento', () => {
+  const input = [' Casa-1 ', 'casa-1', ...Array.from({ length: 40 }, (_, index) => `prop-${index}`)];
+  const result = normalizeFavoriteSlugs(input);
+  assert.equal(result[0], 'casa-1');
+  assert.equal(result.length, MAX_FAVORITES);
+});
+
+test('FavoritesStore persiste y alterna favoritos', () => {
+  const storage = createMemoryStorage();
+  const store = new FavoritesStore(storage);
+  assert.deepEqual(store.toggle('Apartamento-Laureles'), { isFavorite: true, persisted: true });
+  assert.equal(store.has('apartamento-laureles'), true);
+  assert.deepEqual(new FavoritesStore(storage).values(), ['apartamento-laureles']);
+  assert.deepEqual(store.toggle('apartamento-laureles'), { isFavorite: false, persisted: true });
+});
+
+test('FavoritesStore funciona en memoria cuando el almacenamiento no existe', () => {
+  const store = new FavoritesStore(null);
+  assert.deepEqual(store.toggle('casa-belen'), { isFavorite: true, persisted: false });
+  assert.equal(store.has('casa-belen'), true);
+});
+
+test('toPropertyCardModel adapta la ficha detallada a tarjeta', () => {
+  const result = toPropertyCardModel({
+    slug: 'apartamento-laureles',
+    features: { areaSquareMeters: 91, bedrooms: 3, bathrooms: 2, parkingSpaces: 1 },
+    photos: [
+      { url: 'https://example.test/secondary.webp', isCover: false },
+      { url: 'https://example.test/cover.webp', isCover: true },
+    ],
+  });
+
+  assert.equal(result.areaSquareMeters, 91);
+  assert.equal(result.bedrooms, 3);
+  assert.equal(result.coverPhoto.url, 'https://example.test/cover.webp');
 });
 
 test('PublicCatalogClient traduce respuesta Problem Details', async () => {

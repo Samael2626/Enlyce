@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Revisa los inmuebles que guardaste en L&C Propiedad Raíz.">
+  <title>Mis favoritos | L&C Propiedad Raíz</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/favorites-page.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="L&C Propiedad Raíz, inicio">
+      <span class="brand-mark">L&C</span>
+      <span>Propiedad<br>Raíz</span>
+    </a>
+    <nav aria-label="Principal">
+      <a href="index.html">Inmuebles</a>
+      <a aria-current="page" href="favoritos.html">Favoritos <span class="favorites-count" hidden data-favorites-count>0</span></a>
+      <a href="propietarios.html">Propietarios</a>
+    </nav>
+    <a class="header-action" href="index.html">Seguir buscando</a>
+  </header>
+
+  <main>
+    <section class="favorites-hero" aria-labelledby="favorites-title">
+      <span class="eyebrow">Tu selección · Sin registro</span>
+      <h1 id="favorites-title">Inmuebles para volver a mirar.</h1>
+      <p>Se guardan únicamente en este navegador. Si una publicación sale del mercado, te lo diremos aquí.</p>
+    </section>
+
+    <section class="favorites-results" aria-live="polite">
+      <div class="status-panel" data-loading><span class="loader" aria-hidden="true"></span><p>Revisando disponibilidad…</p></div>
+      <div class="status-panel" hidden data-empty>
+        <span class="status-code">FAVORITOS</span>
+        <h2>Aún no guardaste inmuebles.</h2>
+        <p>Usa el corazón del catálogo o de una ficha para armar tu selección.</p>
+        <a class="primary-button inline-button" href="index.html">Explorar inmuebles</a>
+      </div>
+      <div class="status-panel" hidden data-error>
+        <span class="status-code">CONEXIÓN</span>
+        <h2>No pudimos revisar tus favoritos.</h2>
+        <p data-error-message>Comprueba que Enlyce.Api esté disponible.</p>
+        <button class="secondary-button" type="button" data-retry>Reintentar</button>
+      </div>
+      <div hidden data-results>
+        <div class="results-meta"><p><strong data-total>0</strong> disponibles</p></div>
+        <div class="property-grid" data-property-grid></div>
+        <ul class="unavailable-list" hidden data-unavailable></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand" href="index.html"><span class="brand-mark">L&C</span><span>Propiedad<br>Raíz</span></a>
+    <p>Venta · Arriendo · Administración</p>
+    <a href="propietarios.html">Publicar inmueble</a>
+  </footer>
+
+  <template id="property-card-template">
+    <article class="property-card">
+      <button class="favorite-button" type="button" aria-pressed="false" data-favorite></button>
+      <a class="property-media" data-property-link>
+        <img alt="" loading="lazy" data-property-image>
+        <span class="media-fallback" data-image-fallback>Imagen pendiente</span>
+        <span class="operation-badge" data-operation></span>
+      </a>
+      <div class="property-copy">
+        <p class="property-location" data-location></p>
+        <h3><a data-title data-property-link></a></h3>
+        <strong class="property-price" data-price></strong>
+        <p class="property-facts" data-facts></p>
+        <div class="property-foot"><span data-published></span><a data-property-link>Ver ficha <span aria-hidden="true">→</span></a></div>
+      </div>
+    </article>
+  </template>
+</body>
+</html>

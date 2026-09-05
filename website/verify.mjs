@@ -56,6 +56,11 @@ for (const required of ['data-owner-form', 'data-owner-submit', 'data-service-ch
   if (!functionalOwners.includes(required)) failures.push(`funcional/propietarios.html: falta ${required}`);
 }
 
+const functionalFavorites = readFileSync(resolve(root, 'funcional/favoritos.html'), 'utf8');
+for (const required of ['data-property-grid', 'data-favorites-count', 'data-unavailable', 'data-empty', 'data-error']) {
+  if (!functionalFavorites.includes(required)) failures.push(`funcional/favoritos.html: falta ${required}`);
+}
+
 if (failures.length) {
   console.error(failures.join('\n'));
   process.exit(1);

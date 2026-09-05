@@ -20,7 +20,7 @@
       <a href="propietarios.html">Propietarios</a>
       <a href="#contact">Asesoría</a>
     </nav>
-    <a class="header-action" href="propietarios.html">Publica tu inmueble</a>
+    <a class="header-action" href="favoritos.html">Favoritos <span class="favorites-count" hidden data-favorites-count>0</span></a>
   </header>
 
   <main>
@@ -161,6 +161,7 @@
 
   <template id="property-card-template">
     <article class="property-card">
+      <button class="favorite-button" type="button" aria-pressed="false" data-favorite></button>
       <a class="property-media" data-property-link>
         <img alt="" loading="lazy" data-property-image>
         <span class="media-fallback" data-image-fallback>Imagen pendiente</span>
