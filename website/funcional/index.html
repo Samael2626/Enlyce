@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explora inmuebles publicados por L&C Propiedad Raíz en Medellín y el área metropolitana.">
+  <title>Inmuebles en Medellín | L&C Propiedad Raíz</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/catalog.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="L&C Propiedad Raíz, inicio">
+      <span class="brand-mark">L&C</span>
+      <span>Propiedad<br>Raíz</span>
+    </a>
+    <nav aria-label="Principal">
+      <a aria-current="page" href="index.html">Inmuebles</a>
+      <a href="#contact">Asesoría</a>
+    </nav>
+    <a class="header-action" href="../index.html">Ver ensayos</a>
+  </header>
+
+  <main>
+    <section class="search-hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <span class="eyebrow">Catálogo público · Medellín</span>
+        <h1 id="page-title">Busca con datos.<br>Decide con respaldo.</h1>
+        <p>Inventario publicado desde Enlyce. Ubicación prudente y una persona real cuando quieras visitar.</p>
+      </div>
+      <form class="quick-search" data-search-form>
+        <label>
+          <span>Modalidad</span>
+          <select name="operation">
+            <option value="">Comprar o arrendar</option>
+            <option value="Venta">Comprar</option>
+            <option value="Arriendo">Arrendar</option>
+            <option value="VentaYArriendo">Venta y arriendo</option>
+          </select>
+        </label>
+        <label>
+          <span>Tipo</span>
+          <select name="propertyType">
+            <option value="">Todos</option>
+            <option value="Apartamento">Apartamento</option>
+            <option value="Casa">Casa</option>
+            <option value="Local">Local</option>
+            <option value="Oficina">Oficina</option>
+            <option value="Lote">Lote</option>
+            <option value="Bodega">Bodega</option>
+            <option value="Finca">Finca</option>
+          </select>
+        </label>
+        <label>
+          <span>Zona o barrio</span>
+          <input name="neighborhood" autocomplete="address-level3" placeholder="Laureles, El Poblado...">
+        </label>
+        <button type="submit">Buscar inmuebles</button>
+      </form>
+    </section>
+
+    <section class="catalog" aria-labelledby="results-title">
+      <div class="catalog-toolbar">
+        <div>
+          <span class="eyebrow">Inventario disponible</span>
+          <h2 id="results-title">Propiedades para comparar</h2>
+        </div>
+        <div class="toolbar-actions">
+          <button class="secondary-button filter-toggle" type="button" aria-expanded="false" aria-controls="filters" data-filter-toggle>Filtros</button>
+          <label class="sort-control">
+            <span>Ordenar</span>
+            <select data-sort>
+              <option value="publishedAtDesc">Más recientes</option>
+              <option value="priceAsc">Menor precio</option>
+              <option value="priceDesc">Mayor precio</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="catalog-layout">
+        <aside id="filters" class="filters" data-filters>
+          <form data-filter-form>
+            <div class="filter-heading">
+              <strong>Afina la búsqueda</strong>
+              <button type="button" data-clear-filters>Limpiar</button>
+            </div>
+            <label><span>Municipio</span><input name="municipality" value="Medellín"></label>
+            <label><span>Barrio</span><input name="neighborhood" placeholder="Ej. Laureles"></label>
+            <fieldset>
+              <legend>Precio</legend>
+              <div class="range-grid">
+                <label><span>Mínimo</span><input name="minPrice" type="number" min="0" step="1000000" placeholder="$ 0"></label>
+                <label><span>Máximo</span><input name="maxPrice" type="number" min="0" step="1000000" placeholder="Sin límite"></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Área</legend>
+              <div class="range-grid">
+                <label><span>Desde m²</span><input name="minArea" type="number" min="0"></label>
+                <label><span>Hasta m²</span><input name="maxArea" type="number" min="0"></label>
+              </div>
+            </fieldset>
+            <div class="range-grid">
+              <label><span>Habitaciones</span><input name="bedrooms" type="number" min="0" placeholder="0+"></label>
+              <label><span>Baños</span><input name="bathrooms" type="number" min="0" placeholder="0+"></label>
+            </div>
+            <label><span>Parqueaderos</span><input name="parkingSpaces" type="number" min="0" placeholder="0+"></label>
+            <button class="primary-button" type="submit">Aplicar filtros</button>
+          </form>
+        </aside>
+
+        <div class="results-region" aria-live="polite" aria-busy="true" data-results-region>
+          <div class="status-panel loading-panel" data-loading>
+            <span class="loader" aria-hidden="true"></span>
+            <p>Consultando propiedades publicadas…</p>
+          </div>
+          <div class="status-panel" hidden data-error>
+            <span class="status-code">CONEXIÓN</span>
+            <h3>No pudimos cargar el catálogo.</h3>
+            <p data-error-message>Comprueba que Enlyce.Api esté corriendo.</p>
+            <button class="secondary-button" type="button" data-retry>Reintentar</button>
+          </div>
+          <div class="status-panel" hidden data-empty>
+            <span class="status-code">0 RESULTADOS</span>
+            <h3>No encontramos esa combinación.</h3>
+            <p>Amplía el precio, el área o la zona. No vamos a inventarte propiedades.</p>
+            <button class="secondary-button" type="button" data-empty-clear>Limpiar filtros</button>
+          </div>
+          <div hidden data-results>
+            <div class="results-meta">
+              <p><strong data-total>0</strong> inmuebles publicados</p>
+              <p data-page-label></p>
+            </div>
+            <div class="property-grid" data-property-grid></div>
+            <nav class="pagination" aria-label="Paginación del catálogo">
+              <button class="secondary-button" type="button" data-previous>Anterior</button>
+              <span data-pagination-label></span>
+              <button class="secondary-button" type="button" data-next>Siguiente</button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact-strip">
+      <span class="eyebrow">¿No encuentras el lugar?</span>
+      <h2>Cuéntanos cómo quieres vivir Medellín.</h2>
+      <p>Este laboratorio muestra el catálogo real. La solicitud personalizada será el siguiente enlace con el CRM.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand" href="index.html"><span class="brand-mark">L&C</span><span>Propiedad<br>Raíz</span></a>
+    <p>Laboratorio HTML funcional · Sin framework</p>
+    <a href="http://localhost:5019/swagger" target="_blank" rel="noreferrer">API pública</a>
+  </footer>
+
+  <template id="property-card-template">
+    <article class="property-card">
+      <a class="property-media" data-property-link>
+        <img alt="" loading="lazy" data-property-image>
+        <span class="media-fallback" data-image-fallback>Imagen pendiente</span>
+        <span class="operation-badge" data-operation></span>
+      </a>
+      <div class="property-copy">
+        <p class="property-location" data-location></p>
+        <h3><a data-title data-property-link></a></h3>
+        <strong class="property-price" data-price></strong>
+        <p class="property-facts" data-facts></p>
+        <div class="property-foot">
+          <span data-published></span>
+          <a data-property-link>Ver ficha <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </article>
+  </template>
+</body>
+</html>

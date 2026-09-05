@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Consulta los detalles de un inmueble publicado por L&C Propiedad Raíz.">
+  <title>Inmueble | L&C Propiedad Raíz</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/detail.js"></script>
+</head>
+<body class="detail-page">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Volver al catálogo de L&C">
+      <span class="brand-mark">L&C</span>
+      <span>Propiedad<br>Raíz</span>
+    </a>
+    <nav aria-label="Principal"><a href="index.html">← Volver a inmuebles</a></nav>
+    <span class="header-label">Ficha pública</span>
+  </header>
+
+  <main>
+    <div class="detail-status" data-detail-loading>
+      <span class="loader" aria-hidden="true"></span>
+      <p>Preparando la ficha…</p>
+    </div>
+
+    <section class="status-panel detail-error" hidden data-detail-error>
+      <span class="status-code" data-detail-code>ERROR</span>
+      <h1 data-detail-error-title>No pudimos abrir este inmueble.</h1>
+      <p data-detail-error-message>Comprueba el enlace o vuelve al catálogo.</p>
+      <a class="primary-button inline-button" href="index.html">Volver al catálogo</a>
+    </section>
+
+    <article hidden data-detail>
+      <div class="detail-intro">
+        <div>
+          <span class="eyebrow" data-detail-operation></span>
+          <h1 data-detail-title></h1>
+          <p class="detail-location" data-detail-location></p>
+        </div>
+        <div class="detail-price-block">
+          <strong data-detail-price></strong>
+          <span data-detail-admin></span>
+        </div>
+      </div>
+
+      <section class="gallery" aria-label="Fotografías del inmueble" data-gallery></section>
+
+      <div class="detail-layout">
+        <div class="detail-content">
+          <section class="fact-panel" aria-label="Características principales">
+            <div><strong data-area></strong><span>Área</span></div>
+            <div><strong data-bedrooms></strong><span>Habitaciones</span></div>
+            <div><strong data-bathrooms></strong><span>Baños</span></div>
+            <div><strong data-parking></strong><span>Parqueaderos</span></div>
+            <div><strong data-stratum></strong><span>Estrato</span></div>
+          </section>
+
+          <section class="copy-section">
+            <span class="eyebrow">Acerca del inmueble</span>
+            <h2>Lo que debes saber</h2>
+            <p class="description" data-description></p>
+          </section>
+
+          <section class="copy-section" data-amenities-section>
+            <span class="eyebrow">Comodidades</span>
+            <h2>Incluido en este lugar</h2>
+            <ul class="amenity-list" data-amenities></ul>
+          </section>
+
+          <section class="location-panel">
+            <div>
+              <span class="eyebrow">Ubicación prudente</span>
+              <h2 data-map-location></h2>
+              <p>Mostramos una referencia aproximada. La dirección exacta se comparte durante el proceso de visita.</p>
+            </div>
+            <div class="coordinate-card">
+              <span>Zona aproximada</span>
+              <strong data-coordinates></strong>
+            </div>
+          </section>
+        </div>
+
+        <aside class="advisor-card" id="contacto">
+          <span class="eyebrow">Agenda una visita</span>
+          <h2>Habla con una persona real.</h2>
+          <div class="advisor-identity">
+            <span class="advisor-avatar" aria-hidden="true">L&C</span>
+            <div><strong data-advisor-name>Asesor L&C</strong><a data-advisor-contact></a></div>
+          </div>
+          <form data-lead-form>
+            <label><span>Nombre</span><input name="name" required autocomplete="name"></label>
+            <label><span>Correo</span><input name="email" type="email" required autocomplete="email"></label>
+            <label><span>Celular</span><input name="phone" type="tel" required autocomplete="tel" inputmode="tel"></label>
+            <label class="consent"><input name="consent" type="checkbox" required><span>Autorizo el tratamiento de mis datos para recibir asesoría.</span></label>
+            <button class="primary-button" type="submit" data-lead-submit>Quiero visitar este inmueble</button>
+            <p class="form-feedback" role="status" data-form-feedback></p>
+          </form>
+          <a class="whatsapp-button" hidden data-whatsapp target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
+        </aside>
+      </div>
+    </article>
+  </main>
+
+  <div class="mobile-contact" hidden data-mobile-contact>
+    <span data-mobile-price></span>
+    <a href="#contacto">Agendar visita</a>
+  </div>
+</body>
+</html>

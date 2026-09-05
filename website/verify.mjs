@@ -17,11 +17,13 @@ const failures = [];
 
 for (const file of files) {
   const extension = extname(file);
-  if (!['.html', '.css'].includes(extension)) continue;
+  if (!['.html', '.css', '.js'].includes(extension)) continue;
   const content = readFileSync(file, 'utf8');
   const references = extension === '.html'
     ? [...content.matchAll(/(?:href|src)="([^"#]+)"/g)].map((match) => match[1])
-    : [...content.matchAll(/url\(['"]?([^'"\)]+)['"]?\)/g)].map((match) => match[1]);
+    : extension === '.css'
+      ? [...content.matchAll(/url\(['"]?([^'"\)]+)['"]?\)/g)].map((match) => match[1])
+      : [...content.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
 
   for (const reference of references) {
     if (/^(?:https?:|data:|mailto:|tel:)/.test(reference)) continue;
@@ -37,6 +39,16 @@ for (const file of files) {
     const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
     if (duplicates.length) failures.push(`${file}: ids duplicados ${[...new Set(duplicates)].join(', ')}`);
   }
+}
+
+const functionalCatalog = readFileSync(resolve(root, 'funcional/index.html'), 'utf8');
+for (const required of ['data-search-form', 'data-filter-form', 'data-property-grid', 'data-empty', 'data-error']) {
+  if (!functionalCatalog.includes(required)) failures.push(`funcional/index.html: falta ${required}`);
+}
+
+const functionalDetail = readFileSync(resolve(root, 'funcional/inmueble.html'), 'utf8');
+for (const required of ['data-detail', 'data-gallery', 'data-lead-form', 'data-detail-error']) {
+  if (!functionalDetail.includes(required)) failures.push(`funcional/inmueble.html: falta ${required}`);
 }
 
 if (failures.length) {
