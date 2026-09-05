@@ -1,4 +1,5 @@
 using System.Text;
+using Enlyce.Api.Development;
 using Enlyce.Api.Endpoints.Alertas;
 using Enlyce.Api.Endpoints.Auth;
 using Enlyce.Api.Endpoints.DatosPersonales;
@@ -15,7 +16,9 @@ using Enlyce.Application;
 using Enlyce.Application.Auth;
 using Enlyce.Infrastructure;
 using Enlyce.Infrastructure.Auth;
+using Enlyce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -81,6 +84,15 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment() &&
+    app.Configuration.GetValue<bool>("DemoData:SeedPublicCatalog"))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+    await db.Database.MigrateAsync();
+    await DemoCatalogSeeder.SeedAsync(db);
+}
 
 app.UseCors();
 

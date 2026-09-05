@@ -1,5 +1,7 @@
 import { ApiError, PublicCatalogClient, resolveApiBase } from './api.js';
+import { buildWhatsAppUrl, resolveWhatsAppNumber } from './contact.js';
 import { formatCurrency, formatLocation, safeMediaUrl } from './format.js';
+import { siteSettings } from './settings.js';
 
 const params = new URLSearchParams(window.location.search);
 const slug = params.get('slug')?.trim();
@@ -8,6 +10,7 @@ const detail = document.querySelector('[data-detail]');
 const loading = document.querySelector('[data-detail-loading]');
 const errorPanel = document.querySelector('[data-detail-error]');
 const leadForm = document.querySelector('[data-lead-form]');
+const whatsappNumber = resolveWhatsAppNumber(window.location.search, siteSettings.whatsappNumber);
 let property;
 
 function setText(selector, value) {
@@ -66,6 +69,13 @@ function renderProperty() {
   } else {
     advisorContact.textContent = 'Contacto mediante formulario';
     advisorContact.removeAttribute('href');
+  }
+
+  const whatsapp = document.querySelector('[data-whatsapp]');
+  const whatsappUrl = buildWhatsAppUrl(whatsappNumber, property);
+  if (whatsappUrl) {
+    whatsapp.href = whatsappUrl;
+    whatsapp.hidden = false;
   }
 
   const amenities = property.features.amenities.map((amenity) => {

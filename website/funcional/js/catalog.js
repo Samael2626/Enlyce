@@ -72,12 +72,14 @@ function navigateWithForm(form) {
 function clearFilters() {
   const next = new URLSearchParams();
   if (search.has('api')) next.set('api', search.get('api'));
+  if (search.has('whatsapp')) next.set('whatsapp', search.get('whatsapp'));
   window.location.search = next.toString();
 }
 
 function propertyHref(slug) {
   const params = new URLSearchParams({ slug });
   if (search.has('api')) params.set('api', search.get('api'));
+  if (search.has('whatsapp')) params.set('whatsapp', search.get('whatsapp'));
   return `inmueble.html?${params}`;
 }
 

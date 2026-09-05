@@ -13,6 +13,7 @@ import {
   formatPropertyFacts,
   safeMediaUrl,
 } from './funcional/js/format.js';
+import { buildWhatsAppUrl, resolveWhatsAppNumber } from './funcional/js/contact.js';
 
 test('buildCatalogUrl serializa solo filtros con valor', () => {
   const url = buildCatalogUrl('http://localhost:5019/', {
@@ -61,6 +62,19 @@ test('formatPropertyFacts crea resumen compacto', () => {
 test('safeMediaUrl bloquea protocolos inseguros', () => {
   assert.equal(safeMediaUrl('javascript:alert(1)'), '');
   assert.equal(safeMediaUrl('https://media.example.test/a.webp'), 'https://media.example.test/a.webp');
+});
+
+test('resolveWhatsAppNumber acepta configuracion o parametro temporal', () => {
+  assert.equal(resolveWhatsAppNumber('?whatsapp=%2B57+300+123+4567', ''), '573001234567');
+  assert.equal(resolveWhatsAppNumber('', '57 301 765 4321'), '573017654321');
+});
+
+test('buildWhatsAppUrl crea mensaje contextual del inmueble', () => {
+  assert.equal(
+    buildWhatsAppUrl('573001234567', { publicTitle: 'Apartamento Laureles', slug: 'apartamento-laureles' }),
+    'https://wa.me/573001234567?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20Apartamento%20Laureles%20(Ref.%20apartamento-laureles).',
+  );
+  assert.equal(buildWhatsAppUrl('', { publicTitle: 'Casa', slug: 'casa' }), '');
 });
 
 test('PublicCatalogClient traduce respuesta Problem Details', async () => {
