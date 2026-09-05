@@ -17,6 +17,7 @@ import { buildOwnerWhatsAppUrl, buildWhatsAppUrl, resolveWhatsAppNumber } from '
 import { buildOwnerLeadPayload } from './funcional/js/owner-inquiry.js';
 import { FavoritesStore, MAX_FAVORITES, normalizeFavoriteSlugs } from './funcional/js/favorites.js';
 import { toPropertyCardModel } from './funcional/js/property-card.js';
+import { buildNeighborhoodFilters } from './funcional/js/neighborhood-query.js';
 
 function createMemoryStorage(initial = {}) {
   const values = new Map(Object.entries(initial));
@@ -158,6 +159,17 @@ test('toPropertyCardModel adapta la ficha detallada a tarjeta', () => {
   assert.equal(result.areaSquareMeters, 91);
   assert.equal(result.bedrooms, 3);
   assert.equal(result.coverPhoto.url, 'https://example.test/cover.webp');
+});
+
+test('buildNeighborhoodFilters fija una consulta estable por barrio', () => {
+  assert.deepEqual(buildNeighborhoodFilters(' Laureles ', ' Medellín '), {
+    page: 1,
+    pageSize: 12,
+    sort: 'publishedAtDesc',
+    municipality: 'Medellín',
+    neighborhood: 'Laureles',
+  });
+  assert.throws(() => buildNeighborhoodFilters('', 'Medellín'), /obligatorios/i);
 });
 
 test('PublicCatalogClient traduce respuesta Problem Details', async () => {

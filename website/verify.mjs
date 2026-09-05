@@ -61,6 +61,22 @@ for (const required of ['data-property-grid', 'data-favorites-count', 'data-unav
   if (!functionalFavorites.includes(required)) failures.push(`funcional/favoritos.html: falta ${required}`);
 }
 
+const neighborhoodDirectory = readFileSync(resolve(root, 'funcional/barrios.html'), 'utf8');
+for (const path of ['barrios/laureles.html', 'barrios/el-poblado.html', 'barrios/belen.html']) {
+  if (!neighborhoodDirectory.includes(`href="${path}"`)) failures.push(`funcional/barrios.html: falta enlace ${path}`);
+}
+
+for (const [file, neighborhood] of [
+  ['laureles.html', 'Laureles'],
+  ['el-poblado.html', 'El Poblado'],
+  ['belen.html', 'Belén'],
+]) {
+  const content = readFileSync(resolve(root, `funcional/barrios/${file}`), 'utf8');
+  for (const required of [`data-neighborhood="${neighborhood}"`, 'data-property-grid', 'data-empty', 'data-error', '<meta name="description"']) {
+    if (!content.includes(required)) failures.push(`funcional/barrios/${file}: falta ${required}`);
+  }
+}
+
 if (failures.length) {
   console.error(failures.join('\n'));
   process.exit(1);

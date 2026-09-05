@@ -175,6 +175,56 @@ legend { margin-bottom: 9px; color: var(--c-muted); font-size: .68rem; font-weig
 .contact-strip h2 { max-width: 720px; }
 .contact-strip p { max-width: 720px; margin: 22px 0 0; color: #dce8df; line-height: 1.65; }
 .contact-strip .inline-button { margin-top: 26px; border-color: #fff; color: #fff; }
+.text-link { color: var(--c-accent); font-weight: 700; }
+
+.neighborhood-preview { padding: var(--sp-xl) 0 var(--sp-2xl); border-top: 1px solid var(--c-line); }
+.neighborhood-preview .section-heading > .text-link { align-self: end; justify-self: end; padding-bottom: 7px; }
+.neighborhood-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--c-line); }
+.neighborhood-card { min-height: 320px; padding: 30px; border-right: 1px solid var(--c-line); background: var(--c-surface); }
+.neighborhood-card:last-child { border-right: 0; }
+.neighborhood-card > span,
+.area-directory-card span { color: var(--c-muted); font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.neighborhood-card strong { display: block; margin-top: 92px; font: 600 clamp(2.2rem, 4vw, 4rem)/1 var(--f-display); }
+.neighborhood-card p { max-width: 310px; margin: 17px 0 0; color: var(--c-muted); line-height: 1.65; }
+.neighborhood-card-featured { color: #fff; background: var(--c-accent); }
+.neighborhood-card-featured > span,
+.neighborhood-card-featured p { color: #c9d9cf; }
+
+.areas-hero { max-width: 1060px; padding: var(--sp-2xl) 0 var(--sp-xl); }
+.areas-hero h1 { margin: 18px 0 30px; font: 600 clamp(3.4rem, 7vw, 7.4rem)/.92 var(--f-display); letter-spacing: -.055em; }
+.areas-hero > p { max-width: 680px; color: var(--c-muted); font-size: 1.12rem; line-height: 1.75; }
+.areas-directory { padding: var(--sp-xl) 0 var(--sp-2xl); border-top: 1px solid var(--c-line); }
+.areas-directory .section-heading > p { max-width: 490px; margin: 0; color: var(--c-muted); line-height: 1.7; }
+.area-directory-grid { display: grid; gap: 1px; border: 1px solid var(--c-line); background: var(--c-line); }
+.area-directory-card { display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: end; min-height: 290px; padding: clamp(28px, 5vw, 62px); background: var(--c-surface); }
+.area-directory-card strong { display: block; margin: 35px 0 15px; font: 600 clamp(3rem, 6vw, 6.2rem)/.9 var(--f-display); letter-spacing: -.045em; }
+.area-directory-card p { max-width: 590px; margin: 0; color: var(--c-muted); line-height: 1.7; }
+.area-directory-card > a { padding-bottom: 6px; border-bottom: 1px solid currentColor; color: var(--c-accent); font-weight: 700; }
+.area-directory-card-featured { color: #fff; background: var(--c-accent); }
+.area-directory-card-featured span,
+.area-directory-card-featured p { color: #c9d9cf; }
+.area-directory-card-featured > a { color: #fff; }
+.area-principle { margin-bottom: var(--sp-2xl); padding: var(--sp-xl); background: var(--c-accent-soft); }
+.area-principle h2 { max-width: 850px; margin: 14px 0 22px; font: 600 clamp(2.5rem, 5vw, 5rem)/.98 var(--f-display); letter-spacing: -.04em; }
+.area-principle p { max-width: 630px; color: #415148; line-height: 1.7; }
+.area-principle .inline-button { margin-top: 20px; }
+
+.breadcrumb { display: flex; gap: 10px; padding-top: 54px; color: var(--c-muted); font-size: .78rem; }
+.breadcrumb a { color: var(--c-accent); font-weight: 700; }
+.neighborhood-hero { display: grid; grid-template-columns: 7fr 5fr; gap: clamp(40px, 8vw, 120px); align-items: end; padding: var(--sp-xl) 0 var(--sp-2xl); }
+.neighborhood-hero h1 { margin: 17px 0 0; font: 600 clamp(4rem, 8vw, 8.6rem)/.88 var(--f-display); letter-spacing: -.06em; }
+.neighborhood-hero > p { margin: 0 0 9px; color: var(--c-muted); font-size: 1.12rem; line-height: 1.75; }
+.neighborhood-notes { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--c-line); }
+.neighborhood-notes > div { min-height: 280px; padding: 30px; border-right: 1px solid var(--c-line); }
+.neighborhood-notes > div:last-child { border-right: 0; }
+.note-number { color: var(--c-accent); font: 600 1.1rem var(--f-display); }
+.neighborhood-notes h2 { margin: 54px 0 15px; font: 600 1.8rem var(--f-display); }
+.neighborhood-notes p { margin: 0; color: var(--c-muted); line-height: 1.7; }
+.neighborhood-inventory { padding: var(--sp-2xl) 0; }
+.neighborhood-inventory .section-heading > p { max-width: 470px; margin: 0; color: var(--c-muted); line-height: 1.7; }
+.next-areas { display: flex; gap: 26px; align-items: center; margin-bottom: var(--sp-2xl); padding: 25px 0; border-block: 1px solid var(--c-line); }
+.next-areas span { margin-right: auto; color: var(--c-muted); font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.next-areas a { color: var(--c-accent); font-weight: 700; }
 
 .owner-hero { display: grid; grid-template-columns: 7fr 5fr; gap: clamp(48px, 8vw, 120px); align-items: end; padding: var(--sp-2xl) 0 var(--sp-xl); }
 .owner-hero h1 { max-width: 850px; margin: 16px 0 0; font: 600 clamp(3.5rem, 7vw, 7.5rem)/.92 var(--f-display); letter-spacing: -.055em; }
@@ -301,13 +351,24 @@ footer > :last-child { justify-self: end; color: var(--c-accent); font-weight: 7
   .contact-strip { padding: 42px 24px; }
   .owner-hero,
   .owner-process,
-  .owner-form-section { grid-template-columns: 1fr; }
+  .owner-form-section,
+  .neighborhood-hero { grid-template-columns: 1fr; }
   .section-heading { grid-template-columns: 1fr; align-items: start; }
   .section-heading h2 { max-width: 100%; font-size: clamp(2.7rem, 12vw, 3.8rem); overflow-wrap: anywhere; }
   .owner-services,
   .service-grid,
   .service-card { min-width: 0; }
   .service-grid { grid-template-columns: 1fr; }
+  .neighborhood-card-grid,
+  .neighborhood-notes { grid-template-columns: 1fr; }
+  .neighborhood-card,
+  .neighborhood-notes > div { min-height: 260px; border-right: 0; border-bottom: 1px solid var(--c-line); }
+  .neighborhood-card:last-child,
+  .neighborhood-notes > div:last-child { border-bottom: 0; }
+  .neighborhood-card strong { margin-top: 54px; }
+  .area-directory-card { grid-template-columns: 1fr; align-items: start; }
+  .area-directory-card > a { width: max-content; margin-top: 25px; }
+  .neighborhood-preview .section-heading > .text-link { justify-self: start; }
   .service-card { min-height: 310px; border-right: 0; border-bottom: 1px solid var(--c-line); }
   .service-card:last-child { border-bottom: 0; }
   .service-card h3 { margin-top: 42px; }
@@ -346,4 +407,9 @@ footer > :last-child { justify-self: end; color: var(--c-accent); font-weight: 7
   .owner-process { padding: 36px 24px; }
   .owner-form { grid-template-columns: 1fr; padding: 28px 20px; }
   .owner-form-row { grid-template-columns: 1fr; }
+  .areas-hero h1,
+  .neighborhood-hero h1 { overflow-wrap: anywhere; }
+  .area-directory-card strong { font-size: clamp(2.8rem, 14vw, 4rem); }
+  .next-areas { align-items: flex-start; flex-direction: column; }
+  .next-areas span { margin-right: 0; }
 }

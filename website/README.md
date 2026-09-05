@@ -17,7 +17,7 @@ Luego visitar `http://localhost:4173`.
 - `concept-01-editorial/`: marca premium y propiedades curadas.
 - `concept-02-urban/`: marketplace, filtros y mapa como protagonistas.
 - `concept-03-cercano/`: asesoria humana y captacion de propietarios.
-- `funcional/`: listado, ficha, favoritos y captación de propietarios en HTML/CSS/JS conectados a Enlyce.Api.
+- `funcional/`: listado, ficha, favoritos, barrios y captación de propietarios en HTML/CSS/JS conectados a Enlyce.Api.
 - `assets/`: imagenes originales generadas para L&C.
 - `INVESTIGACION-COMPETIDORES.md`: patrones encontrados y oportunidades.
 - `OPCIONES-TECNOLOGICAS.md`: comparacion de stacks y recomendacion.
@@ -50,8 +50,9 @@ node website/verify.mjs
 
 Los tres conceptos siguen siendo simulaciones. `funcional/` consume el catalogo
 publico, muestra datos sinteticos, guarda favoritos locales y crea leads desde
-la ficha y el embudo de propietarios. WhatsApp permanece oculto hasta configurar
-un numero real.
+la ficha y el embudo de propietarios. También incluye páginas estáticas para
+Laureles, El Poblado y Belén con inventario vivo. WhatsApp permanece oculto
+hasta configurar un numero real.
 
 ## Direccion recomendada
 

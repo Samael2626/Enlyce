@@ -178,7 +178,7 @@ No crear miles de combinaciones indexables vacías. Facetas sin valor deben usar
 | Favoritos sin cuenta | Soportada | Web | Slugs locales, sincronización entre pestañas y retirados visibles; falta prueba con usuarios. |
 | Alertas guardadas | Ausente | Backend/Web | Posponer hasta tener envío, baja y consentimiento verificables. |
 | SEO por ficha | Parcial | Web | Renderizado indexable, canonical, metadata social y JSON-LD. |
-| SEO por zona/faceta | Ausente | Web/API | Crear solo páginas con inventario y contenido útil. |
+| SEO por zona/faceta | Parcial | Web/API | Laureles, El Poblado y Belén tienen HTML propio e inventario vivo; falta dominio, canonical y generación escalable. |
 | Mapa de resultados | Parcial | API/Web | Coordenadas existen; faltan mapa, clustering y búsqueda por área visible. |
 
 ## Backlog por dependencia
@@ -197,7 +197,7 @@ No crear miles de combinaciones indexables vacías. Facetas sin valor deben usar
 1. Código humano y búsqueda directa.
 2. Favoritos locales sin registro — HECHO en laboratorio; pendiente validación visual y con usuarios.
 3. Mapa de resultados con sincronización tarjeta/marcador.
-4. Páginas de zonas de Medellín con inventario real.
+4. Páginas de zonas de Medellín con inventario real — PARCIAL: índice y primeras tres páginas hechas en HTML.
 5. Propiedades relacionadas basadas en modalidad, barrio y rango de precio.
 
 ### P2 - después de validar tráfico
@@ -242,6 +242,8 @@ No crear miles de combinaciones indexables vacías. Facetas sin valor deben usar
 - Metrocuadrado: [portada](https://www.metrocuadrado.com/), [resultados en Medellín](https://www.metrocuadrado.com/apartamentos/venta/medellin/colombia/) y [ficha observada](https://www.metrocuadrado.com/inmueble/venta-apartamento-medellin-san-diego-3-habitaciones-2-banos-1-garajes/17166-M6462716).
 - Ciencuadras: [resultados en Medellín](https://www.ciencuadras.com/venta/venta/medellin/apartamento), [ficha observada](https://www.ciencuadras.com/inmueble/apartamento-en-venta-en-alejandria-medellin-3362949%26q) y [guía de La Candelaria](https://www.ciencuadras.com/blog/guia-de-barrio-la-candelaria-medellin).
 - Persistencia local: [MDN localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage), consultado mediante Context7 `/mdn/content`.
+- División territorial: [Alcaldía de Medellín — comunas y barrios](https://www.medellin.gov.co/es/conoce-algunos-datos-generales-de-la-ciudad/).
+- Patrón editorial competidor: [guía de Laureles de Ciencuadras](https://www.ciencuadras.com/blog/guia-de-barrio-laureles-medellin).
 - SEO estructurado: [RealEstateListing en Schema.org](https://schema.org/RealEstateListing) y [galería de datos estructurados compatibles con Google](https://developers.google.com/search/docs/appearance/structured-data/search-gallery).
 - L&C: `website/`, `docs/web/contrato-publicacion-inmueble.md` y `src/Enlyce.Api/Endpoints/PublicCatalog/PublicCatalogModule.cs`.
 
