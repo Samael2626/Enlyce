@@ -57,21 +57,25 @@ Fuentes primarias: [inicio de Metrocuadrado](https://www.metrocuadrado.com/), [p
 - Agenda de visita conectada al pipeline del CRM.
 - Propietario puede entender el estado de su proceso sin perseguir al asesor.
 
-## Brecha comprobada en Enlyce
+## Estado comprobado en Enlyce
 
-El backend actual solo expone `GET /api/inmuebles/{id}` y `POST /api/inmuebles/`. La entidad guarda cantidad de fotos, pero no URLs/archivos; tampoco slug publico, coordenadas, amenidades, administracion, estrato, fecha de publicacion ni indicador explicito de publicacion web.
+La brecha original de catálogo ya cerró. Enlyce expone `GET /api/public/inmuebles`
+con filtros, orden y paginación, además de `GET /api/public/inmuebles/{slug}`.
+El contrato incluye fotos, ubicación aproximada, amenidades, administración,
+estrato, fecha de publicación y asesor, sin datos del propietario ni dirección
+exacta.
 
-Antes del marketplace real hacen falta:
+Todavía faltan en la web productiva:
 
-- Consulta publica paginada con filtros y orden.
-- Modelo de publicaciones separado del estado operativo del inmueble.
-- Galeria real y almacenamiento de medios.
-- Coordenadas con politica de privacidad sobre direccion exacta.
-- Slugs, metadatos SEO y datos estructurados.
-- Endpoint de leads/visitas con consentimiento y origen de campana.
-- Favoritos persistentes o locales y alertas opcionales.
+- Consumir la API desde resultados y ficha reales.
+- Estados de carga, vacío, error, foto ausente y publicación retirada.
+- Metadatos SEO, canonical, sitemap y datos estructurados.
+- Asociar cada lead o visita con publicación, campaña, canal y consentimiento.
+- Código público corto, favoritos, mapa y alertas opcionales.
 
-Evidencia local: `src/Enlyce.Api/Endpoints/Inmuebles/InmueblesModule.cs`, `src/Enlyce.Domain/Entities/Inmueble.cs` y `src/Enlyce.Application/UseCases/GetInmuebleById/GetInmuebleByIdHandler.cs`.
+Evidencia local: `src/Enlyce.Api/Endpoints/PublicCatalog/PublicCatalogModule.cs`,
+`src/Enlyce.Application/PublicCatalog/` y
+`docs/web/contrato-publicacion-inmueble.md`.
 
 ## Confianza
 

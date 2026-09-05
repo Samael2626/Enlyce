@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ingenieria inversa web LYC"
+  short_description: "Analiza portales inmobiliarios para L&C"
+  default_prompt: "Usa $lyc-web-reverse-engineering para analizar un competidor web de L&C y convertir hallazgos en decisiones verificables."
