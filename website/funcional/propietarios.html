@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Solicita acompañamiento de L&C Propiedad Raíz para vender, arrendar o administrar tu inmueble en Medellín y el área metropolitana.">
+  <title>Propietarios | L&C Propiedad Raíz</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/owners.js"></script>
+</head>
+<body class="owner-page">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="L&C Propiedad Raíz, inicio">
+      <span class="brand-mark">L&C</span>
+      <span>Propiedad<br>Raíz</span>
+    </a>
+    <nav aria-label="Principal">
+      <a href="index.html">Inmuebles</a>
+      <a aria-current="page" href="propietarios.html">Propietarios</a>
+    </nav>
+    <a class="header-action" href="#solicitud">Hablar con L&C</a>
+  </header>
+
+  <main>
+    <section class="owner-hero" aria-labelledby="owner-title">
+      <div>
+        <span class="eyebrow">Para propietarios · Medellín</span>
+        <h1 id="owner-title">Tu inmueble merece gestión, no improvisación.</h1>
+      </div>
+      <div class="owner-intro">
+        <p>Cuéntanos si quieres vender, arrendar o delegar la administración. L&C revisa tu necesidad antes de proponerte un camino.</p>
+        <a class="primary-button inline-button" href="#servicios">Elegir servicio</a>
+      </div>
+    </section>
+
+    <section id="servicios" class="owner-services" aria-labelledby="services-title">
+      <div class="section-heading">
+        <span class="eyebrow">Tres necesidades, un solo equipo</span>
+        <h2 id="services-title">¿Qué quieres hacer con tu propiedad?</h2>
+      </div>
+      <div class="service-grid">
+        <article class="service-card">
+          <span>01</span>
+          <h3>Vender</h3>
+          <p>Inicia una conversación comercial sobre tu inmueble, su ubicación y el resultado que esperas.</p>
+          <a href="#solicitud" data-service-choice="Vender">Quiero vender <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="service-card">
+          <span>02</span>
+          <h3>Arrendar</h3>
+          <p>Presenta tu propiedad para que L&C conozca el tipo de inmueble y la zona antes de contactarte.</p>
+          <a href="#solicitud" data-service-choice="Arrendar">Quiero arrendar <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="service-card service-card-featured">
+          <span>03</span>
+          <h3>Administrar</h3>
+          <p>Solicita información sobre la administración de tu arriendo y define el alcance directamente con L&C.</p>
+          <a href="#solicitud" data-service-choice="Administrar">Quiero administración <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="owner-process" aria-labelledby="process-title">
+      <div>
+        <span class="eyebrow">Proceso claro</span>
+        <h2 id="process-title">Primero entendemos el inmueble.</h2>
+      </div>
+      <ol>
+        <li><strong>01</strong><span>Recibimos tus datos y el servicio que necesitas.</span></li>
+        <li><strong>02</strong><span>Un asesor revisa el inmueble y la zona.</span></li>
+        <li><strong>03</strong><span>L&C te explica el siguiente paso aplicable a tu caso.</span></li>
+      </ol>
+    </section>
+
+    <section id="solicitud" class="owner-form-section" aria-labelledby="form-title">
+      <div class="owner-form-copy">
+        <span class="eyebrow">Solicitud de propietario</span>
+        <h2 id="form-title">Empecemos por lo esencial.</h2>
+        <p>No publicamos datos privados ni la dirección exacta. Esta información entra al CRM de L&C para continuar el contacto.</p>
+      </div>
+      <form class="owner-form" data-owner-form>
+        <label><span>¿Qué necesitas?</span>
+          <select name="service" required>
+            <option value="">Selecciona un servicio</option>
+            <option value="Vender">Vender</option>
+            <option value="Arrendar">Arrendar</option>
+            <option value="Administrar">Administrar arriendo</option>
+          </select>
+        </label>
+        <label><span>Tipo de inmueble</span>
+          <select name="propertyType" required>
+            <option value="">Selecciona el tipo</option>
+            <option>Apartamento</option><option>Casa</option><option>Local</option>
+            <option>Oficina</option><option>Bodega</option><option>Lote</option><option>Finca</option>
+          </select>
+        </label>
+        <div class="owner-form-row">
+          <label><span>Municipio</span><input name="municipality" required maxlength="30" autocomplete="address-level2" placeholder="Medellín"></label>
+          <label><span>Barrio o sector</span><input name="neighborhood" required maxlength="30" autocomplete="address-level3" placeholder="Belén, Laureles…"></label>
+        </div>
+        <label><span>Nombre</span><input name="name" required maxlength="200" autocomplete="name"></label>
+        <div class="owner-form-row">
+          <label><span>Correo</span><input name="email" type="email" required autocomplete="email"></label>
+          <label><span>Celular</span><input name="phone" type="tel" required maxlength="20" autocomplete="tel" inputmode="tel"></label>
+        </div>
+        <label class="consent"><input name="consent" type="checkbox" required><span>Autorizo el tratamiento de mis datos para recibir asesoría sobre mi inmueble.</span></label>
+        <button class="primary-button" type="submit" data-owner-submit>Enviar solicitud</button>
+        <p class="form-feedback" role="status" data-owner-feedback></p>
+        <a class="whatsapp-button" hidden data-owner-whatsapp target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand" href="index.html"><span class="brand-mark">L&C</span><span>Propiedad<br>Raíz</span></a>
+    <p>Venta · Arriendo · Administración</p>
+    <a href="index.html">Ver inmuebles</a>
+  </footer>
+</body>
+</html>

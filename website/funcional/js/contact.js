@@ -10,3 +10,10 @@ export function buildWhatsAppUrl(number, property) {
   const message = `Hola, quiero información sobre ${property.publicTitle} (Ref. ${property.slug}).`;
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
+
+export function buildOwnerWhatsAppUrl(number, service = 'Administrar') {
+  if (!number) return '';
+
+  const message = `Hola, quiero información para ${service.toLowerCase()} mi inmueble con L&C.`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+}

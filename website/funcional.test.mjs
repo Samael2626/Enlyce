@@ -13,7 +13,8 @@ import {
   formatPropertyFacts,
   safeMediaUrl,
 } from './funcional/js/format.js';
-import { buildWhatsAppUrl, resolveWhatsAppNumber } from './funcional/js/contact.js';
+import { buildOwnerWhatsAppUrl, buildWhatsAppUrl, resolveWhatsAppNumber } from './funcional/js/contact.js';
+import { buildOwnerLeadPayload } from './funcional/js/owner-inquiry.js';
 
 test('buildCatalogUrl serializa solo filtros con valor', () => {
   const url = buildCatalogUrl('http://localhost:5019/', {
@@ -75,6 +76,40 @@ test('buildWhatsAppUrl crea mensaje contextual del inmueble', () => {
     'https://wa.me/573001234567?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20Apartamento%20Laureles%20(Ref.%20apartamento-laureles).',
   );
   assert.equal(buildWhatsAppUrl('', { publicTitle: 'Casa', slug: 'casa' }), '');
+});
+
+test('buildOwnerLeadPayload conserva administracion en la fuente y usa pipeline de arriendo', () => {
+  assert.deepEqual(buildOwnerLeadPayload({
+    name: 'Laura Gómez',
+    email: 'laura@example.test',
+    phone: '3001234567',
+    service: 'Administrar',
+    propertyType: 'Apartamento',
+    municipality: 'Medellín',
+    neighborhood: 'Belén|Rosales',
+    consent: true,
+  }), {
+    nombre: 'Laura Gómez',
+    email: 'laura@example.test',
+    telefono: '3001234567',
+    fuente: 'WebsiteOwner:Administrar:Apartamento:Medellín:Belén Rosales',
+    autorizacionDatos: true,
+    tipoOperacion: 'Arriendo',
+  });
+});
+
+test('buildOwnerLeadPayload rechaza un servicio desconocido', () => {
+  assert.throws(
+    () => buildOwnerLeadPayload({ service: 'Hipoteca' }),
+    /servicio no válido/i,
+  );
+});
+
+test('buildOwnerWhatsAppUrl crea mensaje para administracion', () => {
+  assert.equal(
+    buildOwnerWhatsAppUrl('573001234567', 'Administrar'),
+    'https://wa.me/573001234567?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20administrar%20mi%20inmueble%20con%20L%26C.',
+  );
 });
 
 test('PublicCatalogClient traduce respuesta Problem Details', async () => {

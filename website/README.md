@@ -49,8 +49,8 @@ node website/verify.mjs
 ## Estado
 
 Los tres conceptos siguen siendo simulaciones. `funcional/` consume el catalogo
-publico y crea leads desde la ficha; no incluye datos sinteticos ni WhatsApp
-hasta configurar un numero real.
+publico, muestra datos sinteticos y crea leads desde la ficha y el embudo de
+propietarios. WhatsApp permanece oculto hasta configurar un numero real.
 
 ## Direccion recomendada
 

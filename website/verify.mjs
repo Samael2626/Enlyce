@@ -51,6 +51,11 @@ for (const required of ['data-detail', 'data-gallery', 'data-lead-form', 'data-d
   if (!functionalDetail.includes(required)) failures.push(`funcional/inmueble.html: falta ${required}`);
 }
 
+const functionalOwners = readFileSync(resolve(root, 'funcional/propietarios.html'), 'utf8');
+for (const required of ['data-owner-form', 'data-owner-submit', 'data-service-choice', 'Administrar']) {
+  if (!functionalOwners.includes(required)) failures.push(`funcional/propietarios.html: falta ${required}`);
+}
+
 if (failures.length) {
   console.error(failures.join('\n'));
   process.exit(1);
