@@ -91,6 +91,21 @@ test('PublicCatalogClient traduce respuesta Problem Details', async () => {
   );
 });
 
+test('PublicCatalogClient ejecuta fetch con el receptor global del navegador', async () => {
+  const receiverAwareFetch = function () {
+    assert.equal(this, globalThis);
+    return Promise.resolve(new Response(JSON.stringify({ items: [], total: 0, page: 1, pageSize: 12 }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+  };
+  const client = new PublicCatalogClient('http://localhost:5019', receiverAwareFetch);
+
+  const result = await client.getProperties({ page: 1, pageSize: 12 });
+
+  assert.equal(result.total, 0);
+});
+
 test('PublicCatalogClient crea lead con JSON', async () => {
   let capturedRequest;
   const client = new PublicCatalogClient('http://localhost:5019', async (url, options) => {

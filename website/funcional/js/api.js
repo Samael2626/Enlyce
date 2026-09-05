@@ -53,7 +53,7 @@ async function readResponse(response) {
 export class PublicCatalogClient {
   constructor(apiBase = DEFAULT_API_BASE, fetchImplementation = fetch) {
     this.apiBase = apiBase.replace(/\/$/, '');
-    this.fetch = fetchImplementation;
+    this.fetch = fetchImplementation.bind(globalThis);
   }
 
   async getProperties(filters, signal) {
