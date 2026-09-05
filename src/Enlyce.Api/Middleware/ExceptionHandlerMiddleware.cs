@@ -30,6 +30,17 @@ public class ExceptionHandlerMiddleware
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        if (exception is BadHttpRequestException)
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            await Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Solicitud inválida",
+                detail: "Uno o más parámetros no tienen el formato esperado.")
+                .ExecuteAsync(context);
+            return;
+        }
+
         var (statusCode, message) = exception switch
         {
             DomainError e => (HttpStatusCode.BadRequest, e.Message),

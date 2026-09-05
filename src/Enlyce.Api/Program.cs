@@ -8,6 +8,7 @@ using Enlyce.Api.Endpoints.Interacciones;
 using Enlyce.Api.Endpoints.Leads;
 using Enlyce.Api.Endpoints.Pipeline;
 using Enlyce.Api.Endpoints.Politica;
+using Enlyce.Api.Endpoints.PublicCatalog;
 using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
 using Enlyce.Application;
@@ -105,6 +106,7 @@ app.MapPipeline();
 app.MapInteracciones();
 app.MapVisitas();
 app.MapAlertas();
+app.MapPublicCatalog();
 
 app.Run();
 

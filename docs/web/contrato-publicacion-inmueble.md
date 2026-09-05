@@ -65,6 +65,19 @@ fase posterior.
 Las URLs de medios son conceptuales. El proveedor de almacenamiento, CDN,
 variantes y URLs firmadas no están decididos.
 
+## Consulta y caché
+
+El listado acepta `page`, `pageSize`, `operation`, `propertyType`, `municipality`,
+`neighborhood`, `minPrice`, `maxPrice`, `minArea`, `maxArea`, `bedrooms`,
+`bathrooms`, `parkingSpaces` y `sort`. Habitaciones, baños y parqueaderos son
+mínimos. Los órdenes permitidos son `priceAsc`, `priceDesc` y
+`publishedAtDesc`; los empates se resuelven por identificador para mantener una
+paginación estable.
+
+Las respuestas correctas usan `Cache-Control: public,max-age=300`. Cinco minutos
+reducen consultas repetidas sin dejar pausas o retiros obsoletos durante horas.
+Los errores usan `no-store`.
+
 ## Ejemplo de listado
 
 ```json

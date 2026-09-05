@@ -1,4 +1,5 @@
 using Enlyce.Application.Auth;
+using Enlyce.Application.PublicCatalog;
 using Enlyce.Domain.Ports;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Email;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IInteraccionRepository, InteraccionRepository>();
         services.AddScoped<IVisitaRepository, VisitaRepository>();
+        services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddScoped<ITokenService, JwtTokenService>();
 

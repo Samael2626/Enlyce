@@ -5,6 +5,7 @@ using Enlyce.Application.Commands.Login;
 using Enlyce.Application.Commands.RegisterAsesor;
 using Enlyce.Application.Queries.Lead;
 using Enlyce.Application.Queries.Politica;
+using Enlyce.Application.PublicCatalog;
 using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.CreateLead;
 using Enlyce.Application.UseCases.GetInmuebleById;
@@ -21,6 +22,8 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse>, CreateInmuebleHandler>();
         services.AddScoped<IQueryHandler<GetLeadByIdQuery, GetLeadByIdResponse?>, GetLeadByIdHandler>();
         services.AddScoped<IQueryHandler<GetInmuebleByIdQuery, GetInmuebleByIdResponse?>, GetInmuebleByIdHandler>();
+        services.AddScoped<IQueryHandler<GetPublicPropertiesQuery, PublicPropertyPageResponse>, GetPublicPropertiesHandler>();
+        services.AddScoped<IQueryHandler<GetPublicPropertyBySlugQuery, PublicPropertyDetailResponse?>, GetPublicPropertyBySlugHandler>();
 
         services.AddScoped<LoginCommandHandler>();
         services.AddScoped<RegisterAsesorCommandHandler>();
