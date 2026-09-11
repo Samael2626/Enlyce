@@ -20,6 +20,7 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("Default")));
 
         services.AddScoped<ILeadRepository, LeadRepository>();
+        services.AddScoped<IPropertyPublicationRepository, PropertyPublicationRepository>();
         services.AddScoped<IInmuebleRepository, InmuebleRepository>();
         services.AddScoped<IPropietarioRepository, PropietarioRepository>();
         services.AddScoped<IAsesorRepository, AsesorRepository>();

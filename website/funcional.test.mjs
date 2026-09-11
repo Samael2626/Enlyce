@@ -6,6 +6,7 @@ import {
   PublicCatalogClient,
   buildCatalogUrl,
   buildDetailUrl,
+  buildVisitLeadPayload,
   normalizeProblem,
 } from './funcional/js/api.js';
 import {
@@ -49,6 +50,28 @@ test('buildDetailUrl codifica el slug', () => {
     buildDetailUrl('http://localhost:5019', 'apartamento laureles'),
     'http://localhost:5019/api/public/inmuebles/apartamento%20laureles',
   );
+});
+
+test('buildVisitLeadPayload envia la publicacion como dato estructurado', () => {
+  assert.deepEqual(buildVisitLeadPayload({
+    name: 'Ana',
+    email: 'ana@example.test',
+    phone: '3000000000',
+    consent: true,
+    property: {
+      id: '11111111-1111-1111-1111-111111111111',
+      slug: 'apartamento-laureles',
+      operation: 'Venta',
+    },
+  }), {
+    nombre: 'Ana',
+    email: 'ana@example.test',
+    telefono: '3000000000',
+    fuente: 'Website:apartamento-laureles',
+    autorizacionDatos: true,
+    tipoOperacion: 'Venta',
+    publicationId: '11111111-1111-1111-1111-111111111111',
+  });
 });
 
 test('normalizeProblem conserva errores de validacion', () => {

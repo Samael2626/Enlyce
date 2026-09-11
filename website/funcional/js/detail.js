@@ -1,4 +1,4 @@
-import { ApiError, PublicCatalogClient, resolveApiBase } from './api.js';
+import { ApiError, PublicCatalogClient, buildVisitLeadPayload, resolveApiBase } from './api.js';
 import { buildWhatsAppUrl, resolveWhatsAppNumber } from './contact.js';
 import { formatCurrency, formatLocation, safeMediaUrl } from './format.js';
 import { FavoritesStore, FAVORITES_STORAGE_KEY, updateFavoriteButton, updateFavoriteCounts } from './favorites.js';
@@ -144,14 +144,13 @@ leadForm.addEventListener('submit', async (event) => {
   feedback.textContent = 'Guardando tu solicitud…';
 
   try {
-    await client.createLead({
-      nombre: data.get('name'),
+    await client.createLead(buildVisitLeadPayload({
+      name: data.get('name'),
       email: data.get('email'),
-      telefono: data.get('phone'),
-      fuente: `Website:${property.slug}`,
-      autorizacionDatos: data.get('consent') === 'on',
-      tipoOperacion: property.operation === 'Arriendo' ? 'Arriendo' : 'Venta',
-    });
+      phone: data.get('phone'),
+      consent: data.get('consent') === 'on',
+      property,
+    }));
     feedback.classList.add('is-success');
     feedback.textContent = 'Solicitud recibida. Un asesor de L&C podrá continuar el proceso.';
     leadForm.reset();

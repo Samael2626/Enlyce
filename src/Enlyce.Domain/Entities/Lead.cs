@@ -50,6 +50,7 @@ public sealed class Lead
 
     public string TipoOperacion { get; internal set; } = "Venta";
     public OwnerInquiryService? OwnerService { get; internal set; }
+    public Guid? PublicationId { get; internal set; }
     public string EtapaPipeline { get; internal set; } = EtapasPipeline.LeadNuevo;
     public int InteraccionesCount { get; internal set; }
     public DateTime? FechaUltimaInteraccion { get; internal set; }
@@ -64,7 +65,8 @@ public sealed class Lead
         bool autorizacionDatos, bool activo,
         string tipoOperacion, string etapaPipeline,
         int interaccionesCount, DateTime? fechaUltimaInteraccion,
-        DateTime fechaActualizacion, OwnerInquiryService? ownerService)
+        DateTime fechaActualizacion, OwnerInquiryService? ownerService,
+        Guid? publicationId)
     {
         Id = id;
         Nombre = nombre;
@@ -82,6 +84,7 @@ public sealed class Lead
         Activo = activo;
         TipoOperacion = tipoOperacion;
         OwnerService = ownerService;
+        PublicationId = publicationId;
         EtapaPipeline = etapaPipeline;
         InteraccionesCount = interaccionesCount;
         FechaUltimaInteraccion = fechaUltimaInteraccion;
@@ -90,7 +93,7 @@ public sealed class Lead
 
     public static Lead Crear(string nombre, Email email, Telefono? telefono,
         string fuente, bool autorizacionDatos, string tipoOperacion = "Venta",
-        OwnerInquiryService? ownerService = null)
+        OwnerInquiryService? ownerService = null, Guid? publicationId = null)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del lead no puede ser vacio.");
@@ -102,6 +105,9 @@ public sealed class Lead
             throw new DomainError($"Tipo de operacion no valido: {tipoOperacion}");
 
         ValidateOwnerService(ownerService, tipoOperacion);
+
+        if (publicationId == Guid.Empty)
+            throw new DomainError("El identificador de publicacion no puede ser vacio.");
 
         var now = DateTime.UtcNow;
 
@@ -125,7 +131,8 @@ public sealed class Lead
             0,
             null,
             now,
-            ownerService);
+            ownerService,
+            publicationId);
     }
 
     public static Lead Reconstituir(Guid id, string nombre, Email email, Telefono? telefono,
@@ -136,7 +143,8 @@ public sealed class Lead
         string? tipoOperacion = null, string? etapaPipeline = null,
         int interaccionesCount = 0, DateTime? fechaUltimaInteraccion = null,
         DateTime? fechaActualizacion = null,
-        OwnerInquiryService? ownerService = null)
+        OwnerInquiryService? ownerService = null,
+        Guid? publicationId = null)
     {
         return new Lead(id, nombre, email, telefono, fuente, estado, motivoCierre,
             notasCierre, asesorAsignadoId, fechaCreacion, fechaUltimoContacto,
@@ -146,7 +154,8 @@ public sealed class Lead
             interaccionesCount,
             fechaUltimaInteraccion,
             fechaActualizacion ?? fechaCreacion,
-            ownerService);
+            ownerService,
+            publicationId);
     }
 
     private static void ValidateOwnerService(

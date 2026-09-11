@@ -6,4 +6,5 @@ public record CreateLeadResponse(
     string Email,
     string Estado,
     DateTime FechaCreacion,
-    string? OwnerService);
+    string? OwnerService,
+    Guid? PublicationId);

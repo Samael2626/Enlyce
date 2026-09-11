@@ -7,4 +7,5 @@ public record CreateLeadCommand(
     string? Fuente,
     bool AutorizacionDatos,
     string TipoOperacion = "Venta",
-    string? OwnerService = null);
+    string? OwnerService = null,
+    string? PublicationId = null);

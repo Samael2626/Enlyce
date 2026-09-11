@@ -195,4 +195,94 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task PostVisitLead_WithPublishedPublication_PersistsReferenceAndAssignsAdvisor()
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        await PublicCatalogTestData.SeedAsync(db);
+        var publication = await db.PropertyPublications
+            .SingleAsync(item => item.Slug == PublicCatalogTestData.PublishedApartmentSlug);
+        var request = new CreateLeadRequest(
+            "Visitante Publicacion",
+            $"visit-{Guid.NewGuid():N}@test.com",
+            "3104444444",
+            $"Website:{publication.Slug}",
+            true,
+            "Venta",
+            null,
+            publication.Id.ToString());
+
+        var response = await _client.PostAsJsonAsync("/api/leads", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        await using var command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText = """
+            SELECT "PublicationId", "AsesorAsignadoId"
+            FROM "Leads"
+            WHERE "Id" = $leadId
+            """;
+        var leadParameter = command.CreateParameter();
+        leadParameter.ParameterName = "$leadId";
+        leadParameter.Value = result!.Id;
+        command.Parameters.Add(leadParameter);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        Assert.True(await reader.ReadAsync());
+        Assert.Equal(publication.Id, Guid.Parse(reader.GetString(0)));
+        Assert.Equal(publication.AdvisorId, Guid.Parse(reader.GetString(1)));
+    }
+
+    [Fact]
+    public async Task PostVisitLead_WithMissingPublication_CreatesUnassignedLead()
+    {
+        var publicationId = Guid.NewGuid();
+        var request = new CreateLeadRequest(
+            "Visitante Sin Publicacion",
+            $"missing-{Guid.NewGuid():N}@test.com",
+            null,
+            "Website:retirada",
+            true,
+            "Venta",
+            null,
+            publicationId.ToString());
+
+        var response = await _client.PostAsJsonAsync("/api/leads", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        Assert.Equal(publicationId, result!.PublicationId);
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == result.Id);
+        Assert.Null(lead.AsesorAsignadoId);
+        Assert.Contains("PublicationReview:", lead.Fuente);
+    }
+
+    [Fact]
+    public async Task PostVisitLead_WithMalformedPublicationId_CreatesLeadForReview()
+    {
+        var request = new CreateLeadRequest(
+            "Visitante Id Invalido",
+            $"invalid-publication-{Guid.NewGuid():N}@test.com",
+            null,
+            "Website:referencia-manual",
+            true,
+            "Venta",
+            null,
+            "not-a-guid");
+
+        var response = await _client.PostAsJsonAsync("/api/leads", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        Assert.Null(result!.PublicationId);
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == result.Id);
+        Assert.Null(lead.AsesorAsignadoId);
+        Assert.Contains("PublicationReview:not-a-guid", lead.Fuente);
+    }
 }

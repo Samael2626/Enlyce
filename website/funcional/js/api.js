@@ -30,6 +30,18 @@ export function buildDetailUrl(apiBase, slug) {
   return `${apiBase.replace(/\/$/, '')}/api/public/inmuebles/${encodeURIComponent(slug)}`;
 }
 
+export function buildVisitLeadPayload({ name, email, phone, consent, property }) {
+  return {
+    nombre: name,
+    email,
+    telefono: phone,
+    fuente: `Website:${property.slug}`,
+    autorizacionDatos: consent,
+    tipoOperacion: property.operation === 'Arriendo' ? 'Arriendo' : 'Venta',
+    publicationId: property.id,
+  };
+}
+
 export function normalizeProblem(problem) {
   const title = typeof problem?.title === 'string' ? problem.title : 'No pudimos completar la solicitud';
   const validationMessages = problem?.errors && typeof problem.errors === 'object'

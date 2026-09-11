@@ -90,6 +90,30 @@ public class LeadTests
     }
 
     [Fact]
+    public void Create_WithPublicationId_StoresStructuredValue()
+    {
+        var publicationId = Guid.NewGuid();
+
+        var lead = Lead.Crear(
+            "Visitante",
+            ValidEmail(),
+            null,
+            "Website:apartamento-laureles",
+            true,
+            publicationId: publicationId);
+
+        Assert.Equal(publicationId, lead.PublicationId);
+    }
+
+    [Fact]
+    public void Create_WithoutPublicationId_LeavesStructuredValueNull()
+    {
+        var lead = CrearLead();
+
+        Assert.Null(lead.PublicationId);
+    }
+
+    [Fact]
     public void AsignarAsesor_DesdeNuevo_CambiaAContactado()
     {
         var lead = CrearLead();
