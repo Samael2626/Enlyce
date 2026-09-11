@@ -1,7 +1,7 @@
-const serviceOperations = new Map([
-  ['Vender', 'Venta'],
-  ['Arrendar', 'Arriendo'],
-  ['Administrar', 'Arriendo'],
+const ownerServices = new Map([
+  ['Vender', { operationType: 'Venta', ownerService: 'Sell' }],
+  ['Arrendar', { operationType: 'Arriendo', ownerService: 'Rent' }],
+  ['Administrar', { operationType: 'Arriendo', ownerService: 'Manage' }],
 ]);
 
 function cleanSourcePart(value) {
@@ -9,13 +9,12 @@ function cleanSourcePart(value) {
 }
 
 export function buildOwnerLeadPayload(input) {
-  const service = cleanSourcePart(input.service);
-  const operation = serviceOperations.get(service);
-  if (!operation) throw new Error('El servicio no válido no puede enviarse.');
+  const selectedService = cleanSourcePart(input.ownerService);
+  const service = ownerServices.get(selectedService);
+  if (!service) throw new Error('El servicio no válido no puede enviarse.');
 
   const source = [
     'WebsiteOwner',
-    service,
     input.propertyType,
     input.municipality,
     input.neighborhood,
@@ -27,6 +26,7 @@ export function buildOwnerLeadPayload(input) {
     telefono: String(input.phone || '').trim(),
     fuente: source.slice(0, 100),
     autorizacionDatos: Boolean(input.consent),
-    tipoOperacion: operation,
+    tipoOperacion: service.operationType,
+    ownerService: service.ownerService,
   };
 }

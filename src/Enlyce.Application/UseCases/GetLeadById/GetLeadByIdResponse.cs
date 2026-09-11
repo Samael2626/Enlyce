@@ -13,4 +13,5 @@ public record GetLeadByIdResponse(
     bool AutorizacionDatos,
     bool Activo,
     string EtapaPipeline,
-    string TipoOperacion);
+    string TipoOperacion,
+    string? OwnerService);

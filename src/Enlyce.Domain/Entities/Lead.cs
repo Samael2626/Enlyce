@@ -24,6 +24,13 @@ public enum MotivoCierre
     CerradoGanado
 }
 
+public enum OwnerInquiryService
+{
+    Sell,
+    Rent,
+    Manage
+}
+
 public sealed class Lead
 {
     public Guid Id { get; internal set; }
@@ -42,6 +49,7 @@ public sealed class Lead
     public bool Activo { get; internal set; }
 
     public string TipoOperacion { get; internal set; } = "Venta";
+    public OwnerInquiryService? OwnerService { get; internal set; }
     public string EtapaPipeline { get; internal set; } = EtapasPipeline.LeadNuevo;
     public int InteraccionesCount { get; internal set; }
     public DateTime? FechaUltimaInteraccion { get; internal set; }
@@ -56,7 +64,7 @@ public sealed class Lead
         bool autorizacionDatos, bool activo,
         string tipoOperacion, string etapaPipeline,
         int interaccionesCount, DateTime? fechaUltimaInteraccion,
-        DateTime fechaActualizacion)
+        DateTime fechaActualizacion, OwnerInquiryService? ownerService)
     {
         Id = id;
         Nombre = nombre;
@@ -73,6 +81,7 @@ public sealed class Lead
         AutorizacionDatos = autorizacionDatos;
         Activo = activo;
         TipoOperacion = tipoOperacion;
+        OwnerService = ownerService;
         EtapaPipeline = etapaPipeline;
         InteraccionesCount = interaccionesCount;
         FechaUltimaInteraccion = fechaUltimaInteraccion;
@@ -80,7 +89,8 @@ public sealed class Lead
     }
 
     public static Lead Crear(string nombre, Email email, Telefono? telefono,
-        string fuente, bool autorizacionDatos, string tipoOperacion = "Venta")
+        string fuente, bool autorizacionDatos, string tipoOperacion = "Venta",
+        OwnerInquiryService? ownerService = null)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del lead no puede ser vacio.");
@@ -90,6 +100,8 @@ public sealed class Lead
 
         if (!EtapasPipeline.EsTipoOperacionValida(tipoOperacion))
             throw new DomainError($"Tipo de operacion no valido: {tipoOperacion}");
+
+        ValidateOwnerService(ownerService, tipoOperacion);
 
         var now = DateTime.UtcNow;
 
@@ -112,7 +124,8 @@ public sealed class Lead
             EtapasPipeline.LeadNuevo,
             0,
             null,
-            now);
+            now,
+            ownerService);
     }
 
     public static Lead Reconstituir(Guid id, string nombre, Email email, Telefono? telefono,
@@ -122,7 +135,8 @@ public sealed class Lead
         bool autorizacionDatos, bool activo,
         string? tipoOperacion = null, string? etapaPipeline = null,
         int interaccionesCount = 0, DateTime? fechaUltimaInteraccion = null,
-        DateTime? fechaActualizacion = null)
+        DateTime? fechaActualizacion = null,
+        OwnerInquiryService? ownerService = null)
     {
         return new Lead(id, nombre, email, telefono, fuente, estado, motivoCierre,
             notasCierre, asesorAsignadoId, fechaCreacion, fechaUltimoContacto,
@@ -131,7 +145,27 @@ public sealed class Lead
             etapaPipeline ?? EtapasPipeline.LeadNuevo,
             interaccionesCount,
             fechaUltimaInteraccion,
-            fechaActualizacion ?? fechaCreacion);
+            fechaActualizacion ?? fechaCreacion,
+            ownerService);
+    }
+
+    private static void ValidateOwnerService(
+        OwnerInquiryService? ownerService,
+        string operationType)
+    {
+        if (ownerService is null)
+            return;
+
+        if (!Enum.IsDefined(ownerService.Value))
+            throw new DomainError($"Servicio de propietario no valido: {ownerService}");
+
+        var expectedOperation = ownerService == OwnerInquiryService.Sell
+            ? "Venta"
+            : "Arriendo";
+
+        if (operationType != expectedOperation)
+            throw new DomainError(
+                $"El servicio {ownerService} requiere TipoOperacion {expectedOperation}.");
     }
 
     public void AsignarAsesor(Guid asesorId)

@@ -5,4 +5,5 @@ public record CreateLeadResponse(
     string Nombre,
     string Email,
     string Estado,
-    DateTime FechaCreacion);
+    DateTime FechaCreacion,
+    string? OwnerService);

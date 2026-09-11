@@ -3,6 +3,9 @@ using System.Net.Http.Json;
 using Enlyce.Api.Endpoints.Leads;
 using Enlyce.Application.UseCases.CreateLead;
 using Enlyce.Application.UseCases.GetLeadById;
+using Enlyce.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Enlyce.IntegrationTests;
@@ -10,9 +13,11 @@ namespace Enlyce.IntegrationTests;
 public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
 
     public LeadsEndpointTests(TestWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -115,5 +120,79 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal("pedro@test.com", lead.Email);
         Assert.True(lead.AutorizacionDatos);
         Assert.True(lead.Activo);
+    }
+
+    [Fact]
+    public async Task PostOwnerLeads_PersistsRentAndManageAsDistinctStructuredValues()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        var rentEmail = $"rent-{suffix}@test.com";
+        var manageEmail = $"manage-{suffix}@test.com";
+
+        var rentResponse = await _client.PostAsJsonAsync("/api/leads", new CreateLeadRequest(
+            "Propietario Arriendo",
+            rentEmail,
+            "3101111111",
+            "WebsiteOwner:Apartamento:Medellin:Laureles",
+            true,
+            "Arriendo",
+            "Rent"));
+        var manageResponse = await _client.PostAsJsonAsync("/api/leads", new CreateLeadRequest(
+            "Propietario Administracion",
+            manageEmail,
+            "3102222222",
+            "WebsiteOwner:Apartamento:Medellin:Belen",
+            true,
+            "Arriendo",
+            "Manage"));
+
+        Assert.Equal(HttpStatusCode.Created, rentResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, manageResponse.StatusCode);
+        var rentLead = await rentResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        var manageLead = await manageResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        Assert.Equal("Rent", rentLead!.OwnerService);
+        Assert.Equal("Manage", manageLead!.OwnerService);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        await using var command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText = """
+            SELECT "OwnerService"
+            FROM "Leads"
+            WHERE "Email" IN ($rentEmail, $manageEmail)
+            ORDER BY "OwnerService"
+            """;
+        var rentParameter = command.CreateParameter();
+        rentParameter.ParameterName = "$rentEmail";
+        rentParameter.Value = rentEmail;
+        command.Parameters.Add(rentParameter);
+        var manageParameter = command.CreateParameter();
+        manageParameter.ParameterName = "$manageEmail";
+        manageParameter.Value = manageEmail;
+        command.Parameters.Add(manageParameter);
+
+        var values = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            values.Add(reader.GetString(0));
+
+        Assert.Equal(["Manage", "Rent"], values);
+    }
+
+    [Fact]
+    public async Task PostOwnerLead_WithOperationMismatch_ReturnsBadRequest()
+    {
+        var request = new CreateLeadRequest(
+            "Propietario Invalido",
+            $"invalid-{Guid.NewGuid():N}@test.com",
+            "3103333333",
+            "WebsiteOwner",
+            true,
+            "Venta",
+            "Manage");
+
+        var response = await _client.PostAsJsonAsync("/api/leads", request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }

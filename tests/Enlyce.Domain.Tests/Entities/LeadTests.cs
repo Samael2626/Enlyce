@@ -42,6 +42,53 @@ public class LeadTests
         Assert.Equal("Manual", lead.Fuente);
     }
 
+    [Theory]
+    [InlineData(OwnerInquiryService.Sell, "Venta")]
+    [InlineData(OwnerInquiryService.Rent, "Arriendo")]
+    [InlineData(OwnerInquiryService.Manage, "Arriendo")]
+    public void Create_WithValidOwnerService_StoresStructuredValue(
+        OwnerInquiryService ownerService,
+        string operationType)
+    {
+        var lead = Lead.Crear(
+            "Propietario",
+            ValidEmail(),
+            null,
+            "WebsiteOwner",
+            true,
+            operationType,
+            ownerService);
+
+        Assert.Equal(ownerService, lead.OwnerService);
+        Assert.Equal(operationType, lead.TipoOperacion);
+    }
+
+    [Theory]
+    [InlineData(OwnerInquiryService.Sell, "Arriendo")]
+    [InlineData(OwnerInquiryService.Rent, "Venta")]
+    [InlineData(OwnerInquiryService.Manage, "Venta")]
+    public void Create_WithOwnerServiceOperationMismatch_ThrowsDomainError(
+        OwnerInquiryService ownerService,
+        string operationType)
+    {
+        Assert.Throws<DomainError>(() => Lead.Crear(
+            "Propietario",
+            ValidEmail(),
+            null,
+            "WebsiteOwner",
+            true,
+            operationType,
+            ownerService));
+    }
+
+    [Fact]
+    public void Create_WithoutOwnerService_LeavesStructuredValueNull()
+    {
+        var lead = CrearLead();
+
+        Assert.Null(lead.OwnerService);
+    }
+
     [Fact]
     public void AsignarAsesor_DesdeNuevo_CambiaAContactado()
     {

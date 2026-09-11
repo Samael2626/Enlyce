@@ -1,5 +1,6 @@
 using Enlyce.Application.Abstractions;
 using Enlyce.Domain.Entities;
+using Enlyce.Domain.Errors;
 using Enlyce.Domain.Ports;
 using Enlyce.Domain.ValueObjects;
 
@@ -28,12 +29,13 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
     {
         var email = Email.Create(command.Email);
         var telefono = command.Telefono is not null ? Telefono.Create(command.Telefono) : null;
+        var ownerService = ParseOwnerService(command.OwnerService);
 
         if (await _leadRepo.ExistsByEmailAsync(email))
             throw new InvalidOperationException($"Ya existe un lead con email {command.Email}");
 
         var lead = Lead.Crear(command.Nombre, email, telefono, command.Fuente ?? "Manual",
-            command.AutorizacionDatos, command.TipoOperacion);
+            command.AutorizacionDatos, command.TipoOperacion, ownerService);
 
         var saved = await _leadRepo.SaveAsync(lead);
 
@@ -58,6 +60,19 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
 
         return new CreateLeadResponse(
             saved.Id, saved.Nombre, saved.Email.Value,
-            saved.Estado.ToString(), saved.FechaCreacion);
+            saved.Estado.ToString(), saved.FechaCreacion,
+            saved.OwnerService?.ToString());
+    }
+
+    private static OwnerInquiryService? ParseOwnerService(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (!Enum.TryParse<OwnerInquiryService>(value, false, out var ownerService) ||
+            !Enum.IsDefined(ownerService))
+            throw new DomainError($"Servicio de propietario no valido: {value}");
+
+        return ownerService;
     }
 }

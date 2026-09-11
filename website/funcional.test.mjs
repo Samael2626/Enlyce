@@ -90,12 +90,12 @@ test('buildWhatsAppUrl crea mensaje contextual del inmueble', () => {
   assert.equal(buildWhatsAppUrl('', { publicTitle: 'Casa', slug: 'casa' }), '');
 });
 
-test('buildOwnerLeadPayload conserva administracion en la fuente y usa pipeline de arriendo', () => {
+test('buildOwnerLeadPayload envia administracion como dato estructurado', () => {
   assert.deepEqual(buildOwnerLeadPayload({
     name: 'Laura Gómez',
     email: 'laura@example.test',
     phone: '3001234567',
-    service: 'Administrar',
+    ownerService: 'Administrar',
     propertyType: 'Apartamento',
     municipality: 'Medellín',
     neighborhood: 'Belén|Rosales',
@@ -104,15 +104,31 @@ test('buildOwnerLeadPayload conserva administracion en la fuente y usa pipeline 
     nombre: 'Laura Gómez',
     email: 'laura@example.test',
     telefono: '3001234567',
-    fuente: 'WebsiteOwner:Administrar:Apartamento:Medellín:Belén Rosales',
+    fuente: 'WebsiteOwner:Apartamento:Medellín:Belén Rosales',
     autorizacionDatos: true,
     tipoOperacion: 'Arriendo',
+    ownerService: 'Manage',
   });
+});
+
+test('buildOwnerLeadPayload distingue arrendar de administrar', () => {
+  const baseInput = {
+    name: 'Laura Gómez',
+    email: 'laura@example.test',
+    phone: '3001234567',
+    propertyType: 'Apartamento',
+    municipality: 'Medellín',
+    neighborhood: 'Belén',
+    consent: true,
+  };
+
+  assert.equal(buildOwnerLeadPayload({ ...baseInput, ownerService: 'Arrendar' }).ownerService, 'Rent');
+  assert.equal(buildOwnerLeadPayload({ ...baseInput, ownerService: 'Administrar' }).ownerService, 'Manage');
 });
 
 test('buildOwnerLeadPayload rechaza un servicio desconocido', () => {
   assert.throws(
-    () => buildOwnerLeadPayload({ service: 'Hipoteca' }),
+    () => buildOwnerLeadPayload({ ownerService: 'Hipoteca' }),
     /servicio no válido/i,
   );
 });

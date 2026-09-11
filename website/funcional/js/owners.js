@@ -40,7 +40,7 @@ form.addEventListener('submit', async (event) => {
       name: data.get('name'),
       email: data.get('email'),
       phone: data.get('phone'),
-      service: data.get('service'),
+      ownerService: data.get('service'),
       propertyType: data.get('propertyType'),
       municipality: data.get('municipality'),
       neighborhood: data.get('neighborhood'),

@@ -30,6 +30,7 @@ public class GetLeadByIdHandler : IQueryHandler<GetLeadByIdQuery, GetLeadByIdRes
             lead.AutorizacionDatos,
             lead.Activo,
             lead.EtapaPipeline,
-            lead.TipoOperacion);
+            lead.TipoOperacion,
+            lead.OwnerService?.ToString());
     }
 }
