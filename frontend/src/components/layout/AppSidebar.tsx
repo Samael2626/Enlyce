@@ -10,7 +10,7 @@ import {
   BarChart3,
   Bell,
   Settings,
-  Building2,
+  LayoutDashboard,
 } from "lucide-react"
 
 const iconMap: Record<string, React.ElementType> = {
@@ -22,6 +22,7 @@ const iconMap: Record<string, React.ElementType> = {
   BarChart3,
   Bell,
   Settings,
+  LayoutDashboard,
 }
 
 interface AppSidebarProps {
@@ -34,22 +35,23 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
   return (
     <aside
       className={cn(
-        "flex flex-col h-screen border-r transition-all duration-300",
-        "bg-[#1a4d2e] text-white dark:bg-[#1e293b]",
-        collapsed ? "w-16" : "w-64"
+        "flex flex-col border-r border-white/10 bg-sidebar text-sidebar-foreground lg:h-screen lg:flex-shrink-0",
+        collapsed ? "lg:w-20" : "lg:w-64"
       )}
     >
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-4 h-14 border-b border-white/10">
-        <Building2 className="h-6 w-6 text-[#c9a84c] flex-shrink-0" />
+      <div className="flex h-24 items-center gap-3 border-b border-white/15 px-5">
+        <span role="img" aria-label="L&C Propiedad Raíz" className="crm-brand-seal h-16 w-16" />
         {!collapsed && (
-          <span className="text-lg font-semibold tracking-tight">Enlyce</span>
+          <div>
+            <span className="block font-display text-[1.65rem] leading-none tracking-tight">Enlyce</span>
+            <span className="mt-1 block text-[.61rem] font-semibold uppercase tracking-[.17em] text-white/65">Espacio de trabajo</span>
+          </div>
         )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3">
-        <ul className="space-y-1 px-2">
+      <nav aria-label="Navegación principal" className="overflow-x-auto lg:flex-1 lg:overflow-y-auto lg:py-7">
+        {!collapsed && <p className="hidden px-6 pb-3 text-[.65rem] font-bold uppercase tracking-[.18em] text-white/45 lg:block">Operación diaria</p>}
+        <ul className="flex gap-1 px-3 py-2 lg:block lg:space-y-1 lg:px-3 lg:py-0">
           {NAV_ITEMS.map((item) => {
             const Icon = iconMap[item.icon]
             const isActive = location.pathname === item.href
@@ -59,14 +61,14 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
                 <NavLink
                   to={item.href}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center gap-3 whitespace-nowrap rounded-md border border-transparent px-3 py-3 text-[.83rem] font-semibold transition-colors lg:border-l-2",
                     isActive
-                      ? "bg-white/15 text-white"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                      ? "border-white/25 bg-white/12 text-white lg:border-l-accent"
+                      : "text-white/70 hover:bg-white/8 hover:text-white"
                   )}
                   title={collapsed ? item.title : undefined}
                 >
-                  {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
+                  {Icon && <Icon className={cn("h-4 w-4 flex-shrink-0", isActive && "text-[#dca782]")} />}
                   {!collapsed && <span>{item.title}</span>}
                 </NavLink>
               </li>
@@ -75,10 +77,10 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
         </ul>
       </nav>
 
-      {/* Footer */}
       {!collapsed && (
-        <div className="px-4 py-3 border-t border-white/10">
-          <p className="text-xs text-white/50">L&C Propiedad Raiz</p>
+        <div className="hidden border-t border-white/15 px-6 py-5 lg:block">
+          <p className="text-[.67rem] font-semibold uppercase tracking-[.13em] text-white/65">L&C Propiedad Raíz</p>
+          <p className="mt-1 text-xs text-white/45">Tu hogar, nuestra prioridad.</p>
         </div>
       )}
     </aside>

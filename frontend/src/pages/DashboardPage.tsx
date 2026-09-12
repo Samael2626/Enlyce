@@ -2,7 +2,6 @@ import { usePipeline, useAlertas, useVisitas } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 import {
   Users,
-  Home,
   CalendarCheck,
   AlertTriangle,
   TrendingUp,
@@ -10,7 +9,7 @@ import {
   ArrowUpRight,
   Activity,
 } from "lucide-react"
-import { format, parseISO, differenceInDays } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 
 export function DashboardPage() {
@@ -47,65 +46,63 @@ export function DashboardPage() {
       : 0
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#1a4d2e] to-[#22c55e] dark:from-[#154225] dark:to-[#16a34a] rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold">
-          Bienvenido, {user?.nombre || "Asesor"}
+    <div className="space-y-8">
+      <div className="crm-hero flex min-h-[250px] flex-col justify-end rounded-lg p-7 md:p-10">
+        <span className="text-[.7rem] font-bold uppercase tracking-[.18em] text-[#e7b99f]">Pulso comercial</span>
+        <h1 className="mt-4 max-w-3xl font-display text-[clamp(2.6rem,5vw,5rem)] leading-[.95] tracking-[-.05em]">
+          Buen día, {user?.nombre || "Asesor"}.
         </h1>
-        <p className="text-white/80 mt-1">
-          Resumen de tu actividad inmobiliaria
-        </p>
+        <p className="mt-4 max-w-xl text-sm leading-6 text-white/80">Tu actividad inmobiliaria, clara y en movimiento.</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div>
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div><span className="crm-eyebrow">Vista general</span><h2 className="mt-2 font-display text-3xl tracking-tight">Los números de hoy</h2></div>
+          <span className="hidden text-xs font-semibold uppercase tracking-widest text-muted-foreground sm:block">L&C Propiedad Raíz</span>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KPICard
           icon={<Users className="h-5 w-5" />}
-          label="Total Leads"
+          label="Total de leads"
           value={totalLeads}
-          color="bg-[#1a4d2e] dark:bg-[#22c55e]"
           loading={loadingPipeline}
         />
         <KPICard
           icon={<Activity className="h-5 w-5" />}
-          label="Leads Activos"
+          label="Leads activos"
           value={leadsActivos.length}
-          color="bg-[#3b82f6]"
           loading={loadingPipeline}
         />
         <KPICard
           icon={<CalendarCheck className="h-5 w-5" />}
-          label="Visitas Pendientes"
+          label="Visitas pendientes"
           value={visitasPendientes.length}
-          color="bg-[#f59e0b]"
           loading={loadingVisitas}
         />
         <KPICard
           icon={<TrendingUp className="h-5 w-5" />}
-          label="Tasa Conversion"
+          label="Tasa de conversión"
           value={`${tasaConversion}%`}
-          color="bg-[#c9a84c]"
           loading={loadingPipeline}
         />
+        </div>
       </div>
 
-      {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Pipeline chart */}
-        <div className="lg:col-span-2 bg-card rounded-lg border p-4">
-          <h2 className="font-semibold text-foreground mb-4">
-            Pipeline por Etapa
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="crm-panel p-6 lg:col-span-2">
+          <span className="crm-eyebrow">Movimiento</span>
+          <h2 className="mb-6 mt-2 font-display text-2xl tracking-tight">
+            Pipeline por etapa
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {Object.entries(leadsPorEtapa).map(([etapa, count]) => (
               <div key={etapa} className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground w-32 truncate">
+                <span className="w-32 truncate text-xs font-medium text-muted-foreground sm:w-40">
                   {etapa}
                 </span>
-                <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full bg-gradient-to-r from-[#1a4d2e] to-[#22c55e] dark:from-[#154225] dark:to-[#16a34a] rounded transition-all duration-500"
+                    className="h-full rounded-full bg-accent transition-all duration-500"
                     style={{
                       width: `${Math.max(
                         ((count as number) / totalLeads) * 100,
@@ -114,42 +111,41 @@ export function DashboardPage() {
                     }}
                   />
                 </div>
-                <span className="text-sm font-medium w-8 text-right">
+                <span className="w-8 text-right text-sm font-semibold">
                   {count as number}
                 </span>
               </div>
             ))}
+            {Object.keys(leadsPorEtapa).length === 0 && <p className="py-7 text-sm text-muted-foreground">El pipeline aparecerá cuando ingresen los primeros leads.</p>}
           </div>
         </div>
 
-        {/* Alertas */}
-        <div className="bg-card rounded-lg border p-4">
-          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-[#f59e0b]" />
-            Alertas
+        <div className="crm-panel p-6">
+          <span className="crm-eyebrow">Atención</span>
+          <h2 className="mb-6 mt-2 flex items-center gap-2 font-display text-2xl tracking-tight">
+            <AlertTriangle className="h-5 w-5 text-warning" /> Alertas
           </h2>
           {loadingAlertas ? (
             <div className="text-sm text-muted-foreground">Cargando...</div>
           ) : alertasLeads.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground">
-                Sin alertas pendientes
-              </p>
+            <div className="rounded-md border border-border bg-muted/35 p-6">
+              <p className="font-display text-xl">Todo al día.</p>
+              <p className="mt-2 text-sm text-muted-foreground">No hay alertas pendientes.</p>
             </div>
           ) : (
             <div className="space-y-2">
               {alertasLeads.slice(0, 5).map((alerta: any) => (
                 <div
                   key={alerta.id}
-                  className="flex items-center gap-2 p-2 rounded bg-[#f59e0b]/10 border border-[#f59e0b]/20"
+                  className="flex items-center gap-3 rounded-md border border-border bg-muted/35 p-3"
                 >
-                  <div className="h-2 w-2 rounded-full bg-[#f59e0b] animate-pulse" />
+                  <div className="h-2 w-2 rounded-full bg-warning" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {alerta.nombre}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {alerta.diasSinActividad} dias sin actividad
+                      {alerta.diasSinActividad} días sin actividad
                     </p>
                   </div>
                 </div>
@@ -159,29 +155,23 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Visitas proximas */}
-      <div className="bg-card rounded-lg border p-4">
-        <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Clock className="h-4 w-4 text-[#3b82f6]" />
-          Proximas Visitas
+      <div className="crm-panel p-6">
+        <span className="crm-eyebrow">Agenda</span>
+        <h2 className="mb-6 mt-2 flex items-center gap-2 font-display text-2xl tracking-tight">
+          <Clock className="h-5 w-5 text-accent" /> Próximas visitas
         </h2>
         {loadingVisitas ? (
           <div className="text-sm text-muted-foreground">Cargando...</div>
         ) : visitasPendientes.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-sm text-muted-foreground">
-              No hay visitas programadas
-            </p>
+          <div className="py-6 text-sm text-muted-foreground">
+            No hay visitas programadas por ahora.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {visitasPendientes.slice(0, 6).map((visita: any) => (
-              <div
-                key={visita.id}
-                className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/5 transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-[#3b82f6]/10 flex items-center justify-center">
-                  <CalendarCheck className="h-5 w-5 text-[#3b82f6]" />
+              <div key={visita.id} className="flex items-center gap-3 rounded-md border border-border p-4 transition-colors hover:bg-muted/40">
+                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-secondary">
+                  <CalendarCheck className="h-5 w-5 text-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
@@ -207,30 +197,21 @@ function KPICard({
   icon,
   label,
   value,
-  color,
   loading,
 }: {
   icon: React.ReactNode
   label: string
   value: number | string
-  color: string
   loading: boolean
 }) {
   return (
-    <div className="bg-card rounded-lg border p-4">
-      <div className="flex items-center gap-3">
-        <div
-          className={`h-10 w-10 rounded-lg ${color} flex items-center justify-center text-white`}
-        >
-          {icon}
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold text-foreground">
-            {loading ? "..." : value}
-          </p>
-        </div>
+    <div className="crm-panel min-h-36 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[.7rem] font-bold uppercase tracking-[.11em] text-muted-foreground">{label}</p>
+        <span className="text-accent">{icon}</span>
       </div>
+      <p className="mt-7 font-display text-4xl leading-none tracking-tight">{loading ? "..." : value}</p>
+      <div className="mt-4 h-[2px] w-10 bg-accent" />
     </div>
   )
 }

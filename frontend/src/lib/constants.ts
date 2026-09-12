@@ -31,8 +31,8 @@ export const ETIQUETAS_PIPELINE: Record<string, string> = {
   "Visita realizada": "Visita realizada",
   "Oferta/Negociacion": "Oferta",
   "Bajo contrato": "Bajo contrato",
-  Postulacion: "Postulacion",
-  "Aprobacion propietario": "Aprobacion",
+  Postulacion: "Postulación",
+  "Aprobacion propietario": "Aprobación",
   "Cerrado ganado": "Cerrado ganado",
   "Cerrado perdido": "Cerrado perdido",
 }
@@ -81,6 +81,7 @@ export const ESTADOS_VISITA = [
 ] as const
 
 export const NAV_ITEMS = [
+  { title: "Panel", href: "/dashboard", icon: "LayoutDashboard" },
   { title: "Pipeline", href: "/pipeline", icon: "Activity" },
   { title: "Leads", href: "/leads", icon: "Users" },
   { title: "Inmuebles", href: "/inmuebles", icon: "Home" },
@@ -88,5 +89,5 @@ export const NAV_ITEMS = [
   { title: "Chat", href: "/chat", icon: "MessageSquare" },
   { title: "Reportes", href: "/reportes", icon: "BarChart3" },
   { title: "Alertas", href: "/alertas", icon: "Bell" },
-  { title: "Configuracion", href: "/config", icon: "Settings" },
+  { title: "Configuración", href: "/config", icon: "Settings" },
 ] as const

@@ -11,12 +11,12 @@ export function MainLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="min-h-screen lg:flex lg:h-screen lg:overflow-hidden">
       <AppSidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col lg:h-screen lg:overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <Outlet />
+        <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 lg:overflow-y-auto xl:px-12">
+          <div className="mx-auto max-w-[1500px]"><Outlet /></div>
         </main>
       </div>
     </div>

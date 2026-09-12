@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useCallback } from "react"
 import { usePipeline, useMoveLeadInPipeline } from "@/hooks/useApi"
 import { ETAPAS_PIPELINE, ETIQUETAS_PIPELINE } from "@/lib/constants"
 import { cn } from "@/lib/utils"
@@ -53,28 +53,29 @@ export function PipelinePage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-foreground">Pipeline</h1>
-        <p className="text-sm text-muted-foreground">
+      <div className="mb-7">
+        <span className="crm-eyebrow">Oportunidades</span>
+        <h1 className="crm-page-title mt-2">Pipeline</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
           Arrastra los leads entre etapas para actualizar su estado
         </p>
       </div>
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-x-auto">
-          <div className="flex gap-3 min-w-max pb-4">
+          <div className="flex min-w-max gap-4 pb-4">
             {etapas.map((etapa) => (
               <div
                 key={etapa}
-                className="w-72 flex-shrink-0 flex flex-col bg-muted/50 rounded-lg"
+                className="flex w-72 flex-shrink-0 flex-col rounded-lg border border-border bg-card/50"
               >
                 {/* Column header */}
-                <div className="p-3 border-b">
+                <div className="border-b border-border px-4 py-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-sm text-foreground">
+                    <h3 className="font-display text-lg text-foreground">
                       {ETIQUETAS_PIPELINE[etapa] || etapa}
                     </h3>
-                    <span className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded-full">
+                    <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
                       {leadsPorEtapa[etapa]?.length || 0}
                     </span>
                   </div>
@@ -87,8 +88,8 @@ export function PipelinePage() {
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={cn(
-                        "flex-1 p-2 space-y-2 min-h-[200px] transition-colors",
-                        snapshot.isDraggingOver && "bg-[#1a4d2e]/5 dark:bg-[#22c55e]/5"
+                        "min-h-[200px] flex-1 space-y-2 p-3 transition-colors",
+                        snapshot.isDraggingOver && "bg-secondary/60"
                       )}
                     >
                       {leadsPorEtapa[etapa]?.map(
@@ -104,7 +105,7 @@ export function PipelinePage() {
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 className={cn(
-                                  "bg-card rounded-lg border p-3 shadow-sm cursor-grab active:cursor-grabbing transition-shadow",
+                                  "crm-panel cursor-grab p-4 shadow-sm transition-shadow active:cursor-grabbing",
                                   snapshot.isDragging && "shadow-md"
                                 )}
                               >
@@ -113,7 +114,7 @@ export function PipelinePage() {
                                   <h4 className="font-medium text-sm text-foreground truncate">
                                     {lead.nombre}
                                   </h4>
-                                  <button className="p-1 hover:bg-accent rounded">
+                                  <button className="rounded-sm p-1 hover:bg-muted" aria-label="Más opciones">
                                     <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                                   </button>
                                 </div>
@@ -148,8 +149,8 @@ export function PipelinePage() {
                                   </span>
                                   {lead.asesorNombre && (
                                     <div className="flex items-center gap-1">
-                                      <div className="h-5 w-5 rounded-full bg-[#1a4d2e] dark:bg-[#22c55e] flex items-center justify-center">
-                                        <User className="h-3 w-3 text-white" />
+                                      <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-secondary">
+                                        <User className="h-3 w-3 text-foreground" />
                                       </div>
                                       <span className="text-xs text-muted-foreground">
                                         {lead.asesorNombre}

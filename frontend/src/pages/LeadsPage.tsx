@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { usePipeline, useLead, useInteracciones, useRegistrarInteraccion } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
-import { cn } from "@/lib/utils"
 import {
   User,
   Phone,
@@ -14,7 +13,6 @@ import {
   Clock,
   Building2,
   FileText,
-  X,
 } from "lucide-react"
 import { format, parseISO, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
@@ -34,26 +32,26 @@ export function LeadsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-7">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Leads</h1>
-          <p className="text-sm text-muted-foreground">
+          <span className="crm-eyebrow">Relaciones</span>
+          <h1 className="crm-page-title mt-2">Leads</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
             {leads.length} leads registrados
           </p>
         </div>
-        <button className="px-4 py-2 bg-[#1a4d2e] hover:bg-[#154225] dark:bg-[#22c55e] dark:hover:bg-[#16a34a] text-white text-sm font-medium rounded-md transition-colors flex items-center gap-2">
+        <button className="crm-button">
           <Plus className="h-4 w-4" />
           Nuevo Lead
         </button>
       </div>
 
-      {/* Leads list */}
-      <div className="space-y-2">
+      <div className="space-y-3 border-t border-border pt-6">
         {leads.length === 0 ? (
-          <div className="text-center py-12 bg-card rounded-lg border">
+          <div className="crm-panel py-14 text-center">
             <User className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <h3 className="font-medium text-foreground">Primer lead</h3>
+            <h3 className="font-display text-2xl">Primer lead</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Agrega tu primer lead para comenzar
             </p>
@@ -116,26 +114,26 @@ function LeadCard({
   }
 
   return (
-    <div className="bg-card rounded-lg border overflow-hidden">
+    <div className="crm-panel overflow-hidden">
       {/* Compact view */}
       <div
-        className="flex items-center gap-4 p-4 cursor-pointer hover:bg-accent/5 transition-colors"
+        className="flex cursor-pointer items-center gap-4 p-4 transition-colors hover:bg-muted/40 md:p-5"
         onClick={onToggle}
       >
-        <div className="h-10 w-10 rounded-full bg-[#1a4d2e] dark:bg-[#22c55e] flex items-center justify-center flex-shrink-0">
-          <User className="h-5 w-5 text-white" />
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-sm bg-secondary">
+          <User className="h-5 w-5 text-foreground" />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-foreground truncate">
+            <h3 className="truncate font-display text-lg text-foreground">
               {lead.nombre}
             </h3>
-            <span className="px-2 py-0.5 text-xs bg-[#1a4d2e]/10 dark:bg-[#22c55e]/10 text-[#1a4d2e] dark:text-[#22c55e] rounded-full">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-[.68rem] font-semibold text-secondary-foreground">
               {lead.etapaPipeline}
             </span>
           </div>
-          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Mail className="h-3 w-3" />
               {lead.email}
@@ -184,7 +182,7 @@ function LeadCard({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <DetailItem
                   icon={<Building2 className="h-4 w-4" />}
-                  label="Tipo Operacion"
+                  label="Tipo de operación"
                   value={leadDetail.tipoOperacion}
                 />
                 <DetailItem
@@ -205,8 +203,8 @@ function LeadCard({
                 />
                 <DetailItem
                   icon={<User className="h-4 w-4" />}
-                  label="Autorizacion"
-                  value={leadDetail.autorizacionDatos ? "Si" : "No"}
+                  label="Autorización"
+                  value={leadDetail.autorizacionDatos ? "Sí" : "No"}
                 />
               </div>
 
@@ -221,7 +219,7 @@ function LeadCard({
                       e.stopPropagation()
                       setShowInteraccionForm(!showInteraccionForm)
                     }}
-                    className="text-xs text-[#1a4d2e] dark:text-[#22c55e] hover:underline flex items-center gap-1"
+                    className="flex items-center gap-1 text-xs font-semibold text-foreground hover:underline"
                   >
                     <Plus className="h-3 w-3" />
                     Registrar
@@ -240,7 +238,7 @@ function LeadCard({
                         <option>Email</option>
                         <option>WhatsApp</option>
                         <option>Visita</option>
-                        <option>Reunion</option>
+                        <option value="Reunion">Reunión</option>
                       </select>
                       <input
                         type="text"
@@ -252,7 +250,7 @@ function LeadCard({
                       <button
                         onClick={handleRegistrarInteraccion}
                         disabled={registrarInteraccion.isPending}
-                        className="px-3 py-1 text-xs bg-[#1a4d2e] dark:bg-[#22c55e] text-white rounded"
+                        className="crm-button min-h-8 px-3 py-1 text-xs"
                       >
                         Guardar
                       </button>

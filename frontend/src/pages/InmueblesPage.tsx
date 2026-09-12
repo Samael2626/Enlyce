@@ -4,10 +4,6 @@ import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE } from "@/lib/constants"
 import {
   Home,
   Plus,
-  MapPin,
-  BedDouble,
-  Bath,
-  Car,
   X,
   Loader2,
 } from "lucide-react"
@@ -69,17 +65,18 @@ export function InmueblesPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-7">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Inmuebles</h1>
-          <p className="text-sm text-muted-foreground">
-            Catalogo de propiedades
+          <span className="crm-eyebrow">Inventario</span>
+          <h1 className="crm-page-title mt-2">Inmuebles</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Catálogo de propiedades
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-[#1a4d2e] hover:bg-[#154225] dark:bg-[#22c55e] dark:hover:bg-[#16a34a] text-white text-sm font-medium rounded-md transition-colors flex items-center gap-2"
+          className="crm-button"
         >
           <Plus className="h-4 w-4" />
           Nuevo Inmueble
@@ -88,23 +85,24 @@ export function InmueblesPage() {
 
       {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-lg border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="font-semibold text-foreground">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/55 p-4">
+          <div className="crm-panel max-h-[90vh] w-full max-w-2xl overflow-y-auto border-t-4 border-t-accent">
+            <div className="flex items-center justify-between border-b border-border p-5">
+              <h2 className="font-display text-2xl text-foreground">
                 Nuevo Inmueble
               </h2>
               <button
                 onClick={() => setShowForm(false)}
-                className="p-1 hover:bg-accent rounded"
+                className="rounded-sm p-2 hover:bg-muted"
+                aria-label="Cerrar formulario"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
+            <form onSubmit={handleSubmit} className="space-y-5 p-5 md:p-7">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
                   <label className="text-sm font-medium">Nombre</label>
                   <input
                     type="text"
@@ -201,7 +199,7 @@ export function InmueblesPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">m2</label>
+                  <label className="text-sm font-medium">m²</label>
                   <input
                     type="number"
                     value={form.metrosCuadrados}
@@ -225,7 +223,7 @@ export function InmueblesPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Banos</label>
+                  <label className="text-sm font-medium">Baños</label>
                   <input
                     type="number"
                     value={form.banos}
@@ -260,7 +258,7 @@ export function InmueblesPage() {
                 <button
                   type="submit"
                   disabled={createInmueble.isPending}
-                  className="px-4 py-2 text-sm bg-[#1a4d2e] dark:bg-[#22c55e] text-white rounded-md flex items-center gap-2"
+                  className="crm-button"
                 >
                   {createInmueble.isPending && (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -274,9 +272,9 @@ export function InmueblesPage() {
       )}
 
       {/* Empty state */}
-      <div className="text-center py-12 bg-card rounded-lg border">
-        <Home className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-        <h3 className="font-medium text-foreground">Primer inmueble</h3>
+      <div className="crm-panel border-t-4 border-t-accent py-16 text-center">
+        <Home className="mx-auto mb-4 h-10 w-10 text-accent" />
+        <h3 className="font-display text-2xl">Primer inmueble</h3>
         <p className="text-sm text-muted-foreground mt-1">
           Registra tu primer inmueble para comenzar
         </p>

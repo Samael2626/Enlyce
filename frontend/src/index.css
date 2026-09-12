@@ -1,34 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #f0f2f5;
-  --color-foreground: #111111;
-  --color-card: #ffffff;
-  --color-card-foreground: #111111;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #111111;
-  --color-primary: #1a4d2e;
+  --color-background: #f2efe7;
+  --color-foreground: #183127;
+  --color-card: #fbfaf6;
+  --color-card-foreground: #183127;
+  --color-popover: #fbfaf6;
+  --color-popover-foreground: #183127;
+  --color-primary: #183127;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #f3f4f6;
-  --color-secondary-foreground: #374151;
-  --color-muted: #f3f4f6;
-  --color-muted-foreground: #6b7280;
-  --color-accent: #c9a84c;
-  --color-accent-foreground: #1a4d2e;
-  --color-destructive: #dc2626;
+  --color-secondary: #eadbd1;
+  --color-secondary-foreground: #183127;
+  --color-muted: #e9e6dd;
+  --color-muted-foreground: #5e6962;
+  --color-accent: #ae6b48;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #9c2f24;
   --color-destructive-foreground: #ffffff;
-  --color-border: #e5e7eb;
-  --color-input: #e5e7eb;
-  --color-ring: #1a4d2e;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-info: #3b82f6;
+  --color-border: #d7d4cb;
+  --color-input: #d7d4cb;
+  --color-ring: #ae6b48;
+  --color-success: #17653c;
+  --color-warning: #9a5b28;
+  --color-info: #315c7d;
+  --color-sidebar: #183127;
+  --color-sidebar-foreground: #f7f3e9;
 
-  --radius-lg: 8px;
-  --radius-md: 6px;
+  --radius-lg: 14px;
+  --radius-md: 9px;
   --radius-sm: 4px;
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-display: 'Fraunces', serif;
 }
 
 @layer base {
@@ -38,26 +41,102 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+  }
 }
 
 .dark {
-  --color-background: #0f172a;
-  --color-foreground: #f1f5f9;
-  --color-card: #1e293b;
-  --color-card-foreground: #f1f5f9;
-  --color-popover: #1e293b;
-  --color-popover-foreground: #f1f5f9;
-  --color-primary: #22c55e;
-  --color-primary-foreground: #0f172a;
-  --color-secondary: #1e293b;
-  --color-secondary-foreground: #e2e8f0;
-  --color-muted: #1e293b;
-  --color-muted-foreground: #94a3b8;
-  --color-accent: #fbbf24;
-  --color-accent-foreground: #1a4d2e;
-  --color-destructive: #ef4444;
+  --color-background: #10231b;
+  --color-foreground: #f4efe5;
+  --color-card: #1c382c;
+  --color-card-foreground: #f4efe5;
+  --color-popover: #1c382c;
+  --color-popover-foreground: #f4efe5;
+  --color-primary: #d49a76;
+  --color-primary-foreground: #10231b;
+  --color-secondary: #2b493b;
+  --color-secondary-foreground: #f4efe5;
+  --color-muted: #284638;
+  --color-muted-foreground: #c0cec3;
+  --color-accent: #d49a76;
+  --color-accent-foreground: #10231b;
+  --color-destructive: #ed9d92;
   --color-destructive-foreground: #ffffff;
-  --color-border: #334155;
-  --color-input: #334155;
-  --color-ring: #22c55e;
+  --color-border: #385648;
+  --color-input: #385648;
+  --color-ring: #d49a76;
+  --color-success: #9ccdb1;
+  --color-warning: #e0b47c;
+  --color-info: #9fc4dc;
+  --color-sidebar: #0b1b13;
+  --color-sidebar-foreground: #f7f3e9;
+}
+
+@layer components {
+  .crm-brand-seal {
+    display: block;
+    flex: 0 0 auto;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: var(--radius-sm);
+    background: #11152a url('/lyc-navy.jpeg') center 47% / 165% no-repeat;
+  }
+  .crm-eyebrow {
+    color: var(--color-accent);
+    font-size: .69rem;
+    font-weight: 700;
+    letter-spacing: .17em;
+    text-transform: uppercase;
+  }
+  .crm-page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.15rem, 4vw, 3.8rem);
+    font-weight: 600;
+    letter-spacing: -.045em;
+    line-height: 1;
+  }
+  .crm-panel {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-card);
+    box-shadow: 0 12px 36px rgb(24 49 39 / 5%);
+  }
+  .crm-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    min-height: 44px;
+    padding: .65rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    font-size: .85rem;
+    font-weight: 700;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .crm-button:hover { opacity: .88; transform: translateY(-1px); }
+  .crm-button:disabled { cursor: not-allowed; opacity: .5; transform: none; }
+  .crm-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgb(9 29 21 / 94%), rgb(9 29 21 / 66%)), url('/medellin-hero.png') center 48% / cover;
+    color: #fff;
+  }
+  .crm-hero::after {
+    position: absolute;
+    inset: auto 0 0;
+    height: 4px;
+    background: var(--color-accent);
+    content: '';
+  }
 }

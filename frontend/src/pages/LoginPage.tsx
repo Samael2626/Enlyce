@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useLogin } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
-import { Building2, Loader2 } from "lucide-react"
+import { ArrowRight, Loader2 } from "lucide-react"
 
 export function LoginPage() {
   const [email, setEmail] = useState("")
@@ -33,85 +33,65 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-8 space-y-6">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-14 w-14 rounded-xl bg-[#1a4d2e] dark:bg-[#22c55e] flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground">Enlyce</h1>
-            <p className="text-sm text-muted-foreground">
-              CRM Inmobiliario — L&C Propiedad Raiz
-            </p>
+    <div className="grid min-h-screen bg-background lg:grid-cols-[1.08fr_.92fr]">
+      <section className="crm-hero flex min-h-[310px] flex-col justify-between p-7 md:p-12 lg:min-h-screen lg:p-16">
+        <div className="relative z-10 flex items-center gap-3">
+          <span role="img" aria-label="L&C Propiedad Raíz" className="crm-brand-seal h-20 w-20" />
+          <div>
+            <span className="block font-display text-3xl leading-none">Enlyce</span>
+            <span className="mt-1 block text-[.65rem] font-semibold uppercase tracking-[.17em] text-white/70">CRM inmobiliario</span>
           </div>
         </div>
+        <div className="relative z-10 max-w-xl">
+          <p className="text-[.7rem] font-bold uppercase tracking-[.18em] text-[#e7b99f]">L&C Propiedad Raíz</p>
+          <p className="mt-5 font-display text-[clamp(2.8rem,5vw,5.8rem)] leading-[.98] tracking-[-.05em]">Un lugar para cada conversación importante.</p>
+          <p className="mt-6 max-w-md text-sm leading-7 text-white/80">Personas, inmuebles y oportunidades en un mismo espacio de trabajo.</p>
+        </div>
+        <p className="relative z-10 hidden text-xs font-medium tracking-wide text-white/65 lg:block">Tu hogar, nuestra prioridad.</p>
+      </section>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-foreground"
-            >
-              Correo electronico
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-[#22c55e]"
-              placeholder="admin@enlyce.com"
-              required
-            />
-          </div>
+      <main className="flex items-center justify-center px-5 py-12 md:px-10 lg:py-16">
+        <div className="w-full max-w-md">
+          <span className="crm-eyebrow">Acceso privado</span>
+          <h1 className="crm-page-title mt-4">Bienvenido de nuevo.</h1>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">Ingresa con tu cuenta para continuar la gestión de L&C.</p>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-foreground"
-            >
-              Contrasena
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] dark:focus:ring-[#22c55e]"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-              {error}
+          <form onSubmit={handleSubmit} className="crm-panel mt-9 space-y-5 border-t-4 border-t-accent p-6 md:p-8">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-semibold">Correo electrónico</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-sm border border-input bg-background px-3 py-3 text-foreground placeholder:text-muted-foreground"
+                placeholder="tu@correo.com"
+                autoComplete="email"
+                required
+              />
             </div>
-          )}
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-semibold">Contraseña</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-sm border border-input bg-background px-3 py-3 text-foreground placeholder:text-muted-foreground"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            {error && <p role="alert" className="rounded-sm bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+            <button type="submit" disabled={login.isPending} className="crm-button w-full">
+              {login.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Ingresando...</> : <>Iniciar sesión <ArrowRight className="h-4 w-4" /></>}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={login.isPending}
-            className="w-full py-2.5 px-4 bg-[#1a4d2e] hover:bg-[#154225] dark:bg-[#22c55e] dark:hover:bg-[#16a34a] text-white font-medium rounded-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {login.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Ingresando...
-              </>
-            ) : (
-              "Iniciar sesion"
-            )}
-          </button>
-        </form>
-
-        <p className="text-xs text-center text-muted-foreground">
-          Ley 1581 de 2012 — Proteccion de datos personales
-        </p>
-      </div>
+          <p className="mt-7 text-xs text-muted-foreground">Acceso protegido · Tratamiento de datos conforme a la Ley 1581 de 2012.</p>
+        </div>
+      </main>
     </div>
   )
 }
