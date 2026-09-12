@@ -194,10 +194,11 @@ legend { margin-bottom: 9px; color: var(--c-muted); font-size: .68rem; font-weig
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .contact-strip { margin-bottom: var(--sp-2xl); padding: var(--sp-xl); color: #fff; background: var(--c-text); }
-.contact-strip .eyebrow { color: var(--c-accent); }
+.contact-strip .eyebrow { color: #e7b99f; }
 .contact-strip h2 { max-width: 720px; }
 .contact-strip p { max-width: 720px; margin: 22px 0 0; color: rgb(255 255 255 / 72%); line-height: 1.65; }
-.contact-strip .inline-button { margin-top: 26px; border-color: #fff; color: #fff; }
+.contact-strip .inline-button { margin-top: 26px; border-color: #fff; color: #fff; background: transparent; }
+.contact-strip .inline-button:hover { background: rgb(255 255 255 / 12%); }
 .text-link { color: var(--c-accent); font-weight: 700; }
 
 .neighborhood-preview { padding: var(--sp-xl) 0 var(--sp-2xl); border-top: 1px solid var(--c-line); }
