@@ -19,6 +19,7 @@ import { buildOwnerLeadPayload } from './funcional/js/owner-inquiry.js';
 import { FavoritesStore, MAX_FAVORITES, normalizeFavoriteSlugs } from './funcional/js/favorites.js';
 import { toPropertyCardModel } from './funcional/js/property-card.js';
 import { buildNeighborhoodFilters } from './funcional/js/neighborhood-query.js';
+import { buildRelatedPropertyHref, loadRelatedProperties } from './funcional/js/related-properties.js';
 
 function createMemoryStorage(initial = {}) {
   const values = new Map(Object.entries(initial));
@@ -263,4 +264,85 @@ test('PublicCatalogClient crea lead con JSON', async () => {
   assert.equal(capturedRequest.url, 'http://localhost:5019/api/leads/');
   assert.equal(capturedRequest.options.method, 'POST');
   assert.deepEqual(JSON.parse(capturedRequest.options.body), payload);
+});
+
+function createRelatedFixture(pages) {
+  const requests = [];
+  const section = { hidden: true };
+  const grid = {
+    children: [],
+    replaceChildren(...children) { this.children = children; },
+  };
+  const property = {
+    slug: 'actual',
+    operation: 'Venta',
+    price: { amount: 100000000, currency: 'COP' },
+    location: { neighborhood: 'Laureles', municipality: 'Medellín' },
+  };
+  const client = {
+    async getProperties(filters) {
+      requests.push(filters);
+      return { items: pages[requests.length - 1] };
+    },
+  };
+
+  return { client, property, section, grid, requests, renderCard: ({ slug }) => slug };
+}
+
+test('propiedades relacionadas muestra resultados del barrio sin consultar municipio', async () => {
+  const fixture = createRelatedFixture([[
+    { slug: 'actual' }, { slug: 'uno' }, { slug: 'dos' }, { slug: 'tres' },
+  ]]);
+
+  await loadRelatedProperties(fixture);
+
+  assert.deepEqual(fixture.requests, [{
+    operation: 'Venta', neighborhood: 'Laureles', minPrice: 70000000,
+    maxPrice: 130000000, pageSize: 4,
+  }]);
+  assert.deepEqual(fixture.grid.children, ['uno', 'dos', 'tres']);
+  assert.equal(fixture.section.hidden, false);
+});
+
+test('propiedades relacionadas completa resultados con fallback al municipio', async () => {
+  const fixture = createRelatedFixture([
+    [{ slug: 'actual' }, { slug: 'uno' }],
+    [{ slug: 'actual' }, { slug: 'uno' }, { slug: 'dos' }, { slug: 'tres' }],
+  ]);
+
+  await loadRelatedProperties(fixture);
+
+  assert.equal(fixture.requests.length, 2);
+  assert.deepEqual(fixture.requests[1], {
+    operation: 'Venta', municipality: 'Medellín', minPrice: 70000000,
+    maxPrice: 130000000, pageSize: 4,
+  });
+  assert.deepEqual(fixture.grid.children, ['uno', 'dos', 'tres']);
+  assert.equal(fixture.section.hidden, false);
+});
+
+test('propiedades relacionadas oculta la seccion cuando no hay resultados', async () => {
+  const fixture = createRelatedFixture([[{ slug: 'actual' }], []]);
+
+  await loadRelatedProperties(fixture);
+
+  assert.equal(fixture.requests.length, 2);
+  assert.deepEqual(fixture.grid.children, []);
+  assert.equal(fixture.section.hidden, true);
+});
+
+test('propiedades relacionadas conserva resultados parciales tras el fallback', async () => {
+  const fixture = createRelatedFixture([[{ slug: 'actual' }, { slug: 'uno' }], []]);
+
+  await loadRelatedProperties(fixture);
+
+  assert.deepEqual(fixture.grid.children, ['uno']);
+  assert.equal(fixture.section.hidden, false);
+});
+
+test('enlace relacionado conserva api y whatsapp al cambiar de ficha', () => {
+  assert.equal(
+    buildRelatedPropertyHref('casa belen', '?slug=actual&api=http%3A%2F%2Flocalhost%3A5019&whatsapp=573001234567'),
+    'inmueble.html?slug=casa+belen&api=http%3A%2F%2Flocalhost%3A5019&whatsapp=573001234567',
+  );
 });

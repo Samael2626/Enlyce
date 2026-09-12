@@ -2,6 +2,8 @@ import { ApiError, PublicCatalogClient, buildVisitLeadPayload, resolveApiBase } 
 import { buildWhatsAppUrl, resolveWhatsAppNumber } from './contact.js';
 import { formatCurrency, formatLocation, safeMediaUrl } from './format.js';
 import { FavoritesStore, FAVORITES_STORAGE_KEY, updateFavoriteButton, updateFavoriteCounts } from './favorites.js';
+import { createPropertyCard } from './property-card.js';
+import { buildRelatedPropertyHref, loadRelatedProperties } from './related-properties.js';
 import { siteSettings } from './settings.js';
 
 const params = new URLSearchParams(window.location.search);
@@ -97,6 +99,27 @@ function renderProperty() {
   document.querySelector('[data-mobile-contact]').hidden = false;
 }
 
+async function renderRelatedProperties() {
+  try {
+    const template = document.querySelector('#property-card-template');
+    await loadRelatedProperties({
+      client,
+      property,
+      section: document.querySelector('[data-related]'),
+      grid: document.querySelector('[data-related-grid]'),
+      renderCard: (item) => createPropertyCard({
+        property: item,
+        template,
+        href: buildRelatedPropertyHref(item.slug, window.location.search),
+        favorites,
+        onFavoriteChange: () => updateFavoriteCounts(favorites),
+      }),
+    });
+  } catch (error) {
+    console.error('No se pudieron cargar las propiedades relacionadas.', error);
+  }
+}
+
 document.querySelector('[data-favorite]').addEventListener('click', (event) => {
   if (!property) return;
   const result = favorites.toggle(property.slug);
@@ -129,6 +152,7 @@ async function loadProperty() {
   try {
     property = await client.getProperty(slug);
     renderProperty();
+    void renderRelatedProperties();
   } catch (error) {
     showError(error);
   }

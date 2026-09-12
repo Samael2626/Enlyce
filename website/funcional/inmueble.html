@@ -103,6 +103,12 @@
         </aside>
       </div>
     </article>
+
+    <section class="related-properties" data-related hidden aria-labelledby="related-title">
+      <span class="eyebrow">Explora más opciones</span>
+      <h2 id="related-title">También te puede interesar</h2>
+      <div class="related-grid" data-related-grid></div>
+    </section>
   </main>
 
   <footer>
@@ -115,5 +121,26 @@
     <span data-mobile-price></span>
     <a href="#contacto">Agendar visita</a>
   </div>
+
+  <template id="property-card-template">
+    <article class="property-card">
+      <button class="favorite-button" type="button" aria-pressed="false" data-favorite></button>
+      <a class="property-media" data-property-link>
+        <img alt="" loading="lazy" data-property-image>
+        <span class="media-fallback" data-image-fallback>Imagen pendiente</span>
+        <span class="operation-badge" data-operation></span>
+      </a>
+      <div class="property-copy">
+        <p class="property-location" data-location></p>
+        <h3><a data-title data-property-link></a></h3>
+        <strong class="property-price" data-price></strong>
+        <p class="property-facts" data-facts></p>
+        <div class="property-foot">
+          <span data-published></span>
+          <a data-property-link>Ver ficha <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </article>
+  </template>
 </body>
 </html>

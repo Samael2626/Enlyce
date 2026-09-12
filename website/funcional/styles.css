@@ -355,6 +355,9 @@ footer > :last-child { justify-self: end; color: var(--c-accent); font-weight: 7
 .advisor-identity a { display: block; }
 .advisor-identity a { margin-top: 4px; color: var(--c-muted); font-size: .75rem; }
 .advisor-card form { display: grid; gap: 13px; }
+.related-properties { padding: var(--sp-xl) 0 var(--sp-2xl); border-top: 1px solid var(--c-line); }
+.related-properties h2 { margin: 12px 0 var(--sp-lg); font: 600 clamp(2rem, 4vw, 3.7rem)/1 var(--f-display); letter-spacing: -.035em; }
+.related-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-md); }
 .consent { display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: start; color: var(--c-muted); font-size: .72rem; line-height: 1.45; }
 .consent input { width: 17px; min-height: 17px; margin: 2px 0 0; }
 .consent span { margin: 0; color: inherit; font-size: inherit; font-weight: 400; letter-spacing: 0; text-transform: none; }
@@ -371,6 +374,7 @@ footer > :last-child { justify-self: end; color: var(--c-accent); font-weight: 7
   .property-grid > .property-card:first-child { grid-column: 1 / -1; }
   .detail-layout { grid-template-columns: 1fr 310px; gap: 32px; }
   .gallery { grid-template-rows: 180px 180px; }
+  .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -439,6 +443,7 @@ footer > :last-child { justify-self: end; color: var(--c-accent); font-weight: 7
   .amenity-list { grid-template-columns: 1fr; }
   .location-panel { grid-template-columns: 1fr; }
   .advisor-card { position: static; }
+  .related-grid { grid-template-columns: 1fr; }
   .mobile-contact { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; color: #fff; background: var(--c-text); box-shadow: 0 -10px 30px rgb(0 0 0 / 15%); }
   .mobile-contact[hidden] { display: none; }
   .mobile-contact span { font-size: .78rem; font-weight: 700; }
