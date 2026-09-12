@@ -68,18 +68,46 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var localCorsOrigins = new[]
+{
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173"
+};
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
         // Origenes explicitos: AllowAnyOrigin es incompatible con AllowCredentials
-        policy.WithOrigins(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://localhost:4173")
+        policy.WithOrigins(localCorsOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
+
+        if (builder.Configuration.GetValue<bool>("Cors:AllowTrycloudflareOrigins"))
+        {
+            policy.SetIsOriginAllowed(origin =>
+            {
+                if (localCorsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+                    return true;
+
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
+                    uri.Scheme != Uri.UriSchemeHttps ||
+                    !uri.IsDefaultPort ||
+                    uri.UserInfo.Length != 0 ||
+                    uri.AbsolutePath != "/" ||
+                    uri.Query.Length != 0 ||
+                    uri.Fragment.Length != 0)
+                    return false;
+
+                const string suffix = ".trycloudflare.com";
+                if (!uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                var subdomain = uri.Host[..^suffix.Length];
+                return subdomain.Length > 0 && !subdomain.Contains('.');
+            });
+        }
     });
 });
 
