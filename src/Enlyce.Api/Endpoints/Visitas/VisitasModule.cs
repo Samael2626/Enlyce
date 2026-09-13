@@ -22,9 +22,8 @@ public static class VisitasModule
             if (!http.User.IsInRole("Asesor"))
                 return Results.Forbid();
 
-            var idClaim = http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? http.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-            if (!Guid.TryParse(idClaim, out var advisorId))
+            var advisorId = GetAdvisorId(http);
+            if (advisorId is null)
                 return Results.Forbid();
 
             return Results.Ok(await repo.ObtenerVisitasAsync(advisorId));
@@ -44,26 +43,59 @@ public static class VisitasModule
         .WithName("RegistrarVisita")
         .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapGet("/lead/{leadId:guid}", async (
+        group.MapGet("/lead/{leadId:guid}", async Task<IResult> (
             Guid leadId,
-            IVisitaRepository repo) =>
+            HttpContext http,
+            IVisitaRepository repo,
+            ILeadRepository leadRepo) =>
         {
+            if (!http.User.IsInRole("Administrador"))
+            {
+                var advisorId = GetAdvisorId(http);
+                if (!http.User.IsInRole("Asesor") || advisorId is null)
+                    return Results.Forbid();
+
+                var lead = await leadRepo.GetByIdAsync(leadId);
+                if (lead?.AsesorAsignadoId != advisorId)
+                    return Results.Forbid();
+
+                var ownVisits = await repo.ObtenerPorLeadAsync(leadId);
+                return Results.Ok(ownVisits.Where(visit => visit.AsesorId == advisorId).ToList());
+            }
+
             var visitas = await repo.ObtenerPorLeadAsync(leadId);
             return Results.Ok(visitas);
         })
+        .RequireAuthorization()
         .WithName("ObtenerVisitasPorLead")
         .Produces<List<Domain.Entities.Visita>>();
 
-        group.MapGet("/asesor/{asesorId:guid}", async (
+        group.MapGet("/asesor/{asesorId:guid}", async Task<IResult> (
             Guid asesorId,
             [AsParameters] ConsultarVisitasAsesorRequest query,
+            HttpContext http,
             IVisitaRepository repo) =>
         {
+            if (!http.User.IsInRole("Administrador"))
+            {
+                var advisorId = GetAdvisorId(http);
+                if (!http.User.IsInRole("Asesor") || advisorId != asesorId)
+                    return Results.Forbid();
+            }
+
             var visitas = await repo.ObtenerPorAsesorAsync(asesorId, query.Desde);
             return Results.Ok(visitas);
         })
+        .RequireAuthorization()
         .WithName("ObtenerVisitasPorAsesor")
         .Produces<List<Domain.Entities.Visita>>();
+    }
+
+    private static Guid? GetAdvisorId(HttpContext http)
+    {
+        var claim = http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? http.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        return Guid.TryParse(claim, out var advisorId) ? advisorId : null;
     }
 }
 
