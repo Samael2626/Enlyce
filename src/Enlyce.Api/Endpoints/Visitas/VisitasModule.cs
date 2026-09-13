@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Enlyce.Application.Commands.Lead;
 using Enlyce.Domain.Ports;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +11,27 @@ public static class VisitasModule
     public static void MapVisitas(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/visitas").WithTags("Visitas");
+
+        group.MapGet("/", async Task<IResult> (
+            HttpContext http,
+            IVisitaRepository repo) =>
+        {
+            if (http.User.IsInRole("Administrador"))
+                return Results.Ok(await repo.ObtenerVisitasAsync(null));
+
+            if (!http.User.IsInRole("Asesor"))
+                return Results.Forbid();
+
+            var idClaim = http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? http.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            if (!Guid.TryParse(idClaim, out var advisorId))
+                return Results.Forbid();
+
+            return Results.Ok(await repo.ObtenerVisitasAsync(advisorId));
+        })
+        .RequireAuthorization()
+        .WithName("ObtenerVisitas")
+        .Produces<List<Domain.Entities.Visita>>();
 
         group.MapPost("/", async (
             [FromBody] RegistrarVisitaRequest request,

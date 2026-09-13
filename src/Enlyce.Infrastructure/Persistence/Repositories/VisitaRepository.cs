@@ -10,6 +10,15 @@ public class VisitaRepository : IVisitaRepository
 
     public VisitaRepository(EnlyceDbContext context) => _context = context;
 
+    public async Task<List<Visita>> ObtenerVisitasAsync(Guid? asesorId)
+    {
+        var query = _context.Visitas.AsNoTracking();
+        if (asesorId is Guid id)
+            query = query.Where(v => v.AsesorId == id);
+
+        return await query.OrderBy(v => v.FechaProgramada).ToListAsync();
+    }
+
     public async Task<List<Visita>> ObtenerPorLeadAsync(Guid leadId)
     {
         return await _context.Visitas
