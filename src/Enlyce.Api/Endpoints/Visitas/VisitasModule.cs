@@ -32,14 +32,21 @@ public static class VisitasModule
         .WithName("ObtenerVisitas")
         .Produces<List<Domain.Entities.Visita>>();
 
-        group.MapPost("/", async (
+        group.MapPost("/", async Task<IResult> (
             [FromBody] RegistrarVisitaRequest request,
+            HttpContext http,
+            ILeadRepository leads,
             RegistrarVisitaHandler handler) =>
         {
+            if (!await EndpointAccess.CanAccessLeadAsync(http.User, request.LeadId, leads) ||
+                !EndpointAccess.CanActAsAdvisor(http.User, request.AsesorId))
+                return Results.Forbid();
+
             var ok = await handler.HandleAsync(new RegistrarVisitaCommand(
                 request.LeadId, request.InmuebleId, request.AsesorId, request.FechaProgramada));
             return ok ? Results.Ok() : Results.NotFound();
         })
+        .RequireAuthorization()
         .WithName("RegistrarVisita")
         .ProducesProblem(StatusCodes.Status404NotFound);
 

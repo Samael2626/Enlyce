@@ -10,7 +10,8 @@ public static class InmueblesModule
 {
     public static void MapInmuebles(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inmuebles").WithTags("Inmuebles");
+        // Inmueble solo referencia al propietario; no tiene asesor responsable.
+        var group = app.MapGroup("/api/inmuebles").WithTags("Inmuebles").RequireAuthorization();
 
         group.MapGet("/{id:guid}", async (
             Guid id,

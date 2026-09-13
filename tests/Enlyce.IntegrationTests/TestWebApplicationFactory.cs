@@ -1,4 +1,5 @@
 using Enlyce.Application.Auth;
+using System.Net.Http.Headers;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
@@ -23,6 +24,24 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         _connection = new SqliteConnection("Data Source=:memory:");
         _connection.Open();
+    }
+
+    public (HttpClient Client, Asesor User) CreateAuthenticatedClient(string role = "Administrador")
+    {
+        var client = CreateClient();
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        var user = Asesor.Crear(
+            $"Usuario {role}",
+            Email.Create($"auth-{Guid.NewGuid():N}@test.com"),
+            BCrypt.Net.BCrypt.HashPassword("OnlyForTests123!"),
+            role);
+        db.Asesores.Add(user);
+        db.SaveChanges();
+
+        var token = scope.ServiceProvider.GetRequiredService<ITokenService>().GenerarToken(user);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return (client, user);
     }
 
     protected override IHost CreateHost(IHostBuilder builder)

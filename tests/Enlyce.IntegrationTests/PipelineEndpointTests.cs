@@ -19,7 +19,7 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
     public PipelineEndpointTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient().Client;
     }
 
     private async Task<Guid> CreateLeadAsync(string tipoOperacion = "Venta")

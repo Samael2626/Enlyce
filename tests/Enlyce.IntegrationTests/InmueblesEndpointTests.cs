@@ -15,7 +15,7 @@ public class InmueblesEndpointTests : IClassFixture<TestWebApplicationFactory>
 
     public InmueblesEndpointTests(TestWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient().Client;
     }
 
     [Fact]

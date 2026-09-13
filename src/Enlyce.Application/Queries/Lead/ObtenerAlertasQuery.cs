@@ -1,6 +1,6 @@
 namespace Enlyce.Application.Queries.Lead;
 
-public sealed record ObtenerAlertasQuery(int DiasUmbral = 7);
+public sealed record ObtenerAlertasQuery(int DiasUmbral = 7, Guid? AdvisorId = null);
 
 public sealed record AlertaLeadDto(
     Guid Id, string Nombre, string Email, string EtapaPipeline,

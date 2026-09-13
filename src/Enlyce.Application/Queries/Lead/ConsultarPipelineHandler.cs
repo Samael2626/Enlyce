@@ -12,9 +12,12 @@ public sealed class ConsultarPipelineHandler
     public async Task<PipelineResponse> HandleAsync(
         ConsultarPipelineQuery query, CancellationToken ct = default)
     {
-        var leads = query.Etapa is not null
-            ? await _leadRepo.ObtenerPorEtapaAsync(query.Etapa)
-            : (await _leadRepo.GetAllAsync()).ToList();
+        IReadOnlyList<Enlyce.Domain.Entities.Lead> accessibleLeads = query.AdvisorId is Guid advisorId
+            ? await _leadRepo.GetByAsesorIdAsync(advisorId)
+            : await _leadRepo.GetAllAsync();
+        var leads = query.Etapa is null
+            ? accessibleLeads
+            : accessibleLeads.Where(lead => lead.EtapaPipeline == query.Etapa).ToList();
 
         var etapas = new List<EtapaPipelineDto>();
         foreach (var etapa in EtapasPipeline.Venta)

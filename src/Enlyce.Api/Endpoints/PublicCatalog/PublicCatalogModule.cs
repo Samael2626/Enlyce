@@ -12,12 +12,16 @@ public static class PublicCatalogModule
     {
         var group = app.MapGroup("/api/public/inmuebles").WithTags("Catálogo público");
 
+        // Publico: el catalogo es la vitrina de inmuebles publicados.
         group.MapGet("", GetPropertiesAsync)
+            .AllowAnonymous()
             .WithName("GetPublicProperties")
             .Produces<PublicPropertyPageResponse>()
             .ProducesValidationProblem(StatusCodes.Status400BadRequest);
 
+        // Publico: la ficha publicada se comparte sin sesion del CRM.
         group.MapGet("/{slug}", GetPropertyBySlugAsync)
+            .AllowAnonymous()
             .WithName("GetPublicPropertyBySlug")
             .Produces<PublicPropertyDetailResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);

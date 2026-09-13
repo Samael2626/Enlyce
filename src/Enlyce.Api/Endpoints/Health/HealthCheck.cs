@@ -7,6 +7,7 @@ public static class HealthCheck
 {
     public static void MapHealth(this IEndpointRouteBuilder app)
     {
+        // Publico: los monitores deben verificar salud sin credenciales del CRM.
         app.MapGet("/health", async (EnlyceDbContext context) =>
         {
             var canConnect = await context.Database.CanConnectAsync();

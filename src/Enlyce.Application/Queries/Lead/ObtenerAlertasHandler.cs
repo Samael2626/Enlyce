@@ -11,7 +11,9 @@ public sealed class ObtenerAlertasHandler
     public async Task<AlertasResponse> HandleAsync(
         ObtenerAlertasQuery query, CancellationToken ct = default)
     {
-        var leads = await _leadRepo.GetAllAsync();
+        var leads = query.AdvisorId is Guid advisorId
+            ? await _leadRepo.GetByAsesorIdAsync(advisorId)
+            : await _leadRepo.GetAllAsync();
         var ahora = DateTime.UtcNow;
         var umbral = ahora.AddDays(-query.DiasUmbral);
 

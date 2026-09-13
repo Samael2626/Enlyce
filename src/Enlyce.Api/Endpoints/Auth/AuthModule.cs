@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Net;
 using Enlyce.Application.Commands.Login;
 using Enlyce.Application.Commands.RegisterAsesor;
 using Enlyce.Domain.Entities;
@@ -15,6 +16,7 @@ public static class AuthModule
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth");
 
+        // Publico: el usuario necesita obtener el token antes de autenticarse.
         group.MapPost("/login", async (
             LoginCommand command,
             LoginCommandHandler handler,
@@ -35,6 +37,7 @@ public static class AuthModule
 
             return Results.Ok(new { result.Token, result.Rol, result.Nombre });
         })
+        .AllowAnonymous()
         .WithName("Login");
 
         group.MapPost("/register", async (
@@ -69,21 +72,32 @@ public static class AuthModule
         .RequireAuthorization()
         .WithName("Me");
 
-        // Seed endpoint - crear admin por defecto si no existe.
-        // Solo en Development: crea un admin con credenciales conocidas sin autenticacion.
-        group.MapPost("/seed", async (EnlyceDbContext db, IWebHostEnvironment env) =>
+        // Publico solo para bootstrap local explicito; Development por si solo no habilita el seed.
+        group.MapPost("/seed", async (
+            EnlyceDbContext db,
+            IWebHostEnvironment env,
+            IConfiguration config,
+            HttpContext http,
+            ILoggerFactory loggerFactory) =>
         {
-            if (!env.IsDevelopment())
+            var password = config["Auth:DevelopmentSeedPassword"];
+            if (!env.IsDevelopment() ||
+                !config.GetValue<bool>("Auth:AllowDevelopmentSeed") ||
+                !IPAddress.IsLoopback(http.Connection.RemoteIpAddress ?? IPAddress.None) ||
+                string.IsNullOrWhiteSpace(password))
+            {
+                loggerFactory.CreateLogger("Auth.Seed")
+                    .LogWarning("Intento de invocar el seed de administracion sin habilitacion local explicita");
                 return Results.NotFound();
+            }
 
             var adminEmail = "admin@enlyce.com";
-            var adminPassword = "Admin123!";
 
             if (await db.Asesores.AnyAsync(a => a.Correo.Value == adminEmail))
                 return Results.Ok(new { message = "Admin ya existe.", email = adminEmail });
 
             var correo = Email.Create(adminEmail);
-            var hash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+            var hash = BCrypt.Net.BCrypt.HashPassword(password);
             var admin = Asesor.Crear("Administrador", correo, hash, "Administrador");
             db.Asesores.Add(admin);
             await db.SaveChangesAsync();
@@ -91,10 +105,10 @@ public static class AuthModule
             return Results.Ok(new
             {
                 message = "Admin creado.",
-                email = adminEmail,
-                password = adminPassword
+                email = adminEmail
             });
         })
+        .AllowAnonymous()
         .WithName("SeedAdmin");
     }
 }

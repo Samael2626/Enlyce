@@ -18,7 +18,7 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
     public LeadsEndpointTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient().Client;
     }
 
     [Fact]

@@ -2,7 +2,7 @@ using Enlyce.Domain.Entities;
 
 namespace Enlyce.Application.Queries.Lead;
 
-public sealed record ConsultarPipelineQuery(string? Etapa = null);
+public sealed record ConsultarPipelineQuery(string? Etapa = null, Guid? AdvisorId = null);
 
 public sealed record PipelineResponse(
     List<EtapaPipelineDto> Etapas,

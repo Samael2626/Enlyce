@@ -20,7 +20,7 @@ public class Ley1581EndpointTests : IClassFixture<TestWebApplicationFactory>
     public Ley1581EndpointTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient().Client;
 
         SeedAdmin(factory);
     }
