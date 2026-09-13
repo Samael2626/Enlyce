@@ -8,7 +8,7 @@ Arquitectura: Clean Architecture / Hexagonal (ardalis).
 ## Comandos
 ```bash
 dotnet build                                            # Compilar todo
-dotnet test                                             # Correr todos los tests (223: 151 dominio + 10 aplicacion + 62 integracion)
+dotnet test                                             # Correr todos los tests (303: 160 dominio + 14 aplicacion + 129 integracion)
 dotnet run --project src/Enlyce.Api --no-launch-profile  # Levantar API (puerto 5000, Postgres en 5435)
 dotnet ef migrations add <Nombre> --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
 dotnet ef database update --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
@@ -19,6 +19,14 @@ dotnet ef database update --project src/Enlyce.Infrastructure --startup-project 
 docker start enlyce-db   # PostgreSQL 17-alpine, puerto 5435->5432
 docker stop enlyce-db
 ```
+
+## Secretos locales (antes de levantar la API)
+`Enlyce.Api.csproj` ya tiene `UserSecretsId`. Cada clon necesita sus propios valores, fuera de Git:
+```powershell
+dotnet user-secrets set "JwtSettings:SecretKey" "<CLAVE_ALEATORIA_DE_32_BYTES_O_MAS>" --project src/Enlyce.Api/Enlyce.Api.csproj
+dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5435;Database=enlyce;Username=postgres;Password=<CONTRASENA_LOCAL_POSTGRES>" --project src/Enlyce.Api/Enlyce.Api.csproj
+```
+La contrasena en la segunda linea debe coincidir con la del contenedor PostgreSQL local. En produccion, configurar `JwtSettings__SecretKey` y `ConnectionStrings__Default` mediante secretos del entorno; User Secrets solo se carga en Development. Nunca copiar valores reales a `appsettings.json`, Git ni el vault.
 
 ## Convenciones
 - Identificadores, clases, metodos: **ingles sin acentos**.
@@ -52,7 +60,7 @@ tests/
 - Todo lead requiere autorizacion de tratamiento de datos (Ley 1581).
 
 ## Estado actual
-- 223 tests pasando (151 dominio + 10 aplicacion + 62 integracion)
+- 303 tests pasando (160 dominio + 14 aplicacion + 129 integracion)
 - PostgreSQL: container Docker `enlyce-db` en puerto 5435
 - Modulos: Leads, Inmuebles, Propietarios, Pipeline, Interacciones, Visitas, Alertas, Auth (JWT+roles+bcrypt), Datos personales (Ley 1581)
 - Actividad 1: docs/actividad-1/ (modelo-negocio.md, 1_MODELO_DEL_NEGOCIO_RESPUESTAS.docx, canvas-modelo-negocio.xlsx, presentacion-enlyce.pptx). Generadores en docs/actividad-1/_scripts/

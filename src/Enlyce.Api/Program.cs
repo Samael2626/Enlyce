@@ -113,6 +113,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+var signingKey = app.Services.GetRequiredService<IOptions<JwtSettings>>().Value.SecretKey;
+if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
+    throw new InvalidOperationException("Configura JwtSettings:SecretKey fuera del repositorio (minimo 32 bytes).");
+
 if (app.Environment.IsDevelopment() &&
     app.Configuration.GetValue<bool>("DemoData:SeedPublicCatalog"))
 {
