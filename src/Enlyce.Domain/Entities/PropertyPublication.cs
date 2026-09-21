@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Enlyce.Domain.Errors;
+using Enlyce.Domain.Media;
 
 namespace Enlyce.Domain.Entities;
 
@@ -199,6 +200,7 @@ public sealed class PropertyPublication
     public void AddPhoto(string url, string altText, int order, bool isCover = false)
     {
         EnsureNotWithdrawn();
+        MediaConstraints.ValidatePhotoCount(_photos.Count);
 
         if (_photos.Any(photo => photo.Order == order))
             throw new DomainError("El orden de la foto ya existe en la publicacion.");

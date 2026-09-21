@@ -9,16 +9,19 @@ using Enlyce.Api.Endpoints.Interacciones;
 using Enlyce.Api.Endpoints.Leads;
 using Enlyce.Api.Endpoints.Pipeline;
 using Enlyce.Api.Endpoints.Politica;
+using Enlyce.Api.Endpoints.PublicationMedia;
 using Enlyce.Api.Endpoints.PublicCatalog;
 using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
 using Enlyce.Application;
 using Enlyce.Application.Auth;
+using Enlyce.Domain.Ports;
 using Enlyce.Infrastructure;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -122,9 +125,22 @@ if (app.Environment.IsDevelopment() &&
 {
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+    var mediaStorage = scope.ServiceProvider.GetRequiredService<IMediaStorage>();
+    var photoSource = app.Configuration.GetValue<string>("DemoData:PhotoSourceDirectory")
+        ?? Path.Combine(app.Environment.ContentRootPath, "..", "..", "website", "assets");
+
     await db.Database.MigrateAsync();
-    await DemoCatalogSeeder.SeedAsync(db);
+    await DemoCatalogSeeder.SeedAsync(db, mediaStorage, Path.GetFullPath(photoSource));
 }
+
+// Sirve las variantes generadas por LocalMediaStorage bajo /media.
+var mediaRoot = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "media");
+Directory.CreateDirectory(mediaRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(mediaRoot),
+    RequestPath = "/media"
+});
 
 app.UseCors();
 
@@ -151,6 +167,7 @@ app.MapInteracciones();
 app.MapVisitas();
 app.MapAlertas();
 app.MapPublicCatalog();
+app.MapPublicationMedia();
 
 app.Run();
 

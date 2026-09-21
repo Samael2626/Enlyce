@@ -10,6 +10,7 @@ using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.CreateLead;
 using Enlyce.Application.UseCases.GetInmuebleById;
 using Enlyce.Application.UseCases.GetLeadById;
+using Enlyce.Application.UseCases.UploadPublicationPhoto;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Enlyce.Application;
@@ -20,6 +21,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ICommandHandler<CreateLeadCommand, CreateLeadResponse>, CreateLeadHandler>();
         services.AddScoped<ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse>, CreateInmuebleHandler>();
+        services.AddScoped<ICommandHandler<UploadPublicationPhotoCommand, UploadPublicationPhotoResponse>, UploadPublicationPhotoHandler>();
         services.AddScoped<IQueryHandler<GetLeadByIdQuery, GetLeadByIdResponse?>, GetLeadByIdHandler>();
         services.AddScoped<IQueryHandler<GetInmuebleByIdQuery, GetInmuebleByIdResponse?>, GetInmuebleByIdHandler>();
         services.AddScoped<IQueryHandler<GetPublicPropertiesQuery, PublicPropertyPageResponse>, GetPublicPropertiesHandler>();

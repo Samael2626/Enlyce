@@ -54,3 +54,6 @@ web/node_modules/
 web/dist/
 frontend/node_modules/
 frontend/dist/
+
+# Medios generados por LocalMediaStorage
+src/Enlyce.Api/wwwroot/media/

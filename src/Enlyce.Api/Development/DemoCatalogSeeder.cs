@@ -1,4 +1,6 @@
 using Enlyce.Domain.Entities;
+using Enlyce.Domain.Media;
+using Enlyce.Domain.Ports;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +28,20 @@ public static class DemoCatalogSeeder
         new("finca-copacabana-el-cabuyal", "Finca de recreo en El Cabuyal", "Casa principal, árboles maduros y espacio exterior para descanso.", TipoInmueble.Finca, ModalidadInmueble.Venta, "Copacabana", "El Cabuyal", 1_090_000_000m, 2_600, 4, 3, 5, 6.3372m, -75.5084m),
     ];
 
-    public static async Task SeedAsync(EnlyceDbContext db, CancellationToken cancellationToken = default)
+    // Fotos de origen del catalogo sintetico. Solo hay dos assets utiles; las
+    // fotos reales siguen pendientes de entrega por L&C.
+    private static readonly string[] SourcePhotos =
+    [
+        "property-triptych.png",
+        "medellin-hero.png",
+        "property-triptych.png"
+    ];
+
+    public static async Task SeedAsync(
+        EnlyceDbContext db,
+        IMediaStorage storage,
+        string photoSourceDirectory,
+        CancellationToken cancellationToken = default)
     {
         var demoSlugs = Properties.Select(item => item.Slug).ToArray();
         var existingSlugs = await db.PropertyPublications
@@ -77,7 +92,7 @@ public static class DemoCatalogSeeder
                 spec.Description);
             publication.SetPublicPrice(spec.Price);
             publication.SetPublicLocation(spec.Municipality, spec.Neighborhood, spec.Latitude, spec.Longitude);
-            AddPhotos(publication, spec);
+            await AddPhotosAsync(publication, spec, storage, photoSourceDirectory, cancellationToken);
             publication.Publish();
 
             db.Inmuebles.Add(property);
@@ -87,11 +102,38 @@ public static class DemoCatalogSeeder
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private static void AddPhotos(PropertyPublication publication, DemoProperty spec)
+    private static async Task AddPhotosAsync(
+        PropertyPublication publication,
+        DemoProperty spec,
+        IMediaStorage storage,
+        string photoSourceDirectory,
+        CancellationToken cancellationToken)
     {
-        publication.AddPhoto($"http://localhost:4173/assets/property-triptych.png?property={spec.Slug}&photo=1", $"Vista principal de {spec.Title}", 0, true);
-        publication.AddPhoto($"http://localhost:4173/assets/medellin-hero.png?property={spec.Slug}&photo=2", $"Entorno de {spec.Neighborhood}", 1);
-        publication.AddPhoto($"http://localhost:4173/assets/property-triptych.png?property={spec.Slug}&photo=3", $"Detalle interior de {spec.Title}", 2);
+        string[] altTexts =
+        [
+            $"Vista principal de {spec.Title}",
+            $"Entorno de {spec.Neighborhood}",
+            $"Detalle interior de {spec.Title}"
+        ];
+
+        for (var index = 0; index < SourcePhotos.Length; index++)
+        {
+            var path = Path.Combine(photoSourceDirectory, SourcePhotos[index]);
+            if (!File.Exists(path))
+                throw new InvalidOperationException(
+                    $"Falta la imagen de demostracion '{path}'. Configure DemoData:PhotoSourceDirectory.");
+
+            await using var content = File.OpenRead(path);
+            var upload = MediaUpload.Create(
+                publication.Id,
+                SourcePhotos[index],
+                "image/png",
+                content.Length,
+                content);
+
+            var stored = await storage.StoreAsync(upload, cancellationToken);
+            publication.AddPhoto(stored.Url, altTexts[index], index, index == 0);
+        }
     }
 
     private sealed record DemoProperty(

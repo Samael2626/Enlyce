@@ -44,7 +44,9 @@ Usar **Next.js + TypeScript para `website/` y conservar ASP.NET Core 10 + Postgr
 
 - Sus paginas y layouts se renderizan en servidor por defecto, con HTML inicial, prerender y render dinamico.
 - Permite metadatos estaticos o generados desde cada inmueble para SEO y compartidos sociales.
-- React ya existe en `frontend/`; se reutilizan conocimientos y componentes sin acoplar ambas aplicaciones.
+- **Razon corregida 2026-09-21:** el argumento original decia que se reutilizarian componentes de `frontend/`. Es falso para `website/`: son 2.483 lineas de HTML/CSS/JS vanilla, sin `package.json` y sin una sola importacion de React. No hay ningun componente que reutilizar; migrar a Next es reescribir el laboratorio, no reciclarlo.
+- Lo que si se gana no es "enlazar con el CRM" — el enlace es HTTP contra `Enlyce.Api` y se ve igual desde cualquier framework. Se gana **compartir ecosistema** con `frontend/` (React 19, TypeScript 6, Tailwind 4, react-query 5): un unico cliente tipado generado del OpenAPI para las dos apps, mismos tipos de dominio, mismos patrones, una sola cabeza de frontend que mantener con seis horas semanales. Esa es la justificacion real de las 18-26 horas de reescritura, no el SEO solo.
+- Recordar que `website/` y `frontend/` siguen siendo aplicaciones separadas: el sitio publico es anonimo, el CRM es JWT con roles. Compartir tipos no es acoplar permisos.
 - El mapa, filtros y favoritos permanecen interactivos, mientras las fichas pueden salir como HTML indexable.
 
 Fuentes oficiales: [App Router](https://nextjs.org/docs/app), [renderizado y navegacion](https://nextjs.org/docs/app/getting-started/linking-and-navigating) y [metadatos](https://nextjs.org/docs/app/getting-started/metadata-and-og-images).

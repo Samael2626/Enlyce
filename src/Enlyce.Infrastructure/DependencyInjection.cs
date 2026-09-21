@@ -3,6 +3,7 @@ using Enlyce.Application.PublicCatalog;
 using Enlyce.Domain.Ports;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Email;
+using Enlyce.Infrastructure.Media;
 using Enlyce.Infrastructure.Persistence;
 using Enlyce.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,8 @@ public static class DependencyInjection
         services.AddScoped<IInteraccionRepository, InteraccionRepository>();
         services.AddScoped<IVisitaRepository, VisitaRepository>();
         services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
+        services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
+        services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddScoped<ITokenService, JwtTokenService>();
 

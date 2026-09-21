@@ -19,4 +19,17 @@ public sealed class PropertyPublicationRepository : IPropertyPublicationReposito
             .SingleOrDefaultAsync(publication =>
                 publication.Id == id &&
                 publication.Status == PublicationStatus.Published);
+
+    public Task<PropertyPublication?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        _context.PropertyPublications
+            .Include(publication => publication.Photos)
+            .SingleOrDefaultAsync(publication => publication.Id == id, ct);
+
+    public async Task SaveAsync(PropertyPublication publication, CancellationToken ct = default)
+    {
+        if (_context.Entry(publication).State == EntityState.Detached)
+            _context.PropertyPublications.Update(publication);
+
+        await _context.SaveChangesAsync(ct);
+    }
 }
