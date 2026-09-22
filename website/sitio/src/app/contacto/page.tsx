@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ContactForm } from "@/components/ContactForm";
+import { getPropertyBySlug } from "@/lib/api/catalog";
+import { findOwnerService, getActivePolicy } from "@/lib/api/leads";
 
 export const metadata: Metadata = {
   title: "Contacto",
-  description: "Habla con un asesor de L&C Propiedad Raíz sobre compra, arriendo o publicación de tu inmueble.",
+  description:
+    "Habla con un asesor de L&C Propiedad Raíz sobre compra, arriendo o publicación de tu inmueble.",
 };
 
 type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -14,38 +18,51 @@ function first(value: string | string[] | undefined): string | undefined {
 
 export default async function ContactoPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const property = first(params.inmueble);
+  const slug = first(params.inmueble);
   const reason = first(params.motivo);
+  const isOwnerInquiry = reason === "propietario" || findOwnerService(first(params.servicio)) !== undefined;
+
+  // El enlace de la ficha trae el slug, pero el CRM espera el GUID de la
+  // publicacion. Se resuelve aqui; si el slug no existe se ignora y el
+  // formulario sigue funcionando como contacto general.
+  const property = slug ? await getPropertyBySlug(slug) : null;
+  const policy = await getActivePolicy();
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <header className="space-y-2">
         <h1 className="text-4xl">Contacto</h1>
         <p className="text-muted">
-          {reason === "propietario"
-            ? "Quieres publicar o avaluar tu inmueble."
+          {isOwnerInquiry
+            ? "Cuéntanos qué inmueble tienes y qué necesitas."
             : "Escríbenos y te responde un asesor, no un robot."}
         </p>
       </header>
 
-      {property && (
+      {property ? (
         <p className="rounded-sheet bg-surface p-4 text-sm shadow-card">
-          Consulta sobre el inmueble{" "}
-          <Link href={`/inmuebles/${property}`} className="text-accent underline">
-            {property}
-          </Link>
+          Consulta sobre{" "}
+          <Link href={`/inmuebles/${property.slug}`} className="text-accent underline">
+            {property.publicTitle}
+          </Link>{" "}
+          — {property.location.neighborhood}, {property.location.municipality}
         </p>
+      ) : (
+        slug && (
+          <p className="rounded-sheet border border-line p-4 text-sm text-muted">
+            El inmueble que buscabas ya no está publicado. Puedes escribirnos igual y te
+            proponemos alternativas.
+          </p>
+        )
       )}
 
-      {/* El formulario que crea el lead en el CRM llega en el bloque 6 del plan. */}
-      <section className="rounded-sheet border border-line p-6">
-        <h2 className="mb-2 text-2xl">Formulario en construcción</h2>
-        <p className="max-w-prose text-muted">
-          El envío de solicitudes al CRM, con la autorización de tratamiento de datos de la Ley
-          1581, es el siguiente paso del plan. Mientras tanto, el laboratorio en{" "}
-          <code className="rounded bg-surface px-1">website/funcional</code> ya crea leads reales.
-        </p>
-      </section>
+      <ContactForm
+        publicationId={property?.id}
+        propertySlug={property?.slug}
+        propertyTitle={property?.publicTitle}
+        isOwnerInquiry={isOwnerInquiry}
+        policyVersion={policy?.version}
+      />
     </div>
   );
 }

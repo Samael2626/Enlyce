@@ -95,4 +95,61 @@ export async function apiGetOrNull<T>(path: string, options: RequestOptions = {}
   }
 }
 
+// Mismo criterio que normalizeProblem en website/funcional/js/api.js: los
+// errores de validacion del backend mandan sobre el detail, y si no hay
+// ninguno se muestra un mensaje generico en vez de un volcado tecnico.
+export type ProblemDetails = {
+  title?: string | null;
+  detail?: string | null;
+  errors?: Record<string, string[]> | null;
+};
+
+export function normalizeProblem(problem: unknown): { title: string; messages: string[] } {
+  const source = (problem ?? {}) as ProblemDetails;
+  const title =
+    typeof source.title === "string" && source.title.trim()
+      ? source.title
+      : "No pudimos completar la solicitud";
+
+  const validationMessages =
+    source.errors && typeof source.errors === "object"
+      ? Object.values(source.errors)
+          .flat()
+          .filter((message): message is string => typeof message === "string")
+      : [];
+
+  const detail = typeof source.detail === "string" ? [source.detail] : [];
+
+  return { title, messages: validationMessages.length ? validationMessages : detail };
+}
+
+export class ApiProblemError extends Error {
+  readonly messages: string[];
+
+  constructor(
+    readonly status: number,
+    problem: unknown,
+  ) {
+    const normalized = normalizeProblem(problem);
+    super(normalized.messages[0] ?? normalized.title);
+    this.name = "ApiProblemError";
+    this.messages = normalized.messages.length ? normalized.messages : [normalized.title];
+  }
+}
+
+export async function apiPost<TBody, TResult>(path: string, body: TBody): Promise<TResult> {
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const isJson = response.headers.get("content-type")?.includes("json") ?? false;
+  const payload: unknown = isJson ? await response.json() : null;
+
+  if (!response.ok) throw new ApiProblemError(response.status, payload);
+
+  return payload as TResult;
+}
+
 export { baseUrl as apiBaseUrl };

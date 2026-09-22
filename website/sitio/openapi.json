@@ -1309,6 +1309,9 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "esContactoRepetido": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

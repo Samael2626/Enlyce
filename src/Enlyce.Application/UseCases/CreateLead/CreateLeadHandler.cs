@@ -6,6 +6,22 @@ using Enlyce.Domain.ValueObjects;
 
 namespace Enlyce.Application.UseCases.CreateLead;
 
+// Criterio de correos repetidos (2026-09-21)
+//
+// Antes, un segundo lead con el mismo correo lanzaba InvalidOperationException
+// y el visitante recibia un error generico. Un comprador que consulta dos
+// inmuebles, o un propietario que vuelve meses despues, quedaban fuera.
+//
+// Ahora:
+//   - Correo nuevo                          -> lead nuevo.
+//   - Correo repetido y otra publicacion    -> lead nuevo. Es otra oportunidad
+//     comercial y necesita su propia ficha en el pipeline.
+//   - Correo repetido, misma publicacion o
+//     consulta sin publicacion              -> interaccion sobre el lead que ya
+//     existe, mas IncrementarInteracciones. No se duplica la ficha.
+//
+// La respuesta marca EsContactoRepetido para que la web pueda decirlo sin
+// inventarse que creo algo nuevo.
 public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadResponse>
 {
     private const int MaxSourceLength = 100;
@@ -13,6 +29,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
     private readonly IPropertyPublicationRepository _publicationRepo;
     private readonly IConsentimientoRepository _consentimientoRepo;
     private readonly IPoliticaTratamientoRepository _politicaRepo;
+    private readonly IInteraccionRepository _interaccionRepo;
     private readonly IEmailSender _emailSender;
 
     public CreateLeadHandler(
@@ -20,12 +37,14 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         IPropertyPublicationRepository publicationRepo,
         IConsentimientoRepository consentimientoRepo,
         IPoliticaTratamientoRepository politicaRepo,
+        IInteraccionRepository interaccionRepo,
         IEmailSender emailSender)
     {
         _leadRepo = leadRepo;
         _publicationRepo = publicationRepo;
         _consentimientoRepo = consentimientoRepo;
         _politicaRepo = politicaRepo;
+        _interaccionRepo = interaccionRepo;
         _emailSender = emailSender;
     }
 
@@ -36,9 +55,6 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         var ownerService = ParseOwnerService(command.OwnerService);
         var publicationId = ParsePublicationId(command.PublicationId);
 
-        if (await _leadRepo.ExistsByEmailAsync(email))
-            throw new InvalidOperationException($"Ya existe un lead con email {command.Email}");
-
         PropertyPublication? publication = null;
         var requiresPublicationReview = !string.IsNullOrWhiteSpace(command.PublicationId);
 
@@ -47,6 +63,12 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             publication = await _publicationRepo.GetPublishedByIdAsync(publicationId.Value);
             requiresPublicationReview = publication is null;
         }
+
+        // Criterio de duplicados por correo (ver comentario al final de la clase).
+        // Un correo repetido no es un error: es una persona que vuelve.
+        var existing = await _leadRepo.GetByEmailAsync(email);
+        if (existing is not null && !IsDistinctOpportunity(existing, publicationId))
+            return await RegisterRepeatContactAsync(existing, command, publication, ct);
 
         var source = BuildSource(
             command.Fuente,
@@ -60,19 +82,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
 
         var saved = await _leadRepo.SaveAsync(lead);
 
-        if (command.AutorizacionDatos)
-        {
-            var politica = await _politicaRepo.ObtenerActivaAsync();
-            if (politica is not null)
-            {
-                var consentimiento = Consentimiento.Registrar(
-                    saved.Id,
-                    politica.TextoCompleto,
-                    politica.Version,
-                    "formulario_web");
-                await _consentimientoRepo.AgregarAsync(consentimiento);
-            }
-        }
+        await RegisterConsentAsync(saved.Id, command.AutorizacionDatos);
 
         await _emailSender.SendAsync(
             command.Email,
@@ -84,6 +94,60 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             saved.Estado.ToString(), saved.FechaCreacion,
             saved.OwnerService?.ToString(),
             saved.PublicationId);
+    }
+
+    // Interes por una publicacion distinta a la que ya trae el lead: es otra
+    // oportunidad comercial y merece su propia ficha en el pipeline. Sin
+    // publicacion, o con la misma, se trata como recontacto.
+    private static bool IsDistinctOpportunity(Lead existing, Guid? publicationId) =>
+        publicationId.HasValue && existing.PublicationId != publicationId;
+
+    private async Task<CreateLeadResponse> RegisterRepeatContactAsync(
+        Lead existing,
+        CreateLeadCommand command,
+        PropertyPublication? publication,
+        CancellationToken ct)
+    {
+        var advisorId = publication?.AdvisorId ?? existing.AsesorAsignadoId;
+
+        if (advisorId.HasValue)
+        {
+            var resumen = string.IsNullOrWhiteSpace(command.Fuente)
+                ? "Nuevo contacto desde la web."
+                : $"Nuevo contacto desde la web. Origen: {command.Fuente.Trim()}";
+
+            await _interaccionRepo.AgregarAsync(
+                Interaccion.Registrar(existing.Id, advisorId.Value, "ContactoWeb", resumen));
+        }
+
+        // Sin asesor asignado no hay a quien atribuir la interaccion, pero el
+        // contador si debe moverse: es la senal de que la persona insiste.
+        existing.IncrementarInteracciones();
+        var saved = await _leadRepo.SaveAsync(existing);
+
+        await RegisterConsentAsync(saved.Id, command.AutorizacionDatos);
+
+        return new CreateLeadResponse(
+            saved.Id, saved.Nombre, saved.Email.Value,
+            saved.Estado.ToString(), saved.FechaCreacion,
+            saved.OwnerService?.ToString(),
+            saved.PublicationId,
+            EsContactoRepetido: true);
+    }
+
+    private async Task RegisterConsentAsync(Guid leadId, bool autorizacionDatos)
+    {
+        if (!autorizacionDatos)
+            return;
+
+        // Cada autorizacion se audita, tambien en el recontacto: la Ley 1581
+        // pide poder demostrar cuando se otorgo, no solo que existe.
+        var politica = await _politicaRepo.ObtenerActivaAsync();
+        if (politica is null)
+            return;
+
+        await _consentimientoRepo.AgregarAsync(Consentimiento.Registrar(
+            leadId, politica.TextoCompleto, politica.Version, "formulario_web"));
     }
 
     private static OwnerInquiryService? ParseOwnerService(string? value)

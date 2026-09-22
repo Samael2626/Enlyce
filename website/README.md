@@ -73,7 +73,10 @@ correr `npm run api:types`.
 `sitio/` (Next.js 16 + React 19 + Tailwind 4) cubre inicio, listado con filtros
 en la URL, ficha con metadatos y Open Graph por inmueble, zonas indexables,
 favoritos en localStorage, propietarios, contacto, privacidad, sitemap y robots.
-El formulario que crea leads en el CRM es el bloque 6 y todavia no esta.
+El formulario de contacto ya crea leads reales en el CRM (bloque 6): resuelve el
+slug del inmueble contra la API para mandar el GUID de la publicacion, exige la
+autorizacion de la Ley 1581 y trata un correo repetido como recontacto en vez de
+error.
 
 Los tres conceptos siguen siendo simulaciones. `funcional/` consume el catalogo
 publico, muestra datos sinteticos, guarda favoritos locales y crea leads desde

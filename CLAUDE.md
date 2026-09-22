@@ -8,7 +8,7 @@ Arquitectura: Clean Architecture / Hexagonal (ardalis).
 ## Comandos
 ```bash
 dotnet build                                            # Compilar todo
-dotnet test                                             # Correr todos los tests (342: 182 dominio + 20 aplicacion + 140 integracion)
+dotnet test                                             # Correr todos los tests (346: 182 dominio + 24 aplicacion + 140 integracion)
 dotnet run --project src/Enlyce.Api --no-launch-profile  # Levantar API (puerto 5000, Postgres en 5435)
 dotnet ef migrations add <Nombre> --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
 dotnet ef database update --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
@@ -60,7 +60,7 @@ tests/
 - Todo lead requiere autorizacion de tratamiento de datos (Ley 1581).
 
 ## Estado actual
-- 342 tests pasando (182 dominio + 20 aplicacion + 140 integracion)
+- 346 tests pasando (182 dominio + 24 aplicacion + 140 integracion)
 - PostgreSQL: container Docker `enlyce-db` en puerto 5435
 - Modulos: Leads, Inmuebles, Propietarios, Pipeline, Interacciones, Visitas, Alertas, Auth (JWT+roles+bcrypt), Datos personales (Ley 1581), Medios de publicacion (IMediaStorage + ImageSharp)
 - Actividad 1: docs/actividad-1/ (modelo-negocio.md, 1_MODELO_DEL_NEGOCIO_RESPUESTAS.docx, canvas-modelo-negocio.xlsx, presentacion-enlyce.pptx). Generadores en docs/actividad-1/_scripts/

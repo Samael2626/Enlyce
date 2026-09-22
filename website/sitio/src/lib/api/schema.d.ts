@@ -516,6 +516,7 @@ export interface components {
             ownerService?: string | null;
             /** Format: uuid */
             publicationId?: string | null;
+            esContactoRepetido?: boolean;
         };
         Email: {
             readonly value?: string | null;
