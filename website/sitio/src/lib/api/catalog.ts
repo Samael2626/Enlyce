@@ -47,7 +47,21 @@ export function parseFilters(params: Record<string, string | string[] | undefine
     }
 
     const numeric = Number(value);
-    if (Number.isFinite(numeric) && numeric >= 0) Object.assign(filters, { [key]: numeric });
+    if (!Number.isFinite(numeric) || numeric < 0) continue;
+
+    // Se acotan contra los limites de la API: una URL compartida o editada a
+    // mano no puede tumbar la pagina con un 400.
+    if (key === "page") {
+      filters.page = Math.max(1, Math.floor(numeric));
+      continue;
+    }
+
+    if (key === "pageSize") {
+      filters.pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(numeric)));
+      continue;
+    }
+
+    Object.assign(filters, { [key]: numeric });
   }
 
   return filters;

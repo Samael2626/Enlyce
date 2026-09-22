@@ -42,10 +42,23 @@ public class UploadPublicationPhotoHandler
             publication.AddPhoto(stored.Url, command.AltText, order, isCover);
             await _publications.SaveAsync(publication, ct);
         }
-        catch
+        catch (Exception rejection)
         {
             // Sin esto el disco acumula variantes huerfanas ante cualquier rechazo.
-            await _storage.RemoveAsync(command.PublicationId, stored.Url, ct);
+            try
+            {
+                await _storage.RemoveAsync(command.PublicationId, stored.Url, ct);
+            }
+            catch (Exception cleanupFailure)
+            {
+                // Los dos fallos importan: el rechazo y las variantes que quedaron
+                // en disco. Tragarse cualquiera de ellos deja basura invisible.
+                throw new AggregateException(
+                    $"La foto fue rechazada y ademas no se pudo limpiar {stored.Url}.",
+                    rejection,
+                    cleanupFailure);
+            }
+
             throw;
         }
 

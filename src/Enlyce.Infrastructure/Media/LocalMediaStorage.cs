@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Enlyce.Domain.Errors;
 using Enlyce.Domain.Media;
 using Enlyce.Domain.Ports;
@@ -13,8 +14,11 @@ namespace Enlyce.Infrastructure.Media;
 // Adaptador inicial: escribe variantes WebP en disco y las sirve por static
 // files. Cambiar a S3 u otro proveedor solo implica otra implementacion del
 // puerto; Domain y Application no se enteran.
-public sealed class LocalMediaStorage : IMediaStorage
+public sealed partial class LocalMediaStorage : IMediaStorage
 {
+    [GeneratedRegex(@"^([0-9a-f]{16})-\d+\.webp$", RegexOptions.IgnoreCase)]
+    private static partial Regex VariantFileName();
+
     private readonly MediaStorageOptions _options;
 
     public LocalMediaStorage(IOptions<MediaStorageOptions> options)
@@ -91,19 +95,37 @@ public sealed class LocalMediaStorage : IMediaStorage
 
     public Task RemoveAsync(Guid publicationId, string url, CancellationToken ct = default)
     {
-        var fileName = Path.GetFileName(new Uri(url, UriKind.RelativeOrAbsolute).LocalPath);
-        if (string.IsNullOrWhiteSpace(fileName))
+        // Las URL heredadas o externas no siguen el patron huella-ancho.webp.
+        // Se ignoran en vez de reventar: esto corre en el rollback de la carga
+        // y una excepcion aqui enterraria el error que motivo la limpieza.
+        var fingerprint = ExtractFingerprint(url);
+        if (fingerprint is null)
             return Task.CompletedTask;
 
         var folder = Path.Combine(_options.RootPath, "publicaciones", publicationId.ToString());
-        var prefix = fileName[..fileName.LastIndexOf('-')];
+        if (!Directory.Exists(folder))
+            return Task.CompletedTask;
 
         // Se borran todas las variantes que comparten huella, no solo la URL dada.
-        if (Directory.Exists(folder))
-            foreach (var path in Directory.EnumerateFiles(folder, $"{prefix}-*.webp"))
-                File.Delete(path);
+        foreach (var path in Directory.EnumerateFiles(folder, $"{fingerprint}-*.webp"))
+            File.Delete(path);
 
         return Task.CompletedTask;
+    }
+
+    // Acepta solo el nombre que genera StoreAsync, para que un valor arbitrario
+    // no se convierta en un patron de busqueda con comodines.
+    private static string? ExtractFingerprint(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return null;
+
+        if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out var uri))
+            return null;
+
+        var fileName = Path.GetFileName(uri.IsAbsoluteUri ? uri.LocalPath : url);
+        var match = VariantFileName().Match(fileName);
+        return match.Success ? match.Groups[1].Value : null;
     }
 
     private static async Task<Image> LoadAsync(Stream content, CancellationToken ct)

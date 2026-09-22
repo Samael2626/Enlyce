@@ -87,6 +87,23 @@ public sealed class UploadPublicationPhotoHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_CleanupAlsoFails_KeepsBothErrors()
+    {
+        var publication = Publication();
+        publication.AddPhoto("https://cdn.enlyce.test/media/portada.webp", "Portada", 0, true);
+        _publications.GetByIdAsync(publication.Id, Arg.Any<CancellationToken>()).Returns(publication);
+
+        _storage.RemoveAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns<Task>(_ => throw new IOException("disco ocupado"));
+
+        var error = await Assert.ThrowsAsync<AggregateException>(() =>
+            _handler.HandleAsync(Command(publication.Id, isCover: true)));
+
+        Assert.Contains(error.InnerExceptions, inner => inner is DomainError);
+        Assert.Contains(error.InnerExceptions, inner => inner is IOException);
+    }
+
+    [Fact]
     public async Task HandleAsync_UnsupportedContentType_RejectsBeforeStoring()
     {
         var publication = Publication();

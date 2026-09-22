@@ -128,6 +128,39 @@ public sealed class LocalMediaStorageTests : IDisposable
             Path.Combine(_root, "publicaciones", publicationId.ToString()), "*.webp"));
     }
 
+    [Theory]
+    [InlineData("https://cdn.enlyce.test/media/legado.webp")]
+    [InlineData("http://localhost:4173/assets/property-triptych.png")]
+    [InlineData("https://cdn.enlyce.test/media/")]
+    public async Task RemoveAsync_UrlWithoutVariantSuffix_DoesNotThrow(string url)
+    {
+        // El rollback de la carga llama a RemoveAsync; si revienta aqui se pierde
+        // el DomainError original que motivo la limpieza.
+        await CreateStorage().RemoveAsync(Guid.NewGuid(), url);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_DoesNotTouchOtherPhotosOfTheSamePublication()
+    {
+        var publicationId = Guid.NewGuid();
+        var storage = CreateStorage();
+
+        using var first = Png(1800, 1200);
+        var one = await storage.StoreAsync(Upload(publicationId, first));
+        using var second = Png(1400, 1000);
+        var two = await storage.StoreAsync(Upload(publicationId, second));
+
+        await storage.RemoveAsync(publicationId, one.Url);
+
+        var folder = Path.Combine(_root, "publicaciones", publicationId.ToString());
+        var remaining = Directory.GetFiles(folder, "*.webp");
+        Assert.Equal(3, remaining.Length);
+        Assert.All(remaining, path =>
+            Assert.StartsWith(
+                Path.GetFileName(new Uri(two.Url).LocalPath).Split('-')[0],
+                Path.GetFileName(path)));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root))

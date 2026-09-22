@@ -46,9 +46,18 @@ export function CatalogFilters() {
 
   const current = (key: string) => searchParams.get(key) ?? "";
 
+  // Sin este onSubmit, pulsar Enter en el campo de barrio dispara el envio
+  // nativo del formulario y la navegacion pierde todos los filtros de la URL.
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const neighborhood = new FormData(event.currentTarget).get("neighborhood");
+    update("neighborhood", typeof neighborhood === "string" ? neighborhood.trim() : "");
+  }
+
   return (
     <form
       aria-label="Filtros de búsqueda"
+      onSubmit={handleSubmit}
       className="grid gap-3 rounded-sheet bg-surface p-4 shadow-card sm:grid-cols-2 lg:grid-cols-4"
       data-pending={pending ? "" : undefined}
     >
@@ -83,6 +92,10 @@ export function CatalogFilters() {
         <input
           className={fieldClass}
           type="search"
+          name="neighborhood"
+          // key fuerza el remonte cuando la URL cambia por otra via (atras,
+          // limpiar busqueda): sin esto el input conserva el texto viejo.
+          key={current("neighborhood")}
           placeholder="Laureles, El Poblado…"
           defaultValue={current("neighborhood")}
           onBlur={(event) => update("neighborhood", event.target.value.trim())}
