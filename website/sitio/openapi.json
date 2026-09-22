@@ -1,0 +1,2243 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Enlyce.Api",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/alertas": {
+      "get": {
+        "tags": [
+          "Alertas"
+        ],
+        "operationId": "ObtenerAlertas",
+        "parameters": [
+          {
+            "name": "DiasUmbral",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertasResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "RegisterAsesor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterAsesorCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Logout",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "Me",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/seed": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "SeedAdmin",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/public/inmuebles": {
+      "get": {
+        "tags": [
+          "Catálogo público"
+        ],
+        "operationId": "GetPublicProperties",
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Operation",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "PropertyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Municipality",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Neighborhood",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "MinPrice",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "MaxPrice",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "MinArea",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "MaxArea",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Bedrooms",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Bathrooms",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "ParkingSpaces",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPropertyPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/inmuebles/{slug}": {
+      "get": {
+        "tags": [
+          "Catálogo público"
+        ],
+        "operationId": "GetPublicPropertyBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPropertyDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datos-personales/{leadId}": {
+      "get": {
+        "tags": [
+          "DatosPersonales"
+        ],
+        "operationId": "ConsultarDatosLead",
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsultarDatosLeadResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "DatosPersonales"
+        ],
+        "operationId": "SuprimirDatosLead",
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Enlyce.Api"
+        ],
+        "operationId": "HealthCheck",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inmuebles/{id}": {
+      "get": {
+        "tags": [
+          "Inmuebles"
+        ],
+        "operationId": "GetInmuebleById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetInmuebleByIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inmuebles": {
+      "post": {
+        "tags": [
+          "Inmuebles"
+        ],
+        "operationId": "CreateInmueble",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInmuebleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInmuebleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interacciones": {
+      "post": {
+        "tags": [
+          "Interacciones"
+        ],
+        "operationId": "RegistrarInteraccion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarInteraccionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interacciones/lead/{leadId}": {
+      "get": {
+        "tags": [
+          "Interacciones"
+        ],
+        "operationId": "ObtenerInteraccionesPorLead",
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Interaccion"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/leads/{id}": {
+      "get": {
+        "tags": [
+          "Leads"
+        ],
+        "operationId": "GetLeadById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLeadByIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/leads": {
+      "post": {
+        "tags": [
+          "Leads"
+        ],
+        "operationId": "CreateLead",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLeadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateLeadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline": {
+      "get": {
+        "tags": [
+          "Pipeline"
+        ],
+        "operationId": "ConsultarPipeline",
+        "parameters": [
+          {
+            "name": "Etapa",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline/{id}/mover-etapa": {
+      "put": {
+        "tags": [
+          "Pipeline"
+        ],
+        "operationId": "MoverEtapa",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoverEtapaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline/{id}/asignar": {
+      "put": {
+        "tags": [
+          "Pipeline"
+        ],
+        "operationId": "AsignarLead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarLeadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline/{id}/reasignar": {
+      "put": {
+        "tags": [
+          "Pipeline"
+        ],
+        "operationId": "ReasignarLead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasignarLeadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/politica/activa": {
+      "get": {
+        "tags": [
+          "PoliticaTratamiento"
+        ],
+        "operationId": "GetPoliticaActiva",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObtenerPoliticaActivaResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/publicaciones/{publicationId}/fotos": {
+      "post": {
+        "tags": [
+          "PublicationMedia"
+        ],
+        "operationId": "UploadPublicationPhoto",
+        "parameters": [
+          {
+            "name": "publicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "archivo",
+                  "esPortada",
+                  "textoAlternativo"
+                ],
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "textoAlternativo": {
+                    "type": "string"
+                  },
+                  "esPortada": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "encoding": {
+                "archivo": {
+                  "style": "form"
+                },
+                "textoAlternativo": {
+                  "style": "form"
+                },
+                "esPortada": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadPublicationPhotoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/publicaciones/{publicationId}/fotos/restricciones": {
+      "get": {
+        "tags": [
+          "PublicationMedia"
+        ],
+        "operationId": "GetMediaConstraints",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaConstraintsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visitas": {
+      "get": {
+        "tags": [
+          "Visitas"
+        ],
+        "operationId": "ObtenerVisitas",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Visita"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Visitas"
+        ],
+        "operationId": "RegistrarVisita",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarVisitaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visitas/lead/{leadId}": {
+      "get": {
+        "tags": [
+          "Visitas"
+        ],
+        "operationId": "ObtenerVisitasPorLead",
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Visita"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visitas/asesor/{asesorId}": {
+      "get": {
+        "tags": [
+          "Visitas"
+        ],
+        "operationId": "ObtenerVisitasPorAsesor",
+        "parameters": [
+          {
+            "name": "asesorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Desde",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Visita"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlertaLeadDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "etapaPipeline": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaUltimaActividad": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "diasSinActividad": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AlertasResponse": {
+        "type": "object",
+        "properties": {
+          "leads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertaLeadDto"
+            },
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AsignarLeadRequest": {
+        "type": "object",
+        "properties": {
+          "asesorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConsentimientoInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "versionPolitica": {
+            "type": "string",
+            "nullable": true
+          },
+          "metodo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConsultarDatosLeadResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "telefono": {
+            "$ref": "#/components/schemas/Telefono"
+          },
+          "autorizacionDatos": {
+            "type": "boolean"
+          },
+          "consentimiento": {
+            "$ref": "#/components/schemas/ConsentimientoInfo"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateInmuebleRequest": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoInmueble"
+          },
+          "modalidad": {
+            "$ref": "#/components/schemas/ModalidadInmueble"
+          },
+          "calle": {
+            "type": "string",
+            "nullable": true
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "barrio": {
+            "type": "string",
+            "nullable": true
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          },
+          "moneda": {
+            "type": "string",
+            "nullable": true
+          },
+          "metrosCuadrados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "habitaciones": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "banos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parqueaderos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "propietarioId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateInmuebleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "type": "string",
+            "nullable": true
+          },
+          "modalidad": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccion": {
+            "type": "string",
+            "nullable": true
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateLeadRequest": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefono": {
+            "type": "string",
+            "nullable": true
+          },
+          "fuente": {
+            "type": "string",
+            "nullable": true
+          },
+          "autorizacionDatos": {
+            "type": "boolean"
+          },
+          "tipoOperacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerService": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicationId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateLeadResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ownerService": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Email": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EtapaPipelineDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "etiqueta": {
+            "type": "string",
+            "nullable": true
+          },
+          "leadCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetInmuebleByIdResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "type": "string",
+            "nullable": true
+          },
+          "modalidad": {
+            "type": "string",
+            "nullable": true
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccion": {
+            "type": "string",
+            "nullable": true
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          },
+          "moneda": {
+            "type": "string",
+            "nullable": true
+          },
+          "metrosCuadrados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "habitaciones": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "banos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parqueaderos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "propietarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetLeadByIdResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefono": {
+            "type": "string",
+            "nullable": true
+          },
+          "fuente": {
+            "type": "string",
+            "nullable": true
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          },
+          "motivoCierre": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaUltimoContacto": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "autorizacionDatos": {
+            "type": "boolean"
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "etapaPipeline": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoOperacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerService": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "Interaccion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "leadId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "asesorId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "tipo": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "resumen": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LeadDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefono": {
+            "type": "string",
+            "nullable": true
+          },
+          "fuente": {
+            "type": "string",
+            "nullable": true
+          },
+          "etapaPipeline": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoOperacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "interaccionesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fechaUltimaInteraccion": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "asesorNombre": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginCommand": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaConstraintsResponse": {
+        "type": "object",
+        "properties": {
+          "tiposPermitidos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "maxBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "anchoMinimo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "altoMinimo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dimensionMaxima": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxFotosPorPublicacion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ModalidadInmueble": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "MoverEtapaRequest": {
+        "type": "object",
+        "properties": {
+          "nuevaEtapa": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ObtenerPoliticaActivaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
+          },
+          "textoCompleto": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaVigencia": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PhotoVariantResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PipelineResponse": {
+        "type": "object",
+        "properties": {
+          "etapas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EtapaPipelineDto"
+            },
+            "nullable": true
+          },
+          "leads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadDto"
+            },
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "PublicAdvisorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicPhone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicCoverPhotoResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicLocationResponse": {
+        "type": "object",
+        "properties": {
+          "municipality": {
+            "type": "string",
+            "nullable": true
+          },
+          "neighborhood": {
+            "type": "string",
+            "nullable": true
+          },
+          "approximateLatitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "approximateLongitude": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicMoneyResponse": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPhotoResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isCover": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPropertyDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "propertyType": {
+            "type": "string",
+            "nullable": true
+          },
+          "operation": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "$ref": "#/components/schemas/PublicMoneyResponse"
+          },
+          "administrationFee": {
+            "$ref": "#/components/schemas/PublicMoneyResponse"
+          },
+          "location": {
+            "$ref": "#/components/schemas/PublicLocationResponse"
+          },
+          "features": {
+            "$ref": "#/components/schemas/PublicPropertyFeaturesResponse"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPhotoResponse"
+            },
+            "nullable": true
+          },
+          "advisor": {
+            "$ref": "#/components/schemas/PublicAdvisorResponse"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPropertyFeaturesResponse": {
+        "type": "object",
+        "properties": {
+          "areaSquareMeters": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bedrooms": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bathrooms": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parkingSpaces": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stratum": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "amenities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPropertyListItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "propertyType": {
+            "type": "string",
+            "nullable": true
+          },
+          "operation": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "$ref": "#/components/schemas/PublicMoneyResponse"
+          },
+          "location": {
+            "$ref": "#/components/schemas/PublicLocationResponse"
+          },
+          "areaSquareMeters": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bedrooms": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bathrooms": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parkingSpaces": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coverPhoto": {
+            "$ref": "#/components/schemas/PublicCoverPhotoResponse"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicPropertyPageResponse": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPropertyListItemResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReasignarLeadRequest": {
+        "type": "object",
+        "properties": {
+          "nuevoAsesorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterAsesorCommand": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "correo": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "rol": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistrarInteraccionRequest": {
+        "type": "object",
+        "properties": {
+          "leadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "asesorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "nullable": true
+          },
+          "resumen": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistrarVisitaRequest": {
+        "type": "object",
+        "properties": {
+          "leadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "inmuebleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "asesorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fechaProgramada": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Telefono": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TipoInmueble": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "UploadPublicationPhotoResponse": {
+        "type": "object",
+        "properties": {
+          "publicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isCover": {
+            "type": "boolean"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PhotoVariantResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Visita": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "leadId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "inmuebleId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "asesorId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "fechaProgramada": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "fechaRealizada": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "feedback": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Alertas"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Catálogo público"
+    },
+    {
+      "name": "DatosPersonales"
+    },
+    {
+      "name": "Enlyce.Api"
+    },
+    {
+      "name": "Inmuebles"
+    },
+    {
+      "name": "Interacciones"
+    },
+    {
+      "name": "Leads"
+    },
+    {
+      "name": "Pipeline"
+    },
+    {
+      "name": "PoliticaTratamiento"
+    },
+    {
+      "name": "PublicationMedia"
+    },
+    {
+      "name": "Visitas"
+    }
+  ]
+}

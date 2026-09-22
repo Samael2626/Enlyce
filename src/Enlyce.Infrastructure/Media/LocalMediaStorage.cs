@@ -51,7 +51,13 @@ public sealed class LocalMediaStorage : IMediaStorage
             .OrderByDescending(width => width)
             .ToArray();
 
-        var encoder = new WebpEncoder { Quality = _options.Quality };
+        // Sin FileFormat explicito ImageSharp puede salir sin perdida y los
+        // archivos se van a megabytes, que es justo lo que se quiere evitar.
+        var encoder = new WebpEncoder
+        {
+            Quality = _options.Quality,
+            FileFormat = WebpFileFormatType.Lossy
+        };
         var variants = new List<MediaVariant>(widths.Length);
 
         foreach (var width in widths)

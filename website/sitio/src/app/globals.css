@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* Identidad del concepto 01 (editorial), decidida el 2026-09-11. */
+@theme {
+  --color-bg: #f2efe7;
+  --color-surface: #fbfaf6;
+  --color-accent: #ae6b48;
+  --color-accent-strong: #8f5334;
+  --color-ink: #183127;
+  --color-muted: #68716c;
+  --color-line: #ded8c9;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+
+  --radius-sheet: 16px;
+  --shadow-card: 0 8px 26px rgb(24 49 39 / 8%);
+  --shadow-raised: 0 22px 60px rgb(24 49 39 / 14%);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}

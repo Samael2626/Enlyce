@@ -1,0 +1,98 @@
+import type { components } from "./schema";
+
+type Schemas = components["schemas"];
+
+// Swashbuckle genera todo opcional y anulable. Strict deja los campos
+// obligatorios y sin null para que las paginas no vayan sembradas de guardas.
+type Strict<T> = { [K in keyof T]-?: NonNullable<T[K]> };
+
+// Las respuestas generadas desde Swashbuckle llegan con todo opcional. Se
+// estrechan aqui una sola vez para que las paginas trabajen con datos firmes.
+export type PropertyListItem = Strict<
+  Pick<
+    Schemas["PublicPropertyListItemResponse"],
+    | "id"
+    | "slug"
+    | "publicTitle"
+    | "propertyType"
+    | "operation"
+    | "areaSquareMeters"
+    | "bedrooms"
+    | "bathrooms"
+    | "parkingSpaces"
+    | "publishedAt"
+  >
+> & {
+  price: Strict<Schemas["PublicMoneyResponse"]>;
+  location: Strict<Schemas["PublicLocationResponse"]>;
+  coverPhoto?: Strict<Schemas["PublicCoverPhotoResponse"]> | null;
+};
+
+export type PropertyPage = {
+  page: number;
+  pageSize: number;
+  total: number;
+  items: PropertyListItem[];
+};
+
+export type PropertyPhoto = Strict<Schemas["PublicPhotoResponse"]>;
+
+export type PropertyDetail = Strict<
+  Pick<
+    Schemas["PublicPropertyDetailResponse"],
+    "id" | "slug" | "publicTitle" | "publicDescription" | "propertyType" | "operation" | "publishedAt"
+  >
+> & {
+  price: Strict<Schemas["PublicMoneyResponse"]>;
+  administrationFee?: Strict<Schemas["PublicMoneyResponse"]> | null;
+  location: Strict<Schemas["PublicLocationResponse"]>;
+  features: Strict<Omit<Schemas["PublicPropertyFeaturesResponse"], "stratum">> & {
+    stratum?: number | null;
+  };
+  photos: PropertyPhoto[];
+  advisor: Strict<Omit<Schemas["PublicAdvisorResponse"], "publicPhone">> & {
+    publicPhone?: string | null;
+  };
+};
+
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(/\/$/, "");
+
+type RequestOptions = {
+  // Revalidacion ISR. El catalogo ya manda Cache-Control public,max-age=300.
+  revalidate?: number;
+};
+
+export async function apiGet<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await fetch(`${baseUrl}${path}`, {
+    headers: { Accept: "application/json" },
+    next: { revalidate: options.revalidate ?? 300 },
+  });
+
+  if (!response.ok) {
+    // Fallar ruidoso: la pagina decide si es 404 o error, nunca se traga.
+    throw new ApiError(response.status, `GET ${path} respondio ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+export async function apiGetOrNull<T>(path: string, options: RequestOptions = {}): Promise<T | null> {
+  try {
+    return await apiGet<T>(path, options);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+export { baseUrl as apiBaseUrl };
