@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FavoriteToggle } from "@/components/FavoriteToggle";
+import { PropertyLocation } from "@/components/PropertyLocation";
 import { getPropertyBySlug } from "@/lib/api/catalog";
 import { formatArea, formatOperation, formatPrice } from "@/lib/format";
 
@@ -127,6 +128,14 @@ export default async function InmueblePage({ params }: PageProps) {
         <h2 id="descripcion" className="text-2xl">Sobre el inmueble</h2>
         <p className="max-w-prose leading-relaxed">{property.publicDescription}</p>
       </section>
+
+      <PropertyLocation
+        latitude={property.location.approximateLatitude}
+        longitude={property.location.approximateLongitude}
+        municipality={property.location.municipality}
+        neighborhood={property.location.neighborhood}
+        title={property.publicTitle}
+      />
 
       <section aria-labelledby="contacto" className="rounded-sheet bg-surface p-6 shadow-card">
         <h2 id="contacto" className="mb-2 text-2xl">¿Quieres verlo?</h2>

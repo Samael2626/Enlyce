@@ -38,3 +38,45 @@ h1, h2, h3 {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
+
+/* Leaflet: el mapa hereda la paleta editorial en vez del gris de fabrica. */
+.leaflet-container {
+  background: var(--color-bg);
+  font-family: var(--font-body);
+}
+
+/* La atribucion de OpenStreetMap es requisito de licencia. Se restyliza para
+   que se lea, nunca para esconderla: display, visibility y opacity quedan
+   forzados aqui para que ningun ajuste posterior la apague sin querer. */
+.leaflet-control-attribution {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  color: var(--color-ink);
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.leaflet-bar a {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-bottom-color: var(--color-line);
+}
+
+.leaflet-bar a:hover {
+  background: var(--color-bg);
+  color: var(--color-accent);
+}
+
+/* Tipografia del control de zoom: el default se ve a sistema operativo. */
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
