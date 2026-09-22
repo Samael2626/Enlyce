@@ -9,14 +9,14 @@ Arquitectura: Clean Architecture / Hexagonal (ardalis).
 ```bash
 dotnet build                                            # Compilar todo
 dotnet test                                             # Correr todos los tests (355: 182 dominio + 33 aplicacion + 140 integracion)
-dotnet run --project src/Enlyce.Api --no-launch-profile  # Levantar API (puerto 5000, Postgres en 5435)
+dotnet run --project src/Enlyce.Api --no-launch-profile  # Levantar API (puerto 5000, Postgres en 5436)
 dotnet ef migrations add <Nombre> --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
 dotnet ef database update --project src/Enlyce.Infrastructure --startup-project src/Enlyce.Api
 ```
 
 ## Docker
 ```bash
-docker start enlyce-db   # PostgreSQL 17-alpine, puerto 5435->5432
+docker start enlyce-db   # PostgreSQL 17-alpine, puerto 5436->5432
 docker stop enlyce-db
 ```
 
@@ -24,7 +24,7 @@ docker stop enlyce-db
 `Enlyce.Api.csproj` ya tiene `UserSecretsId`. Cada clon necesita sus propios valores, fuera de Git:
 ```powershell
 dotnet user-secrets set "JwtSettings:SecretKey" "<CLAVE_ALEATORIA_DE_32_BYTES_O_MAS>" --project src/Enlyce.Api/Enlyce.Api.csproj
-dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5435;Database=enlyce;Username=postgres;Password=<CONTRASENA_LOCAL_POSTGRES>" --project src/Enlyce.Api/Enlyce.Api.csproj
+dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5436;Database=enlyce;Username=postgres;Password=<CONTRASENA_LOCAL_POSTGRES>" --project src/Enlyce.Api/Enlyce.Api.csproj
 ```
 La contrasena en la segunda linea debe coincidir con la del contenedor PostgreSQL local. En produccion, configurar `JwtSettings__SecretKey` y `ConnectionStrings__Default` mediante secretos del entorno; User Secrets solo se carga en Development. Nunca copiar valores reales a `appsettings.json`, Git ni el vault.
 
@@ -61,6 +61,6 @@ tests/
 
 ## Estado actual
 - 355 tests pasando (182 dominio + 33 aplicacion + 140 integracion)
-- PostgreSQL: container Docker `enlyce-db` en puerto 5435
+- PostgreSQL: container Docker `enlyce-db` en puerto 5436 (el 5435 lo ocupa Arcanum)
 - Modulos: Leads, Inmuebles, Propietarios, Pipeline, Interacciones, Visitas, Alertas, Auth (JWT+roles+bcrypt), Datos personales (Ley 1581), Medios de publicacion (IMediaStorage + ImageSharp)
 - Actividad 1: docs/actividad-1/ (modelo-negocio.md, 1_MODELO_DEL_NEGOCIO_RESPUESTAS.docx, canvas-modelo-negocio.xlsx, presentacion-enlyce.pptx). Generadores en docs/actividad-1/_scripts/
