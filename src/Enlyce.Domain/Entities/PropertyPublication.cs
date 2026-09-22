@@ -16,6 +16,12 @@ public enum PublicationStatus
 public sealed class PropertyPublication
 {
     private const int MinimumPhotos = 3;
+
+    // Tres decimales son unos 111 m: cubren la manzana sin salirse del barrio.
+    // Con cuatro (unos 11 m) la coordenada senala el portal del inmueble, y con
+    // dos (1,1 km) en Medellin se cruza de comuna y el pin apunta al barrio
+    // equivocado, que es enganar en la direccion contraria.
+    private const int PublicCoordinateDecimals = 3;
     private readonly List<PropertyPhoto> _photos = [];
 
     public Guid Id { get; private set; }
@@ -150,8 +156,11 @@ public sealed class PropertyPublication
             publicPriceCurrency,
             municipality,
             neighborhood,
-            approximateLatitude,
-            approximateLongitude,
+            // Red de seguridad para filas guardadas antes de que el redondeo
+            // existiera. No sustituye a la migracion que limpia la tabla: solo
+            // evita que una fila vieja se reexponga con precision de portal.
+            RoundPublicCoordinate(approximateLatitude),
+            RoundPublicCoordinate(approximateLongitude),
             exactAddressVisible,
             createdAt,
             publishedAt,
@@ -193,9 +202,18 @@ public sealed class PropertyPublication
 
         Municipality = municipality.Trim();
         Neighborhood = neighborhood.Trim();
-        ApproximateLatitude = approximateLatitude;
-        ApproximateLongitude = approximateLongitude;
+        // El redondeo vive aqui para que el invariante valga sin importar quien
+        // llame: CRM, seeder o un importador futuro. Si dependiera de que cada
+        // caller recuerde redondear, la fuga volveria en el primer descuido.
+        ApproximateLatitude = RoundPublicCoordinate(approximateLatitude);
+        ApproximateLongitude = RoundPublicCoordinate(approximateLongitude);
     }
+
+    private static decimal RoundPublicCoordinate(decimal value) =>
+        Math.Round(value, PublicCoordinateDecimals, MidpointRounding.AwayFromZero);
+
+    private static decimal? RoundPublicCoordinate(decimal? value) =>
+        value.HasValue ? RoundPublicCoordinate(value.Value) : null;
 
     public void AddPhoto(string url, string altText, int order, bool isCover = false)
     {

@@ -27,6 +27,61 @@ public class PropertyPublicationTests
         Assert.Throws<DomainError>(() => publication.Publish());
     }
 
+    [Theory]
+    // Cuarto decimal 3: redondea hacia abajo.
+    [InlineData(6.2443, -75.5934, 6.244, -75.593)]
+    // Cuarto decimal 7 y 8: redondea hacia arriba en valor absoluto.
+    [InlineData(6.2447, -75.5938, 6.245, -75.594)]
+    // Seis decimales, la precision que admite la columna.
+    [InlineData(6.244321, -75.593789, 6.244, -75.594)]
+    public void SetPublicLocation_RoundsCoordinatesToThreeDecimals(
+        double latitude, double longitude, double expectedLatitude, double expectedLongitude)
+    {
+        var publication = CreatePublication();
+
+        publication.SetPublicLocation("Medellín", "Laureles", (decimal)latitude, (decimal)longitude);
+
+        Assert.Equal((decimal)expectedLatitude, publication.ApproximateLatitude);
+        Assert.Equal((decimal)expectedLongitude, publication.ApproximateLongitude);
+    }
+
+    [Fact]
+    public void SetPublicLocation_RoundsHalfAwayFromZero()
+    {
+        var publication = CreatePublication();
+
+        publication.SetPublicLocation("Medellín", "Laureles", 6.2445m, -75.5935m);
+
+        Assert.Equal(6.245m, publication.ApproximateLatitude);
+        Assert.Equal(-75.594m, publication.ApproximateLongitude);
+    }
+
+    [Fact]
+    public void SetPublicLocation_KeepsCoordinatesThatAreAlreadyCoarse()
+    {
+        var publication = CreatePublication();
+
+        publication.SetPublicLocation("Envigado", "Zúñiga", 6.178m, -75.584m);
+
+        Assert.Equal(6.178m, publication.ApproximateLatitude);
+        Assert.Equal(-75.584m, publication.ApproximateLongitude);
+    }
+
+    [Fact]
+    public void Reconstitute_RoundsLegacyCoordinatesStoredBeforeTheRule()
+    {
+        var publication = PropertyPublication.Reconstitute(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            "apartamento-laureles", "Apartamento", "Descripcion",
+            PublicationStatus.Published, 500_000_000m, "COP",
+            "Medellín", "Laureles",
+            6.244321m, -75.593789m,
+            false, DateTime.UtcNow, DateTime.UtcNow, []);
+
+        Assert.Equal(6.244m, publication.ApproximateLatitude);
+        Assert.Equal(-75.594m, publication.ApproximateLongitude);
+    }
+
     [Fact]
     public void Publish_WithoutPositivePrice_ThrowsDomainError()
     {
