@@ -504,6 +504,7 @@ export interface components {
             tipoOperacion?: string | null;
             ownerService?: string | null;
             publicationId?: string | null;
+            canal?: string | null;
         };
         CreateLeadResponse: {
             /** Format: uuid */

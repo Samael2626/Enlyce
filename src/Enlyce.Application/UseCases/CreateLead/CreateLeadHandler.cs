@@ -25,6 +25,9 @@ namespace Enlyce.Application.UseCases.CreateLead;
 public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadResponse>
 {
     private const int MaxSourceLength = 100;
+    private const string UnknownChannel = "desconocido";
+    private const string UtmMarker = "|utm=";
+    private const int MaxChannelLength = 50;
     private readonly ILeadRepository _leadRepo;
     private readonly IPropertyPublicationRepository _publicationRepo;
     private readonly IConsentimientoRepository _consentimientoRepo;
@@ -82,7 +85,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
 
         var saved = await _leadRepo.SaveAsync(lead);
 
-        await RegisterConsentAsync(saved.Id, command.AutorizacionDatos);
+        await RegisterConsentAsync(saved.Id, command);
 
         await _emailSender.SendAsync(
             command.Email,
@@ -125,7 +128,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         existing.IncrementarInteracciones();
         var saved = await _leadRepo.SaveAsync(existing);
 
-        await RegisterConsentAsync(saved.Id, command.AutorizacionDatos);
+        await RegisterConsentAsync(saved.Id, command);
 
         return new CreateLeadResponse(
             saved.Id, saved.Nombre, saved.Email.Value,
@@ -135,19 +138,35 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             EsContactoRepetido: true);
     }
 
-    private async Task RegisterConsentAsync(Guid leadId, bool autorizacionDatos)
+    private async Task RegisterConsentAsync(Guid leadId, CreateLeadCommand command)
     {
-        if (!autorizacionDatos)
+        if (!command.AutorizacionDatos)
             return;
 
         // Cada autorizacion se audita, tambien en el recontacto: la Ley 1581
-        // pide poder demostrar cuando se otorgo, no solo que existe.
+        // pide poder demostrar cuando y como se otorgo, no solo que existe.
         var politica = await _politicaRepo.ObtenerActivaAsync();
         if (politica is null)
             return;
 
         await _consentimientoRepo.AgregarAsync(Consentimiento.Registrar(
-            leadId, politica.TextoCompleto, politica.Version, "formulario_web"));
+            leadId,
+            politica.TextoCompleto,
+            politica.Version,
+            NormalizeChannel(command.Canal),
+            command.DireccionIp));
+    }
+
+    // El canal lo declara cada origen. No hay lista cerrada todavia: forzarla
+    // ahora romperia integraciones futuras sin aportar nada a la auditoria, que
+    // lo que necesita es saber que dijo el origen, no validarlo.
+    private static string NormalizeChannel(string? canal)
+    {
+        if (string.IsNullOrWhiteSpace(canal))
+            return UnknownChannel;
+
+        var trimmed = canal.Trim();
+        return trimmed[..Math.Min(trimmed.Length, MaxChannelLength)];
     }
 
     private static OwnerInquiryService? ParseOwnerService(string? value)
@@ -178,8 +197,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         bool requiresReview)
     {
         var baseSource = string.IsNullOrWhiteSpace(source) ? "Manual" : source.Trim();
+
         if (!requiresReview)
-            return baseSource[..Math.Min(baseSource.Length, MaxSourceLength)];
+            return FitWithinLimit(baseSource, MaxSourceLength);
 
         var reference = publicationReference?.Trim() ?? "missing";
         var marker = $"PublicationReview:{reference}";
@@ -187,7 +207,33 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             return marker[..MaxSourceLength];
 
         var availableBaseLength = MaxSourceLength - marker.Length - 1;
-        var trimmedBase = baseSource[..Math.Min(baseSource.Length, availableBaseLength)];
-        return $"{trimmedBase}|{marker}";
+        return $"{FitWithinLimit(baseSource, availableBaseLength)}|{marker}";
+    }
+
+    // La campana es el dato mas prescindible de la fuente: identificar el
+    // inmueble importa mas que saber de que anuncio vino. Por eso el segmento
+    // |utm= se recorta primero y se descarta entero antes de tocar el resto.
+    private static string FitWithinLimit(string source, int limit)
+    {
+        if (limit <= 0)
+            return string.Empty;
+
+        if (source.Length <= limit)
+            return source;
+
+        var utmIndex = source.IndexOf(UtmMarker, StringComparison.Ordinal);
+        if (utmIndex < 0)
+            return source[..limit];
+
+        var withoutUtm = source[..utmIndex];
+        if (withoutUtm.Length >= limit)
+            return withoutUtm[..limit];
+
+        // Si ni siquiera cabe el marcador completo, la campana se descarta
+        // entera: mejor sin dato que con un "|ut" que nadie sabe leer.
+        if (limit - withoutUtm.Length <= UtmMarker.Length)
+            return withoutUtm;
+
+        return source[..limit];
     }
 }

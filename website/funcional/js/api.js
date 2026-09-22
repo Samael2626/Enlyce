@@ -30,6 +30,8 @@ export function buildDetailUrl(apiBase, slug) {
   return `${apiBase.replace(/\/$/, '')}/api/public/inmuebles/${encodeURIComponent(slug)}`;
 }
 
+export const LEGACY_CHANNEL = 'funcional_legacy';
+
 export function buildVisitLeadPayload({ name, email, phone, consent, property }) {
   return {
     nombre: name,
@@ -39,6 +41,7 @@ export function buildVisitLeadPayload({ name, email, phone, consent, property })
     autorizacionDatos: consent,
     tipoOperacion: property.operation === 'Arriendo' ? 'Arriendo' : 'Venta',
     publicationId: property.id,
+    canal: LEGACY_CHANNEL,
   };
 }
 

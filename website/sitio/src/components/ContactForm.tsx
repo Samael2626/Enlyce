@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ApiProblemError } from "@/lib/api/client";
-import { OWNER_SERVICES, createLead, type OwnerServiceValue } from "@/lib/api/leads";
+import {
+  OWNER_SERVICES,
+  buildSourceWithCampaign,
+  createLead,
+  type CampaignParams,
+  type OwnerServiceValue,
+} from "@/lib/api/leads";
 
 type Props = {
   // GUID ya resuelto por el server component; nunca el slug.
@@ -12,6 +18,7 @@ type Props = {
   propertyTitle?: string;
   isOwnerInquiry: boolean;
   policyVersion?: string;
+  campaign?: CampaignParams;
 };
 
 type Status =
@@ -29,6 +36,7 @@ export function ContactForm({
   propertyTitle,
   isOwnerInquiry,
   policyVersion,
+  campaign,
 }: Props) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [authorized, setAuthorized] = useState(false);
@@ -42,9 +50,14 @@ export function ContactForm({
   const sending = status.kind === "sending";
 
   function buildSource(): string {
-    if (propertySlug) return `Website:${propertySlug}`;
-    if (isOwnerInquiry) return `PropietarioWeb:${selected.label}`;
-    return "ContactoWeb";
+    const base = propertySlug
+      ? `Website:${propertySlug}`
+      : isOwnerInquiry
+        ? `PropietarioWeb:${selected.label}`
+        : "ContactoWeb";
+
+    // El backend recorta si se pasa de 100: la campana cae antes que el inmueble.
+    return campaign ? buildSourceWithCampaign(base, campaign) : base;
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

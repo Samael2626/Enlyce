@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Enlyce.Api.Development;
 using Enlyce.Api.Endpoints.Alertas;
@@ -20,6 +21,7 @@ using Enlyce.Infrastructure;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -114,7 +116,32 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Solo se confia en X-Forwarded-For cuando hay un proxy declarado delante (el
+// tunel de Cloudflare del demo). Sin esa configuracion el header se ignora: de
+// lo contrario cualquiera podria falsear su IP en la auditoria de consentimiento.
+var trustedProxies = builder.Configuration
+    .GetSection("Forwarding:KnownProxies").Get<string[]>() ?? [];
+var trustForwardedHeaders = builder.Configuration.GetValue<bool>("Forwarding:Enabled");
+
+if (trustForwardedHeaders)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+        options.KnownProxies.Clear();
+        options.KnownNetworks.Clear();
+
+        foreach (var proxy in trustedProxies)
+            if (IPAddress.TryParse(proxy, out var parsed))
+                options.KnownProxies.Add(parsed);
+    });
+}
+
 var app = builder.Build();
+
+if (trustForwardedHeaders)
+    app.UseForwardedHeaders();
 
 var signingKey = app.Services.GetRequiredService<IOptions<JwtSettings>>().Value.SecretKey;
 if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)

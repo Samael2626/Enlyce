@@ -72,6 +72,7 @@ test('buildVisitLeadPayload envia la publicacion como dato estructurado', () => 
     autorizacionDatos: true,
     tipoOperacion: 'Venta',
     publicationId: '11111111-1111-1111-1111-111111111111',
+    canal: 'funcional_legacy',
   });
 });
 
@@ -132,6 +133,7 @@ test('buildOwnerLeadPayload envia administracion como dato estructurado', () => 
     autorizacionDatos: true,
     tipoOperacion: 'Arriendo',
     ownerService: 'Manage',
+    canal: 'funcional_legacy',
   });
 });
 

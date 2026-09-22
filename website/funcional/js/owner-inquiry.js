@@ -1,3 +1,5 @@
+import { LEGACY_CHANNEL } from './api.js';
+
 const ownerServices = new Map([
   ['Vender', { operationType: 'Venta', ownerService: 'Sell' }],
   ['Arrendar', { operationType: 'Arriendo', ownerService: 'Rent' }],
@@ -28,5 +30,6 @@ export function buildOwnerLeadPayload(input) {
     autorizacionDatos: Boolean(input.consent),
     tipoOperacion: service.operationType,
     ownerService: service.ownerService,
+    canal: LEGACY_CHANNEL,
   };
 }

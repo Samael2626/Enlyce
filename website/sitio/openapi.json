@@ -1274,6 +1274,10 @@
           "publicationId": {
             "type": "string",
             "nullable": true
+          },
+          "canal": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

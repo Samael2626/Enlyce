@@ -40,6 +40,29 @@ export async function getActivePolicy(): Promise<ActivePolicy | null> {
   return { version: policy.version, fechaVigencia: policy.fechaVigencia };
 }
 
+// Canal declarado por este frontend. El backend audita lo que llegue y cae a
+// "desconocido" si no llega nada; no adivina el origen.
+export const SITE_CHANNEL = "sitio_web";
+
+export const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign"] as const;
+
+// Mismo separador que ya usa BuildSource en CreateLeadHandler para el marcador
+// PublicationReview:, para no inventar un segundo formato en la misma columna.
+export type CampaignParams = { source?: string; medium?: string; campaign?: string };
+
+export function buildSourceWithCampaign(base: string, utm: CampaignParams): string {
+  // Se limpian los separadores del propio formato para que la fuente siga
+  // siendo parseable aunque la campana venga con barras o pipes.
+  const parts = [utm.source, utm.medium, utm.campaign].map(
+    (part) => part?.trim().replace(/[|/]/g, "-") ?? "",
+  );
+
+  while (parts.length > 0 && parts[parts.length - 1] === "") parts.pop();
+  if (parts.length === 0) return base;
+
+  return `${base}|utm=${parts.join("/")}`;
+}
+
 export type CreateLeadInput = {
   nombre: string;
   email: string;
@@ -62,6 +85,7 @@ export async function createLead(input: CreateLeadInput): Promise<LeadResult> {
     tipoOperacion: input.tipoOperacion,
     ownerService: input.ownerService ?? null,
     publicationId: input.publicationId ?? null,
+    canal: SITE_CHANNEL,
   };
 
   const result = await apiPost<Schemas["CreateLeadRequest"], Schemas["CreateLeadResponse"]>(

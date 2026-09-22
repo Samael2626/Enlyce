@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/ContactForm";
 import { getPropertyBySlug } from "@/lib/api/catalog";
-import { findOwnerService, getActivePolicy } from "@/lib/api/leads";
+import { findOwnerService, getActivePolicy, type CampaignParams } from "@/lib/api/leads";
 
 export const metadata: Metadata = {
   title: "Contacto",
@@ -27,6 +27,14 @@ export default async function ContactoPage({ searchParams }: PageProps) {
   // formulario sigue funcionando como contacto general.
   const property = slug ? await getPropertyBySlug(slug) : null;
   const policy = await getActivePolicy();
+
+  // Campana: mismo patron que ?inmueble= y ?motivo=. No se guarda como entidad
+  // propia todavia, solo se anexa a la fuente del lead.
+  const campaign: CampaignParams = {
+    source: first(params.utm_source),
+    medium: first(params.utm_medium),
+    campaign: first(params.utm_campaign),
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
@@ -62,6 +70,7 @@ export default async function ContactoPage({ searchParams }: PageProps) {
         propertyTitle={property?.publicTitle}
         isOwnerInquiry={isOwnerInquiry}
         policyVersion={policy?.version}
+        campaign={campaign}
       />
     </div>
   );
