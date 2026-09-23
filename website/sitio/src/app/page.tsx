@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { PropertyCard } from "@/components/PropertyCard";
 import { getProperties } from "@/lib/api/catalog";
@@ -12,6 +13,14 @@ export default async function HomePage() {
         <div className="hero-visual" aria-hidden="true" />
         <div className="hero-shade" aria-hidden="true" />
         <div className="relative mx-auto grid min-h-[660px] max-w-6xl items-end gap-10 px-4 py-14 lg:grid-cols-[1fr_21rem] lg:py-20">
+          <Image
+            src="/lyc-logo-transparent.png"
+            alt="L&C Propiedad Raíz S.A.S."
+            width={1280}
+            height={1280}
+            priority
+            className="hero-brand-mark"
+          />
           <div className="max-w-3xl space-y-6">
             <p className="hero-kicker">Medellín · Valle de Aburrá</p>
             <h1 className="text-balance text-5xl leading-[.98] text-white sm:text-6xl lg:text-7xl">

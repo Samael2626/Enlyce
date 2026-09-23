@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
-import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
 
@@ -46,8 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="site-header">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-3 px-4 py-3">
             <Link href="/" className="brand-lockup" aria-label="L&C Propiedad Raíz, inicio">
-              <Image src="/lyc-logo.png" alt="" width={76} height={76} priority />
-              <span className="hidden sm:block">
+              <span>
                 <strong>L&amp;C</strong>
                 <small>Propiedad Raíz S.A.S.</small>
               </span>
