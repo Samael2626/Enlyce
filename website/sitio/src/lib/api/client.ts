@@ -67,6 +67,17 @@ export class ApiError extends Error {
 
 const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(/\/$/, "");
 
+export function resolveMediaUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname.startsWith("/media/")
+      ? `${baseUrl}${parsed.pathname}${parsed.search}`
+      : url;
+  } catch {
+    return url;
+  }
+}
+
 type RequestOptions = {
   // Revalidacion ISR. El catalogo ya manda Cache-Control public,max-age=300.
   revalidate?: number;

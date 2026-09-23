@@ -1,4 +1,10 @@
-import { apiGet, apiGetOrNull, type PropertyDetail, type PropertyPage } from "./client";
+import {
+  apiGet,
+  apiGetOrNull,
+  resolveMediaUrl,
+  type PropertyDetail,
+  type PropertyPage,
+} from "./client";
 
 // Valores que acepta la API, no los nombres del enum de C#.
 export const SORT_VALUES = ["publishedAtDesc", "priceAsc", "priceDesc"] as const;
@@ -77,10 +83,30 @@ export function buildQuery(filters: CatalogFilters): string {
   return query ? `?${query}` : "";
 }
 
-export function getProperties(filters: CatalogFilters): Promise<PropertyPage> {
-  return apiGet<PropertyPage>(`/api/public/inmuebles${buildQuery(filters)}`);
+export async function getProperties(filters: CatalogFilters): Promise<PropertyPage> {
+  const page = await apiGet<PropertyPage>(`/api/public/inmuebles${buildQuery(filters)}`);
+  return {
+    ...page,
+    items: page.items.map((property) => ({
+      ...property,
+      coverPhoto: property.coverPhoto
+        ? { ...property.coverPhoto, url: resolveMediaUrl(property.coverPhoto.url) }
+        : property.coverPhoto,
+    })),
+  };
 }
 
-export function getPropertyBySlug(slug: string): Promise<PropertyDetail | null> {
-  return apiGetOrNull<PropertyDetail>(`/api/public/inmuebles/${encodeURIComponent(slug)}`);
+export async function getPropertyBySlug(slug: string): Promise<PropertyDetail | null> {
+  const property = await apiGetOrNull<PropertyDetail>(
+    `/api/public/inmuebles/${encodeURIComponent(slug)}`,
+  );
+  return property
+    ? {
+        ...property,
+        photos: property.photos.map((photo) => ({
+          ...photo,
+          url: resolveMediaUrl(photo.url),
+        })),
+      }
+    : null;
 }
