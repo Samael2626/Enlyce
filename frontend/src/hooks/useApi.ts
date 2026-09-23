@@ -88,7 +88,7 @@ export function useCreateLead() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: api.createLead,
+    mutationFn: api.createLead.bind(api),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pipeline"] })
       queryClient.invalidateQueries({ queryKey: ["leads"] })

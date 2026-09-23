@@ -40,7 +40,7 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
       )}
     >
       <div className="flex h-24 items-center gap-3 border-b border-white/15 px-5">
-        <span role="img" aria-label="L&C Propiedad Raíz" className="crm-brand-seal h-16 w-16" />
+        <img src="/lyc-logo.png" alt="L&C Propiedad Raíz" className="crm-brand-seal h-16 w-16" />
         {!collapsed && (
           <div>
             <span className="block font-display text-[1.65rem] leading-none tracking-tight">Enlyce</span>
@@ -68,7 +68,7 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
                   )}
                   title={collapsed ? item.title : undefined}
                 >
-                  {Icon && <Icon className={cn("h-4 w-4 flex-shrink-0", isActive && "text-[#dca782]")} />}
+                  {Icon && <Icon className={cn("h-4 w-4 flex-shrink-0", isActive && "text-[#e3be65]")} />}
                   {!collapsed && <span>{item.title}</span>}
                 </NavLink>
               </li>

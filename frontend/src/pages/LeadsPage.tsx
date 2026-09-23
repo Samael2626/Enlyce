@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { usePipeline, useLead, useInteracciones, useRegistrarInteraccion } from "@/hooks/useApi"
+import { useEffect, useState, type FormEvent } from "react"
+import { usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 import {
   User,
@@ -13,6 +13,7 @@ import {
   Clock,
   Building2,
   FileText,
+  X,
 } from "lucide-react"
 import { format, parseISO, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
@@ -20,6 +21,7 @@ import { es } from "date-fns/locale"
 export function LeadsPage() {
   const { data: pipeline, isLoading } = usePipeline()
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showNewLead, setShowNewLead] = useState(false)
 
   const leads = pipeline?.leads || []
 
@@ -41,11 +43,13 @@ export function LeadsPage() {
             {leads.length} leads registrados
           </p>
         </div>
-        <button className="crm-button">
+        <button className="crm-button" onClick={() => setShowNewLead(true)}>
           <Plus className="h-4 w-4" />
           Nuevo Lead
         </button>
       </div>
+
+      {showNewLead && <NewLeadModal onClose={() => setShowNewLead(false)} />}
 
       <div className="space-y-3 border-t border-border pt-6">
         {leads.length === 0 ? (
@@ -69,6 +73,159 @@ export function LeadsPage() {
           ))
         )}
       </div>
+    </div>
+  )
+}
+
+function NewLeadModal({ onClose }: { onClose: () => void }) {
+  const createLead = useCreateLead()
+  const [form, setForm] = useState({
+    nombre: "",
+    email: "",
+    telefono: "",
+    fuente: "CRM manual",
+    tipoOperacion: "Venta",
+    autorizacionDatos: false,
+  })
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !createLead.isPending) onClose()
+    }
+    document.addEventListener("keydown", closeOnEscape)
+    return () => document.removeEventListener("keydown", closeOnEscape)
+  }, [createLead.isPending, onClose])
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    createLead.mutate(
+      {
+        nombre: form.nombre.trim(),
+        email: form.email.trim(),
+        telefono: form.telefono.trim() || undefined,
+        fuente: form.fuente.trim() || "CRM manual",
+        tipoOperacion: form.tipoOperacion,
+        autorizacionDatos: form.autorizacionDatos,
+      },
+      { onSuccess: onClose }
+    )
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#060c20]/75 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !createLead.isPending) onClose()
+      }}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-lead-title"
+        className="w-full max-w-2xl border-t-4 border-accent bg-card p-6 shadow-2xl sm:p-8"
+      >
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <span className="crm-eyebrow">Captación manual</span>
+            <h2 id="new-lead-title" className="mt-2 font-display text-3xl">Nuevo lead</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Registra el contacto y su interés inicial.</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Cerrar"
+            disabled={createLead.isPending}
+            onClick={onClose}
+            className="p-2 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="text-sm font-semibold sm:col-span-2">
+              Nombre completo
+              <input
+                autoFocus
+                required
+                value={form.nombre}
+                onChange={(event) => setForm({ ...form, nombre: event.target.value })}
+                className="mt-1 block w-full rounded-sm border border-input bg-background px-3 py-2.5 text-foreground"
+                placeholder="Ej. Laura Gómez"
+              />
+            </label>
+            <label className="text-sm font-semibold">
+              Correo electrónico
+              <input
+                required
+                type="email"
+                value={form.email}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
+                className="mt-1 block w-full rounded-sm border border-input bg-background px-3 py-2.5 text-foreground"
+                placeholder="laura@correo.com"
+              />
+            </label>
+            <label className="text-sm font-semibold">
+              Teléfono
+              <input
+                type="tel"
+                value={form.telefono}
+                onChange={(event) => setForm({ ...form, telefono: event.target.value })}
+                className="mt-1 block w-full rounded-sm border border-input bg-background px-3 py-2.5 text-foreground"
+                placeholder="300 000 0000"
+              />
+            </label>
+            <label className="text-sm font-semibold">
+              Operación de interés
+              <select
+                value={form.tipoOperacion}
+                onChange={(event) => setForm({ ...form, tipoOperacion: event.target.value })}
+                className="mt-1 block w-full rounded-sm border border-input bg-background px-3 py-2.5 text-foreground"
+              >
+                <option value="Venta">Compra</option>
+                <option value="Arriendo">Arriendo</option>
+              </select>
+            </label>
+            <label className="text-sm font-semibold">
+              Fuente
+              <input
+                value={form.fuente}
+                onChange={(event) => setForm({ ...form, fuente: event.target.value })}
+                className="mt-1 block w-full rounded-sm border border-input bg-background px-3 py-2.5 text-foreground"
+                placeholder="Referido, llamada, portal..."
+              />
+            </label>
+          </div>
+
+          <label className="flex items-start gap-3 border border-border bg-muted/45 p-4 text-sm">
+            <input
+              required
+              type="checkbox"
+              checked={form.autorizacionDatos}
+              onChange={(event) => setForm({ ...form, autorizacionDatos: event.target.checked })}
+              className="mt-1 h-4 w-4 accent-[#b78a2d]"
+            />
+            <span>
+              Confirmo que el lead autorizó el tratamiento de sus datos personales según la política vigente.
+            </span>
+          </label>
+
+          {createLead.isError && (
+            <p role="alert" className="border-l-4 border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {createLead.error instanceof Error ? createLead.error.message : "No fue posible crear el lead."}
+            </p>
+          )}
+
+          <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
+            <button type="button" onClick={onClose} disabled={createLead.isPending} className="min-h-11 border border-border bg-card px-5 text-sm font-bold hover:bg-muted disabled:opacity-40">
+              Cancelar
+            </button>
+            <button type="submit" disabled={createLead.isPending} className="crm-button min-w-36">
+              {createLead.isPending ? "Guardando..." : "Guardar lead"}
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   )
 }

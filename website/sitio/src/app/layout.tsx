@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
 
@@ -42,12 +43,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Saltar al contenido
         </a>
 
-        <header className="border-b border-line">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-5">
-            <Link href="/" className="font-display text-xl tracking-tight">
-              L&amp;C <span className="text-muted">Propiedad Raíz</span>
+        <header className="site-header">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-3 px-4 py-3">
+            <Link href="/" className="brand-lockup" aria-label="L&C Propiedad Raíz, inicio">
+              <Image src="/lyc-logo.png" alt="" width={76} height={76} priority />
+              <span className="hidden sm:block">
+                <strong>L&amp;C</strong>
+                <small>Propiedad Raíz S.A.S.</small>
+              </span>
             </Link>
-            <nav aria-label="Principal" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <nav aria-label="Principal" className="flex flex-wrap justify-end gap-x-6 gap-y-2 text-sm font-semibold">
               {navigation.map((item) => (
                 <Link key={item.href} href={item.href} className="hover:text-accent">
                   {item.label}
@@ -61,8 +66,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
 
-        <footer className="border-t border-line bg-surface">
-          <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted">
+        <footer className="site-footer">
+          <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-10 text-sm">
             <p>L&amp;C Propiedad Raíz S.A.S. — Medellín, Colombia.</p>
             <Link href="/privacidad" className="hover:text-accent w-fit">
               Política de tratamiento de datos personales

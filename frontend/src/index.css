@@ -1,30 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #f2efe7;
-  --color-foreground: #183127;
-  --color-card: #fbfaf6;
-  --color-card-foreground: #183127;
-  --color-popover: #fbfaf6;
-  --color-popover-foreground: #183127;
-  --color-primary: #183127;
+  --color-background: #f7f6f2;
+  --color-foreground: #0f1a3d;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f1a3d;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f1a3d;
+  --color-primary: #0f1a3d;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #eadbd1;
-  --color-secondary-foreground: #183127;
-  --color-muted: #e9e6dd;
-  --color-muted-foreground: #5e6962;
-  --color-accent: #ae6b48;
-  --color-accent-foreground: #ffffff;
+  --color-secondary: #eee8d8;
+  --color-secondary-foreground: #0f1a3d;
+  --color-muted: #eeece6;
+  --color-muted-foreground: #667085;
+  --color-accent: #b78a2d;
+  --color-accent-foreground: #0f1a3d;
   --color-destructive: #9c2f24;
   --color-destructive-foreground: #ffffff;
-  --color-border: #d7d4cb;
-  --color-input: #d7d4cb;
-  --color-ring: #ae6b48;
+  --color-border: #ded9ca;
+  --color-input: #d5d1c5;
+  --color-ring: #b78a2d;
   --color-success: #17653c;
   --color-warning: #9a5b28;
   --color-info: #315c7d;
-  --color-sidebar: #183127;
-  --color-sidebar-foreground: #f7f3e9;
+  --color-sidebar: #0f1a3d;
+  --color-sidebar-foreground: #ffffff;
 
   --radius-lg: 14px;
   --radius-md: 9px;
@@ -56,29 +56,29 @@
 }
 
 .dark {
-  --color-background: #10231b;
+  --color-background: #080f26;
   --color-foreground: #f4efe5;
-  --color-card: #1c382c;
+  --color-card: #111b3b;
   --color-card-foreground: #f4efe5;
-  --color-popover: #1c382c;
+  --color-popover: #111b3b;
   --color-popover-foreground: #f4efe5;
-  --color-primary: #d49a76;
-  --color-primary-foreground: #10231b;
-  --color-secondary: #2b493b;
+  --color-primary: #e3be65;
+  --color-primary-foreground: #080f26;
+  --color-secondary: #253050;
   --color-secondary-foreground: #f4efe5;
-  --color-muted: #284638;
-  --color-muted-foreground: #c0cec3;
-  --color-accent: #d49a76;
-  --color-accent-foreground: #10231b;
+  --color-muted: #202b4a;
+  --color-muted-foreground: #c7ccdc;
+  --color-accent: #e3be65;
+  --color-accent-foreground: #080f26;
   --color-destructive: #ed9d92;
   --color-destructive-foreground: #ffffff;
-  --color-border: #385648;
-  --color-input: #385648;
-  --color-ring: #d49a76;
+  --color-border: #34405f;
+  --color-input: #34405f;
+  --color-ring: #e3be65;
   --color-success: #9ccdb1;
   --color-warning: #e0b47c;
   --color-info: #9fc4dc;
-  --color-sidebar: #0b1b13;
+  --color-sidebar: #060c20;
   --color-sidebar-foreground: #f7f3e9;
 }
 
@@ -86,9 +86,7 @@
   .crm-brand-seal {
     display: block;
     flex: 0 0 auto;
-    border: 1px solid rgb(255 255 255 / 16%);
-    border-radius: var(--radius-sm);
-    background: #11152a url('/lyc-navy.jpeg') center 47% / 165% no-repeat;
+    object-fit: contain;
   }
   .crm-eyebrow {
     color: var(--color-accent);
@@ -108,7 +106,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     background: var(--color-card);
-    box-shadow: 0 12px 36px rgb(24 49 39 / 5%);
+    box-shadow: 0 12px 36px rgb(15 26 61 / 6%);
   }
   .crm-button {
     display: inline-flex;
@@ -129,7 +127,7 @@
   .crm-hero {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(90deg, rgb(9 29 21 / 94%), rgb(9 29 21 / 66%)), url('/medellin-hero.png') center 48% / cover;
+    background: linear-gradient(90deg, rgb(8 15 38 / 94%), rgb(8 15 38 / 62%)), url('/medellin-hero.png') center 48% / cover;
     color: #fff;
   }
   .crm-hero::after {

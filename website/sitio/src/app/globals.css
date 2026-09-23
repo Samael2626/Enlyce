@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
-/* Identidad del concepto 01 (editorial), decidida el 2026-09-11. */
+/* Identidad L&C: azul institucional, dorado y blanco calido. */
 @theme {
-  --color-bg: #f2efe7;
-  --color-surface: #fbfaf6;
-  --color-accent: #ae6b48;
-  --color-accent-strong: #8f5334;
-  --color-ink: #183127;
-  --color-muted: #68716c;
-  --color-line: #ded8c9;
+  --color-bg: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-accent: #b78a2d;
+  --color-accent-strong: #8a651c;
+  --color-ink: #0f1a3d;
+  --color-muted: #667085;
+  --color-line: #ded9ca;
 
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-body: var(--font-dm-sans), system-ui, sans-serif;
 
   --radius-sheet: 16px;
-  --shadow-card: 0 8px 26px rgb(24 49 39 / 8%);
-  --shadow-raised: 0 22px 60px rgb(24 49 39 / 14%);
+  --shadow-card: 0 10px 30px rgb(15 26 61 / 8%);
+  --shadow-raised: 0 24px 64px rgb(15 26 61 / 16%);
 }
 
 html {
@@ -38,6 +38,33 @@ h1, h2, h3 {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
+
+.site-header {
+  position: relative;
+  z-index: 20;
+  border-bottom: 1px solid rgb(183 138 45 / 35%);
+  background: #0f1a3d;
+  color: white;
+}
+
+.brand-lockup { display: inline-flex; align-items: center; gap: .6rem; }
+.brand-lockup img { width: 3.65rem; height: 3.65rem; object-fit: contain; }
+.brand-lockup strong, .brand-lockup small { display: block; }
+.brand-lockup strong { color: #e3be65; font-family: var(--font-display); font-size: 1.4rem; line-height: 1; }
+.brand-lockup small { margin-top: .25rem; color: rgb(255 255 255 / 68%); font-size: .57rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+
+.hero-shell { position: relative; isolation: isolate; overflow: hidden; background: #0f1a3d; }
+.hero-visual, .hero-shade { position: absolute; inset: 0; }
+.hero-visual { background: url('/medellin-hero.png') center 48% / cover no-repeat; }
+.hero-shade { background: linear-gradient(90deg, rgb(6 13 38 / 94%) 0%, rgb(6 13 38 / 62%) 52%, rgb(6 13 38 / 14%) 100%), linear-gradient(0deg, rgb(6 13 38 / 78%) 0%, transparent 55%); }
+.hero-shell::after { position: absolute; inset: auto 0 0; height: 5px; background: linear-gradient(90deg, #8a651c, #e3be65 45%, transparent 82%); content: ''; }
+.hero-kicker, .section-kicker { color: #c99d42; font-size: .72rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+.hero-actions { display: grid; gap: .7rem; padding: 1.3rem; border: 1px solid rgb(255 255 255 / 20%); background: rgb(8 16 43 / 72%); backdrop-filter: blur(12px); }
+.hero-action { display: flex; min-height: 48px; align-items: center; justify-content: space-between; border-top: 1px solid rgb(255 255 255 / 22%); color: white; font-size: .88rem; font-weight: 700; }
+.hero-action::after { color: #e3be65; content: '→'; }
+.hero-action:hover { color: #e3be65; }
+.hero-action-primary { border-color: #c99d42; color: #e3be65; }
+.site-footer { border-top: 4px solid var(--color-accent); background: #0f1a3d; color: rgb(255 255 255 / 68%); }
 
 /* Leaflet: el mapa hereda la paleta editorial en vez del gris de fabrica. */
 .leaflet-container {

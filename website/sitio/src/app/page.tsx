@@ -7,37 +7,40 @@ export default async function HomePage() {
   const page = await getProperties({ pageSize: 6 });
 
   return (
-    <div className="space-y-16 pb-16">
-      <section className="border-b border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-16 lg:grid-cols-[3fr_2fr] lg:items-end">
-          <div className="space-y-4">
-            <p className="text-sm uppercase tracking-wide text-accent">Medellín y Valle de Aburrá</p>
-            <h1 className="text-balance text-5xl leading-[1.05]">
-              Encuentra la casa que sí se parece a tu vida.
+    <div className="space-y-20 pb-20">
+      <section className="hero-shell">
+        <div className="hero-visual" aria-hidden="true" />
+        <div className="hero-shade" aria-hidden="true" />
+        <div className="relative mx-auto grid min-h-[660px] max-w-6xl items-end gap-10 px-4 py-14 lg:grid-cols-[1fr_21rem] lg:py-20">
+          <div className="max-w-3xl space-y-6">
+            <p className="hero-kicker">Medellín · Valle de Aburrá</p>
+            <h1 className="text-balance text-5xl leading-[.98] text-white sm:text-6xl lg:text-7xl">
+              Propiedades con altura. Decisiones con criterio.
             </h1>
-            <p className="max-w-prose text-lg text-muted">
-              Inventario propio, acompañamiento de asesores reales y una lectura honesta de cada
-              barrio. Sin listados fantasma.
+            <p className="max-w-2xl text-lg leading-relaxed text-white/80">
+              Inmuebles seleccionados y asesoría cercana para comprar, arrendar o vender con
+              seguridad en Medellín y sus alrededores.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="hero-actions">
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-white/55">Comienza aquí</p>
             <Link
               href="/inmuebles?operation=Venta"
-              className="rounded bg-accent px-5 py-3 text-surface hover:bg-accent-strong"
+              className="hero-action hero-action-primary"
             >
-              Quiero comprar
+              Explorar propiedades
             </Link>
             <Link
               href="/inmuebles?operation=Arriendo"
-              className="rounded border border-line px-5 py-3 hover:text-accent"
+              className="hero-action"
             >
-              Quiero arrendar
+              Buscar arriendo
             </Link>
             <Link
               href="/propietarios"
-              className="rounded border border-line px-5 py-3 hover:text-accent"
+              className="hero-action"
             >
-              Tengo un inmueble
+              Publicar mi inmueble
             </Link>
           </div>
         </div>
@@ -45,7 +48,10 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-6xl space-y-6 px-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-3xl">Publicaciones recientes</h2>
+          <div>
+            <p className="section-kicker">Selección L&amp;C</p>
+            <h2 className="mt-2 text-4xl">Propiedades destacadas</h2>
+          </div>
           <Link href="/inmuebles" className="text-accent underline">Ver todo el inventario</Link>
         </div>
 
@@ -65,7 +71,8 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl space-y-6 px-4">
-        <h2 className="text-3xl">Zonas que conocemos</h2>
+        <p className="section-kicker">Conocimiento local</p>
+        <h2 className="text-4xl">Zonas que conocemos de verdad</h2>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {NEIGHBORHOODS.map((zone) => (
             <li key={zone.slug}>
