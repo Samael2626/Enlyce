@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import Link from "next/link";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import "./globals.css";
 
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
@@ -63,6 +64,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="contenido" className="flex-1">
           {children}
         </main>
+
+        <WhatsAppButton />
 
         <footer className="site-footer">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-10 text-sm">

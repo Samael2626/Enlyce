@@ -66,6 +66,60 @@ h1, h2, h3 {
 .hero-action-primary { border-color: #c99d42; color: #e3be65; }
 .site-footer { border-top: 4px solid var(--color-accent); background: #0f1a3d; color: rgb(255 255 255 / 68%); }
 
+.whatsapp-fab {
+  position: fixed;
+  top: 62%;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  min-height: 3.25rem;
+  padding: .75rem 1rem .75rem .85rem;
+  border: 1px solid rgb(227 190 101 / 65%);
+  border-right: 0;
+  border-radius: 999px 0 0 999px;
+  background: #0f1a3d;
+  box-shadow: 0 14px 36px rgb(6 13 38 / 30%);
+  color: #f8e5ad;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  transform: translateY(-50%);
+  transition: background-color 180ms ease, color 180ms ease, padding 180ms ease;
+}
+
+.whatsapp-fab svg {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: none;
+}
+
+.whatsapp-fab:hover {
+  padding-left: 1.2rem;
+  background: #173d31;
+  color: white;
+}
+
+@media (max-width: 640px) {
+  .whatsapp-fab {
+    top: auto;
+    right: 1rem;
+    bottom: 1rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    min-height: 0;
+    justify-content: center;
+    padding: 0;
+    border-right: 1px solid rgb(227 190 101 / 65%);
+    border-radius: 999px;
+    transform: none;
+  }
+
+  .whatsapp-fab:hover { padding-left: 0; }
+  .whatsapp-fab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+}
+
 /* Leaflet: el mapa hereda la paleta editorial en vez del gris de fabrica. */
 .leaflet-container {
   background: var(--color-bg);
