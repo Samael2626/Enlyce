@@ -1,0 +1,4 @@
+interface:
+  display_name: "Enlyce UML"
+  short_description: "Genera UML verificable desde el codigo ENLYCE"
+  default_prompt: "Usa $enlyce-uml para generar diagramas UML verificados contra el codigo actual."

@@ -1,0 +1,60 @@
+@startuml
+title ENLYCE - Arquitectura web y conexión API
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #243447
+skinparam ComponentBorderColor #243447
+skinparam DatabaseBorderColor #243447
+
+actor "Visitante" as Visitor
+actor "Asesor / Administrador" as Staff
+
+component "Sitio público\nNext.js" as PublicWeb
+component "CRM privado\nReact + Vite" as CrmWeb
+
+package "Backend ENLYCE" {
+  component "Enlyce.Api\nASP.NET Core Minimal APIs" as Api
+  component "Application\nCasos de uso" as Application
+  component "Domain\nEntidades y reglas" as Domain
+  component "Infrastructure\nEF Core y adaptadores" as Infrastructure
+  component "Medios\n/media" as Media
+}
+
+database "PostgreSQL" as Database
+folder "Almacenamiento local\nde imágenes" as MediaStorage
+
+Visitor --> PublicWeb : catálogo y contacto
+Staff --> CrmWeb : gestión comercial
+
+PublicWeb --> Api : HTTPS\ncatálogo, política y leads
+CrmWeb --> Api : HTTPS + cookie HttpOnly\nautenticación y gestión
+PublicWeb --> Media : GET /media/*
+CrmWeb --> Media : GET /media/*
+
+Api --> Application
+Application --> Domain
+Api --> Infrastructure : composición DI
+Infrastructure ..> Domain : implementa puertos
+Infrastructure --> Database : EF Core / Npgsql
+Api --> Media
+Media --> MediaStorage
+
+note bottom of PublicWeb
+  website/sitio/
+  NEXT_PUBLIC_API_URL
+end note
+
+note bottom of CrmWeb
+  frontend/
+  VITE_API_URL
+end note
+
+note right of Api
+  Catálogo y captación: anónimos
+  Gestión CRM: autenticada
+  Registro de asesor: Administrador
+end note
+
+@enduml
