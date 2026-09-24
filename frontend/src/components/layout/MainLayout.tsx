@@ -1,12 +1,22 @@
 import { Outlet, Navigate } from "react-router-dom"
 import { useAuthStore } from "@/stores/authStore"
+import { useMe } from "@/hooks/useApi"
 import { AppSidebar } from "./AppSidebar"
 import { Header } from "./Header"
 
 export function MainLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const session = useMe()
 
-  if (!isAuthenticated) {
+  if (session.isPending && !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Verificando sesión...
+      </div>
+    )
+  }
+
+  if (session.isError || !isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 

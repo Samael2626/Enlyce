@@ -7,6 +7,8 @@ import { NEIGHBORHOODS, findZone } from "@/lib/zones";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return NEIGHBORHOODS.map((zone) => ({ slug: zone.slug }));
 }

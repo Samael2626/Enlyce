@@ -11,7 +11,7 @@ public sealed class MediaStorageOptions
     public string RequestPath { get; set; } = "/media";
 
     // Origen absoluto con el que se construyen las URL publicas.
-    public string PublicBaseUrl { get; set; } = "http://localhost:5000";
+    public string PublicBaseUrl { get; set; } = "http://localhost:5019";
 
     // Anchos generados, de mayor a menor. El mayor es la URL canonica.
     public int[] VariantWidths { get; set; } = [1600, 800, 400];

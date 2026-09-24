@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5050"
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5019"
 
 class ApiClient {
   private baseUrl: string
@@ -52,6 +52,10 @@ class ApiClient {
     )
   }
 
+  async logout() {
+    return this.request<void>("/api/auth/logout", { method: "POST" })
+  }
+
   // Leads
   async createLead(data: {
     nombre: string
@@ -77,14 +81,14 @@ class ApiClient {
   }
 
   async moveLeadInPipeline(leadId: string, nuevaEtapa: string) {
-    return this.request<void>(`/api/pipeline/leads/${leadId}/mover-etapa`, {
+    return this.request<void>(`/api/pipeline/${leadId}/mover-etapa`, {
       method: "PUT",
       body: JSON.stringify({ nuevaEtapa }),
     })
   }
 
   async assignLeadToAsesor(leadId: string, asesorId: string) {
-    return this.request<void>(`/api/pipeline/leads/${leadId}/asignar`, {
+    return this.request<void>(`/api/pipeline/${leadId}/asignar`, {
       method: "PUT",
       body: JSON.stringify({ asesorId }),
     })
@@ -92,7 +96,7 @@ class ApiClient {
 
   // Interacciones
   async getInteracciones(leadId: string) {
-    return this.request<any[]>(`/api/leads/${leadId}/interacciones`)
+    return this.request<any[]>(`/api/interacciones/lead/${leadId}`)
   }
 
   async registrarInteraccion(data: {
@@ -101,7 +105,7 @@ class ApiClient {
     tipo: string
     resumen?: string
   }) {
-    return this.request<any>("/api/leads/interacciones", {
+    return this.request<any>("/api/interacciones", {
       method: "POST",
       body: JSON.stringify(data),
     })
@@ -147,16 +151,16 @@ class ApiClient {
 
   // Politica
   async getPoliticaActiva() {
-    return this.request<any>("/api/ley1581/politica")
+    return this.request<any>("/api/politica/activa")
   }
 
   async consultarDatosLead(leadId: string) {
-    return this.request<any>(`/api/ley1581/leads/${leadId}/datos`)
+    return this.request<any>(`/api/datos-personales/${leadId}`)
   }
 
-  async revocarConsentimiento(leadId: string) {
-    return this.request<void>(`/api/ley1581/leads/${leadId}/revocar`, {
-      method: "PUT",
+  async suprimirDatosLead(leadId: string) {
+    return this.request<void>(`/api/datos-personales/${leadId}`, {
+      method: "DELETE",
     })
   }
 }

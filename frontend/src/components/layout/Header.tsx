@@ -4,17 +4,20 @@ import { useLocation } from "react-router-dom"
 import { LogOut, Sun, Moon, User } from "lucide-react"
 import { useTheme } from "next-themes"
 import { NAV_ITEMS } from "@/lib/constants"
+import { useLogout } from "@/hooks/useApi"
 
 export function Header() {
-  const { user, logout } = useAuthStore()
+  const user = useAuthStore((s) => s.user)
+  const logout = useLogout()
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
   const location = useLocation()
   const pageTitle = NAV_ITEMS.find((item) => item.href === location.pathname)?.title || "Panel"
 
   const handleLogout = () => {
-    logout()
-    navigate("/login")
+    logout.mutate(undefined, {
+      onSettled: () => navigate("/login"),
+    })
   }
 
   return (
@@ -44,6 +47,7 @@ export function Header() {
 
         <button
           onClick={handleLogout}
+          disabled={logout.isPending}
           className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
           title="Cerrar sesión"
           aria-label="Cerrar sesión"

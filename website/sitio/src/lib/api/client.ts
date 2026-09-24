@@ -65,7 +65,7 @@ export class ApiError extends Error {
   }
 }
 
-const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace(/\/$/, "");
+const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5019").replace(/\/$/, "");
 
 export function resolveMediaUrl(url: string): string {
   try {

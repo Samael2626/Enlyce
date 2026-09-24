@@ -5,31 +5,47 @@ import { useAuthStore } from "@/stores/authStore"
 // Auth
 export function useLogin() {
   const setUser = useAuthStore((s) => s.setUser)
-  const setToken = useAuthStore((s) => s.setToken)
 
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       api.login(email, password),
-    onSuccess: (data) => {
-      setToken(data.token)
-      setUser({ nombre: data.nombre, rol: data.rol, email: "" })
+    onSuccess: (data, variables) => {
+      setUser({ nombre: data.nombre, rol: data.rol, email: variables.email })
     },
   })
 }
 
 export function useMe() {
   const setUser = useAuthStore((s) => s.setUser)
-  const token = useAuthStore((s) => s.token)
+  const logout = useAuthStore((s) => s.logout)
 
   return useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => {
-      const data = await api.getMe()
-      setUser({ nombre: data.nombre, rol: data.rol, email: data.email })
-      return data
+      try {
+        const data = await api.getMe()
+        setUser({ nombre: data.nombre, rol: data.rol, email: data.email })
+        return data
+      } catch (error) {
+        logout()
+        throw error
+      }
     },
-    enabled: !!token,
     retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient()
+  const logout = useAuthStore((s) => s.logout)
+
+  return useMutation({
+    mutationFn: () => api.logout(),
+    onSettled: () => {
+      logout()
+      queryClient.clear()
+    },
   })
 }
 
@@ -189,11 +205,11 @@ export function useDatosLead(leadId: string) {
   })
 }
 
-export function useRevocarConsentimiento() {
+export function useSuprimirDatosLead() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (leadId: string) => api.revocarConsentimiento(leadId),
+    mutationFn: (leadId: string) => api.suprimirDatosLead(leadId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] })
     },

@@ -4,7 +4,7 @@
 
 **Alcance:** CRM privado, sitio web público, API compartida, medios y PostgreSQL.
 
-**Versión analizada:** commit `b1df518` más cambios locales sin commit.
+**Versión analizada:** commit documental `b8fecf0` más el cierre técnico del 2026-09-24.
 
 **Diagrama:** `NO RENDERIZADO`; PlantUML no está instalado localmente.
 
@@ -32,36 +32,28 @@ Fuente UML editable: [`uml/arquitectura-web-api.puml`](uml/arquitectura-web-api.
 ## Flujo del CRM privado
 
 1. React obtiene la URL base desde `VITE_API_URL`. El `.env` local usa `http://localhost:5019`, igual que `launchSettings.json`.
-2. El valor de respaldo del cliente es `http://localhost:5050`, mientras Vite proxifica `/api` y `/media` hacia `http://127.0.0.1:5000`. Esos valores alternativos no están alineados con el puerto local vigente.
+2. El valor de respaldo del cliente y el proxy de Vite apuntan al puerto local vigente `5019`.
 3. El login envía `POST /api/auth/login`.
 4. La API valida correo, contraseña y estado del asesor.
 5. La API devuelve el JWT y crea la cookie HttpOnly `_enlyce_auth`.
 6. El cliente usa `credentials: "include"`; el middleware transforma la cookie en encabezado `Authorization: Bearer` antes de la autenticación JWT.
 7. Las políticas y `EndpointAccess` limitan información según rol y asesor asignado.
 
-La respuesta también contiene el token y el frontend lo conserva en Zustand. Sin embargo, las solicitudes del cliente dependen de la cookie porque `ApiClient` no agrega el token como encabezado. Esta duplicación debe revisarse: persistir el JWT en almacenamiento del navegador aumenta superficie de exposición sin participar en la autorización actual.
+La respuesta también contiene el token para conservar el contrato de la API, pero el CRM no lo guarda ni lo usa. Zustand solo mantiene en memoria el usuario de la sesión; la autenticación depende de la cookie HttpOnly y se revalida con `GET /api/auth/me`. El cierre de sesión llama `POST /api/auth/logout` antes de limpiar el estado local.
 
-### Desfases detectados entre CRM y API
+### Desfases CRM/API cerrados el 2026-09-24
 
-El cliente CRM contiene rutas que no coinciden con las Minimal APIs actuales:
-
-| Operación | Cliente CRM | Ruta real de la API |
-|---|---|---|
-| Mover lead | `/api/pipeline/leads/{id}/mover-etapa` | `/api/pipeline/{id}/mover-etapa` |
-| Asignar lead | `/api/pipeline/leads/{id}/asignar` | `/api/pipeline/{id}/asignar` |
-| Consultar interacciones | `/api/leads/{id}/interacciones` | `/api/interacciones/lead/{id}` |
-| Registrar interacción | `/api/leads/interacciones` | `/api/interacciones` |
-| Consultar política | `/api/ley1581/politica` | `/api/politica/activa` |
-| Consultar datos del lead | `/api/ley1581/leads/{id}/datos` | `/api/datos-personales/{id}` |
-| Revocar o suprimir datos | `PUT /api/ley1581/leads/{id}/revocar` | `DELETE /api/datos-personales/{id}` |
-
-Estos métodos pueden responder `404` cuando se ejecuten. Hallazgo obtenido por comparación estática; no se probó cada pantalla en navegador.
+- Pipeline alineado con `/api/pipeline/{id}/mover-etapa` y `/api/pipeline/{id}/asignar`.
+- Interacciones alineadas con `/api/interacciones/lead/{id}` y `/api/interacciones`.
+- Política y datos personales alineados con `/api/politica/activa` y `/api/datos-personales/{id}`.
+- La antigua acción ambigua de revocación fue reemplazada por la operación real de supresión: `DELETE /api/datos-personales/{id}`.
+- API, cliente Vite y proxy local usan el puerto `5019`.
 
 ## Flujo del sitio público
 
 ### Consulta del catálogo
 
-1. Next.js obtiene la API desde `NEXT_PUBLIC_API_URL`; el respaldo local es `http://localhost:5000`.
+1. Next.js obtiene la API desde `NEXT_PUBLIC_API_URL`; el respaldo local es `http://localhost:5019`.
 2. El catálogo consulta `GET /api/public/inmuebles` con filtros en la URL.
 3. La ficha consulta `GET /api/public/inmuebles/{slug}`.
 4. Ambos endpoints permiten acceso anónimo y responden con caché pública de cinco minutos.
@@ -76,7 +68,9 @@ Estos métodos pueden responder `404` cuando se ejecuten. Hallazgo obtenido por 
 5. Application valida los datos, identifica contactos repetidos, registra el consentimiento y vincula la oportunidad con una publicación cuando corresponde.
 6. PostgreSQL conserva el lead, consentimiento e interacciones aplicables.
 
-El catálogo puede consultarse desde el servidor de Next.js sin depender de CORS. El formulario de contacto se ejecuta en el navegador y llama directamente a la API. La política CORS local permite `localhost:5173` y `localhost:4173`, pero no `localhost:3000`, puerto local del sitio Next.js. Por código, la captación local puede quedar bloqueada por CORS; falta prueba real en navegador.
+El catálogo puede consultarse desde el servidor de Next.js sin depender de CORS. El formulario de contacto se ejecuta en el navegador y llama directamente a la API. La política CORS local permite los orígenes de Vite (`5173` y `4173`) y de Next.js (`3000`), tanto con `localhost` como con `127.0.0.1` cuando aplica.
+
+La portada y las páginas dinámicas de zona se renderizan bajo demanda. Así el build de Next.js no necesita una API activa; el `sitemap` conserva una degradación controlada cuando el catálogo no responde.
 
 ## Fronteras de seguridad
 
@@ -104,9 +98,13 @@ El catálogo puede consultarse desde el servidor de Next.js sin depender de CORS
 - Application: 33 pruebas superadas.
 - Integración: 150 pruebas superadas.
 - CRM React: build de producción superado.
-- Sitio Next.js: lint superado y build de producción superado con API y PostgreSQL locales disponibles.
-- El build de Next.js depende de consultar la API durante el prerender; sin API activa falla con `ECONNREFUSED` en la página principal.
+- Sitio Next.js: lint, typecheck y build de producción superados con API y PostgreSQL locales apagados.
+- API: build correcto; 190 pruebas de dominio, 33 de Application y 150 de integración superadas.
 - Deuda conocida: advertencias de nulabilidad en .NET y advertencia futura por `__dirname` en Vite.
+
+## Decisión PlantUML
+
+Se usará la edición **MIT, Compiled jar**. Mantiene generación de todos los diagramas UML y evita incorporar la licencia GPL al artefacto descargado. El archivo debe guardarse como `tools/plantuml/plantuml.jar`; no se versionará el binario. La fuente oficial consultada fue la página de descargas de PlantUML, versión `v1.2026.8` al 2026-09-24.
 
 ## Pendientes documentales
 

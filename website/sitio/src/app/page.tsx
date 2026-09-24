@@ -4,6 +4,8 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { getProperties } from "@/lib/api/catalog";
 import { NEIGHBORHOODS } from "@/lib/zones";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const page = await getProperties({ pageSize: 6 });
 

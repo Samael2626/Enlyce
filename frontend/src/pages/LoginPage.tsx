@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useLogin } from "@/hooks/useApi"
-import { useAuthStore } from "@/stores/authStore"
 import { ArrowRight, Loader2 } from "lucide-react"
 
 export function LoginPage() {
@@ -10,8 +9,6 @@ export function LoginPage() {
   const [error, setError] = useState("")
   const navigate = useNavigate()
   const login = useLogin()
-  const setToken = useAuthStore((s) => s.setToken)
-  const setUser = useAuthStore((s) => s.setUser)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,9 +17,7 @@ export function LoginPage() {
     login.mutate(
       { email, password },
       {
-        onSuccess: (data) => {
-          setToken(data.token)
-          setUser({ nombre: data.nombre, rol: data.rol, email })
+        onSuccess: () => {
           navigate("/dashboard")
         },
         onError: (err) => {
