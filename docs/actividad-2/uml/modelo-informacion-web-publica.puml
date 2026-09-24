@@ -1,0 +1,79 @@
+@startuml
+title ENLYCE WEB — Información que presenta y envía la web
+top to bottom direction
+skinparam backgroundColor #F8F4EA
+skinparam shadowing false
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontColor #26352F
+skinparam ArrowColor #6B766F
+skinparam class {
+  BorderColor #66796E
+  BackgroundColor #FCFAF4
+  HeaderBackgroundColor #E4ECE6
+  FontColor #26352F
+}
+skinparam legend {
+  BorderColor #B08A4B
+  BackgroundColor #FFF8DF
+  FontColor #4D4538
+}
+hide circle
+hide empty methods
+
+class "Catálogo" as Catalog #E4ECE6 {
+  +Página actual: número
+  +Total: número
+  +Filtros: búsqueda seleccionada
+}
+class "Resumen de inmueble" as Summary #E4ECE6 {
+  +Título público: texto
+  +Operación: venta / arriendo
+  +Precio: dinero
+  +Zona: texto
+  +Foto de portada: imagen [opcional]
+}
+class "Detalle de inmueble" as Detail #F1E5E7 {
+  +Título y descripción: texto
+  +Precio y características
+  +Ubicación aproximada
+  +Asesor responsable
+}
+class Fotografía #EFE6D5 {
+  +URL: dirección web
+  +Texto alternativo: texto
+  +Orden: número
+}
+class "Formulario de contacto" as Form #F1E5E7 {
+  +Nombre: texto
+  +Correo: correo electrónico
+  +Teléfono: texto [opcional]
+  +Autorización: sí / no
+}
+class "Solicitud de información" as Request #FCF6F7 {
+  +Origen: texto
+  +Tipo de operación: texto
+  +Servicio de propietario: texto [opcional]
+}
+class "Política de datos" as Policy #EFE6D5 {
+  +Versión: texto
+  +Fecha de vigencia: fecha
+}
+
+Catalog "1" -- "0..*" Summary : muestra
+Summary "1" .. "1" Detail : abre
+Detail "1" -- "0..*" Fotografía
+Form "1" -- "1" Request
+Form "1" .. "1" Policy
+Detail "0..1" .. "0..*" Request
+
+legend bottom
+  |= Cómo leer el modelo |
+  | La parte verde describe información consultada; la rosa, información de contacto. |
+  | El catálogo abre un detalle con fotos; el formulario exige una política y genera una solicitud. |
+  | La solicitud puede estar vinculada con el inmueble que estaba viendo el visitante. |
+  | **[opcional]** significa que el dato puede faltar. **0..*** significa ninguno o muchos. |
+  | Se omiten identificadores técnicos para mostrar únicamente lo que entiende el visitante. |
+endlegend
+@enduml

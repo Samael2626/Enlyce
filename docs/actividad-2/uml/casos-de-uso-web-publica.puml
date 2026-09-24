@@ -1,0 +1,77 @@
+@startuml
+title ENLYCE WEB — Casos de uso de la experiencia pública
+left to right direction
+skinparam backgroundColor #F8F4EA
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontColor #26352F
+skinparam ArrowColor #6B766F
+skinparam actor {
+  BorderColor #742A3A
+  BackgroundColor #F8F4EA
+  FontColor #26352F
+}
+skinparam usecase {
+  BorderColor #66796E
+  BackgroundColor #FCFAF4
+  FontColor #26352F
+}
+skinparam rectangle {
+  BorderColor #B08A4B
+  BackgroundColor #F8F4EA
+  FontColor #26352F
+}
+skinparam package {
+  BorderColor #B08A4B
+  FontColor #26352F
+}
+skinparam legend {
+  BorderColor #B08A4B
+  BackgroundColor #FFF8DF
+  FontColor #4D4538
+}
+
+actor Visitante as visitor
+actor Propietario as owner
+
+rectangle "WEB PÚBLICA ENLYCE" {
+  package "EXPLORAR INMUEBLES" #E4ECE6 {
+    together {
+      usecase "Consultar catálogo" as catalog
+      usecase "Filtrar y ordenar" as filters
+      usecase "Ver ficha del inmueble" as detail
+      usecase "Guardar favoritos" as favorites
+      usecase "Explorar por zonas" as zones
+    }
+  }
+  package "CONTACTAR" #F1E5E7 {
+    together {
+      usecase "Solicitar información\nsobre un inmueble" as contact
+      usecase "Solicitar servicio\npara propietario" as ownerContact
+      usecase "Consultar política\nde datos" as privacy
+    }
+  }
+}
+
+visitor --> catalog
+visitor --> filters
+visitor --> detail
+visitor --> favorites
+visitor --> zones
+visitor --> contact
+visitor --> privacy
+owner --> ownerContact
+owner --> privacy
+
+visitor -[hidden]down- owner
+catalog -[hidden]down- contact
+
+legend bottom
+  |= Cómo leer el diagrama |
+  | El visitante explora inmuebles sin iniciar sesión. |
+  | Favoritos se guardan en el navegador; no crean una cuenta. |
+  | Enviar una solicitud exige aceptar la política de tratamiento de datos. |
+endlegend
+@enduml
