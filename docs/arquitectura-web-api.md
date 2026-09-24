@@ -6,6 +6,8 @@
 
 **Versión analizada:** commit documental `b8fecf0` más el cierre técnico del 2026-09-24.
 
+**Implementación del cierre:** commit `82ae9f2`.
+
 **Diagrama:** `NO RENDERIZADO`; PlantUML no está instalado localmente.
 
 **Advertencia:** el worktree contenía cambios sin commit en el módulo administrativo de publicaciones al crear este documento.
