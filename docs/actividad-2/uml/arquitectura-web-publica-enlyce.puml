@@ -1,0 +1,66 @@
+@startuml
+title ENLYCE — Cómo funciona la web pública
+top to bottom direction
+skinparam backgroundColor #F8F4EA
+skinparam shadowing false
+skinparam linetype ortho
+skinparam componentStyle rectangle
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontColor #26352F
+skinparam ArrowColor #6B766F
+skinparam actor {
+  BorderColor #742A3A
+  BackgroundColor #F8F4EA
+  FontColor #26352F
+}
+skinparam component {
+  BorderColor #66796E
+  BackgroundColor #FCFAF4
+  FontColor #26352F
+}
+skinparam database {
+  BorderColor #66796E
+  BackgroundColor #E4ECE6
+  FontColor #26352F
+}
+skinparam folder {
+  BorderColor #B08A4B
+  BackgroundColor #EFE6D5
+  FontColor #26352F
+}
+skinparam legend {
+  BorderColor #B08A4B
+  BackgroundColor #FFF8DF
+  FontColor #4D4538
+}
+
+actor Visitante as visitor
+
+component "WEB PÚBLICA · Next.js\n\n• Portada y catálogo\n• Ficha del inmueble\n• Formulario de contacto" as website #F1E5E7
+
+component "CONSULTA PÚBLICA\nCatálogo y ficha\nGET /api/public/inmuebles" as catalog #E4ECE6
+component "SOLICITUD DE INFORMACIÓN\nPolítica de datos + oportunidad\nGET /api/politica/activa\nPOST /api/leads" as leads #F1E5E7
+component "FOTOGRAFÍAS\nArchivos publicados\nGET /media/*" as media #EFE6D5
+
+database "POSTGRESQL\n\nInmuebles publicados\nOportunidades comerciales\nConsentimientos" as database
+folder "IMÁGENES\nAlmacenamiento de medios" as storage
+
+visitor --> website : navega y envía formularios
+website --> catalog : consulta inmuebles
+website --> leads : envía datos autorizados
+website --> media : solicita fotografías
+catalog --> database : lee publicaciones
+leads --> database : guarda oportunidad\ny consentimiento
+media --> storage : lee archivos
+
+catalog -[hidden]right- leads
+leads -[hidden]right- media
+
+legend bottom
+  |= Cómo leer el diagrama |
+  | La web presenta la información; la API valida y administra los datos. |
+  | **GET** consulta información. **POST** envía información nueva. |
+  | La web nunca se conecta directamente con PostgreSQL ni con el almacenamiento. |
+  | `NEXT_PUBLIC_API_URL` indica a Next.js dónde está la API de ENLYCE. |
+endlegend
+@enduml

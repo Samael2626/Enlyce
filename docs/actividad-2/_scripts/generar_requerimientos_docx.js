@@ -257,6 +257,16 @@ const classSection = [
   paragraph("Documento contrastado contra src/, configuraciones EF Core, endpoints y pruebas de ENLYCE en el commit 13624a7, el 24 de septiembre de 2026. Los cambios locales aún no versionados del módulo administrativo de publicaciones no forman parte de estos diagramas."),
 ]
 
+const webSection = [
+  heading("Arquitectura de la web pública"),
+  ...imageParagraph("arquitectura-web-publica-enlyce.png", 520, 590, "Figura 4. Conexión de la web pública con la API, los datos y las imágenes."),
+  labelValueTable([
+    ["Consultar inmuebles", "El visitante navega por catálogo y fichas. Next.js consulta la API y esta lee únicamente las publicaciones disponibles en PostgreSQL."],
+    ["Solicitar información", "El formulario consulta la política de datos y envía la solicitud. La API valida y guarda una oportunidad comercial con su consentimiento."],
+    ["Frontera importante", "La web nunca accede directamente a PostgreSQL ni al almacenamiento de imágenes; toda operación pasa por la API de ENLYCE."],
+  ]),
+]
+
 const doc = new Document({
   creator: "Samuel Andres Escobar Saldarriaga",
   title: "Taller práctico UML — ENLYCE",
@@ -286,6 +296,11 @@ const doc = new Document({
       properties: { type: "nextPage", page: { size: { width: 12240, height: 15840 }, margin: { top: 500, right: 700, bottom: 500, left: 700 } } },
       footers: { default: footer },
       children: classSection,
+    },
+    {
+      properties: { type: "nextPage", page: { size: { width: 12240, height: 15840 }, margin: { top: 500, right: 700, bottom: 500, left: 700 } } },
+      footers: { default: footer },
+      children: webSection,
     },
   ],
 })

@@ -75,8 +75,17 @@ Las inmobiliarias pequeñas gestionan oportunidades, inmuebles y seguimientos me
 
 ![Diagrama de clases del dominio](uml/clases-dominio-enlyce.png)
 
-Las líneas continuas representan relaciones configuradas en EF Core. Las líneas punteadas representan relaciones conceptuales implementadas mediante identificadores, pero sin clave foránea configurada actualmente.
+La vista prioriza el significado del negocio y omite identificadores técnicos. Las líneas continuas representan relaciones configuradas en el modelo; las punteadas representan relaciones conceptuales mediante identificadores. En el código, `Guid` es un identificador único y `Guid?` indica que puede estar vacío.
+
+## Arquitectura de la web pública
+
+![Arquitectura de la web pública](uml/arquitectura-web-publica-enlyce.png)
+
+- **Consulta:** Next.js solicita catálogo y fichas a `Enlyce.Api`; la API lee las publicaciones disponibles en PostgreSQL.
+- **Contacto:** el formulario consulta la política activa y envía la solicitud; la API registra la oportunidad comercial y el consentimiento.
+- **Imágenes:** la web solicita `/media/*` a la API, que sirve los archivos desde su almacenamiento.
+- **Frontera:** `website/sitio/` nunca accede directamente a PostgreSQL ni al almacenamiento de imágenes.
 
 ## Base de verificación
 
-Documento contrastado contra `src/`, configuraciones EF Core, endpoints y pruebas de ENLYCE en el commit `dc24b37`, el 2026-09-24. Los cambios locales aún no versionados del módulo administrativo de publicaciones no forman parte de estos diagramas.
+Documento contrastado contra `src/`, `website/sitio/`, configuraciones EF Core, endpoints y pruebas de ENLYCE en el commit base `13624a7`, el 2026-09-24. Los cambios locales aún no versionados del módulo administrativo de publicaciones no forman parte de estos diagramas.
