@@ -8,7 +8,7 @@
 
 **Implementación del cierre:** commit `82ae9f2`.
 
-**Diagrama:** `NO RENDERIZADO`; PlantUML no está instalado localmente.
+**Diagrama:** validado y renderizado con PlantUML `1.2026.8 MIT` el 2026-09-24.
 
 **Advertencia:** el worktree contenía cambios sin commit en el módulo administrativo de publicaciones al crear este documento.
 
@@ -29,7 +29,9 @@ ENLYCE incluye dos aplicaciones web activas con públicos distintos:
 
 Ninguna interfaz web accede directamente a PostgreSQL. Ambas consumen `Enlyce.Api` mediante HTTP. La API ejecuta los casos de uso de Application, aplica las reglas de Domain y persiste mediante los adaptadores de Infrastructure.
 
-Fuente UML editable: [`uml/arquitectura-web-api.puml`](uml/arquitectura-web-api.puml).
+Fuente UML editable: [`uml/arquitectura-web-api.puml`](uml/arquitectura-web-api.puml). Salidas: [SVG](uml/arquitectura-web-api.svg) y [PNG](uml/arquitectura-web-api.png).
+
+![Arquitectura web y conexión API de ENLYCE](uml/arquitectura-web-api.svg)
 
 ## Flujo del CRM privado
 
@@ -106,7 +108,9 @@ La portada y las páginas dinámicas de zona se renderizan bajo demanda. Así el
 
 ## Decisión PlantUML
 
-Se usará la edición **MIT, Compiled jar**. Mantiene generación de todos los diagramas UML y evita incorporar la licencia GPL al artefacto descargado. El archivo debe guardarse como `tools/plantuml/plantuml.jar`; no se versionará el binario. La fuente oficial consultada fue la página de descargas de PlantUML, versión `v1.2026.8` al 2026-09-24.
+Está instalada la edición **MIT, Compiled jar** en `tools/plantuml/plantuml.jar`. Mantiene generación de todos los diagramas UML y el binario queda excluido de Git. La fuente oficial consultada fue la página de descargas de PlantUML, versión `v1.2026.8` al 2026-09-24.
+
+Comprobaciones ejecutadas: `-version`, `-checkonly`, exportación SVG, exportación PNG e inspección visual del PNG. Resultado: sintaxis válida, Graphviz operativo y diagrama legible.
 
 ## Pendientes documentales
 

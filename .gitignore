@@ -57,3 +57,6 @@ frontend/dist/
 
 # Medios generados por LocalMediaStorage
 src/Enlyce.Api/wwwroot/media/
+
+# Herramientas locales: binario PlantUML no versionado
+tools/plantuml/*.jar
