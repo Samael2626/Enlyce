@@ -1,0 +1,55 @@
+@startuml
+title ENLYCE - Diagrama de casos de uso
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor Visitante as visitor
+actor Asesor as advisor
+actor Administrador as admin
+
+admin --|> advisor
+
+rectangle "Sistema ENLYCE" {
+  usecase "Autenticar" as authenticate
+  usecase "Cerrar sesión" as logout
+  usecase "Registrar asesor" as registerAdvisor
+  usecase "Registrar lead" as registerLead
+  usecase "Consultar pipeline" as viewPipeline
+  usecase "Mover lead de etapa" as moveLead
+  usecase "Asignar o reasignar lead" as assignLead
+  usecase "Registrar interacción" as registerInteraction
+  usecase "Agendar visita" as scheduleVisit
+  usecase "Gestionar inmuebles" as manageProperties
+  usecase "Consultar catálogo público" as viewCatalog
+  usecase "Solicitar información" as requestInfo
+  usecase "Consultar o suprimir\ndatos personales" as personalData
+}
+
+advisor --> authenticate
+advisor --> logout
+advisor --> registerLead
+advisor --> viewPipeline
+advisor --> moveLead
+advisor --> registerInteraction
+advisor --> scheduleVisit
+advisor --> manageProperties
+
+admin --> registerAdvisor
+admin --> assignLead
+admin --> personalData
+
+visitor --> viewCatalog
+visitor --> requestInfo
+requestInfo ..> registerLead : <<include>>
+
+note bottom of registerAdvisor
+  ENLYCE no permite auto-registro.
+  Solo el Administrador crea asesores.
+end note
+
+note bottom of authenticate
+  Precondición de los casos privados;
+  no se repite como include en cada uno.
+end note
+@enduml

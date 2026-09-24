@@ -1,0 +1,57 @@
+@startuml
+title ENLYCE - Actividad del caso de uso Autenticar
+skinparam shadowing false
+
+|Usuario|
+start
+:Abrir formulario de acceso;
+:Ingresar correo y contraseña;
+
+|CRM React|
+:Validar campos obligatorios;
+:POST /api/auth/login;
+
+|Enlyce.Api|
+:Recibir LoginCommand;
+
+|Application|
+:Buscar asesor por correo;
+
+|PostgreSQL|
+:Consultar Asesores;
+:Devolver asesor o nulo;
+
+|Application|
+if (¿Asesor existe y contraseña válida?) then (No)
+  :Lanzar UnauthorizedAccessException;
+  |Enlyce.Api|
+  :Responder 401 Credenciales inválidas;
+  |CRM React|
+  :Mostrar error de autenticación;
+  stop
+else (Sí)
+endif
+
+if (¿Asesor activo?) then (No)
+  :Lanzar UnauthorizedAccessException;
+  |Enlyce.Api|
+  :Responder 401 Asesor inactivo;
+  |CRM React|
+  :Mostrar error de autenticación;
+  stop
+else (Sí)
+  :Generar JWT con identidad y rol;
+endif
+
+|Enlyce.Api|
+:Crear cookie _enlyce_auth\nHttpOnly, Secure y SameSite Strict;
+:Responder 200 con nombre y rol;
+
+|CRM React|
+:Mantener usuario en memoria;
+:Navegar al panel privado;
+
+|Usuario|
+:Acceder según su rol;
+stop
+@enduml
