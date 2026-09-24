@@ -251,8 +251,8 @@ const activitySection = [
 
 const classSection = [
   heading("Diagrama de clases"),
-  ...imageParagraph("clases-dominio-enlyce.png", 540, 643, "Figura 3. Vista conceptual del dominio organizada por agregados."),
-  paragraph("Las líneas continuas representan relaciones de agregado configuradas en EF Core. Las punteadas muestran asociaciones conceptuales mediante identificadores. Para conservar la lectura se omiten conexiones secundarias de Asesor con Interacción y Visita; sus identificadores siguen visibles en las clases."),
+  ...imageParagraph("clases-dominio-enlyce.png", 600, 600, "Figura 3. Clases principales de ENLYCE organizadas como flujo de negocio."),
+  paragraph("Esta vista omite Id y claves foráneas para priorizar el significado del negocio. En el código, Guid representa un identificador único y Guid? indica que ese identificador puede estar vacío."),
   heading("Base de verificación", HeadingLevel.HEADING_2),
   paragraph("Documento contrastado contra src/, configuraciones EF Core, endpoints y pruebas de ENLYCE en el commit 13624a7, el 24 de septiembre de 2026. Los cambios locales aún no versionados del módulo administrativo de publicaciones no forman parte de estos diagramas."),
 ]

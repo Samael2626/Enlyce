@@ -1,10 +1,9 @@
 @startuml
-title ENLYCE — Vista conceptual del dominio
-left to right direction
+title ENLYCE — Clases principales y sus relaciones
+top to bottom direction
 skinparam backgroundColor #F8F4EA
 skinparam shadowing false
 skinparam linetype ortho
-skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
 skinparam defaultFontName "Times New Roman"
 skinparam defaultFontColor #26352F
@@ -15,11 +14,7 @@ skinparam class {
   HeaderBackgroundColor #E4ECE6
   FontColor #26352F
 }
-skinparam package {
-  BorderColor #B08A4B
-  FontColor #26352F
-}
-skinparam note {
+skinparam legend {
   BorderColor #B08A4B
   BackgroundColor #FFF8DF
   FontColor #4D4538
@@ -27,87 +22,75 @@ skinparam note {
 hide circle
 hide empty methods
 
-package "IDENTIDAD Y ACCESO" #EFE6D5 {
-  class Asesor <<Entidad>> {
-    +Id: Guid
-    +Nombre: string
-    +Correo: Email
-    -PasswordHash: string
-    +Rol: string
-    +Activo: bool
-    +VerificarPassword(password): bool
-  }
-}
-package "GESTIÓN COMERCIAL" #F1E5E7 {
-  class Lead <<Agregado raíz>> {
-    +Id: Guid
-    +Nombre: string
-    +Email: Email
-    +Telefono: Telefono?
-    +Estado: EstadoLead
-    +AsesorAsignadoId: Guid?
-    +EtapaPipeline: string
-    +AutorizacionDatos: bool
-  }
-  class Interaccion <<Entidad>> {
-    +Id: Guid
-    +LeadId: Guid
-    +AsesorId: Guid
-    +Tipo: string
-    +Resumen: string?
-    +Fecha: DateTime
-  }
-  class Consentimiento <<Entidad>> {
-    +Id: Guid
-    +LeadId: Guid
-    +Fecha: DateTime
-    +VersionPolitica: string
-    +Metodo: string
-  }
-  class Visita <<Entidad>> {
-    +Id: Guid
-    +LeadId: Guid
-    +InmuebleId: Guid
-    +AsesorId: Guid
-    +FechaProgramada: DateTime
-    +FechaRealizada: DateTime?
-    +Estado: string
-  }
-  Lead "1" *-- "0..*" Interaccion : historial
-  Lead "1" *-- "0..*" Consentimiento : autoriza
-  Lead "1" *-- "0..*" Visita : agenda
-}
-package "INVENTARIO INMOBILIARIO" #E4ECE6 {
-  class Inmueble <<Agregado raíz>> {
-    +Id: Guid
-    +Nombre: string
-    +Tipo: TipoInmueble
-    +Modalidad: ModalidadInmueble
-    +Estado: EstadoInmueble
-    +Direccion: Direccion
-    +Precio: Dinero
-    +PropietarioId: Guid
-    +Activo: bool
-  }
-  class Propietario <<Entidad>> {
-    +Id: Guid
-    +Nombre: string
-    +Email: Email
-    +Telefono: Telefono?
-    +Activo: bool
-  }
-  Propietario "1" .. "0..*" Inmueble : posee
+class Asesor <<Usuario>> #EFE6D5 {
+    +Nombre: texto
+    +Correo: correo electrónico
+    +Rol: texto
+    +Activo: sí / no
 }
 
-Asesor "1" .. "0..*" Lead : atiende
-Inmueble "1" .. "0..*" Visita : es visitado en
-Asesor -[hidden]right- Lead
-Lead -[hidden]right- Inmueble
+class "Oportunidad comercial" as Lead <<Entidad principal>> #F1E5E7 {
+    +Nombre: texto
+    +Correo: correo electrónico
+    +Teléfono: texto [opcional]
+    +Estado: estado de la oportunidad
+    +Etapa: etapa de venta
+    +Autoriza datos: sí / no
+}
 
-note bottom
-  Línea continua: relación del agregado configurada en EF Core.
-  Línea punteada: asociación conceptual mediante identificador.
-  Se omiten asociaciones secundarias de Asesor con Interacción y Visita
-  para conservar la lectura; sus identificadores permanecen visibles.
-end note
+class "Interacción" as Interaccion <<Registro comercial>> #FCF6F7 {
+    +Tipo: texto
+    +Resumen: texto [opcional]
+    +Fecha: fecha y hora
+}
+
+class Consentimiento <<Registro comercial>> #FCF6F7 {
+    +Fecha: fecha y hora
+    +Versión de política: texto
+    +Método: texto
+}
+
+class Visita <<Registro comercial>> #FCF6F7 {
+    +Fecha programada: fecha y hora
+    +Fecha realizada: fecha y hora [opcional]
+    +Estado: texto
+}
+
+Lead "1" -- "0..*" Interaccion : registra
+Lead "1" -- "0..*" Consentimiento : autoriza
+Lead "1" -- "0..*" Visita : agenda
+
+class Inmueble <<Inventario>> #E4ECE6 {
+    +Nombre: texto
+    +Tipo: tipo de inmueble
+    +Modalidad: venta / arriendo
+    +Estado: estado del inmueble
+    +Dirección: dirección
+    +Precio: dinero
+    +Activo: sí / no
+}
+
+class Propietario <<Inventario>> #E4ECE6 {
+    +Nombre: texto
+    +Correo: correo electrónico
+    +Teléfono: texto [opcional]
+    +Activo: sí / no
+}
+
+Asesor "0..1" .. "0..*" Lead
+Inmueble "1" .. "0..*" Visita
+Propietario "1" .. "0..*" Inmueble
+
+Interaccion -[hidden]right- Consentimiento
+Consentimiento -[hidden]right- Visita
+
+legend bottom
+  |= Cómo leer el diagrama |
+  | Flujo: el asesor atiende oportunidades; cada oportunidad registra interacciones, consentimiento y visitas. |
+  | El propietario posee inmuebles y cada inmueble puede recibir visitas. |
+  | **1** = exactamente uno · **0..1** = ninguno o uno · **0..*** = ninguno o muchos. |
+  | Línea continua: relación configurada en el modelo. Línea punteada: relación conceptual mediante identificador. |
+  | Los campos técnicos `Id` y `...Id` se omiten para facilitar la lectura. |
+  | En el código, `Guid` es un identificador único y `Guid?` significa que puede estar vacío. |
+endlegend
 @enduml
