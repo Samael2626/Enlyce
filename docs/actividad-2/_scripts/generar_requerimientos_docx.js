@@ -25,7 +25,9 @@ const {
 
 const root = path.resolve(__dirname, "..")
 const uml = path.join(root, "uml")
-const output = path.join(root, "2_3_REQUERIMIENTOS_PROYECTO_ENLYCE.docx")
+const output = process.argv[3]
+  ? path.resolve(process.argv[3])
+  : path.join(root, "2_3_REQUERIMIENTOS_PROYECTO_ENLYCE.docx")
 
 const colors = {
   navy: "26352F",

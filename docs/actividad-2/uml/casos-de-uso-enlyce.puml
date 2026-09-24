@@ -41,14 +41,14 @@ rectangle "SISTEMA ENLYCE" as system {
   package "ADMINISTRACIÓN" #EFE6D5 {
     together {
       usecase "Registrar asesor" as registerAdvisor
-      usecase "Asignar o\nreasignar lead" as assignLead
+      usecase "Asignar o reasignar\noportunidad" as assignLead
       usecase "Gestionar datos\npersonales" as personalData
     }
   }
   package "GESTIÓN COMERCIAL" #F1E5E7 {
     together {
-      usecase "Registrar lead" as registerLead
-      usecase "Gestionar pipeline" as managePipeline
+      usecase "Registrar oportunidad\ncomercial" as registerLead
+      usecase "Gestionar etapas\nde venta" as managePipeline
       usecase "Registrar\ninteracción" as registerInteraction
       usecase "Agendar visita" as scheduleVisit
       usecase "Gestionar\ninmuebles" as manageProperties
@@ -57,7 +57,7 @@ rectangle "SISTEMA ENLYCE" as system {
   package "PORTAL PÚBLICO" #E4ECE6 {
     together {
       usecase "Consultar catálogo" as viewCatalog
-      usecase "Solicitar\ninformación" as requestInfo
+      usecase "Solicitar información\n(genera una oportunidad)" as requestInfo
     }
   }
 }
@@ -72,16 +72,17 @@ advisor --> scheduleVisit
 advisor --> manageProperties
 visitor --> viewCatalog
 visitor --> requestInfo
-requestInfo ..> registerLead : <<crea lead>>
 
 admin -[hidden]down- advisor
 advisor -[hidden]down- visitor
 registerAdvisor -[hidden]down- registerLead
 registerLead -[hidden]down- viewCatalog
 
-note bottom of system
-  Autenticar y cerrar sesión son capacidades compartidas y precondición
-  de las operaciones privadas; se omiten del trazado para evitar ruido.
-  ENLYCE no permite auto-registro de asesores.
-end note
+legend bottom
+  |= Cómo leer el diagrama |
+  | Una **oportunidad comercial** representa a una persona interesada en un inmueble. |
+  | Cuando un visitante solicita información, ENLYCE registra esa oportunidad. |
+  | Asesor y Administrador deben iniciar sesión antes de las operaciones privadas. |
+  | Solo el Administrador puede registrar asesores. |
+endlegend
 @enduml
