@@ -28,20 +28,23 @@ const uml = path.join(root, "uml")
 const output = path.join(root, "2_3_REQUERIMIENTOS_PROYECTO_ENLYCE.docx")
 
 const colors = {
-  navy: "17324D",
-  blue: "2D6A8A",
-  pale: "EAF2F6",
-  line: "AAB8C2",
-  gray: "59636B",
+  navy: "26352F",
+  blue: "742A3A",
+  pale: "E4ECE6",
+  line: "C9BFAE",
+  gray: "655F56",
   white: "FFFFFF",
-  warning: "FFF4CC",
+  warning: "FFF8DF",
+  ivory: "F8F4EA",
+  gold: "B08A4B",
+  blush: "F1E5E7",
 }
 
 const border = { style: BorderStyle.SINGLE, size: 5, color: colors.line }
 const cellBorders = { top: border, bottom: border, left: border, right: border }
 
 function run(text, options = {}) {
-  return new TextRun({ text, font: "Aptos", size: 21, color: "1F2933", ...options })
+  return new TextRun({ text, font: "Times New Roman", size: 21, color: "26352F", ...options })
 }
 
 function paragraph(text, options = {}) {
@@ -56,7 +59,8 @@ function heading(text, level = HeadingLevel.HEADING_1) {
   return new Paragraph({
     heading: level,
     spacing: { before: level === HeadingLevel.HEADING_1 ? 260 : 180, after: 120 },
-    children: [new TextRun({ text, font: "Aptos Display", color: colors.navy, bold: true })],
+    border: { bottom: { style: BorderStyle.SINGLE, size: 9, color: colors.gold } },
+    children: [new TextRun({ text, font: "Times New Roman", color: colors.blue, bold: true })],
   })
 }
 
@@ -149,21 +153,27 @@ const footer = new Footer({
     alignment: AlignmentType.CENTER,
     children: [
       run("ENLYCE · Taller práctico UML · ", { color: colors.gray, size: 18 }),
-      new TextRun({ children: [PageNumber.CURRENT], font: "Aptos", size: 18, color: colors.gray }),
+      new TextRun({ children: [PageNumber.CURRENT], font: "Times New Roman", size: 18, color: colors.gray }),
     ],
   })],
 })
 
 const intro = [
   new Paragraph({
-    alignment: AlignmentType.CENTER,
-    spacing: { before: 300, after: 120 },
-    children: [new TextRun({ text: "TALLER PRÁCTICO UML", font: "Aptos Display", size: 38, bold: true, color: colors.navy })],
+    alignment: AlignmentType.RIGHT,
+    spacing: { before: 180, after: 60 },
+    children: [new TextRun({ text: "02", font: "Times New Roman", size: 78, bold: true, color: colors.gold })],
   }),
   new Paragraph({
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 360 },
-    children: [new TextRun({ text: "Proyecto ENLYCE", font: "Aptos Display", size: 28, color: colors.blue })],
+    alignment: AlignmentType.LEFT,
+    spacing: { after: 20 },
+    children: [new TextRun({ text: "ENLYCE", font: "Times New Roman", size: 66, bold: true, color: colors.navy })],
+  }),
+  new Paragraph({
+    alignment: AlignmentType.LEFT,
+    border: { bottom: { style: BorderStyle.SINGLE, size: 18, color: colors.blue } },
+    spacing: { after: 300 },
+    children: [new TextRun({ text: "TALLER PRÁCTICO · MODELADO UML", font: "Times New Roman", size: 25, bold: true, color: colors.blue, characterSpacing: 40 })],
   }),
   labelValueTable([
     ["Estudiante", "Samuel Andres Escobar Saldarriaga"],
@@ -195,7 +205,7 @@ const intro = [
   requirementTable(),
   new Paragraph({ children: [new PageBreak()] }),
   heading("Diagrama de casos de uso"),
-  ...imageParagraph("casos-de-uso-enlyce.png", 565, 793, "Figura 1. Casos de uso de ENLYCE."),
+  ...imageParagraph("casos-de-uso-enlyce.png", 700, 575, "Figura 1. Capacidades de ENLYCE agrupadas por actor y contexto."),
   new Paragraph({
     shading: { type: ShadingType.CLEAR, color: "auto", fill: colors.warning },
     spacing: { before: 100, after: 180 },
@@ -239,10 +249,10 @@ const activitySection = [
 
 const classSection = [
   heading("Diagrama de clases"),
-  ...imageParagraph("clases-dominio-enlyce.png", 760, 510, "Figura 3. Clases del dominio principal de ENLYCE."),
-  paragraph("Las líneas continuas representan relaciones configuradas en EF Core. Las líneas punteadas representan relaciones conceptuales implementadas mediante identificadores, pero sin clave foránea configurada actualmente."),
+  ...imageParagraph("clases-dominio-enlyce.png", 540, 643, "Figura 3. Vista conceptual del dominio organizada por agregados."),
+  paragraph("Las líneas continuas representan relaciones de agregado configuradas en EF Core. Las punteadas muestran asociaciones conceptuales mediante identificadores. Para conservar la lectura se omiten conexiones secundarias de Asesor con Interacción y Visita; sus identificadores siguen visibles en las clases."),
   heading("Base de verificación", HeadingLevel.HEADING_2),
-  paragraph("Documento contrastado contra src/, configuraciones EF Core, endpoints y pruebas de ENLYCE en el commit dc24b37, el 24 de septiembre de 2026. Los cambios locales aún no versionados del módulo administrativo de publicaciones no forman parte de estos diagramas."),
+  paragraph("Documento contrastado contra src/, configuraciones EF Core, endpoints y pruebas de ENLYCE en el commit 13624a7, el 24 de septiembre de 2026. Los cambios locales aún no versionados del módulo administrativo de publicaciones no forman parte de estos diagramas."),
 ]
 
 const doc = new Document({
@@ -250,10 +260,10 @@ const doc = new Document({
   title: "Taller práctico UML — ENLYCE",
   description: "Requisitos, casos de uso, actividad de autenticación y clases del proyecto ENLYCE.",
   styles: {
-    default: { document: { run: { font: "Aptos", size: 21 } } },
+    default: { document: { run: { font: "Times New Roman", size: 21, color: colors.navy }, paragraph: { spacing: { line: 276 } } } },
     paragraphStyles: [
-      { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true, run: { font: "Aptos Display", size: 30, bold: true, color: colors.navy }, paragraph: { spacing: { before: 260, after: 120 }, outlineLevel: 0 } },
-      { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true, run: { font: "Aptos Display", size: 25, bold: true, color: colors.blue }, paragraph: { spacing: { before: 200, after: 100 }, outlineLevel: 1 } },
+      { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true, run: { font: "Times New Roman", size: 30, bold: true, color: colors.blue }, paragraph: { spacing: { before: 260, after: 120 }, outlineLevel: 0 } },
+      { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true, run: { font: "Times New Roman", size: 25, bold: true, color: colors.navy }, paragraph: { spacing: { before: 200, after: 100 }, outlineLevel: 1 } },
     ],
   },
   numbering: {
@@ -271,7 +281,7 @@ const doc = new Document({
       children: activitySection,
     },
     {
-      properties: { type: "nextPage", page: { size: { width: 12240, height: 15840, orientation: PageOrientation.LANDSCAPE }, margin: { top: 400, right: 600, bottom: 400, left: 600 } } },
+      properties: { type: "nextPage", page: { size: { width: 12240, height: 15840 }, margin: { top: 500, right: 700, bottom: 500, left: 700 } } },
       footers: { default: footer },
       children: classSection,
     },

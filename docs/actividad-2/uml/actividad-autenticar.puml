@@ -1,6 +1,18 @@
 @startuml
 title ENLYCE - Actividad del caso de uso Autenticar
+skinparam backgroundColor #F8F4EA
 skinparam shadowing false
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontColor #26352F
+skinparam ArrowColor #6B766F
+skinparam activity {
+  BorderColor #66796E
+  BackgroundColor #FCFAF4
+  DiamondBackgroundColor #F1E5E7
+  DiamondBorderColor #742A3A
+  StartColor #742A3A
+  EndColor #742A3A
+}
 
 |Usuario|
 start

@@ -1,120 +1,113 @@
 @startuml
-title ENLYCE - Diagrama de clases del dominio principal
+title ENLYCE — Vista conceptual del dominio
+left to right direction
+skinparam backgroundColor #F8F4EA
 skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontColor #26352F
+skinparam ArrowColor #6B766F
+skinparam class {
+  BorderColor #66796E
+  BackgroundColor #FCFAF4
+  HeaderBackgroundColor #E4ECE6
+  FontColor #26352F
+}
+skinparam package {
+  BorderColor #B08A4B
+  FontColor #26352F
+}
+skinparam note {
+  BorderColor #B08A4B
+  BackgroundColor #FFF8DF
+  FontColor #4D4538
+}
+hide circle
 hide empty methods
 
-class Asesor {
-  +Id: Guid
-  +Nombre: string
-  +Correo: Email
-  -PasswordHash: string
-  +Rol: string
-  +Activo: bool
-  +VerificarPassword(password): bool
+package "IDENTIDAD Y ACCESO" #EFE6D5 {
+  class Asesor <<Entidad>> {
+    +Id: Guid
+    +Nombre: string
+    +Correo: Email
+    -PasswordHash: string
+    +Rol: string
+    +Activo: bool
+    +VerificarPassword(password): bool
+  }
+}
+package "GESTIÓN COMERCIAL" #F1E5E7 {
+  class Lead <<Agregado raíz>> {
+    +Id: Guid
+    +Nombre: string
+    +Email: Email
+    +Telefono: Telefono?
+    +Estado: EstadoLead
+    +AsesorAsignadoId: Guid?
+    +EtapaPipeline: string
+    +AutorizacionDatos: bool
+  }
+  class Interaccion <<Entidad>> {
+    +Id: Guid
+    +LeadId: Guid
+    +AsesorId: Guid
+    +Tipo: string
+    +Resumen: string?
+    +Fecha: DateTime
+  }
+  class Consentimiento <<Entidad>> {
+    +Id: Guid
+    +LeadId: Guid
+    +Fecha: DateTime
+    +VersionPolitica: string
+    +Metodo: string
+  }
+  class Visita <<Entidad>> {
+    +Id: Guid
+    +LeadId: Guid
+    +InmuebleId: Guid
+    +AsesorId: Guid
+    +FechaProgramada: DateTime
+    +FechaRealizada: DateTime?
+    +Estado: string
+  }
+  Lead "1" *-- "0..*" Interaccion : historial
+  Lead "1" *-- "0..*" Consentimiento : autoriza
+  Lead "1" *-- "0..*" Visita : agenda
+}
+package "INVENTARIO INMOBILIARIO" #E4ECE6 {
+  class Inmueble <<Agregado raíz>> {
+    +Id: Guid
+    +Nombre: string
+    +Tipo: TipoInmueble
+    +Modalidad: ModalidadInmueble
+    +Estado: EstadoInmueble
+    +Direccion: Direccion
+    +Precio: Dinero
+    +PropietarioId: Guid
+    +Activo: bool
+  }
+  class Propietario <<Entidad>> {
+    +Id: Guid
+    +Nombre: string
+    +Email: Email
+    +Telefono: Telefono?
+    +Activo: bool
+  }
+  Propietario "1" .. "0..*" Inmueble : posee
 }
 
-class Lead {
-  +Id: Guid
-  +Nombre: string
-  +Email: Email
-  +Telefono: Telefono?
-  +Fuente: string
-  +Estado: EstadoLead
-  +AsesorAsignadoId: Guid?
-  +EtapaPipeline: string
-  +AutorizacionDatos: bool
-  +Activo: bool
-}
-
-class Interaccion {
-  +Id: Guid
-  +LeadId: Guid
-  +AsesorId: Guid
-  +Tipo: string
-  +Resumen: string?
-  +Fecha: DateTime
-}
-
-class Visita {
-  +Id: Guid
-  +LeadId: Guid
-  +InmuebleId: Guid
-  +AsesorId: Guid
-  +FechaProgramada: DateTime
-  +FechaRealizada: DateTime?
-  +Estado: string
-}
-
-class Consentimiento {
-  +Id: Guid
-  +LeadId: Guid
-  +Fecha: DateTime
-  +TextoConsentido: string
-  +VersionPolitica: string
-  +Metodo: string
-}
-
-class Inmueble {
-  +Id: Guid
-  +Nombre: string
-  +Tipo: TipoInmueble
-  +Modalidad: ModalidadInmueble
-  +Estado: EstadoInmueble
-  +Direccion: Direccion
-  +Precio: Dinero
-  +PropietarioId: Guid
-  +Activo: bool
-}
-
-class Propietario {
-  +Id: Guid
-  +Nombre: string
-  +Email: Email
-  +Telefono: Telefono?
-  +Activo: bool
-}
-
-class Email <<value object>> {
-  +Value: string
-}
-
-class Telefono <<value object>> {
-  +Value: string
-}
-
-class Direccion <<value object>> {
-  +Calle: string
-  +Ciudad: string
-  +Barrio: string?
-}
-
-class Dinero <<value object>> {
-  +Monto: decimal
-  +Moneda: string
-}
-
-Lead "1" -- "0..*" Interaccion : registra >
-Lead "1" -- "0..*" Visita : agenda >
-Lead "1" -- "0..*" Consentimiento : autoriza >
-
-Asesor "1" .. "0..*" Lead : asignado a\nFK no configurada
-Asesor "1" .. "0..*" Interaccion : realizada por\nFK no configurada
-Asesor "1" .. "0..*" Visita : responsable\nFK no configurada
-Inmueble "1" .. "0..*" Visita : inmueble visitado\nFK no configurada
-Propietario "1" .. "0..*" Inmueble : posee\nFK no configurada
-
-Asesor *-- Email
-Lead *-- Email
-Lead *-- Telefono
-Propietario *-- Email
-Propietario *-- Telefono
-Inmueble *-- Direccion
-Inmueble *-- Dinero
+Asesor "1" .. "0..*" Lead : atiende
+Inmueble "1" .. "0..*" Visita : es visitado en
+Asesor -[hidden]right- Lead
+Lead -[hidden]right- Inmueble
 
 note bottom
-  Líneas continuas: relaciones configuradas en EF Core.
-  Líneas punteadas: relación conceptual mediante identificador,
-  sin clave foránea configurada en el modelo actual.
+  Línea continua: relación del agregado configurada en EF Core.
+  Línea punteada: asociación conceptual mediante identificador.
+  Se omiten asociaciones secundarias de Asesor con Interacción y Visita
+  para conservar la lectura; sus identificadores permanecen visibles.
 end note
 @enduml

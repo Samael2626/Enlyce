@@ -1,0 +1,5 @@
+interface:
+  display_name: "ENLYCE Academic Docs"
+  short_description: "Documentos UML elegantes y verificables para ENLYCE"
+  brand_color: "#742A3A"
+  default_prompt: "Usa $enlyce-academic-docs para crear o rediseñar un documento académico de ENLYCE con UML legible y estilo editorial."

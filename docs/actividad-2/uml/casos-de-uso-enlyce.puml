@@ -1,55 +1,87 @@
 @startuml
-title ENLYCE - Diagrama de casos de uso
+title ENLYCE — Capacidades principales por actor
 left to right direction
+skinparam backgroundColor #F8F4EA
 skinparam shadowing false
+skinparam linetype ortho
 skinparam packageStyle rectangle
-
-actor Visitante as visitor
-actor Asesor as advisor
-actor Administrador as admin
-
-admin --|> advisor
-
-rectangle "Sistema ENLYCE" {
-  usecase "Autenticar" as authenticate
-  usecase "Cerrar sesión" as logout
-  usecase "Registrar asesor" as registerAdvisor
-  usecase "Registrar lead" as registerLead
-  usecase "Consultar pipeline" as viewPipeline
-  usecase "Mover lead de etapa" as moveLead
-  usecase "Asignar o reasignar lead" as assignLead
-  usecase "Registrar interacción" as registerInteraction
-  usecase "Agendar visita" as scheduleVisit
-  usecase "Gestionar inmuebles" as manageProperties
-  usecase "Consultar catálogo público" as viewCatalog
-  usecase "Solicitar información" as requestInfo
-  usecase "Consultar o suprimir\ndatos personales" as personalData
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontColor #26352F
+skinparam ArrowColor #6B766F
+skinparam actor {
+  BorderColor #742A3A
+  BackgroundColor #F8F4EA
+  FontColor #26352F
+}
+skinparam usecase {
+  BorderColor #66796E
+  BackgroundColor #FCFAF4
+  FontColor #26352F
+}
+skinparam rectangle {
+  BorderColor #B08A4B
+  BackgroundColor #F8F4EA
+  FontColor #26352F
+}
+skinparam package {
+  BorderColor #B08A4B
+  FontColor #26352F
+}
+skinparam note {
+  BorderColor #B08A4B
+  BackgroundColor #FFF8DF
+  FontColor #4D4538
 }
 
-advisor --> authenticate
-advisor --> logout
-advisor --> registerLead
-advisor --> viewPipeline
-advisor --> moveLead
-advisor --> registerInteraction
-advisor --> scheduleVisit
-advisor --> manageProperties
+actor Administrador as admin
+actor Asesor as advisor
+actor Visitante as visitor
+
+rectangle "SISTEMA ENLYCE" as system {
+  package "ADMINISTRACIÓN" #EFE6D5 {
+    together {
+      usecase "Registrar asesor" as registerAdvisor
+      usecase "Asignar o\nreasignar lead" as assignLead
+      usecase "Gestionar datos\npersonales" as personalData
+    }
+  }
+  package "GESTIÓN COMERCIAL" #F1E5E7 {
+    together {
+      usecase "Registrar lead" as registerLead
+      usecase "Gestionar pipeline" as managePipeline
+      usecase "Registrar\ninteracción" as registerInteraction
+      usecase "Agendar visita" as scheduleVisit
+      usecase "Gestionar\ninmuebles" as manageProperties
+    }
+  }
+  package "PORTAL PÚBLICO" #E4ECE6 {
+    together {
+      usecase "Consultar catálogo" as viewCatalog
+      usecase "Solicitar\ninformación" as requestInfo
+    }
+  }
+}
 
 admin --> registerAdvisor
 admin --> assignLead
 admin --> personalData
-
+advisor --> registerLead
+advisor --> managePipeline
+advisor --> registerInteraction
+advisor --> scheduleVisit
+advisor --> manageProperties
 visitor --> viewCatalog
 visitor --> requestInfo
-requestInfo ..> registerLead : <<include>>
+requestInfo ..> registerLead : <<crea lead>>
 
-note bottom of registerAdvisor
-  ENLYCE no permite auto-registro.
-  Solo el Administrador crea asesores.
-end note
+admin -[hidden]down- advisor
+advisor -[hidden]down- visitor
+registerAdvisor -[hidden]down- registerLead
+registerLead -[hidden]down- viewCatalog
 
-note bottom of authenticate
-  Precondición de los casos privados;
-  no se repite como include en cada uno.
+note bottom of system
+  Autenticar y cerrar sesión son capacidades compartidas y precondición
+  de las operaciones privadas; se omiten del trazado para evitar ruido.
+  ENLYCE no permite auto-registro de asesores.
 end note
 @enduml
