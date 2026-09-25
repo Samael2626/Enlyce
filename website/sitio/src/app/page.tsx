@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PropertyCard } from "@/components/PropertyCard";
+import { PropertySearchPanel } from "@/components/PropertySearchPanel";
 import { getProperties } from "@/lib/api/catalog";
 import { NEIGHBORHOODS } from "@/lib/zones";
 
@@ -11,10 +12,11 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-20 pb-20">
-      <section className="hero-shell">
-        <div className="hero-visual" aria-hidden="true" />
-        <div className="hero-shade" aria-hidden="true" />
-        <div className="relative mx-auto grid min-h-[660px] max-w-6xl items-end gap-10 px-4 py-14 lg:grid-cols-[1fr_21rem] lg:py-20">
+      <div>
+        <section className="hero-shell">
+          <div className="hero-visual" aria-hidden="true" />
+          <div className="hero-shade" aria-hidden="true" />
+          <div className="relative mx-auto grid min-h-[660px] max-w-6xl items-end gap-10 px-4 pb-28 pt-14 lg:grid-cols-[1fr_21rem] lg:pb-32 lg:pt-20">
           <Image
             src="/lyc-logo-transparent.png"
             alt="L&C Propiedad Raíz S.A.S."
@@ -54,8 +56,12 @@ export default async function HomePage() {
               Publicar mi inmueble
             </Link>
           </div>
+          </div>
+        </section>
+        <div className="relative z-10 mx-auto -mt-16 max-w-[82rem] px-4">
+          <PropertySearchPanel />
         </div>
-      </section>
+      </div>
 
       <section className="mx-auto max-w-6xl space-y-6 px-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">

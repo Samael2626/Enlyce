@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/ContactForm";
+import { PropertySearchPanel } from "@/components/PropertySearchPanel";
 import { getPropertyBySlug } from "@/lib/api/catalog";
 import { findOwnerService, getActivePolicy, type CampaignParams } from "@/lib/api/leads";
 
@@ -37,8 +38,8 @@ export default async function ContactoPage({ searchParams }: PageProps) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
-      <header className="space-y-2">
+    <div className="mx-auto max-w-[82rem] space-y-10 px-4 py-10">
+      <header className="max-w-3xl space-y-2">
         <h1 className="text-4xl">Contacto</h1>
         <p className="text-muted">
           {isOwnerInquiry
@@ -46,6 +47,10 @@ export default async function ContactoPage({ searchParams }: PageProps) {
             : "Escríbenos y te responde un asesor, no un robot."}
         </p>
       </header>
+
+      <PropertySearchPanel />
+
+      <div className="max-w-3xl space-y-8">
 
       {property ? (
         <p className="rounded-sheet bg-surface p-4 text-sm shadow-card">
@@ -72,6 +77,7 @@ export default async function ContactoPage({ searchParams }: PageProps) {
         policyVersion={policy?.version}
         campaign={campaign}
       />
+      </div>
     </div>
   );
 }
