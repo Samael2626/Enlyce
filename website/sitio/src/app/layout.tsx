@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import Link from "next/link";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { SocialContactDock } from "@/components/SocialContactDock";
 import "./globals.css";
 
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
@@ -65,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
 
-        <WhatsAppButton />
+        <SocialContactDock />
 
         <footer className="site-footer">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-10 text-sm">

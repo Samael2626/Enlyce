@@ -63,6 +63,8 @@ Configuracion en `.env.local` (copiar de `.env.example`):
 
 - `NEXT_PUBLIC_API_URL`: origen de Enlyce.Api. Por defecto `http://localhost:5000`.
 - `NEXT_PUBLIC_SITE_URL`: origen publico del sitio, usado por metadatos, sitemap y robots.
+- `NEXT_PUBLIC_INSTAGRAM_URL`: perfil publico; usa el Instagram oficial de L&C por defecto.
+- `NEXT_PUBLIC_FACEBOOK_URL`: perfil publico; el acceso se oculta mientras permanezca vacio.
 
 Para actualizar los tipos tras cambiar el backend: levantar la API, guardar
 `http://localhost:5000/swagger/v1/swagger.json` como `sitio/openapi.json` y

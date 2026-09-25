@@ -9,6 +9,8 @@
   --color-ink: #0f1a3d;
   --color-muted: #667085;
   --color-line: #ded9ca;
+  --color-whatsapp: #1d8f5d;
+  --color-whatsapp-strong: #157047;
 
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-body: var(--font-dm-sans), system-ui, sans-serif;
@@ -66,27 +68,62 @@ h1, h2, h3 {
 .hero-action-primary { border-color: #c99d42; color: #e3be65; }
 .site-footer { border-top: 4px solid var(--color-accent); background: #0f1a3d; color: rgb(255 255 255 / 68%); }
 
-.whatsapp-fab {
+.social-contact-dock {
   position: fixed;
-  top: 62%;
-  right: 0;
+  right: clamp(1rem, 2.5vw, 2rem);
+  bottom: clamp(1rem, 2.5vw, 2rem);
   z-index: 40;
+  display: flex;
+  align-items: stretch;
+  gap: .55rem;
+}
+
+.social-contact-links {
+  display: flex;
+  gap: .4rem;
+  padding: .3rem;
+  border: 1px solid rgb(183 138 45 / 38%);
+  border-radius: 999px;
+  background: rgb(15 26 61 / 94%);
+  box-shadow: 0 14px 36px rgb(6 13 38 / 24%);
+  backdrop-filter: blur(10px);
+}
+
+.social-contact-link {
+  display: grid;
+  width: 2.65rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #f8e5ad;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.social-contact-link svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.social-contact-link:hover {
+  background: rgb(255 255 255 / 10%);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.whatsapp-fab {
   display: flex;
   align-items: center;
   gap: .65rem;
   min-height: 3.25rem;
-  padding: .75rem 1rem .75rem .85rem;
-  border: 1px solid rgb(227 190 101 / 65%);
-  border-right: 0;
-  border-radius: 999px 0 0 999px;
-  background: #0f1a3d;
+  padding: .75rem 1.15rem .75rem .95rem;
+  border: 1px solid rgb(248 229 173 / 35%);
+  border-radius: 999px;
+  background: var(--color-whatsapp);
   box-shadow: 0 14px 36px rgb(6 13 38 / 30%);
-  color: #f8e5ad;
+  color: white;
   font-size: .78rem;
   font-weight: 800;
   letter-spacing: .04em;
-  transform: translateY(-50%);
-  transition: background-color 180ms ease, color 180ms ease, padding 180ms ease;
+  transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .whatsapp-fab svg {
@@ -96,27 +133,25 @@ h1, h2, h3 {
 }
 
 .whatsapp-fab:hover {
-  padding-left: 1.2rem;
-  background: #173d31;
-  color: white;
+  background: var(--color-whatsapp-strong);
+  box-shadow: 0 18px 42px rgb(6 13 38 / 38%);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 640px) {
-  .whatsapp-fab {
-    top: auto;
+  .social-contact-dock {
     right: 1rem;
     bottom: 1rem;
+  }
+
+  .whatsapp-fab {
     width: 3.5rem;
     height: 3.5rem;
     min-height: 0;
     justify-content: center;
     padding: 0;
-    border-right: 1px solid rgb(227 190 101 / 65%);
-    border-radius: 999px;
-    transform: none;
   }
 
-  .whatsapp-fab:hover { padding-left: 0; }
   .whatsapp-fab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 }
 
