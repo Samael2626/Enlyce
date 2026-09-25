@@ -1,5 +1,6 @@
 interface SocialLink {
   readonly label: string;
+  readonly network: "facebook" | "instagram";
   readonly url: string;
   readonly icon: React.ReactNode;
 }
@@ -14,6 +15,7 @@ export function SocialContactDock() {
   const socialLinks: SocialLink[] = [
     {
       label: "Instagram",
+      network: "instagram",
       url: INSTAGRAM_URL,
       icon: <InstagramIcon />,
     },
@@ -22,6 +24,7 @@ export function SocialContactDock() {
   if (process.env.NEXT_PUBLIC_FACEBOOK_URL) {
     socialLinks.unshift({
       label: "Facebook",
+      network: "facebook",
       url: process.env.NEXT_PUBLIC_FACEBOOK_URL,
       icon: <FacebookIcon />,
     });
@@ -33,7 +36,7 @@ export function SocialContactDock() {
         {socialLinks.map((link) => (
           <a
             key={link.label}
-            className="social-contact-link"
+            className={`social-contact-link social-contact-link-${link.network}`}
             href={link.url}
             target="_blank"
             rel="noreferrer"
@@ -53,7 +56,7 @@ export function SocialContactDock() {
         aria-label="Hablar con L&C por WhatsApp"
       >
         <WhatsAppIcon />
-        <span>WhatsApp</span>
+        <span className="social-contact-label">WhatsApp</span>
       </a>
     </aside>
   );

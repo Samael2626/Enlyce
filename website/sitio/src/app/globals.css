@@ -11,6 +11,8 @@
   --color-line: #ded9ca;
   --color-whatsapp: #1d8f5d;
   --color-whatsapp-strong: #157047;
+  --color-facebook: #1877f2;
+  --gradient-instagram: linear-gradient(145deg, #6d28a8 4%, #b72f7d 48%, #db684b 78%, #dba342 100%);
 
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-body: var(--font-dm-sans), system-ui, sans-serif;
@@ -74,62 +76,59 @@ h1, h2, h3 {
   bottom: clamp(1rem, 2.5vw, 2rem);
   z-index: 40;
   display: flex;
-  align-items: stretch;
-  gap: .55rem;
+  flex-direction: column;
+  align-items: center;
+  gap: .65rem;
 }
 
 .social-contact-links {
   display: flex;
-  gap: .4rem;
-  padding: .3rem;
-  border: 1px solid rgb(183 138 45 / 38%);
-  border-radius: 999px;
-  background: rgb(15 26 61 / 94%);
-  box-shadow: 0 14px 36px rgb(6 13 38 / 24%);
-  backdrop-filter: blur(10px);
+  flex-direction: column;
+  gap: .65rem;
 }
 
 .social-contact-link {
   display: grid;
-  width: 2.65rem;
+  width: 3.5rem;
+  height: 3.5rem;
   place-items: center;
+  border: 1px solid rgb(255 255 255 / 30%);
   border-radius: 999px;
-  color: #f8e5ad;
-  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+  box-shadow: 0 12px 30px rgb(6 13 38 / 22%);
+  color: white;
+  transition: filter 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .social-contact-link svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.45rem;
+  height: 1.45rem;
 }
 
 .social-contact-link:hover {
-  background: rgb(255 255 255 / 10%);
-  color: white;
+  filter: brightness(.9) saturate(.9);
+  box-shadow: 0 16px 34px rgb(6 13 38 / 30%);
   transform: translateY(-1px);
 }
 
+.social-contact-link-facebook { background: var(--color-facebook); }
+.social-contact-link-instagram { background: var(--gradient-instagram); }
+
 .whatsapp-fab {
-  display: flex;
-  align-items: center;
-  gap: .65rem;
-  min-height: 3.25rem;
-  padding: .75rem 1.15rem .75rem .95rem;
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
   border: 1px solid rgb(248 229 173 / 35%);
   border-radius: 999px;
   background: var(--color-whatsapp);
   box-shadow: 0 14px 36px rgb(6 13 38 / 30%);
   color: white;
-  font-size: .78rem;
-  font-weight: 800;
-  letter-spacing: .04em;
   transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .whatsapp-fab svg {
-  width: 1.45rem;
-  height: 1.45rem;
-  flex: none;
+  width: 1.55rem;
+  height: 1.55rem;
 }
 
 .whatsapp-fab:hover {
@@ -138,21 +137,23 @@ h1, h2, h3 {
   transform: translateY(-1px);
 }
 
+.social-contact-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .social-contact-dock {
     right: 1rem;
     bottom: 1rem;
   }
 
-  .whatsapp-fab {
-    width: 3.5rem;
-    height: 3.5rem;
-    min-height: 0;
-    justify-content: center;
-    padding: 0;
-  }
-
-  .whatsapp-fab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .social-contact-link,
+  .whatsapp-fab { width: 3.25rem; height: 3.25rem; }
 }
 
 /* Leaflet: el mapa hereda la paleta editorial en vez del gris de fabrica. */
