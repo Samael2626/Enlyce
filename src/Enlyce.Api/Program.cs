@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text;
+using System.Threading.RateLimiting;
+using Enlyce.Api.Endpoints.Billing;
 using Enlyce.Api.Development;
 using Enlyce.Api.Endpoints.Alertas;
 using Enlyce.Api.Endpoints.Auth;
@@ -22,6 +24,7 @@ using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -72,6 +75,28 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("billing-checkout", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 8,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    options.AddPolicy("billing-status", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
 
 var localCorsOrigins = new[]
 {
@@ -172,6 +197,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseCors();
+app.UseRateLimiter();
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseMiddleware<CookieAuthenticationMiddleware>();
@@ -197,6 +223,7 @@ app.MapVisitas();
 app.MapAlertas();
 app.MapPublicCatalog();
 app.MapPublicationMedia();
+app.MapBilling();
 
 app.Run();
 

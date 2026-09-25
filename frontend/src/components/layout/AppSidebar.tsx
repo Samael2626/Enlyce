@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS } from "@/lib/constants"
+import { useAuthStore } from "@/stores/authStore"
 import {
   Activity,
   Users,
@@ -11,6 +12,7 @@ import {
   Bell,
   Settings,
   LayoutDashboard,
+  CreditCard,
 } from "lucide-react"
 
 const iconMap: Record<string, React.ElementType> = {
@@ -23,6 +25,7 @@ const iconMap: Record<string, React.ElementType> = {
   Bell,
   Settings,
   LayoutDashboard,
+  CreditCard,
 }
 
 interface AppSidebarProps {
@@ -31,6 +34,10 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed = false }: AppSidebarProps) {
   const location = useLocation()
+  const user = useAuthStore((state) => state.user)
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !("adminOnly" in item && item.adminOnly) || user?.rol === "Administrador"
+  )
 
   return (
     <aside
@@ -52,7 +59,7 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
       <nav aria-label="Navegación principal" className="overflow-x-auto lg:flex-1 lg:overflow-y-auto lg:py-7">
         {!collapsed && <p className="hidden px-6 pb-3 text-[.65rem] font-bold uppercase tracking-[.18em] text-white/45 lg:block">Operación diaria</p>}
         <ul className="flex gap-1 px-3 py-2 lg:block lg:space-y-1 lg:px-3 lg:py-0">
-          {NAV_ITEMS.map((item) => {
+          {visibleItems.map((item) => {
             const Icon = iconMap[item.icon]
             const isActive = location.pathname === item.href
 

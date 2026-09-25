@@ -16,6 +16,7 @@ public class EnlyceDbContext : DbContext
     public DbSet<Visita> Visitas => Set<Visita>();
     public DbSet<PropertyPublication> PropertyPublications => Set<PropertyPublication>();
     public DbSet<PropertyPhoto> PropertyPhotos => Set<PropertyPhoto>();
+    public DbSet<PaymentOrder> PaymentOrders => Set<PaymentOrder>();
 
     public EnlyceDbContext(DbContextOptions<EnlyceDbContext> options) : base(options) { }
 

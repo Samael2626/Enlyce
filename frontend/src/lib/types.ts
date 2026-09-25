@@ -174,6 +174,51 @@ export interface GetInmuebleByIdResponse {
   activo: boolean
 }
 
+// Facturacion
+export interface BillingPricing {
+  basePlanInCents: number
+  additionalAdvisorInCents: number
+  setupInCents: number
+  whatsAppInCents: number
+  portalInCents: number
+  advancedReportsInCents: number
+  maximumAdditionalAdvisors: number
+}
+
+export interface CreateCheckoutSessionInput {
+  companyName: string
+  taxId: string
+  customerEmail: string
+  additionalAdvisors: number
+  includeSetup: boolean
+  includeWhatsApp: boolean
+  includePortal: boolean
+  includeAdvancedReports: boolean
+}
+
+export interface PaymentCheckoutData {
+  checkoutUrl: string
+  publicKey: string
+  currency: string
+  amountInCents: number
+  reference: string
+  integritySignature: string
+  redirectUrl: string
+  customerEmail: string
+}
+
+export interface CreateCheckoutSessionResponse {
+  orderId: string
+  checkout: PaymentCheckoutData
+}
+
+export interface PaymentOrderStatus {
+  reference: string
+  amountInCents: number
+  currency: string
+  status: "Pending" | "Approved" | "Declined" | "Voided" | "Error"
+}
+
 // Politica
 export interface ObtenerPoliticaActivaResponse {
   id: string

@@ -89,5 +89,6 @@ export const NAV_ITEMS = [
   { title: "Chat", href: "/chat", icon: "MessageSquare" },
   { title: "Reportes", href: "/reportes", icon: "BarChart3" },
   { title: "Alertas", href: "/alertas", icon: "Bell" },
+  { title: "Plan y facturación", href: "/facturacion", icon: "CreditCard", adminOnly: true },
   { title: "Configuración", href: "/config", icon: "Settings" },
 ] as const

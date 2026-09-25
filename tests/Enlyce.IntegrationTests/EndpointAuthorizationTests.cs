@@ -38,7 +38,7 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
         {
             "health", "api/auth/login", "api/auth/seed", "api/leads",
             "api/public/inmuebles", "api/public/inmuebles/{slug}",
-            "api/politica/activa"
+            "api/politica/activa", "api/webhooks/wompi"
         };
 
         foreach (var endpoint in routes)
@@ -72,6 +72,9 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
     [InlineData("GET", "/api/visitas")]
     [InlineData("GET", "/api/visitas/lead/11111111-1111-1111-1111-111111111111")]
     [InlineData("GET", "/api/visitas/asesor/11111111-1111-1111-1111-111111111111?Desde=2020-01-01T00:00:00Z")]
+    [InlineData("GET", "/api/billing/pricing")]
+    [InlineData("POST", "/api/billing/checkout-sessions")]
+    [InlineData("GET", "/api/billing/orders/ENL-11111111111111111111111111111111")]
     public async Task PrivateEndpoint_WithoutToken_ReturnsUnauthorized(string method, string path)
     {
         using var client = _factory.CreateClient();

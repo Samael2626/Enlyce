@@ -149,6 +149,24 @@ class ApiClient {
     return this.request<any>(`/api/inmuebles/${id}`)
   }
 
+  // Facturacion
+  async getBillingPricing() {
+    return this.request<import("@/lib/types").BillingPricing>("/api/billing/pricing")
+  }
+
+  async createCheckoutSession(data: import("@/lib/types").CreateCheckoutSessionInput) {
+    return this.request<import("@/lib/types").CreateCheckoutSessionResponse>(
+      "/api/billing/checkout-sessions",
+      { method: "POST", body: JSON.stringify(data) }
+    )
+  }
+
+  async getPaymentOrderStatus(reference: string) {
+    return this.request<import("@/lib/types").PaymentOrderStatus>(
+      `/api/billing/orders/${encodeURIComponent(reference)}`
+    )
+  }
+
   // Politica
   async getPoliticaActiva() {
     return this.request<any>("/api/politica/activa")

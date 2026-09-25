@@ -1,7 +1,9 @@
 using Enlyce.Application.Auth;
+using Enlyce.Application.Billing;
 using Enlyce.Application.PublicCatalog;
 using Enlyce.Domain.Ports;
 using Enlyce.Infrastructure.Auth;
+using Enlyce.Infrastructure.Billing;
 using Enlyce.Infrastructure.Email;
 using Enlyce.Infrastructure.Media;
 using Enlyce.Infrastructure.Persistence;
@@ -30,11 +32,16 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IInteraccionRepository, InteraccionRepository>();
         services.AddScoped<IVisitaRepository, VisitaRepository>();
+        services.AddScoped<IPaymentOrderRepository, PaymentOrderRepository>();
         services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddScoped<ITokenService, JwtTokenService>();
+        services.Configure<WompiOptions>(configuration.GetSection(WompiOptions.SectionName));
+        services.AddSingleton<WompiPaymentGateway>();
+        services.AddSingleton<IPaymentCheckoutGateway>(provider => provider.GetRequiredService<WompiPaymentGateway>());
+        services.AddSingleton<IPaymentEventVerifier>(provider => provider.GetRequiredService<WompiPaymentGateway>());
 
         return services;
     }

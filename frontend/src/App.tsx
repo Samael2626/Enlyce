@@ -8,6 +8,8 @@ import { PipelinePage } from "@/pages/PipelinePage"
 import { LeadsPage } from "@/pages/LeadsPage"
 import { InmueblesPage } from "@/pages/InmueblesPage"
 import { AlertasPage } from "@/pages/AlertasPage"
+import { BillingPage } from "@/pages/BillingPage"
+import { BillingResultPage } from "@/pages/BillingResultPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +38,8 @@ export function App() {
               <Route path="/leads" element={<LeadsPage />} />
               <Route path="/inmuebles" element={<InmueblesPage />} />
               <Route path="/alertas" element={<AlertasPage />} />
+              <Route path="/facturacion" element={<BillingPage />} />
+              <Route path="/facturacion/respuesta" element={<BillingResultPage />} />
               <Route path="/calendario" element={<Placeholder title="Calendario" />} />
               <Route path="/chat" element={<Placeholder title="Chat" />} />
               <Route path="/reportes" element={<Placeholder title="Reportes" />} />

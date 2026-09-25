@@ -189,6 +189,30 @@ export function useCreateInmueble() {
   })
 }
 
+// Facturacion
+export function useBillingPricing() {
+  return useQuery({
+    queryKey: ["billing", "pricing"],
+    queryFn: () => api.getBillingPricing(),
+  })
+}
+
+export function useCreateCheckoutSession() {
+  return useMutation({
+    mutationFn: api.createCheckoutSession.bind(api),
+  })
+}
+
+export function usePaymentOrderStatus(reference: string | null) {
+  return useQuery({
+    queryKey: ["billing", "order", reference],
+    queryFn: () => api.getPaymentOrderStatus(reference!),
+    enabled: Boolean(reference),
+    refetchInterval: (query) =>
+      query.state.data?.status === "Pending" ? 2500 : false,
+  })
+}
+
 // Ley 1581
 export function usePoliticaActiva() {
   return useQuery({
