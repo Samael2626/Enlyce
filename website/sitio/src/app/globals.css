@@ -397,6 +397,26 @@ h1, h2, h3 {
 .contact-form-owner input:not([type='checkbox']),
 .contact-form-owner select { min-height: 3.1rem; border-radius: 3px; background: #fbfaf7; }
 .contact-form-owner button[type='submit'] { min-height: 3.2rem; border-radius: 0; font-weight: 800; }
+.owner-capture-progress { display: grid; gap: 2rem; border-radius: 0; }
+.owner-capture-confirmation { padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-line); }
+.owner-capture-confirmation h2 { max-width: 35rem; }
+.owner-capture-confirmation > p:last-child { max-width: 38rem; margin-top: .85rem; color: var(--color-muted); line-height: 1.7; }
+.owner-details-form { display: grid; gap: 1.25rem; }
+.owner-details-heading { display: grid; grid-template-columns: 2.5rem 1fr; gap: .8rem; align-items: start; }
+.owner-details-heading > span { padding-top: .25rem; color: var(--color-accent-strong); font-size: .68rem; font-weight: 800; letter-spacing: .12em; }
+.owner-details-heading h3,
+.owner-details-complete h3 { font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.3rem); font-weight: 500; line-height: 1.05; }
+.owner-details-heading p,
+.owner-details-complete p:last-child { margin-top: .35rem; color: var(--color-muted); font-size: .8rem; }
+.owner-details-form label > span { color: var(--color-ink); font-size: .7rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.owner-details-form input,
+.owner-details-form select,
+.owner-details-form textarea { border-radius: 3px; background: #fbfaf7; }
+.owner-details-form button[type='submit'] { min-height: 3.2rem; background: var(--color-ink); padding-inline: 1.2rem; color: white; font-size: .78rem; font-weight: 800; transition: background-color 180ms ease; }
+.owner-details-form button[type='submit']:hover { background: #192a5a; }
+.owner-details-form button[type='submit']:disabled { cursor: not-allowed; opacity: .55; }
+.owner-details-complete { padding: 1.5rem 0; }
+.owner-details-complete h3 { margin-top: .55rem; }
 #servicios,
 #solicitud { scroll-margin-top: 1.5rem; }
 

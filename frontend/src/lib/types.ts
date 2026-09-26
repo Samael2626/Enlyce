@@ -49,6 +49,14 @@ export interface GetLeadByIdResponse {
   activo: boolean
   etapaPipeline: string
   tipoOperacion: string
+  ownerService?: string
+  publicationId?: string
+  ownerPropertyType?: string
+  ownerPropertyCity?: string
+  ownerPropertyNeighborhood?: string
+  ownerExpectedPrice?: number
+  ownerPropertyMessage?: string
+  ownerPreferredContactChannel?: string
 }
 
 // Pipeline

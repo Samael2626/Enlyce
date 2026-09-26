@@ -37,6 +37,7 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
         var publicRoutes = new HashSet<string>(StringComparer.Ordinal)
         {
             "health", "api/auth/login", "api/auth/seed", "api/leads",
+            "api/leads/{id:guid}/owner-details",
             "api/public/inmuebles", "api/public/inmuebles/{slug}",
             "api/politica/activa", "api/webhooks/wompi"
         };

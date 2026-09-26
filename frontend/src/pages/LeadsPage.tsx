@@ -19,6 +19,35 @@ import { format, parseISO, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { ETIQUETAS_PIPELINE } from "@/lib/constants"
 
+const OWNER_SERVICE_LABELS: Record<string, string> = {
+  Sell: "Venta",
+  Rent: "Arriendo",
+  Manage: "Administración",
+  Valuation: "Valoración",
+}
+
+const OWNER_PROPERTY_TYPE_LABELS: Record<string, string> = {
+  Apartment: "Apartamento",
+  House: "Casa",
+  CommercialSpace: "Local comercial",
+  Office: "Oficina",
+  Lot: "Lote",
+  CountryHouse: "Casa campestre",
+  Other: "Otro",
+}
+
+const CONTACT_CHANNEL_LABELS: Record<string, string> = {
+  WhatsApp: "WhatsApp",
+  Phone: "Llamada",
+  Email: "Correo electrónico",
+}
+
+const currency = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+})
+
 export function LeadsPage() {
   const { data: pipeline, isLoading } = usePipeline()
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -365,6 +394,53 @@ function LeadCard({
                   value={leadDetail.autorizacionDatos ? "Sí" : "No"}
                 />
               </div>
+
+              {leadDetail.ownerService && (
+                <section className="border-l-2 border-accent bg-muted/35 p-4">
+                  <p className="crm-eyebrow">Solicitud de propietario</p>
+                  <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
+                    <DetailItem
+                      icon={<Building2 className="h-4 w-4" />}
+                      label="Servicio"
+                      value={OWNER_SERVICE_LABELS[leadDetail.ownerService] ?? leadDetail.ownerService}
+                    />
+                    <DetailItem
+                      icon={<Building2 className="h-4 w-4" />}
+                      label="Inmueble"
+                      value={leadDetail.ownerPropertyType
+                        ? OWNER_PROPERTY_TYPE_LABELS[leadDetail.ownerPropertyType] ?? leadDetail.ownerPropertyType
+                        : "Pendiente"}
+                    />
+                    <DetailItem
+                      icon={<FileText className="h-4 w-4" />}
+                      label="Ubicación"
+                      value={leadDetail.ownerPropertyCity
+                        ? [leadDetail.ownerPropertyNeighborhood, leadDetail.ownerPropertyCity].filter(Boolean).join(", ")
+                        : "Pendiente"}
+                    />
+                    <DetailItem
+                      icon={<FileText className="h-4 w-4" />}
+                      label="Precio esperado"
+                      value={leadDetail.ownerExpectedPrice
+                        ? currency.format(leadDetail.ownerExpectedPrice)
+                        : "No informado"}
+                    />
+                    <DetailItem
+                      icon={<Phone className="h-4 w-4" />}
+                      label="Canal preferido"
+                      value={leadDetail.ownerPreferredContactChannel
+                        ? CONTACT_CHANNEL_LABELS[leadDetail.ownerPreferredContactChannel] ?? leadDetail.ownerPreferredContactChannel
+                        : "No informado"}
+                    />
+                  </div>
+                  {leadDetail.ownerPropertyMessage && (
+                    <div className="mt-4 border-t border-border pt-3">
+                      <p className="text-xs text-muted-foreground">Mensaje del propietario</p>
+                      <p className="mt-1 text-sm leading-6 text-foreground">{leadDetail.ownerPropertyMessage}</p>
+                    </div>
+                  )}
+                </section>
+              )}
 
               {/* Interacciones */}
               <div>

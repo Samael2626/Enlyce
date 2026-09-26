@@ -1,5 +1,6 @@
 using Enlyce.Application.Abstractions;
 using Enlyce.Application.UseCases.CreateLead;
+using Enlyce.Application.UseCases.EnrichOwnerInquiry;
 using Enlyce.Application.UseCases.GetLeadById;
 using Enlyce.Domain.Ports;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +51,31 @@ public static class LeadsModule
         .WithName("CreateLead")
         .Produces<CreateLeadResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        // Publico y progresivo: la oportunidad ya existe. El correo funciona
+        // como segunda prueba junto al GUID y nunca se revela cual de ambos fallo.
+        group.MapPut("/{id:guid}/owner-details", async (
+            Guid id,
+            [FromBody] EnrichOwnerInquiryRequest request,
+            ICommandHandler<EnrichOwnerInquiryCommand, OwnerInquiryDetailsResponse?> handler) =>
+        {
+            var result = await handler.HandleAsync(new EnrichOwnerInquiryCommand(
+                id,
+                request.Email,
+                request.PropertyType,
+                request.City,
+                request.Neighborhood,
+                request.ExpectedPrice,
+                request.Message,
+                request.PreferredContactChannel));
+
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        })
+        .AllowAnonymous()
+        .WithName("EnrichOwnerInquiry")
+        .Produces<OwnerInquiryDetailsResponse>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static string? ResolveClientIp(HttpContext http) => LeadClientIp.Resolve(http);
@@ -86,3 +112,12 @@ public record CreateLeadRequest(
     string? PublicationId = null,
     // Lo declara cada frontend: "sitio_web", "funcional_legacy", etc.
     string? Canal = null);
+
+public sealed record EnrichOwnerInquiryRequest(
+    string Email,
+    string PropertyType,
+    string City,
+    string? Neighborhood,
+    decimal? ExpectedPrice,
+    string? Message,
+    string PreferredContactChannel);

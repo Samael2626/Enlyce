@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Enlyce.Api.Endpoints.Leads;
 using Enlyce.Application.UseCases.CreateLead;
 using Enlyce.Application.UseCases.GetLeadById;
+using Enlyce.Domain.Entities;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -194,6 +195,76 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.PostAsJsonAsync("/api/leads", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutOwnerDetails_AfterMinimalCapture_EnrichesSameOpportunity()
+    {
+        var email = $"owner-details-{Guid.NewGuid():N}@test.com";
+        var createResponse = await _client.PostAsJsonAsync("/api/leads", new CreateLeadRequest(
+            "Propietario Progresivo",
+            email,
+            "3105551111",
+            "PropietarioWeb:Vender",
+            true,
+            "Venta",
+            "Sell"));
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
+
+        var enrichResponse = await _client.PutAsJsonAsync(
+            $"/api/leads/{created!.Id}/owner-details",
+            new EnrichOwnerInquiryRequest(
+                email,
+                "Apartment",
+                "Medellin",
+                "Laureles",
+                650_000_000m,
+                "Apartamento remodelado y con balcon.",
+                "WhatsApp"));
+
+        Assert.Equal(HttpStatusCode.OK, enrichResponse.StatusCode);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == created.Id);
+        Assert.Equal(OwnerPropertyType.Apartment, lead.OwnerPropertyType);
+        Assert.Equal("Medellin", lead.OwnerPropertyCity);
+        Assert.Equal("Laureles", lead.OwnerPropertyNeighborhood);
+        Assert.Equal(650_000_000m, lead.OwnerExpectedPrice);
+        Assert.Equal(PreferredContactChannel.WhatsApp, lead.OwnerPreferredContactChannel);
+    }
+
+    [Fact]
+    public async Task PutOwnerDetails_WithDifferentEmail_ReturnsNotFoundAndKeepsDataEmpty()
+    {
+        var email = $"owner-protected-{Guid.NewGuid():N}@test.com";
+        var createResponse = await _client.PostAsJsonAsync("/api/leads", new CreateLeadRequest(
+            "Propietario Protegido",
+            email,
+            null,
+            "PropietarioWeb:Administrar",
+            true,
+            "Arriendo",
+            "Manage"));
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
+
+        var response = await _client.PutAsJsonAsync(
+            $"/api/leads/{created!.Id}/owner-details",
+            new EnrichOwnerInquiryRequest(
+                "otro@test.com",
+                "House",
+                "Medellin",
+                null,
+                null,
+                null,
+                "Phone"));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == created.Id);
+        Assert.Null(lead.OwnerPropertyType);
     }
 
     [Fact]

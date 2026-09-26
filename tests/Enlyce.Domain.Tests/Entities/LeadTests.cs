@@ -46,6 +46,7 @@ public class LeadTests
     [InlineData(OwnerInquiryService.Sell, "Venta")]
     [InlineData(OwnerInquiryService.Rent, "Arriendo")]
     [InlineData(OwnerInquiryService.Manage, "Arriendo")]
+    [InlineData(OwnerInquiryService.Valuation, "Venta")]
     public void Create_WithValidOwnerService_StoresStructuredValue(
         OwnerInquiryService ownerService,
         string operationType)
@@ -111,6 +112,71 @@ public class LeadTests
         var lead = CrearLead();
 
         Assert.Null(lead.PublicationId);
+    }
+
+    [Fact]
+    public void EnrichOwnerInquiry_WithStructuredDetails_StoresThem()
+    {
+        var lead = Lead.Crear(
+            "Propietario",
+            ValidEmail(),
+            null,
+            "PropietarioWeb:Vender",
+            true,
+            "Venta",
+            OwnerInquiryService.Sell);
+
+        lead.EnrichOwnerInquiry(
+            OwnerPropertyType.Apartment,
+            "Medellin",
+            "Laureles",
+            650_000_000m,
+            "Apartamento remodelado.",
+            PreferredContactChannel.WhatsApp);
+
+        Assert.Equal(OwnerPropertyType.Apartment, lead.OwnerPropertyType);
+        Assert.Equal("Medellin", lead.OwnerPropertyCity);
+        Assert.Equal("Laureles", lead.OwnerPropertyNeighborhood);
+        Assert.Equal(650_000_000m, lead.OwnerExpectedPrice);
+        Assert.Equal("Apartamento remodelado.", lead.OwnerPropertyMessage);
+        Assert.Equal(PreferredContactChannel.WhatsApp, lead.OwnerPreferredContactChannel);
+    }
+
+    [Fact]
+    public void EnrichOwnerInquiry_OnNonOwnerOpportunity_ThrowsDomainError()
+    {
+        var lead = CrearLead();
+
+        Assert.Throws<DomainError>(() => lead.EnrichOwnerInquiry(
+            OwnerPropertyType.House,
+            "Medellin",
+            null,
+            null,
+            null,
+            PreferredContactChannel.Phone));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void EnrichOwnerInquiry_WithInvalidExpectedPrice_ThrowsDomainError(decimal price)
+    {
+        var lead = Lead.Crear(
+            "Propietario",
+            ValidEmail(),
+            null,
+            "PropietarioWeb:Vender",
+            true,
+            "Venta",
+            OwnerInquiryService.Sell);
+
+        Assert.Throws<DomainError>(() => lead.EnrichOwnerInquiry(
+            OwnerPropertyType.Apartment,
+            "Medellin",
+            null,
+            price,
+            null,
+            PreferredContactChannel.Email));
     }
 
     [Fact]

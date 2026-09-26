@@ -163,4 +163,19 @@ export async function apiPost<TBody, TResult>(path: string, body: TBody): Promis
   return payload as TResult;
 }
 
+export async function apiPut<TBody, TResult>(path: string, body: TBody): Promise<TResult> {
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const isJson = response.headers.get("content-type")?.includes("json") ?? false;
+  const payload: unknown = isJson ? await response.json() : null;
+
+  if (!response.ok) throw new ApiProblemError(response.status, payload);
+
+  return payload as TResult;
+}
+
 export { baseUrl as apiBaseUrl };

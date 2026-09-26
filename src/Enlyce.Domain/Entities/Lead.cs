@@ -28,7 +28,26 @@ public enum OwnerInquiryService
 {
     Sell,
     Rent,
-    Manage
+    Manage,
+    Valuation
+}
+
+public enum OwnerPropertyType
+{
+    Apartment,
+    House,
+    CommercialSpace,
+    Office,
+    Lot,
+    CountryHouse,
+    Other
+}
+
+public enum PreferredContactChannel
+{
+    WhatsApp,
+    Phone,
+    Email
 }
 
 public sealed class Lead
@@ -51,6 +70,12 @@ public sealed class Lead
     public string TipoOperacion { get; internal set; } = "Venta";
     public OwnerInquiryService? OwnerService { get; internal set; }
     public Guid? PublicationId { get; internal set; }
+    public OwnerPropertyType? OwnerPropertyType { get; internal set; }
+    public string? OwnerPropertyCity { get; internal set; }
+    public string? OwnerPropertyNeighborhood { get; internal set; }
+    public decimal? OwnerExpectedPrice { get; internal set; }
+    public string? OwnerPropertyMessage { get; internal set; }
+    public PreferredContactChannel? OwnerPreferredContactChannel { get; internal set; }
     public string EtapaPipeline { get; internal set; } = EtapasPipeline.LeadNuevo;
     public int InteraccionesCount { get; internal set; }
     public DateTime? FechaUltimaInteraccion { get; internal set; }
@@ -168,13 +193,64 @@ public sealed class Lead
         if (!Enum.IsDefined(ownerService.Value))
             throw new DomainError($"Servicio de propietario no valido: {ownerService}");
 
-        var expectedOperation = ownerService == OwnerInquiryService.Sell
+        var expectedOperation = ownerService is OwnerInquiryService.Sell or OwnerInquiryService.Valuation
             ? "Venta"
             : "Arriendo";
 
         if (operationType != expectedOperation)
             throw new DomainError(
                 $"El servicio {ownerService} requiere TipoOperacion {expectedOperation}.");
+    }
+
+    public void EnrichOwnerInquiry(
+        OwnerPropertyType propertyType,
+        string city,
+        string? neighborhood,
+        decimal? expectedPrice,
+        string? message,
+        PreferredContactChannel preferredContactChannel)
+    {
+        if (OwnerService is null)
+            throw new DomainError("La oportunidad no corresponde a una solicitud de propietario.");
+
+        if (!Enum.IsDefined(propertyType))
+            throw new DomainError($"Tipo de inmueble no valido: {propertyType}");
+
+        if (!Enum.IsDefined(preferredContactChannel))
+            throw new DomainError($"Canal de contacto no valido: {preferredContactChannel}");
+
+        if (string.IsNullOrWhiteSpace(city))
+            throw new DomainError("La ciudad del inmueble es obligatoria.");
+
+        var normalizedCity = city.Trim();
+        if (normalizedCity.Length > 100)
+            throw new DomainError("La ciudad no puede superar 100 caracteres.");
+
+        var normalizedNeighborhood = NormalizeOptionalText(neighborhood, 100, "El barrio");
+        var normalizedMessage = NormalizeOptionalText(message, 2_000, "El mensaje");
+
+        if (expectedPrice is <= 0)
+            throw new DomainError("El precio esperado debe ser mayor que cero.");
+
+        OwnerPropertyType = propertyType;
+        OwnerPropertyCity = normalizedCity;
+        OwnerPropertyNeighborhood = normalizedNeighborhood;
+        OwnerExpectedPrice = expectedPrice;
+        OwnerPropertyMessage = normalizedMessage;
+        OwnerPreferredContactChannel = preferredContactChannel;
+        FechaActualizacion = DateTime.UtcNow;
+    }
+
+    private static string? NormalizeOptionalText(string? value, int maxLength, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength)
+            throw new DomainError($"{fieldName} no puede superar {maxLength} caracteres.");
+
+        return normalized;
     }
 
     public void AsignarAsesor(Guid asesorId)

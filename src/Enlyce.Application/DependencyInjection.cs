@@ -9,6 +9,7 @@ using Enlyce.Application.Queries.Politica;
 using Enlyce.Application.PublicCatalog;
 using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.CreateLead;
+using Enlyce.Application.UseCases.EnrichOwnerInquiry;
 using Enlyce.Application.UseCases.GetInmuebleById;
 using Enlyce.Application.UseCases.GetLeadById;
 using Enlyce.Application.UseCases.UploadPublicationPhoto;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateCheckoutSessionCommand, CreateCheckoutSessionResponse>, CreateCheckoutSessionHandler>();
         services.AddScoped<ProcessPaymentNotificationHandler>();
         services.AddScoped<ICommandHandler<CreateLeadCommand, CreateLeadResponse>, CreateLeadHandler>();
+        services.AddScoped<ICommandHandler<EnrichOwnerInquiryCommand, OwnerInquiryDetailsResponse?>, EnrichOwnerInquiryHandler>();
         services.AddScoped<ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse>, CreateInmuebleHandler>();
         services.AddScoped<ICommandHandler<UploadPublicationPhotoCommand, UploadPublicationPhotoResponse>, UploadPublicationPhotoHandler>();
         services.AddScoped<IQueryHandler<GetLeadByIdQuery, GetLeadByIdResponse?>, GetLeadByIdHandler>();

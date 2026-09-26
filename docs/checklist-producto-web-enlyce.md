@@ -35,6 +35,8 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Consentimiento obligatorio, canal web, IP y campaña UTM.
 - [x] Página de propietarios rediseñada con servicios, proceso, fotografía real y formulario comercial.
 - [x] Selección de vender, arrendar, administrar o valorar conservada al llegar al formulario.
+- [x] Captura progresiva de propietarios: la oportunidad se guarda con datos mínimos antes de solicitar información adicional.
+- [x] Enriquecimiento opcional con tipo de inmueble, ciudad, barrio, precio esperado, mensaje y canal preferido.
 - [x] Alias `/propietario` redirige permanentemente a `/propietarios`.
 - [x] Enlaces flotantes de Instagram, Facebook y WhatsApp.
 - [x] SEO base: metadatos, canonical, Open Graph, sitemap, robots y páginas por zona.
@@ -62,8 +64,8 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ### Prioridad P1 — estándar comercial
 
-- [ ] Ampliar la captación de propietarios con ciudad, barrio, tipo de inmueble y mensaje.
-- [ ] Guardar esos datos en campos estructurados del CRM, no incrustados en `Fuente`.
+- [x] Ampliar la captación de propietarios con ciudad, barrio, tipo de inmueble y mensaje.
+- [x] Guardar esos datos en campos estructurados del CRM, no incrustados en `Fuente`.
 - [ ] Mostrar en la ficha de la oportunidad la ruta, campaña, publicación y servicio de origen.
 - [ ] Crear brochure comercial descargable y versión web tipo flipbook.
 - [ ] Añadir analítica de embudo: visita, búsqueda, favorito, formulario iniciado y conversión.
@@ -93,8 +95,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ## Próxima secuencia recomendada
 
-1. Completar campos del formulario de propietarios y su contrato API.
-2. Probar Wompi/PSE en sandbox de extremo a extremo.
-3. Sustituir contenido sintético por material real autorizado.
-4. Crear E2E de los recorridos que generan dinero.
-5. Desplegar staging y medir accesibilidad, rendimiento y conversión.
+1. Probar Wompi/PSE en sandbox de extremo a extremo.
+2. Sustituir contenido sintético por material real autorizado.
+3. Crear E2E de los recorridos que generan dinero.
+4. Desplegar staging y medir accesibilidad, rendimiento y conversión.

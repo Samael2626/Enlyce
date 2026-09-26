@@ -15,4 +15,10 @@ public record GetLeadByIdResponse(
     string EtapaPipeline,
     string TipoOperacion,
     string? OwnerService,
-    Guid? PublicationId);
+    Guid? PublicationId,
+    string? OwnerPropertyType,
+    string? OwnerPropertyCity,
+    string? OwnerPropertyNeighborhood,
+    decimal? OwnerExpectedPrice,
+    string? OwnerPropertyMessage,
+    string? OwnerPreferredContactChannel);
