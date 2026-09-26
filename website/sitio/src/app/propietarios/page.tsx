@@ -144,10 +144,6 @@ export default async function PropietariosPage({ searchParams }: PageProps) {
         <div className="owners-contact-intro">
           <p className="section-kicker">Primer contacto</p>
           <h2 id="owner-contact-title">Cuéntanos qué tienes en mente.</h2>
-          <p>
-            Registraremos tu mensaje como una oportunidad en ENLYCE. Un asesor revisará la
-            información antes de crear o publicar cualquier ficha del inmueble.
-          </p>
           <p className="owners-contact-note">
             Este formulario no publica automáticamente tu dirección ni compromete el inmueble.
           </p>

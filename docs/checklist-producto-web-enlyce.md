@@ -37,6 +37,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Selección de vender, arrendar, administrar o valorar conservada al llegar al formulario.
 - [x] Captura progresiva de propietarios: la oportunidad se guarda con datos mínimos antes de solicitar información adicional.
 - [x] Enriquecimiento opcional con tipo de inmueble, ciudad, barrio, precio esperado, mensaje y canal preferido.
+- [x] Directorio territorial ampliado a 25 municipios y barrios, con inventario filtrado, zonas relacionadas y captación contextual.
 - [x] Alias `/propietario` redirige permanentemente a `/propietarios`.
 - [x] Enlaces flotantes de Instagram, Facebook y WhatsApp.
 - [x] SEO base: metadatos, canonical, Open Graph, sitemap, robots y páginas por zona.

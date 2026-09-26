@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PropertyCard } from "@/components/PropertyCard";
 import { getProperties } from "@/lib/api/catalog";
-import { NEIGHBORHOODS, findZone } from "@/lib/zones";
+import { NEIGHBORHOODS, findNearbyZones, findZone } from "@/lib/zones";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -35,37 +35,100 @@ export default async function ZonaPage({ params }: PageProps) {
     neighborhood: zone.neighborhood || undefined,
     pageSize: 12,
   });
+  const nearbyZones = findNearbyZones(zone);
+
+  const catalogQuery = new URLSearchParams({ municipality: zone.municipality });
+  if (zone.neighborhood) catalogQuery.set("neighborhood", zone.neighborhood);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
-      <header className="space-y-2">
-        <nav aria-label="Ruta" className="text-sm text-muted">
-          <Link href="/zonas" className="hover:text-accent">Zonas</Link>
-          <span aria-hidden="true"> / </span>
+    <main className="zone-detail-page">
+      <header className="zone-detail-hero">
+        <nav aria-label="Ruta">
+          <Link href="/zonas">Zonas</Link>
+          <span aria-hidden="true">/</span>
           <span>{zone.name}</span>
         </nav>
-        <h1 className="text-4xl">Inmuebles en {zone.name}</h1>
-        <p className="max-w-prose text-muted">{zone.summary}</p>
+        <div className="zone-detail-heading">
+          <div>
+            <p className="section-kicker">{zone.kind} · {zone.municipality}</p>
+            <h1>Vivir e invertir en {zone.name}.</h1>
+          </div>
+          <p>{zone.summary}</p>
+        </div>
+        <dl>
+          <div>
+            <dt>Ubicación</dt>
+            <dd>{zone.municipality}</dd>
+          </div>
+          <div>
+            <dt>Cobertura</dt>
+            <dd>{zone.kind}</dd>
+          </div>
+          <div>
+            <dt>Inventario activo</dt>
+            <dd>{page.total}</dd>
+          </div>
+        </dl>
       </header>
 
-      {page.items.length === 0 ? (
-        <div className="rounded-sheet border border-line p-8 text-center">
-          <p className="mb-3 text-muted">
-            Ahora mismo no hay publicaciones activas en {zone.name}.
-          </p>
-          <Link href="/inmuebles" className="text-accent underline">
-            Ver todo el inventario
-          </Link>
-        </div>
-      ) : (
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {page.items.map((property) => (
-            <li key={property.id}>
-              <PropertyCard property={property} />
-            </li>
-          ))}
-        </ul>
+      <section className="zone-inventory" aria-labelledby="zone-inventory-title">
+        <header>
+          <div>
+            <p className="section-kicker">Selección disponible</p>
+            <h2 id="zone-inventory-title">Propiedades en {zone.name}</h2>
+          </div>
+          <Link href={`/inmuebles?${catalogQuery.toString()}`}>Abrir búsqueda completa</Link>
+        </header>
+
+        {page.items.length === 0 ? (
+          <div className="zone-inventory-empty">
+            <span>Inventario en actualización</span>
+            <h3>Ahora mismo no hay publicaciones activas en {zone.name}.</h3>
+            <p>
+              Déjanos tus datos y te avisamos cuando aparezca una propiedad que encaje con tu
+              búsqueda.
+            </p>
+            <Link href={`/contacto?${catalogQuery.toString()}`}>Solicitar búsqueda</Link>
+          </div>
+        ) : (
+          <ul>
+            {page.items.map((property) => (
+              <li key={property.id}>
+                <PropertyCard property={property} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {nearbyZones.length > 0 && (
+        <section className="zone-nearby" aria-labelledby="zone-nearby-title">
+          <header>
+            <p className="section-kicker">Amplía el mapa</p>
+            <h2 id="zone-nearby-title">Otros sectores de {zone.municipality}</h2>
+          </header>
+          <ul>
+            {nearbyZones.map((nearbyZone) => (
+              <li key={nearbyZone.slug}>
+                <Link href={`/zonas/${nearbyZone.slug}`}>
+                  <small>{nearbyZone.kind}</small>
+                  <strong>{nearbyZone.name}</strong>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
-    </div>
+
+      <section className="zone-owner-cta" aria-labelledby="zone-owner-title">
+        <div>
+          <p className="section-kicker">Propietarios en {zone.name}</p>
+          <h2 id="zone-owner-title">¿Tienes una propiedad en esta zona?</h2>
+        </div>
+        <p>Conversemos sobre venta, arriendo, administración o valoración.</p>
+        <Link href="/propietarios">Quiero hablar de mi inmueble</Link>
+      </section>
+    </main>
   );
 }
