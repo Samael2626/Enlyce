@@ -271,7 +271,7 @@ h1, h2, h3 {
 .owners-page { overflow: hidden; }
 .owners-hero {
   display: grid;
-  min-height: 43rem;
+  min-height: 34rem;
   grid-template-columns: minmax(0, 1.04fr) minmax(24rem, .96fr);
   background: var(--color-ink);
   color: white;
@@ -280,15 +280,15 @@ h1, h2, h3 {
   display: flex;
   max-width: 46rem;
   margin-left: max(1rem, calc((100vw - 76rem) / 2));
-  padding: clamp(4.5rem, 8vw, 8rem) clamp(2rem, 6vw, 6rem) 3rem 0;
+  padding: clamp(3rem, 6vw, 5.5rem) clamp(2rem, 6vw, 6rem) 2.5rem 0;
   flex-direction: column;
   justify-content: center;
 }
 .owners-hero h1 {
-  max-width: 44rem;
+  max-width: 34rem;
   margin-top: 1rem;
-  font-size: clamp(3.2rem, 6.2vw, 6.7rem);
-  line-height: .91;
+  font-size: clamp(2.8rem, 5vw, 5rem);
+  line-height: .96;
 }
 .owners-hero-copy > p:nth-of-type(2) {
   max-width: 37rem;
@@ -316,7 +316,7 @@ h1, h2, h3 {
 .owners-secondary-action:hover { background: rgb(255 255 255 / 7%); }
 .owners-proof {
   display: grid;
-  margin-top: 3.5rem;
+  margin-top: 2.5rem;
   grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid rgb(255 255 255 / 20%);
 }

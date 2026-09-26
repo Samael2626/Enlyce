@@ -61,7 +61,7 @@ export default async function PropietariosPage({ searchParams }: PageProps) {
       <section className="owners-hero" aria-labelledby="owners-title">
         <div className="owners-hero-copy">
           <p className="section-kicker">Para propietarios</p>
-          <h1 id="owners-title">Tu inmueble merece una estrategia, no solo un aviso.</h1>
+          <h1 id="owners-title">Tu propiedad, bien representada.</h1>
           <p>
             Vender, arrendar o administrar empieza por entender bien el activo. En L&amp;C
             estudiamos tu caso y lo convertimos en una oportunidad trazable dentro de ENLYCE.
