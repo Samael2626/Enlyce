@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/ContactForm";
-import { PropertySearchPanel } from "@/components/PropertySearchPanel";
 import { getPropertyBySlug } from "@/lib/api/catalog";
 import { findOwnerService, getActivePolicy, type CampaignParams } from "@/lib/api/leads";
 
@@ -48,8 +47,6 @@ export default async function ContactoPage({ searchParams }: PageProps) {
         </p>
       </header>
 
-      <PropertySearchPanel />
-
       <div className="max-w-3xl space-y-8">
 
       {property ? (
@@ -77,6 +74,11 @@ export default async function ContactoPage({ searchParams }: PageProps) {
         policyVersion={policy?.version}
         campaign={campaign}
       />
+
+      <aside className="contact-catalog-return">
+        <p>¿Aún estás comparando opciones?</p>
+        <Link href="/inmuebles">Seguir buscando inmuebles →</Link>
+      </aside>
       </div>
     </div>
   );

@@ -36,14 +36,6 @@ const bedroomOptions = [
 export function PropertySearchPanel() {
   return (
     <form className="property-search-panel" action="/inmuebles" method="get" aria-label="Buscar inmuebles">
-      <div className="property-search-heading">
-        <span aria-hidden="true" className="property-search-marker" />
-        <div>
-          <strong>Encuentra tu próximo espacio</strong>
-          <span>Inventario seleccionado por L&amp;C</span>
-        </div>
-      </div>
-
       <div className="property-search-grid">
         <label className="property-search-field property-search-location">
           <span>Ubicación</span>

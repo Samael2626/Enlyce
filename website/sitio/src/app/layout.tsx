@@ -29,7 +29,12 @@ const navigation = [
   { href: "/zonas", label: "Zonas" },
   { href: "/propietarios", label: "Propietarios" },
   { href: "/favoritos", label: "Favoritos" },
-  { href: "/contacto", label: "Contacto" },
+];
+
+const aboutNavigation = [
+  { href: "/nosotros", label: "Quiénes somos", description: "Historia, propósito y forma de trabajar" },
+  { href: "/nosotros#servicios", label: "Servicios", description: "Acompañamiento inmobiliario integral" },
+  { href: "/zonas", label: "Zonas", description: "Conocimiento local del Valle de Aburrá" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -51,12 +56,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <small>Propiedad Raíz S.A.S.</small>
               </span>
             </Link>
-            <nav aria-label="Principal" className="flex flex-wrap justify-end gap-x-6 gap-y-2 text-sm font-semibold">
+            <nav aria-label="Principal" className="site-navigation">
               {navigation.map((item) => (
-                <Link key={item.href} href={item.href} className="hover:text-accent">
+                <Link key={item.href} href={item.href} className="site-navigation-link">
                   {item.label}
                 </Link>
               ))}
+              <details className="site-navigation-menu">
+                <summary>Nosotros</summary>
+                <div className="site-navigation-dropdown">
+                  {aboutNavigation.map((item) => (
+                    <Link key={item.href} href={item.href}>
+                      <strong>{item.label}</strong>
+                      <span>{item.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              </details>
+              <Link href="/contacto" className="site-navigation-contact">
+                Contacto
+              </Link>
             </nav>
           </div>
         </header>

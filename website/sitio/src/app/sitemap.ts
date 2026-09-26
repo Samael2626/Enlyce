@@ -24,7 +24,7 @@ async function collectProperties(): Promise<PropertyListItem[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const statics: MetadataRoute.Sitemap = [
-    "", "/inmuebles", "/zonas", "/propietarios", "/contacto", "/privacidad",
+    "", "/inmuebles", "/zonas", "/nosotros", "/propietarios", "/contacto", "/privacidad",
   ].map((path) => ({ url: `${siteUrl}${path}`, changeFrequency: "weekly", priority: 0.7 }));
 
   const zones: MetadataRoute.Sitemap = NEIGHBORHOODS.map((zone) => ({

@@ -6,8 +6,8 @@ import { FavoriteToggle } from "./FavoriteToggle";
 
 export function PropertyCard({ property }: { property: PropertyListItem }) {
   return (
-    <article className="group relative overflow-hidden rounded-sheet bg-surface shadow-card transition hover:shadow-raised">
-      <div className="relative aspect-4/3 bg-line">
+    <article className="property-card group relative overflow-hidden rounded-sheet bg-surface shadow-card transition hover:shadow-raised">
+      <div className="property-card-media relative aspect-4/3 bg-line">
         {property.coverPhoto ? (
           <Image
             src={property.coverPhoto.url}
@@ -27,7 +27,8 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
         <FavoriteToggle slug={property.slug} title={property.publicTitle} />
       </div>
 
-      <div className="space-y-2 p-4">
+      <div className="property-card-body">
+        <p className="property-card-type">{property.propertyType}</p>
         <h3 className="text-lg leading-snug">
           <Link href={propertyPath(property.slug)} className="after:absolute after:inset-0">
             {property.publicTitle}
@@ -36,10 +37,10 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
         <p className="text-sm text-muted">
           {property.location.neighborhood}, {property.location.municipality}
         </p>
-        <p className="font-display text-xl text-accent">
+        <p className="property-card-price">
           {formatPrice(property.price.amount, property.price.currency)}
         </p>
-        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+        <dl className="property-card-features">
           <div className="flex gap-1">
             <dt className="sr-only">Área</dt>
             <dd>{formatArea(property.areaSquareMeters)}</dd>

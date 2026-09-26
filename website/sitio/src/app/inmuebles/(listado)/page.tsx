@@ -19,62 +19,44 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
   const lastPage = Math.max(1, Math.ceil(page.total / Math.max(1, page.pageSize)));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
-      <header className="space-y-2">
-        <h1 className="text-3xl">Inmuebles disponibles</h1>
-        <p className="text-muted">
-          {page.total === 0
-            ? "No hay publicaciones que coincidan con la búsqueda."
-            : `${page.total} ${page.total === 1 ? "inmueble" : "inmuebles"} publicados.`}
-        </p>
+    <div className="catalog-page">
+      <header className="catalog-page-heading">
+        <p className="section-kicker">Inventario L&amp;C</p>
+        <h1>Propiedades para vivir e invertir</h1>
+        <p>Explora el inventario publicado y afina la búsqueda sin perder tus filtros.</p>
       </header>
 
-      <CatalogFilters />
+      <div className="catalog-shop">
+        <CatalogFilters total={page.total} />
 
-      {page.items.length === 0 ? (
-        <div className="rounded-sheet border border-line p-8 text-center">
-          <p className="mb-3">Ningún inmueble coincide con estos filtros.</p>
-          <Link href="/inmuebles" className="text-accent underline">
-            Limpiar la búsqueda
-          </Link>
-        </div>
-      ) : (
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {page.items.map((property) => (
-            <li key={property.id}>
-              <PropertyCard property={property} />
-            </li>
-          ))}
-        </ul>
-      )}
+        {page.items.length === 0 ? (
+          <div className="catalog-empty">
+            <p>Ningún inmueble coincide con estos filtros.</p>
+            <span>Prueba ampliando el precio, la zona o el tipo de inmueble.</span>
+            <Link href="/inmuebles">Limpiar la búsqueda</Link>
+          </div>
+        ) : (
+          <ul className="catalog-results">
+            {page.items.map((property) => (
+              <li key={property.id}>
+                <PropertyCard property={property} />
+              </li>
+            ))}
+          </ul>
+        )}
 
-      {lastPage > 1 && (
-        <nav aria-label="Paginación" className="flex items-center justify-between text-sm">
-          {page.page > 1 ? (
-            <Link
-              className="text-accent underline"
-              href={`/inmuebles${buildQuery({ ...filters, page: page.page - 1 })}`}
-            >
-              Anterior
-            </Link>
-          ) : (
-            <span className="text-muted">Anterior</span>
-          )}
-          <span className="text-muted">
-            Página {page.page} de {lastPage}
-          </span>
-          {page.page < lastPage ? (
-            <Link
-              className="text-accent underline"
-              href={`/inmuebles${buildQuery({ ...filters, page: page.page + 1 })}`}
-            >
-              Siguiente
-            </Link>
-          ) : (
-            <span className="text-muted">Siguiente</span>
-          )}
-        </nav>
-      )}
+        {lastPage > 1 && (
+          <nav aria-label="Paginación" className="catalog-pagination">
+            {page.page > 1 ? (
+              <Link href={`/inmuebles${buildQuery({ ...filters, page: page.page - 1 })}`}>← Anterior</Link>
+            ) : <span>← Anterior</span>}
+            <small>Página {page.page} de {lastPage}</small>
+            {page.page < lastPage ? (
+              <Link href={`/inmuebles${buildQuery({ ...filters, page: page.page + 1 })}`}>Siguiente →</Link>
+            ) : <span>Siguiente →</span>}
+          </nav>
+        )}
+      </div>
     </div>
   );
 }
