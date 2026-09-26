@@ -19,6 +19,7 @@ type Props = {
   isOwnerInquiry: boolean;
   policyVersion?: string;
   campaign?: CampaignParams;
+  initialOwnerService?: OwnerServiceValue;
 };
 
 type Status =
@@ -37,10 +38,11 @@ export function ContactForm({
   isOwnerInquiry,
   policyVersion,
   campaign,
+  initialOwnerService,
 }: Props) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [authorized, setAuthorized] = useState(false);
-  const [service, setService] = useState<OwnerServiceValue>("vender");
+  const [service, setService] = useState<OwnerServiceValue>(initialOwnerService ?? "vender");
 
   // El texto escrito no se pierde al fallar: se controla aqui y el formulario
   // nunca se desmonta entre intentos.
@@ -89,8 +91,9 @@ export function ContactForm({
 
   if (status.kind === "sent") {
     return (
-      <section className="rounded-sheet bg-surface p-6 shadow-card" aria-live="polite">
-        <h2 className="mb-2 text-2xl">Solicitud recibida</h2>
+      <section className="contact-form-success" aria-live="polite">
+        <p className="section-kicker">Registro confirmado</p>
+        <h2>{isOwnerInquiry ? "Tu oportunidad ya está en ENLYCE" : "Solicitud recibida"}</h2>
         <p className="max-w-prose text-muted">
           {status.repeated
             ? "Ya te teníamos registrado, así que sumamos esta consulta a tu historial. Un asesor de L&C te contacta pronto."
@@ -99,15 +102,20 @@ export function ContactForm({
         {propertyTitle && (
           <p className="mt-2 text-sm text-muted">Consulta sobre: {propertyTitle}</p>
         )}
-        <Link href="/inmuebles" className="mt-4 inline-block text-accent underline">
-          Seguir viendo inmuebles
-        </Link>
+        {!isOwnerInquiry && (
+          <Link href="/inmuebles" className="mt-4 inline-block text-accent underline">
+            Seguir viendo inmuebles
+          </Link>
+        )}
       </section>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-sheet bg-surface p-6 shadow-card">
+    <form
+      onSubmit={handleSubmit}
+      className={isOwnerInquiry ? "contact-form contact-form-owner" : "contact-form"}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm">
           <span className="mb-1 block text-muted">Nombre</span>
@@ -115,6 +123,7 @@ export function ContactForm({
             className={fieldClass}
             required
             autoComplete="name"
+            placeholder="Nombre y apellido"
             value={form.nombre}
             onChange={(event) => setForm({ ...form, nombre: event.target.value })}
           />
@@ -127,6 +136,7 @@ export function ContactForm({
             type="email"
             required
             autoComplete="email"
+            placeholder="nombre@correo.com"
             value={form.email}
             onChange={(event) => setForm({ ...form, email: event.target.value })}
           />
@@ -138,6 +148,7 @@ export function ContactForm({
             className={fieldClass}
             type="tel"
             autoComplete="tel"
+            placeholder="300 000 0000"
             value={form.telefono}
             onChange={(event) => setForm({ ...form, telefono: event.target.value })}
           />

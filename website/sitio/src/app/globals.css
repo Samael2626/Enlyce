@@ -256,6 +256,150 @@ h1, h2, h3 {
 .contact-catalog-return p { color: var(--color-muted); font-size: .8rem; }
 .contact-catalog-return a { display: inline-block; margin-top: .3rem; font-weight: 800; color: var(--color-accent-strong); }
 
+.contact-form,
+.contact-form-success {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sheet);
+  background: var(--color-surface);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  box-shadow: var(--shadow-card);
+}
+.contact-form { display: grid; gap: 1.25rem; }
+.contact-form-success h2 { margin-top: .45rem; font-size: clamp(1.8rem, 4vw, 2.8rem); }
+.contact-form-success > p:last-of-type { margin-top: .75rem; }
+
+.owners-page { overflow: hidden; }
+.owners-hero {
+  display: grid;
+  min-height: 43rem;
+  grid-template-columns: minmax(0, 1.04fr) minmax(24rem, .96fr);
+  background: var(--color-ink);
+  color: white;
+}
+.owners-hero-copy {
+  display: flex;
+  max-width: 46rem;
+  margin-left: max(1rem, calc((100vw - 76rem) / 2));
+  padding: clamp(4.5rem, 8vw, 8rem) clamp(2rem, 6vw, 6rem) 3rem 0;
+  flex-direction: column;
+  justify-content: center;
+}
+.owners-hero h1 {
+  max-width: 44rem;
+  margin-top: 1rem;
+  font-size: clamp(3.2rem, 6.2vw, 6.7rem);
+  line-height: .91;
+}
+.owners-hero-copy > p:nth-of-type(2) {
+  max-width: 37rem;
+  margin-top: 1.7rem;
+  color: rgb(255 255 255 / 70%);
+  font-size: clamp(1rem, 1.6vw, 1.18rem);
+  line-height: 1.75;
+}
+.owners-hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+.owners-primary-action,
+.owners-secondary-action {
+  display: inline-flex;
+  min-height: 3.2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-accent);
+  padding-inline: 1.1rem;
+  font-size: .78rem;
+  font-weight: 800;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+.owners-primary-action { background: var(--color-accent); }
+.owners-primary-action:hover { background: #ca9b39; transform: translateY(-1px); }
+.owners-secondary-action { color: #e3be65; }
+.owners-secondary-action:hover { background: rgb(255 255 255 / 7%); }
+.owners-proof {
+  display: grid;
+  margin-top: 3.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid rgb(255 255 255 / 20%);
+}
+.owners-proof div { padding: 1.1rem 1rem 0 0; }
+.owners-proof dt { color: #e3be65; font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.owners-proof dd { max-width: 10rem; margin-top: .35rem; color: rgb(255 255 255 / 58%); font-size: .72rem; line-height: 1.5; }
+.owners-hero-visual {
+  position: relative;
+  min-height: 34rem;
+  background: linear-gradient(180deg, rgb(15 26 61 / 10%), rgb(15 26 61 / 72%)), url('/medellin-hero.png') center / cover no-repeat;
+}
+.owners-hero-visual::before { position: absolute; inset: 0; border-left: 1px solid rgb(227 190 101 / 42%); content: ''; }
+.owners-hero-visual blockquote {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: min(24rem, 84%);
+  border-top: 1px solid rgb(227 190 101 / 50%);
+  background: rgb(8 16 43 / 84%);
+  padding: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  backdrop-filter: blur(12px);
+}
+.owners-hero-visual blockquote span { display: block; margin-bottom: .35rem; color: #e3be65; font-family: var(--font-body); font-size: .62rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+
+.owners-services,
+.owners-process,
+.owners-contact { max-width: 76rem; margin-inline: auto; padding-inline: 1rem; }
+.owners-services { display: grid; padding-block: 7rem; grid-template-columns: minmax(17rem, .78fr) minmax(0, 1.22fr); gap: clamp(3rem, 8vw, 7rem); }
+.owners-services header { position: sticky; top: 2rem; align-self: start; }
+.owners-services h2,
+.owners-process h2,
+.owners-contact h2 { margin-top: .65rem; font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: .98; }
+.owners-services header > p:last-child,
+.owners-contact-intro > p:nth-of-type(2) { margin-top: 1.3rem; color: var(--color-muted); line-height: 1.75; }
+.owners-services ol { border-top: 1px solid var(--color-line); }
+.owners-services li {
+  display: grid;
+  min-height: 10.5rem;
+  padding: 1.5rem 0;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  border-bottom: 1px solid var(--color-line);
+}
+.owners-services li > span,
+.owners-process li > span { color: var(--color-accent-strong); font-size: .66rem; font-weight: 800; letter-spacing: .13em; }
+.owners-services h3 { font-size: clamp(1.65rem, 3vw, 2.35rem); }
+.owners-services li p { max-width: 31rem; margin-top: .55rem; color: var(--color-muted); font-size: .85rem; line-height: 1.65; }
+.owners-services li a { align-self: end; color: var(--color-accent-strong); font-size: .72rem; font-weight: 800; text-decoration: underline; text-underline-offset: .25rem; }
+.owners-services li a::after { margin-left: .45rem; content: '→'; }
+
+.owners-process {
+  display: grid;
+  padding-block: 6rem;
+  grid-template-columns: minmax(16rem, .7fr) minmax(0, 1.3fr);
+  gap: clamp(3rem, 8vw, 7rem);
+  border-top: 1px solid var(--color-line);
+}
+.owners-process ol { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--color-line); border-left: 1px solid var(--color-line); }
+.owners-process li { min-height: 18rem; padding: 1.25rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.owners-process h3 { margin-top: 5rem; font-size: 1.4rem; line-height: 1.1; }
+.owners-process li p { margin-top: .75rem; color: var(--color-muted); font-size: .8rem; line-height: 1.65; }
+
+.owners-contact {
+  display: grid;
+  max-width: none;
+  padding: 6rem max(1rem, calc((100vw - 76rem) / 2));
+  grid-template-columns: minmax(16rem, .75fr) minmax(28rem, 1.25fr);
+  gap: clamp(3rem, 8vw, 8rem);
+  background: #efece4;
+}
+.owners-contact-intro { align-self: start; }
+.owners-contact-note { margin-top: 2rem; padding: 1rem 0 0 1rem; border-top: 1px solid var(--color-line); border-left: 3px solid var(--color-accent); color: var(--color-muted); font-size: .78rem; line-height: 1.6; }
+.contact-form-owner { border-radius: 0; box-shadow: 0 28px 70px rgb(15 26 61 / 12%); }
+.contact-form-owner label > span:first-child { color: var(--color-ink); font-size: .7rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.contact-form-owner input:not([type='checkbox']),
+.contact-form-owner select { min-height: 3.1rem; border-radius: 3px; background: #fbfaf7; }
+.contact-form-owner button[type='submit'] { min-height: 3.2rem; border-radius: 0; font-weight: 800; }
+#servicios,
+#solicitud { scroll-margin-top: 1.5rem; }
+
 .about-page { max-width: 76rem; margin-inline: auto; padding: 4rem 1rem 6rem; }
 .about-hero, .about-purpose, .about-services, .about-cta { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
 .about-hero { padding: 3rem 0 5rem; border-bottom: 1px solid var(--color-line); }
@@ -297,6 +441,16 @@ h1, h2, h3 {
   .about-values ul { grid-template-columns: repeat(2, 1fr); }
   .about-cta > div:last-child { justify-self: start; }
   .home-opportunity { grid-template-columns: 1fr; }
+  .owners-hero { grid-template-columns: 1fr; }
+  .owners-hero-copy { margin-inline: auto; padding: 4.5rem 1rem 3rem; }
+  .owners-hero-visual { min-height: 27rem; }
+  .owners-services,
+  .owners-process,
+  .owners-contact { grid-template-columns: 1fr; gap: 2.5rem; }
+  .owners-services { padding-block: 4.5rem; }
+  .owners-services header { position: static; }
+  .owners-process { padding-block: 4.5rem; }
+  .owners-contact { padding-block: 4.5rem; }
 }
 
 @media (max-width: 560px) {
@@ -309,6 +463,13 @@ h1, h2, h3 {
   .about-values ul { grid-template-columns: 1fr; }
   .home-opportunity { padding-top: 2rem; }
   .home-opportunity-card { min-height: 9rem; grid-template-columns: 2rem 1fr; }
+  .owners-proof { grid-template-columns: 1fr; }
+  .owners-proof div { padding-block: .8rem; border-bottom: 1px solid rgb(255 255 255 / 16%); }
+  .owners-services li { grid-template-columns: 2rem 1fr; }
+  .owners-services li a { grid-column: 2; }
+  .owners-process ol { grid-template-columns: 1fr; }
+  .owners-process li { min-height: 12rem; }
+  .owners-process h3 { margin-top: 2.5rem; }
 }
 
 .social-contact-dock {
