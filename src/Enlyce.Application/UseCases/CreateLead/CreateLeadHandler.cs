@@ -90,7 +90,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         await _emailSender.SendAsync(
             command.Email,
             "Bienvenido a Enlyce",
-            $"Hola {command.Nombre}, tu lead fue registrado exitosamente.");
+            $"Hola {command.Nombre}, tu oportunidad fue registrada exitosamente.");
 
         return new CreateLeadResponse(
             saved.Id, saved.Nombre, saved.Email.Value,

@@ -57,7 +57,7 @@ export function PipelinePage() {
         <span className="crm-eyebrow">Oportunidades</span>
         <h1 className="crm-page-title mt-2">Pipeline</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Arrastra los leads entre etapas para actualizar su estado
+          Arrastra las oportunidades entre etapas para actualizar su estado
         </p>
       </div>
 

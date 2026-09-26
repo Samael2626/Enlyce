@@ -2,6 +2,7 @@ import { useAlertas } from "@/hooks/useApi"
 import { AlertTriangle, Clock, Mail } from "lucide-react"
 import { parseISO, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { ETIQUETAS_PIPELINE } from "@/lib/constants"
 
 export function AlertasPage() {
   const { data: alertas, isLoading } = useAlertas()
@@ -22,7 +23,7 @@ export function AlertasPage() {
         <span className="crm-eyebrow">Seguimiento</span>
         <h1 className="crm-page-title mt-2">Alertas</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Leads que requieren seguimiento
+          Oportunidades que requieren seguimiento
         </p>
       </div>
 
@@ -31,7 +32,7 @@ export function AlertasPage() {
           <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-accent" />
           <h3 className="font-display text-2xl">Sin alertas</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Todos tus leads están al día
+            Todas tus oportunidades están al día
           </p>
         </div>
       ) : (
@@ -73,7 +74,7 @@ export function AlertasPage() {
 
                   <div className="mt-2">
                     <span className="text-xs text-muted-foreground">
-                      Etapa: {lead.etapaPipeline}
+                      Etapa: {ETIQUETAS_PIPELINE[lead.etapaPipeline] || lead.etapaPipeline}
                     </span>
                   </div>
                 </div>

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertySearchPanel } from "@/components/PropertySearchPanel";
 import { getProperties } from "@/lib/api/catalog";
-import { NEIGHBORHOODS } from "@/lib/zones";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +25,6 @@ export default async function HomePage() {
             className="hero-brand-mark"
           />
           <div className="max-w-3xl space-y-6">
-            <p className="hero-kicker">Medellín · Valle de Aburrá</p>
             <h1 className="text-balance text-5xl leading-[.98] text-white sm:text-6xl lg:text-7xl">
               Propiedades con altura. Decisiones con criterio.
             </h1>
@@ -87,22 +85,32 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="mx-auto max-w-6xl space-y-6 px-4">
-        <p className="section-kicker">Conocimiento local</p>
-        <h2 className="text-4xl">Zonas que conocemos de verdad</h2>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {NEIGHBORHOODS.map((zone) => (
-            <li key={zone.slug}>
-              <Link
-                href={`/zonas/${zone.slug}`}
-                className="block rounded-sheet bg-surface p-5 shadow-card hover:shadow-raised"
-              >
-                <h3 className="text-xl">{zone.name}</h3>
-                <p className="mt-1 text-sm text-muted">{zone.summary}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <section className="home-opportunity" aria-labelledby="home-opportunity-title">
+        <div className="home-opportunity-intro">
+          <p className="section-kicker">El siguiente movimiento</p>
+          <h2 id="home-opportunity-title">Tu propiedad ya tiene valor. Hagamos que el mercado lo vea.</h2>
+          <p>
+            Habla con un asesor o inicia la publicación de tu inmueble. Cada solicitud entra
+            directamente a ENLYCE como una oportunidad comercial con seguimiento.
+          </p>
+        </div>
+
+        <div className="home-opportunity-actions">
+          <Link href="/contacto" className="home-opportunity-card">
+            <span>01</span>
+            <div>
+              <strong>Contactar a un asesor</strong>
+              <p>Comprar, arrendar o resolver una duda con acompañamiento humano.</p>
+            </div>
+          </Link>
+          <Link href="/propietarios" className="home-opportunity-card home-opportunity-card-primary">
+            <span>02</span>
+            <div>
+              <strong>Publicar una propiedad</strong>
+              <p>Cuéntanos qué tienes y si quieres vender, arrendar, administrar o avaluar.</p>
+            </div>
+          </Link>
+        </div>
       </section>
     </div>
   );

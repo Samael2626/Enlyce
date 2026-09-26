@@ -24,7 +24,7 @@ export const ETAPAS_PIPELINE = {
 } as const
 
 export const ETIQUETAS_PIPELINE: Record<string, string> = {
-  "Lead nuevo": "Lead nuevo",
+  "Lead nuevo": "Oportunidad nueva",
   Contactado: "Contactado",
   Cualificado: "Cualificado",
   "Visita agendada": "Visita agendada",
@@ -83,7 +83,7 @@ export const ESTADOS_VISITA = [
 export const NAV_ITEMS = [
   { title: "Panel", href: "/dashboard", icon: "LayoutDashboard" },
   { title: "Pipeline", href: "/pipeline", icon: "Activity" },
-  { title: "Leads", href: "/leads", icon: "Users" },
+  { title: "Oportunidades", href: "/leads", icon: "Users" },
   { title: "Inmuebles", href: "/inmuebles", icon: "Home" },
   { title: "Calendario", href: "/calendario", icon: "Calendar" },
   { title: "Chat", href: "/chat", icon: "MessageSquare" },

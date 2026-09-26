@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { format, parseISO, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { ETIQUETAS_PIPELINE } from "@/lib/constants"
 
 export function LeadsPage() {
   const { data: pipeline, isLoading } = usePipeline()
@@ -28,7 +29,7 @@ export function LeadsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Cargando leads...</div>
+        <div className="text-muted-foreground">Cargando oportunidades...</div>
       </div>
     )
   }
@@ -38,14 +39,14 @@ export function LeadsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <span className="crm-eyebrow">Relaciones</span>
-          <h1 className="crm-page-title mt-2">Leads</h1>
+          <h1 className="crm-page-title mt-2">Oportunidades</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            {leads.length} leads registrados
+            {leads.length} oportunidades registradas
           </p>
         </div>
         <button className="crm-button" onClick={() => setShowNewLead(true)}>
           <Plus className="h-4 w-4" />
-          Nuevo Lead
+          Nueva oportunidad
         </button>
       </div>
 
@@ -55,9 +56,9 @@ export function LeadsPage() {
         {leads.length === 0 ? (
           <div className="crm-panel py-14 text-center">
             <User className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <h3 className="font-display text-2xl">Primer lead</h3>
+            <h3 className="font-display text-2xl">Primera oportunidad</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Agrega tu primer lead para comenzar
+              Agrega tu primera oportunidad para comenzar
             </p>
           </div>
         ) : (
@@ -127,7 +128,7 @@ function NewLeadModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-start justify-between gap-6">
           <div>
             <span className="crm-eyebrow">Captación manual</span>
-            <h2 id="new-lead-title" className="mt-2 font-display text-3xl">Nuevo lead</h2>
+            <h2 id="new-lead-title" className="mt-2 font-display text-3xl">Nueva oportunidad</h2>
             <p className="mt-2 text-sm text-muted-foreground">Registra el contacto y su interés inicial.</p>
           </div>
           <button
@@ -206,13 +207,13 @@ function NewLeadModal({ onClose }: { onClose: () => void }) {
               className="mt-1 h-4 w-4 accent-[#b78a2d]"
             />
             <span>
-              Confirmo que el lead autorizó el tratamiento de sus datos personales según la política vigente.
+              Confirmo que la persona autorizó el tratamiento de sus datos personales según la política vigente.
             </span>
           </label>
 
           {createLead.isError && (
             <p role="alert" className="border-l-4 border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {createLead.error instanceof Error ? createLead.error.message : "No fue posible crear el lead."}
+              {createLead.error instanceof Error ? createLead.error.message : "No fue posible crear la oportunidad."}
             </p>
           )}
 
@@ -221,7 +222,7 @@ function NewLeadModal({ onClose }: { onClose: () => void }) {
               Cancelar
             </button>
             <button type="submit" disabled={createLead.isPending} className="crm-button min-w-36">
-              {createLead.isPending ? "Guardando..." : "Guardar lead"}
+              {createLead.isPending ? "Guardando..." : "Guardar oportunidad"}
             </button>
           </div>
         </form>
@@ -287,7 +288,7 @@ function LeadCard({
               {lead.nombre}
             </h3>
             <span className="rounded-full bg-secondary px-2 py-0.5 text-[.68rem] font-semibold text-secondary-foreground">
-              {lead.etapaPipeline}
+              {ETIQUETAS_PIPELINE[lead.etapaPipeline] || lead.etapaPipeline}
             </span>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">

@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
+import { ETIQUETAS_PIPELINE } from "@/lib/constants"
 
 export function DashboardPage() {
   const { data: pipeline, isLoading: loadingPipeline } = usePipeline()
@@ -63,13 +64,13 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KPICard
           icon={<Users className="h-5 w-5" />}
-          label="Total de leads"
+          label="Total de oportunidades"
           value={totalLeads}
           loading={loadingPipeline}
         />
         <KPICard
           icon={<Activity className="h-5 w-5" />}
-          label="Leads activos"
+          label="Oportunidades activas"
           value={leadsActivos.length}
           loading={loadingPipeline}
         />
@@ -98,7 +99,7 @@ export function DashboardPage() {
             {Object.entries(leadsPorEtapa).map(([etapa, count]) => (
               <div key={etapa} className="flex items-center gap-3">
                 <span className="w-32 truncate text-xs font-medium text-muted-foreground sm:w-40">
-                  {etapa}
+                  {ETIQUETAS_PIPELINE[etapa] || etapa}
                 </span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
@@ -116,7 +117,7 @@ export function DashboardPage() {
                 </span>
               </div>
             ))}
-            {Object.keys(leadsPorEtapa).length === 0 && <p className="py-7 text-sm text-muted-foreground">El pipeline aparecerá cuando ingresen los primeros leads.</p>}
+            {Object.keys(leadsPorEtapa).length === 0 && <p className="py-7 text-sm text-muted-foreground">El pipeline aparecerá cuando ingresen las primeras oportunidades.</p>}
           </div>
         </div>
 
