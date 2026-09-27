@@ -114,10 +114,19 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 - Regresión ofensiva posterior: 53 de 60 logins bloqueados con `429`, 30 capturas concurrentes reducidas a un registro, cuerpo de 1 MB rechazado con `413`, JWT alterados rechazados y BOLA anterior en `404`.
 - Reportes ZAP locales en `security-reports/`; son artefactos de diagnóstico, no producto final.
 
+## Revalidación del 27 de septiembre de 2026
+
+- Se creó una base PostgreSQL desechable y se aplicó desde cero toda la cadena de migraciones. La última migración registrada fue `20260927155326_HardenSecurityAudit`.
+- La base confirmó los dos índices únicos que protegen la continuación privada de propietarios y la creación concurrente de oportunidades.
+- El harness ofensivo repitió los controles principales: 53 de 60 intentos de acceso fueron limitados, los JWT manipulados recibieron `401`, el acceso de otro asesor recibió `403`, la sobrescritura anónima recibió `404`, el cuerpo de 1 MB recibió `413` y 30 capturas simultáneas produjeron un solo registro.
+- ZAP API activo importó 56 operaciones, recorrió 156 URL y superó 120 reglas sin fallos confirmados. No encontró inyección SQL, XSS, traversal, XXE, ejecución de comandos ni inclusión remota.
+- ZAP mostró tres advertencias operativas: respuestas `503` del webhook Wompi porque el entorno desechable no tenía secreto del proveedor, tipo de contenido inesperado en Swagger y cabecera `Cross-Origin-Resource-Policy` ausente en cuatro rutas de desarrollo. Ninguna demostró una explotación.
+- La cuenta Railway fue consultada y solo contiene `BotLaw` y `Arcanum`. ENLYCE aún no tiene staging remoto; por eso no se ejecutó un ataque sobre una URL pública inventada ni sobre producción.
+
 ## Cierre aplicado
 
 1. Fuga y modificación del recontacto: corregida.
 2. Deduplicación atómica: corregida y probada con concurrencia real.
 3. Límites, rate limiting y logging: corregidos.
 4. Cabeceras, HTTPS/HSTS y sesión: corregidos.
-5. Harness ofensivo: actualizado y ejecutado. Queda repetir ZAP cuando exista staging público.
+5. Migración y ZAP: repetidos satisfactoriamente en un entorno local aislado. Queda una última repetición remota cuando se cree el staging público de ENLYCE.
