@@ -45,23 +45,23 @@ public static class LeadsModule
                 ResolveClientIp(http));
 
             var result = await handler.HandleAsync(command);
-            return Results.Created($"/api/leads/{result.Id}", result);
+            return Results.Accepted(value: new PublicLeadSubmissionResponse(
+                result.ContinuationToken,
+                "Recibimos tu solicitud. Un asesor continuará el proceso contigo."));
         })
         .AllowAnonymous()
         .WithName("CreateLead")
-        .Produces<CreateLeadResponse>(StatusCodes.Status201Created)
+        .Produces<PublicLeadSubmissionResponse>(StatusCodes.Status202Accepted)
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
-        // Publico y progresivo: la oportunidad ya existe. El correo funciona
-        // como segunda prueba junto al GUID y nunca se revela cual de ambos fallo.
-        group.MapPut("/{id:guid}/owner-details", async (
-            Guid id,
+        // El token temporal permite completar solo la solicitud que acaba de
+        // crearse. No expone identificadores del CRM y se consume una vez.
+        group.MapPut("/owner-details", async (
             [FromBody] EnrichOwnerInquiryRequest request,
             ICommandHandler<EnrichOwnerInquiryCommand, OwnerInquiryDetailsResponse?> handler) =>
         {
-            var result = await handler.HandleAsync(new EnrichOwnerInquiryCommand(
-                id,
-                request.Email,
+            await handler.HandleAsync(new EnrichOwnerInquiryCommand(
+                request.ContinuationToken,
                 request.PropertyType,
                 request.City,
                 request.Neighborhood,
@@ -69,13 +69,14 @@ public static class LeadsModule
                 request.Message,
                 request.PreferredContactChannel));
 
-            return result is null ? Results.NotFound() : Results.Ok(result);
+            // La respuesta siempre es igual: no confirma si el token existia,
+            // habia expirado o ya se habia usado.
+            return Results.Accepted();
         })
         .AllowAnonymous()
         .WithName("EnrichOwnerInquiry")
-        .Produces<OwnerInquiryDetailsResponse>()
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status404NotFound);
+        .Produces(StatusCodes.Status202Accepted)
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static string? ResolveClientIp(HttpContext http) => LeadClientIp.Resolve(http);
@@ -113,8 +114,12 @@ public record CreateLeadRequest(
     // Lo declara cada frontend: "sitio_web", "funcional_legacy", etc.
     string? Canal = null);
 
+public sealed record PublicLeadSubmissionResponse(
+    string ContinuationToken,
+    string Message);
+
 public sealed record EnrichOwnerInquiryRequest(
-    string Email,
+    string ContinuationToken,
     string PropertyType,
     string City,
     string? Neighborhood,

@@ -1,14 +1,13 @@
 using Enlyce.Application.Abstractions;
+using Enlyce.Application.Security;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.Errors;
 using Enlyce.Domain.Ports;
-using Enlyce.Domain.ValueObjects;
 
 namespace Enlyce.Application.UseCases.EnrichOwnerInquiry;
 
 public sealed record EnrichOwnerInquiryCommand(
-    Guid LeadId,
-    string Email,
+    string ContinuationToken,
     string PropertyType,
     string City,
     string? Neighborhood,
@@ -32,18 +31,18 @@ public sealed class EnrichOwnerInquiryHandler(ILeadRepository leads)
         EnrichOwnerInquiryCommand command,
         CancellationToken ct = default)
     {
-        var lead = await leads.GetByIdAsync(command.LeadId);
-        var email = Email.Create(command.Email);
-
-        // Mismo resultado para id inexistente y correo distinto: el endpoint
-        // publico no confirma si una oportunidad ajena existe.
-        if (lead is null || lead.Email != email)
+        if (string.IsNullOrWhiteSpace(command.ContinuationToken))
             return null;
 
         var propertyType = ParseEnum<OwnerPropertyType>(command.PropertyType, "tipo de inmueble");
         var preferredChannel = ParseEnum<PreferredContactChannel>(
             command.PreferredContactChannel,
             "canal de contacto");
+
+        var tokenHash = OwnerInquiryContinuationToken.Hash(command.ContinuationToken);
+        var lead = await leads.ConsumeOwnerInquiryTokenAsync(tokenHash, DateTime.UtcNow, ct);
+        if (lead is null)
+            return null;
 
         lead.EnrichOwnerInquiry(
             propertyType,

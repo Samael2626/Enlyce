@@ -44,6 +44,9 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(l => l.OwnerExpectedPrice).HasPrecision(18, 2);
         builder.Property(l => l.OwnerPropertyMessage).HasMaxLength(2_000);
         builder.Property(l => l.OwnerPreferredContactChannel).HasConversion<string>().HasMaxLength(20);
+        builder.Property(l => l.OwnerInquiryTokenHash).HasMaxLength(64);
+        builder.Property(l => l.OwnerInquiryTokenExpiresAt);
+        builder.Property(l => l.OwnerInquiryTokenConsumedAt);
         builder.Property(l => l.EtapaPipeline).HasMaxLength(50).IsRequired();
         builder.Property(l => l.InteraccionesCount).IsRequired();
         builder.Property(l => l.FechaUltimaInteraccion);
@@ -54,6 +57,7 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.HasIndex(l => l.OwnerPropertyCity);
         builder.HasIndex(l => l.OwnerPropertyType);
         builder.HasIndex(l => l.PublicationId);
+        builder.HasIndex(l => l.OwnerInquiryTokenHash).IsUnique();
         builder.HasIndex(l => l.AsesorAsignadoId);
     }
 }

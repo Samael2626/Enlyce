@@ -76,6 +76,9 @@ public sealed class Lead
     public decimal? OwnerExpectedPrice { get; internal set; }
     public string? OwnerPropertyMessage { get; internal set; }
     public PreferredContactChannel? OwnerPreferredContactChannel { get; internal set; }
+    public string? OwnerInquiryTokenHash { get; internal set; }
+    public DateTime? OwnerInquiryTokenExpiresAt { get; internal set; }
+    public DateTime? OwnerInquiryTokenConsumedAt { get; internal set; }
     public string EtapaPipeline { get; internal set; } = EtapasPipeline.LeadNuevo;
     public int InteraccionesCount { get; internal set; }
     public DateTime? FechaUltimaInteraccion { get; internal set; }
@@ -239,6 +242,22 @@ public sealed class Lead
         OwnerPropertyMessage = normalizedMessage;
         OwnerPreferredContactChannel = preferredContactChannel;
         FechaActualizacion = DateTime.UtcNow;
+    }
+
+    public void IssueOwnerInquiryContinuation(string tokenHash, DateTime expiresAt)
+    {
+        if (OwnerService is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(tokenHash))
+            throw new DomainError("El token de continuacion no puede ser vacio.");
+
+        if (expiresAt <= DateTime.UtcNow)
+            throw new DomainError("El token de continuacion debe expirar en el futuro.");
+
+        OwnerInquiryTokenHash = tokenHash;
+        OwnerInquiryTokenExpiresAt = expiresAt;
+        OwnerInquiryTokenConsumedAt = null;
     }
 
     private static string? NormalizeOptionalText(string? value, int maxLength, string fieldName)

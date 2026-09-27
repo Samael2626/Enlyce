@@ -28,7 +28,7 @@ type Props = {
 type Status =
   | { kind: "idle" }
   | { kind: "sending" }
-  | { kind: "captured"; leadId: string; repeated: boolean }
+  | { kind: "captured"; continuationToken: string }
   | { kind: "error"; messages: string[] };
 
 type DetailsStatus =
@@ -99,8 +99,7 @@ export function ContactForm({
 
       setStatus({
         kind: "captured",
-        leadId: result.id,
-        repeated: result.esContactoRepetido,
+        continuationToken: result.continuationToken,
       });
     } catch (error) {
       const messages =
@@ -118,8 +117,8 @@ export function ContactForm({
     setDetailsStatus({ kind: "sending" });
 
     try {
-      await enrichOwnerInquiry(status.leadId, {
-        email: form.email.trim(),
+      await enrichOwnerInquiry({
+        continuationToken: status.continuationToken,
         propertyType: ownerDetails.propertyType,
         city: ownerDetails.city.trim(),
         neighborhood: ownerDetails.neighborhood.trim() || undefined,
@@ -146,10 +145,7 @@ export function ContactForm({
           <p className="section-kicker">Paso 1 guardado</p>
           <h2>Ya podemos contactarte.</h2>
           <p>
-            {status.repeated
-              ? "Reconocimos tu correo y añadimos esta solicitud a tu historial."
-              : "Tu oportunidad ya está en ENLYCE."}{" "}
-            Puedes cerrar esta página o añadir contexto para que el asesor llegue mejor preparado.
+            Recibimos tu solicitud. Puedes cerrar esta página o añadir contexto para que el asesor llegue mejor preparado.
           </p>
         </header>
 
@@ -268,9 +264,7 @@ export function ContactForm({
         <p className="section-kicker">Registro confirmado</p>
         <h2>Solicitud recibida</h2>
         <p className="max-w-prose text-muted">
-          {status.repeated
-            ? "Ya te teníamos registrado, así que sumamos esta consulta a tu historial. Un asesor de L&C te contacta pronto."
-            : "Un asesor de L&C te contacta pronto por el canal que nos dejaste."}
+          Un asesor de L&C te contactará pronto por el canal que nos dejaste.
         </p>
         {propertyTitle && (
           <p className="mt-2 text-sm text-muted">Consulta sobre: {propertyTitle}</p>

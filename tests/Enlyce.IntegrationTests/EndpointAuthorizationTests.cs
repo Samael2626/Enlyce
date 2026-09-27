@@ -37,7 +37,7 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
         var publicRoutes = new HashSet<string>(StringComparer.Ordinal)
         {
             "health", "api/auth/login", "api/auth/seed", "api/leads",
-            "api/leads/{id:guid}/owner-details",
+            "api/leads/owner-details",
             "api/public/inmuebles", "api/public/inmuebles/{slug}",
             "api/politica/activa", "api/webhooks/wompi"
         };
@@ -359,12 +359,12 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
     }
 
     [Fact]
-    public async Task PublicLeadCapture_WithoutToken_ReturnsCreated()
+    public async Task PublicLeadCapture_WithoutToken_ReturnsAccepted()
     {
         using var client = _factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/leads", new CreateLeadRequest(
             "Lead Publico", $"public-{Guid.NewGuid():N}@test.com", null, "Website", true));
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
     }
 
     [Fact]

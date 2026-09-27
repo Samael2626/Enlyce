@@ -8,6 +8,7 @@ public record CreateLeadResponse(
     DateTime FechaCreacion,
     string? OwnerService,
     Guid? PublicationId,
+    string ContinuationToken,
     // True cuando el correo ya existia y la consulta se sumo como interaccion
     // sobre el lead existente en vez de crear uno nuevo.
     bool EsContactoRepetido = false);

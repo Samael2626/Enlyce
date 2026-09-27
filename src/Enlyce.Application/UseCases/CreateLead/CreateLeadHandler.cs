@@ -1,4 +1,5 @@
 using Enlyce.Application.Abstractions;
+using Enlyce.Application.Security;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.Errors;
 using Enlyce.Domain.Ports;
@@ -24,6 +25,7 @@ namespace Enlyce.Application.UseCases.CreateLead;
 // inventarse que creo algo nuevo.
 public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadResponse>
 {
+    private static readonly TimeSpan ContinuationLifetime = TimeSpan.FromMinutes(20);
     private const int MaxSourceLength = 100;
     private const string UnknownChannel = "desconocido";
     private const string UtmMarker = "|utm=";
@@ -80,6 +82,11 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         var lead = Lead.Crear(command.Nombre, email, telefono, source,
             command.AutorizacionDatos, command.TipoOperacion, ownerService, publicationId);
 
+        var continuation = OwnerInquiryContinuationToken.Issue();
+        lead.IssueOwnerInquiryContinuation(
+            continuation.Hash,
+            DateTime.UtcNow.Add(ContinuationLifetime));
+
         if (publication is not null)
             lead.AsignarAsesor(publication.AdvisorId);
 
@@ -96,7 +103,8 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             saved.Id, saved.Nombre, saved.Email.Value,
             saved.Estado.ToString(), saved.FechaCreacion,
             saved.OwnerService?.ToString(),
-            saved.PublicationId);
+            saved.PublicationId,
+            continuation.Token);
     }
 
     // Interes por una publicacion distinta a la que ya trae el lead: es otra
@@ -111,6 +119,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         PropertyPublication? publication,
         CancellationToken ct)
     {
+        var decoyContinuation = OwnerInquiryContinuationToken.Issue();
         var advisorId = publication?.AdvisorId ?? existing.AsesorAsignadoId;
 
         if (advisorId.HasValue)
@@ -135,6 +144,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             saved.Estado.ToString(), saved.FechaCreacion,
             saved.OwnerService?.ToString(),
             saved.PublicationId,
+            decoyContinuation.Token,
             EsContactoRepetido: true);
     }
 

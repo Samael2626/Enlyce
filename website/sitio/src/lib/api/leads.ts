@@ -9,8 +9,12 @@ export type ActivePolicy = {
 };
 
 export type LeadResult = {
-  id: string;
-  esContactoRepetido: boolean;
+  continuationToken: string;
+};
+
+type PublicLeadSubmissionResponse = {
+  continuationToken: string;
+  message: string;
 };
 
 // Servicios que ofrece L&C al propietario. Todos viajan estructurados; la
@@ -102,19 +106,18 @@ export async function createLead(input: CreateLeadInput): Promise<LeadResult> {
     canal: SITE_CHANNEL,
   };
 
-  const result = await apiPost<Schemas["CreateLeadRequest"], Schemas["CreateLeadResponse"]>(
+  const result = await apiPost<Schemas["CreateLeadRequest"], PublicLeadSubmissionResponse>(
     "/api/leads",
     body,
   );
 
   return {
-    id: result.id ?? "",
-    esContactoRepetido: result.esContactoRepetido ?? false,
+    continuationToken: result.continuationToken,
   };
 }
 
 export type EnrichOwnerInquiryInput = {
-  email: string;
+  continuationToken: string;
   propertyType: string;
   city: string;
   neighborhood?: string;
@@ -124,11 +127,10 @@ export type EnrichOwnerInquiryInput = {
 };
 
 export async function enrichOwnerInquiry(
-  leadId: string,
   input: EnrichOwnerInquiryInput,
 ): Promise<void> {
   await apiPut<EnrichOwnerInquiryInput, unknown>(
-    `/api/leads/${encodeURIComponent(leadId)}/owner-details`,
+    "/api/leads/owner-details",
     input,
   );
 }

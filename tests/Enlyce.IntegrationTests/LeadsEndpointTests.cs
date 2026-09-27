@@ -23,32 +23,29 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task PostLead_ValidRequest_ReturnsCreated()
+    public async Task PostLead_ValidRequest_ReturnsOpaqueAcceptedResponse()
     {
         var request = new CreateLeadRequest(
             "Juan Perez", "juan@test.com", "3101234567", "Web", true);
 
         var response = await _client.PostAsJsonAsync("/api/leads", request);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        var result = await response.Content.ReadFromJsonAsync<PublicLeadSubmissionResponse>();
         Assert.NotNull(result);
-        Assert.Equal("Juan Perez", result!.Nombre);
-        Assert.Equal("juan@test.com", result.Email);
-        Assert.Equal("Nuevo", result.Estado);
+        Assert.False(string.IsNullOrWhiteSpace(result!.ContinuationToken));
     }
 
     [Fact]
-    public async Task PostLead_ReturnsLocationHeader()
+    public async Task PostLead_DoesNotRevealInternalLocation()
     {
         var request = new CreateLeadRequest(
             "Maria Lopez", "maria@test.com", null, "Referido", true);
 
         var response = await _client.PostAsJsonAsync("/api/leads", request);
 
-        Assert.NotNull(response.Headers.Location);
-        Assert.Contains("/api/leads/", response.Headers.Location!.ToString());
+        Assert.Null(response.Headers.Location);
     }
 
     [Fact]
@@ -80,7 +77,7 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
         var createRequest = new CreateLeadRequest(
             "Test Lead", "testget@test.com", "3109999888", "Web", true);
         var createResponse = await _client.PostAsJsonAsync("/api/leads", createRequest);
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        var created = await FindLeadByEmailAsync("testget@test.com");
 
         // Get it
         var getResponse = await _client.GetAsync($"/api/leads/{created!.Id}");
@@ -107,10 +104,9 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
         var request = new CreateLeadRequest(
             "Pedro Garcia", "pedro@test.com", "3105555666", "Facebook", true);
         var createResponse = await _client.PostAsJsonAsync("/api/leads", request);
-        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, createResponse.StatusCode);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
-        Assert.NotNull(created);
+        var created = await FindLeadByEmailAsync("pedro@test.com");
 
         // 2. Get
         var getResponse = await _client.GetAsync($"/api/leads/{created!.Id}");
@@ -147,12 +143,8 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
             "Arriendo",
             "Manage"));
 
-        Assert.Equal(HttpStatusCode.Created, rentResponse.StatusCode);
-        Assert.Equal(HttpStatusCode.Created, manageResponse.StatusCode);
-        var rentLead = await rentResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
-        var manageLead = await manageResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
-        Assert.Equal("Rent", rentLead!.OwnerService);
-        Assert.Equal("Manage", manageLead!.OwnerService);
+        Assert.Equal(HttpStatusCode.Accepted, rentResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, manageResponse.StatusCode);
 
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
@@ -209,12 +201,12 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
             true,
             "Venta",
             "Sell"));
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<PublicLeadSubmissionResponse>();
 
         var enrichResponse = await _client.PutAsJsonAsync(
-            $"/api/leads/{created!.Id}/owner-details",
+            "/api/leads/owner-details",
             new EnrichOwnerInquiryRequest(
-                email,
+                created!.ContinuationToken,
                 "Apartment",
                 "Medellin",
                 "Laureles",
@@ -222,11 +214,11 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
                 "Apartamento remodelado y con balcon.",
                 "WhatsApp"));
 
-        Assert.Equal(HttpStatusCode.OK, enrichResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, enrichResponse.StatusCode);
 
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
-        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == created.Id);
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Email.Value == email);
         Assert.Equal(OwnerPropertyType.Apartment, lead.OwnerPropertyType);
         Assert.Equal("Medellin", lead.OwnerPropertyCity);
         Assert.Equal("Laureles", lead.OwnerPropertyNeighborhood);
@@ -235,7 +227,7 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task PutOwnerDetails_WithDifferentEmail_ReturnsNotFoundAndKeepsDataEmpty()
+    public async Task PutOwnerDetails_WithInvalidToken_ReturnsAcceptedAndKeepsDataEmpty()
     {
         var email = $"owner-protected-{Guid.NewGuid():N}@test.com";
         var createResponse = await _client.PostAsJsonAsync("/api/leads", new CreateLeadRequest(
@@ -246,12 +238,10 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
             true,
             "Arriendo",
             "Manage"));
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateLeadResponse>();
-
         var response = await _client.PutAsJsonAsync(
-            $"/api/leads/{created!.Id}/owner-details",
+            "/api/leads/owner-details",
             new EnrichOwnerInquiryRequest(
-                "otro@test.com",
+                "invalid-token",
                 "House",
                 "Medellin",
                 null,
@@ -259,11 +249,11 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
                 null,
                 "Phone"));
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
 
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
-        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == created.Id);
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Email.Value == email);
         Assert.Null(lead.OwnerPropertyType);
     }
 
@@ -275,9 +265,10 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
         await PublicCatalogTestData.SeedAsync(db);
         var publication = await db.PropertyPublications
             .SingleAsync(item => item.Slug == PublicCatalogTestData.PublishedApartmentSlug);
+        var email = $"visit-{Guid.NewGuid():N}@test.com";
         var request = new CreateLeadRequest(
             "Visitante Publicacion",
-            $"visit-{Guid.NewGuid():N}@test.com",
+            email,
             "3104444444",
             $"Website:{publication.Slug}",
             true,
@@ -287,8 +278,8 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/leads", request);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var result = await db.Leads.AsNoTracking().SingleAsync(item => item.Email.Value == email);
         await using var command = db.Database.GetDbConnection().CreateCommand();
         command.CommandText = """
             SELECT "PublicationId", "AsesorAsignadoId"
@@ -297,7 +288,7 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
             """;
         var leadParameter = command.CreateParameter();
         leadParameter.ParameterName = "$leadId";
-        leadParameter.Value = result!.Id;
+        leadParameter.Value = result.Id;
         command.Parameters.Add(leadParameter);
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -310,9 +301,10 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
     public async Task PostVisitLead_WithMissingPublication_CreatesUnassignedLead()
     {
         var publicationId = Guid.NewGuid();
+        var email = $"missing-{Guid.NewGuid():N}@test.com";
         var request = new CreateLeadRequest(
             "Visitante Sin Publicacion",
-            $"missing-{Guid.NewGuid():N}@test.com",
+            email,
             null,
             "Website:retirada",
             true,
@@ -322,12 +314,11 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/leads", request);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
-        Assert.Equal(publicationId, result!.PublicationId);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
-        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == result.Id);
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Email.Value == email);
+        Assert.Equal(publicationId, lead.PublicationId);
         Assert.Null(lead.AsesorAsignadoId);
         Assert.Contains("PublicationReview:", lead.Fuente);
     }
@@ -335,9 +326,10 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task PostVisitLead_WithMalformedPublicationId_CreatesLeadForReview()
     {
+        var email = $"invalid-publication-{Guid.NewGuid():N}@test.com";
         var request = new CreateLeadRequest(
             "Visitante Id Invalido",
-            $"invalid-publication-{Guid.NewGuid():N}@test.com",
+            email,
             null,
             "Website:referencia-manual",
             true,
@@ -347,13 +339,19 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/leads", request);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
-        Assert.Null(result!.PublicationId);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
-        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Id == result.Id);
+        var lead = await db.Leads.AsNoTracking().SingleAsync(item => item.Email.Value == email);
+        Assert.Null(lead.PublicationId);
         Assert.Null(lead.AsesorAsignadoId);
         Assert.Contains("PublicationReview:not-a-guid", lead.Fuente);
+    }
+
+    private async Task<Lead> FindLeadByEmailAsync(string email)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        return await db.Leads.AsNoTracking().SingleAsync(item => item.Email.Value == email);
     }
 }

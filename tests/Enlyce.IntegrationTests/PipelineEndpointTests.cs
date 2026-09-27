@@ -6,6 +6,7 @@ using Enlyce.Domain.Entities;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
 using Enlyce.IntegrationTests;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -24,18 +25,23 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<Guid> CreateLeadAsync(string tipoOperacion = "Venta")
     {
+        var email = $"pipeline_{Guid.NewGuid():N}@test.com";
         var response = await _client.PostAsJsonAsync("/api/leads", new
         {
             Nombre = "Lead Pipeline",
-            Email = $"pipeline_{Guid.NewGuid():N}@test.com",
+            Email = email,
             Telefono = (string?)null,
             Fuente = "Test",
             AutorizacionDatos = true,
             TipoOperacion = tipoOperacion
         });
         response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadFromJsonAsync<CreateLeadResponse>();
-        return content!.Id;
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        return await db.Leads
+            .Where(item => item.Email.Value == email)
+            .Select(item => item.Id)
+            .SingleAsync();
     }
 
     private Guid SeedAsesor()

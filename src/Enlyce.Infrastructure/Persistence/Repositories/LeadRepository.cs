@@ -22,6 +22,39 @@ public class LeadRepository : ILeadRepository
             .FirstOrDefaultAsync(l => l.Email.Value == email.Value);
     }
 
+    public async Task<Lead?> ConsumeOwnerInquiryTokenAsync(
+        string tokenHash,
+        DateTime consumedAt,
+        CancellationToken ct = default)
+    {
+        var leadId = await _context.Leads
+            .Where(lead =>
+                lead.OwnerInquiryTokenHash == tokenHash &&
+                lead.OwnerInquiryTokenExpiresAt > consumedAt &&
+                lead.OwnerInquiryTokenConsumedAt == null)
+            .Select(lead => lead.Id)
+            .SingleOrDefaultAsync(ct);
+
+        if (leadId == Guid.Empty)
+            return null;
+
+        var affected = await _context.Leads
+            .Where(lead =>
+                lead.Id == leadId &&
+                lead.OwnerInquiryTokenHash == tokenHash &&
+                lead.OwnerInquiryTokenConsumedAt == null)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(
+                    lead => lead.OwnerInquiryTokenConsumedAt,
+                    consumedAt),
+                ct);
+
+        if (affected != 1)
+            return null;
+
+        return await _context.Leads.SingleAsync(lead => lead.Id == leadId, ct);
+    }
+
     public async Task<IReadOnlyList<Lead>> GetAllAsync()
     {
         return await _context.Leads

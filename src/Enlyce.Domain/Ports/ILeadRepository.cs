@@ -7,6 +7,7 @@ public interface ILeadRepository
 {
     Task<Lead?> GetByIdAsync(Guid id);
     Task<Lead?> GetByEmailAsync(Email email);
+    Task<Lead?> ConsumeOwnerInquiryTokenAsync(string tokenHash, DateTime consumedAt, CancellationToken ct = default);
     Task<IReadOnlyList<Lead>> GetAllAsync();
     Task<IReadOnlyList<Lead>> GetByAsesorIdAsync(Guid asesorId);
     Task<Lead> SaveAsync(Lead lead);

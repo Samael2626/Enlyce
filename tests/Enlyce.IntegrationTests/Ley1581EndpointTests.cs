@@ -4,6 +4,7 @@ using System.Text.Json;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -70,9 +71,14 @@ public class Ley1581EndpointTests : IClassFixture<TestWebApplicationFactory>
             AutorizacionDatos = autorizacion
         };
         var response = await _client.PostAsJsonAsync("/api/leads", request);
-        var json = await response.Content.ReadAsStringAsync();
-        var doc = JsonDocument.Parse(json);
-        return Guid.Parse(doc.RootElement.GetProperty("id").GetString()!);
+        response.EnsureSuccessStatusCode();
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        return await db.Leads
+            .Where(item => item.Email.Value == email)
+            .Select(item => item.Id)
+            .SingleAsync();
     }
 
     // --- Politica Tests ---

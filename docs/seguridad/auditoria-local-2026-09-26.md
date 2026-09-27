@@ -17,7 +17,7 @@ ENLYCE no debe exponerse a Internet todavía. La autenticación y el control de 
 
 ### Crítico — enumeración y modificación no autorizada de oportunidades
 
-**Estado:** reproducido contra la API local con datos sintéticos.
+**Estado:** corregido y verificado el 27 de septiembre de 2026.
 
 1. `POST /api/leads` acepta un correo ya registrado.
 2. La respuesta del recontacto entrega el identificador, nombre, correo, estado, fecha y metadatos de la oportunidad existente.
@@ -26,7 +26,9 @@ ENLYCE no debe exponerse a Internet todavía. La autenticación y el control de 
 
 **Impacto:** exposición de datos personales, alteración de registros comerciales y contaminación del CRM. Corresponde a una falla de autorización sobre objetos, similar a BOLA/IDOR.
 
-**Corrección exigida:** el recontacto público debe responder de forma opaca, sin identificadores ni datos existentes. El enriquecimiento necesita un token de continuación aleatorio, de un solo uso, corto y ligado a la captura recién creada; no debe usar correo + GUID como prueba de identidad.
+**Solución aplicada:** la respuesta pública ahora es igual para contactos nuevos y repetidos, y ya no entrega identificadores, correo, nombre ni estado. Para completar los datos opcionales se genera un permiso temporal aleatorio, válido por 20 minutos y utilizable una sola vez. La ruta anterior con identificador fue retirada. Una repetición o un permiso inventado recibe una respuesta neutra y no modifica datos.
+
+**Verificación:** se añadieron pruebas automáticas que intentan repetir el ataque original, reutilizar el permiso y consultar un contacto repetido. El ataque quedó bloqueado y la suite completa terminó con 403 pruebas superadas.
 
 ### Alta — fuerza bruta y abuso sin límites
 

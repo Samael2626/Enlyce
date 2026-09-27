@@ -11,15 +11,15 @@ public sealed class EnrichOwnerInquiryHandlerTests
     private readonly ILeadRepository _leads = Substitute.For<ILeadRepository>();
 
     [Fact]
-    public async Task Handle_WithMatchingEmail_EnrichesTheExistingOpportunity()
+    public async Task Handle_WithValidContinuationToken_EnrichesTheExistingOpportunity()
     {
         var lead = CreateOwnerLead();
-        _leads.GetByIdAsync(lead.Id).Returns(lead);
+        _leads.ConsumeOwnerInquiryTokenAsync(Arg.Any<string>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(lead);
         _leads.SaveAsync(lead).Returns(lead);
 
         var result = await new EnrichOwnerInquiryHandler(_leads).HandleAsync(new(
-            lead.Id,
-            "owner@test.com",
+            "temporary-token",
             "Apartment",
             "Medellin",
             "Laureles",
@@ -34,14 +34,10 @@ public sealed class EnrichOwnerInquiryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithDifferentEmail_DoesNotRevealOrModifyTheOpportunity()
+    public async Task Handle_WithInvalidToken_DoesNotRevealOrModifyTheOpportunity()
     {
-        var lead = CreateOwnerLead();
-        _leads.GetByIdAsync(lead.Id).Returns(lead);
-
         var result = await new EnrichOwnerInquiryHandler(_leads).HandleAsync(new(
-            lead.Id,
-            "attacker@test.com",
+            "invalid-token",
             "House",
             "Medellin",
             null,
