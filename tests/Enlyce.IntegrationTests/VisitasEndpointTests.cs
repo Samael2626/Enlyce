@@ -178,8 +178,7 @@ public sealed class VisitasEndpointTests : IClassFixture<TestWebApplicationFacto
         var client = _factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/auth/login", new { Correo = email, Password = TestPassword });
         response.EnsureSuccessStatusCode();
-        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var token = json.RootElement.GetProperty("token").GetString();
+        var token = AuthCookieTestHelper.ReadToken(response);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
     }

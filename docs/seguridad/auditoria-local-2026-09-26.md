@@ -2,7 +2,7 @@
 title: "Auditoría local de seguridad ENLYCE"
 date: 2026-09-26
 tags: [enlyce, seguridad, auditoria, owasp, web, api]
-status: abierto
+status: corregido-y-verificado
 ---
 
 # Auditoría local de seguridad — ENLYCE
@@ -11,7 +11,7 @@ Relacionado: [[Enlyce-MOC]] · [[Checklist-Producto-Web-Enlyce]] · [[Arquitectu
 
 ## Veredicto
 
-ENLYCE no debe exponerse a Internet todavía. La autenticación y el control de acceso de las rutas privadas están razonablemente construidos, pero el flujo público de recontacto permite consultar datos de una oportunidad y modificar su información de propietario sin autenticación.
+Los hallazgos críticos, altos, medios y bajos de esta auditoría quedaron corregidos y verificados localmente el 27 de septiembre de 2026. La salida a Internet sigue condicionada a desplegar esta versión, configurar secretos reales y repetir el escaneo en staging.
 
 ## Hallazgos
 
@@ -28,44 +28,46 @@ ENLYCE no debe exponerse a Internet todavía. La autenticación y el control de 
 
 **Solución aplicada:** la respuesta pública ahora es igual para contactos nuevos y repetidos, y ya no entrega identificadores, correo, nombre ni estado. Para completar los datos opcionales se genera un permiso temporal aleatorio, válido por 20 minutos y utilizable una sola vez. La ruta anterior con identificador fue retirada. Una repetición o un permiso inventado recibe una respuesta neutra y no modifica datos.
 
-**Verificación:** se añadieron pruebas automáticas que intentan repetir el ataque original, reutilizar el permiso y consultar un contacto repetido. El ataque quedó bloqueado y la suite completa terminó con 403 pruebas superadas.
+**Verificación:** se añadieron pruebas automáticas que intentan repetir el ataque original, reutilizar el permiso y consultar un contacto repetido. El ataque quedó bloqueado y la suite completa terminó con 408 pruebas superadas.
 
 ### Alta — fuerza bruta y abuso sin límites
 
-**Estado:** reproducido. Quince intentos consecutivos de login inválido respondieron `401`; ninguno respondió `429`.
+**Estado:** corregido y verificado. El login limita por IP y por correo normalizado; la captura pública, el enriquecimiento y el webhook tienen límites independientes. Una ráfaga de 60 logins produjo 7 respuestas `401` y 53 respuestas `429`.
 
-No existe limitación específica para login, creación pública de oportunidades ni enriquecimiento de propietarios. Esto permite fuerza bruta, spam, crecimiento artificial de consentimientos y abuso combinado con el hallazgo crítico.
+Antes de la corrección no existía limitación específica para login, creación pública de oportunidades ni enriquecimiento de propietarios. Esto permitía fuerza bruta, spam y crecimiento artificial de consentimientos.
 
-**Corrección exigida:** límites por IP y por identidad normalizada, respuesta `429`, ventana progresiva y telemetría. El webhook debe conservar la validación criptográfica y recibir protección de volumen independiente.
+Los rechazos entregan `429` y `Retry-After`. La firma criptográfica de Wompi se conserva.
 
 ### Alta — deduplicación vulnerable a condiciones de carrera
 
-**Estado:** reproducido dos veces contra PostgreSQL desechable.
+**Estado:** corregido y verificado contra PostgreSQL desechable.
 
 Una ráfaga de 30 capturas simultáneas con el mismo correo creó 30 identificadores distintos en la primera ejecución y 19 en la segunda. La secuencia “consultar si existe” y luego “insertar” no es atómica y la base no impide el duplicado.
 
 **Impacto:** contaminación masiva del pipeline, correos repetidos, asignaciones contradictorias y consumo evitable de recursos.
 
-**Corrección exigida:** restricción o índice coherente con la verdadera clave de oportunidad y operación atómica con manejo explícito del conflicto. Una comprobación previa en código no basta.
+**Solución aplicada:** cada oportunidad tiene una clave formada por correo normalizado y publicación. PostgreSQL aplica un índice único sobre oportunidades activas y el repositorio maneja el conflicto de inserción. Treinta solicitudes simultáneas respondieron correctamente, pero persistieron una sola oportunidad.
 
 ### Alta — amplificación de recursos y registros
 
-**Estado:** reproducido con harness propio y escaneo activo.
+**Estado:** corregido y verificado con el harness ofensivo.
 
 - Sesenta logins inválidos simultáneos produjeron 60 respuestas `401` y ninguna `429`.
 - `POST /api/leads` aceptó un cuerpo con un campo de 1 MB y respondió `201`; el valor se recorta después, pero el cuerpo completo ya fue recibido, materializado y procesado.
 - Filtros hostiles del catálogo producen excepciones y stacks completos en el log de Next.js. El cliente recibe solo un digest, pero una ráfaga puede saturar CPU, disco y observabilidad.
 - El API registra excepciones completas por credenciales inválidas; durante la prueba generó un volumen desproporcionado de logs para respuestas esperables.
 
-**Corrección exigida:** límites de cuerpo y longitud antes de materializar comandos, rate limiting, validación temprana de filtros y logging resumido para fallos esperables sin stack por petición.
+**Solución aplicada:** límites de 16 KB para login, 32 KB para capturas y 256 KB para Wompi; longitudes validadas; filtros web acotados; errores esperables registrados sin stack ni datos enviados por el atacante. El cuerpo de 1 MB ahora responde `413`.
 
 ### Media — cabeceras defensivas ausentes
 
-**Estado:** confirmado manualmente y mediante OWASP ZAP sobre el build de producción de Next.js.
+**Estado inicial:** confirmado manualmente y mediante OWASP ZAP sobre el build de producción de Next.js.
 
-Faltan CSP, protección anti-clickjacking, `X-Content-Type-Options`, `Referrer-Policy` y `Permissions-Policy`. Next.js además publica `X-Powered-By`; Kestrel publica `Server`.
+Faltaban CSP, protección anti-clickjacking, `X-Content-Type-Options`, `Referrer-Policy` y `Permissions-Policy`. Next.js además publicaba `X-Powered-By`; Kestrel publicaba `Server`.
 
 **Impacto:** mayor superficie frente a XSS futuro, clickjacking y reconocimiento tecnológico.
+
+**Estado:** corregido. API y sitio envían CSP, anti-clickjacking, `nosniff`, `Referrer-Policy` y `Permissions-Policy`. Next.js ya no envía `X-Powered-By` y Kestrel ya no agrega `Server`.
 
 ### Media — transporte y sesión incompletos para producción
 
@@ -74,11 +76,15 @@ Faltan CSP, protección anti-clickjacking, `X-Content-Type-Options`, `Referrer-P
 - El login crea una cookie `HttpOnly`, `Secure` y `SameSite=Strict`, pero también devuelve el JWT en el JSON aunque el frontend no lo utiliza.
 - Cerrar sesión elimina la cookie, pero no revoca un JWT ya copiado. La vigencia configurada es de ocho horas.
 
-**Corrección exigida:** HTTPS/HSTS en producción, no devolver el token al navegador, reducir vigencia y definir revocación o rotación según el modelo de sesión.
+**Corrección aplicada:** HTTPS/HSTS en producción, token fuera del cuerpo de respuesta, vigencia reducida y revocación al cerrar sesión.
+
+**Estado:** corregido. Producción exige metadatos HTTPS, usa redirección HTTPS y HSTS. El JWT ya no aparece en el JSON, dura 30 minutos y la cookie sigue siendo `HttpOnly`, `Secure` y `SameSite=Strict`. Cerrar sesión incrementa la versión de sesión del asesor: una copia anterior del JWT recibe `401`.
 
 ### Baja — huella tecnológica
 
 Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero facilita reconocimiento automatizado.
+
+**Estado:** corregido mediante la eliminación de ambas cabeceras.
 
 ## Controles que sí funcionaron
 
@@ -104,13 +110,14 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 - OWASP ZAP API activo: 157 URL importadas, 119 reglas superadas, 0 alertas altas/medias y 4 bajas. Los `503` repetidos del webhook fueron causados por el secreto Wompi ausente en el entorno desechable, no por ejecución del payload.
 - Harness ofensivo reproducible: fuerza bruta, integridad JWT, RBAC horizontal, carrera de duplicados, BOLA, cuerpos grandes, CORS y method override.
 - El escaneo web activo con navegador fue detenido después de diez minutos: ZAP abrió decenas de procesos Firefox y superó un consumo razonable. Sus resultados son parciales y no se presentan como cobertura completa.
-- Suite .NET: 400 de 400 pruebas superadas (`--no-build --no-restore`).
+- Suite .NET: 408 de 408 pruebas superadas.
+- Regresión ofensiva posterior: 53 de 60 logins bloqueados con `429`, 30 capturas concurrentes reducidas a un registro, cuerpo de 1 MB rechazado con `413`, JWT alterados rechazados y BOLA anterior en `404`.
 - Reportes ZAP locales en `security-reports/`; son artefactos de diagnóstico, no producto final.
 
-## Orden obligatorio
+## Cierre aplicado
 
-1. Cerrar la fuga y modificación del recontacto.
-2. Hacer atómica la deduplicación y probarla con concurrencia real.
-3. Agregar límites de cuerpo, rate limiting y logging resistente al abuso.
-4. Añadir cabeceras, HTTPS/HSTS y endurecer sesión.
-5. Convertir el harness ofensivo en prueba de regresión y repetir ZAP antes de staging público.
+1. Fuga y modificación del recontacto: corregida.
+2. Deduplicación atómica: corregida y probada con concurrencia real.
+3. Límites, rate limiting y logging: corregidos.
+4. Cabeceras, HTTPS/HSTS y sesión: corregidos.
+5. Harness ofensivo: actualizado y ejecutado. Queda repetir ZAP cuando exista staging público.

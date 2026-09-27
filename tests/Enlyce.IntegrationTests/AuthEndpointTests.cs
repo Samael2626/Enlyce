@@ -45,9 +45,7 @@ public class AuthEndpointTests : IClassFixture<TestWebApplicationFactory>
         var loginRequest = new { Correo = AdminCorreo, Password = AdminPassword };
         var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
 
-        var json = await response.Content.ReadAsStringAsync();
-        var doc = JsonDocument.Parse(json);
-        return doc.RootElement.GetProperty("token").GetString()!;
+        return AuthCookieTestHelper.ReadToken(response);
     }
 
     private void SetAuthHeader(string token)
@@ -78,7 +76,9 @@ public class AuthEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         var json = await response.Content.ReadAsStringAsync();
         var doc = JsonDocument.Parse(json);
-        Assert.True(doc.RootElement.TryGetProperty("token", out _));
+        Assert.False(doc.RootElement.TryGetProperty("token", out _));
+        Assert.Contains(response.Headers.GetValues("Set-Cookie"), value =>
+            value.StartsWith("_enlyce_auth=", StringComparison.Ordinal));
         Assert.True(doc.RootElement.TryGetProperty("rol", out _));
         Assert.True(doc.RootElement.TryGetProperty("nombre", out _));
     }
@@ -163,9 +163,7 @@ public class AuthEndpointTests : IClassFixture<TestWebApplicationFactory>
         // Login como asesor
         var loginRequest = new { Correo = correoAsesor, Password = "Asesor123!" };
         var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        var loginJson = await loginResponse.Content.ReadAsStringAsync();
-        var loginDoc = JsonDocument.Parse(loginJson);
-        var token = loginDoc.RootElement.GetProperty("token").GetString()!;
+        var token = AuthCookieTestHelper.ReadToken(loginResponse);
         SetAuthHeader(token);
 
         // Intentar register — debe retornar 403

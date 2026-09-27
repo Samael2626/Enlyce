@@ -19,7 +19,7 @@ public sealed class EnrichOwnerInquiryHandlerTests
         _leads.SaveAsync(lead).Returns(lead);
 
         var result = await new EnrichOwnerInquiryHandler(_leads).HandleAsync(new(
-            "temporary-token",
+            new string('A', 43),
             "Apartment",
             "Medellin",
             "Laureles",

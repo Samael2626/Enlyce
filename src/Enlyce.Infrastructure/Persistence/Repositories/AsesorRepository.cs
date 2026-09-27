@@ -36,6 +36,12 @@ public class AsesorRepository : IAsesorRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task GuardarAsync(Asesor asesor)
+    {
+        _context.Asesores.Update(asesor);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<List<Asesor>> ObtenerTodosAsync()
     {
         return await _context.Asesores.ToListAsync();

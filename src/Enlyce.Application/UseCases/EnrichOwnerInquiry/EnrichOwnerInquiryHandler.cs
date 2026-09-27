@@ -31,7 +31,7 @@ public sealed class EnrichOwnerInquiryHandler(ILeadRepository leads)
         EnrichOwnerInquiryCommand command,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(command.ContinuationToken))
+        if (string.IsNullOrWhiteSpace(command.ContinuationToken) || command.ContinuationToken.Length != 43)
             return null;
 
         var propertyType = ParseEnum<OwnerPropertyType>(command.PropertyType, "tipo de inmueble");

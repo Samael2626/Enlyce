@@ -231,8 +231,8 @@ const content = [
     columnWidths: [3500, 6580],
     rows: [
       new TableRow({ children: [cell("COMPROBACIÓN", 3500, { fill: NAVY, bold: true, color: WHITE }), cell("RESULTADO", 6580, { fill: NAVY, bold: true, color: WHITE })] }),
-      new TableRow({ children: [cell("Pruebas de seguridad nuevas", 3500), cell("3 de 3 superadas", 6580, { bold: true, color: GREEN })] }),
-      new TableRow({ children: [cell("Suite completa de ENLYCE", 3500, { fill: PALE }), cell("403 de 403 superadas", 6580, { fill: PALE, bold: true, color: GREEN })] }),
+      new TableRow({ children: [cell("Controles de endurecimiento", 3500), cell("5 de 5 superados", 6580, { bold: true, color: GREEN })] }),
+      new TableRow({ children: [cell("Suite completa de ENLYCE", 3500, { fill: PALE }), cell("408 de 408 superadas", 6580, { fill: PALE, bold: true, color: GREEN })] }),
       new TableRow({ children: [cell("Verificación de la página web", 3500), cell("Sin errores de tipos", 6580, { bold: true, color: GREEN })] }),
     ],
   }),

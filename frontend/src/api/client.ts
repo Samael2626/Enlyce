@@ -37,7 +37,7 @@ class ApiClient {
 
   // Auth
   async login(email: string, password: string) {
-    return this.request<{ token: string; rol: string; nombre: string }>(
+    return this.request<{ rol: string; nombre: string }>(
       "/api/auth/login",
       {
         method: "POST",

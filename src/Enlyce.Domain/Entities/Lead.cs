@@ -66,6 +66,7 @@ public sealed class Lead
     public DateTime? FechaAsignacion { get; internal set; }
     public bool AutorizacionDatos { get; internal set; }
     public bool Activo { get; internal set; }
+    public string OpportunityKey { get; internal set; } = string.Empty;
 
     public string TipoOperacion { get; internal set; } = "Venta";
     public OwnerInquiryService? OwnerService { get; internal set; }
@@ -113,6 +114,7 @@ public sealed class Lead
         TipoOperacion = tipoOperacion;
         OwnerService = ownerService;
         PublicationId = publicationId;
+        OpportunityKey = CreateOpportunityKey(email, publicationId);
         EtapaPipeline = etapaPipeline;
         InteraccionesCount = interaccionesCount;
         FechaUltimaInteraccion = fechaUltimaInteraccion;
@@ -125,6 +127,9 @@ public sealed class Lead
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del lead no puede ser vacio.");
+
+        if (nombre.Trim().Length > 200)
+            throw new DomainError("El nombre no puede superar 200 caracteres.");
 
         if (!autorizacionDatos)
             throw new DomainError("Se requiere autorizacion de tratamiento de datos (Ley 1581).");
@@ -162,6 +167,9 @@ public sealed class Lead
             ownerService,
             publicationId);
     }
+
+    public static string CreateOpportunityKey(Email email, Guid? publicationId) =>
+        $"{email.Value}|{publicationId?.ToString("N") ?? "general"}";
 
     public static Lead Reconstituir(Guid id, string nombre, Email email, Telefono? telefono,
         string fuente, EstadoLead estado, MotivoCierre motivoCierre,

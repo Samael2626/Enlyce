@@ -27,6 +27,7 @@ public sealed class JwtTokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Sub, asesor.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, asesor.Correo.Value),
             new Claim("nombre", asesor.Nombre),
+            new Claim("session_version", asesor.SessionVersion.ToString()),
             new Claim(ClaimTypes.Role, asesor.Rol),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };

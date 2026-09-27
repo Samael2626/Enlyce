@@ -5,7 +5,7 @@ import { useEffect } from "react";
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
     // Fallar ruidoso: el error llega a la consola aunque la vista se recupere.
-    console.error(error);
+    console.error(`No se pudo cargar el inventario: ${error.name}`);
   }, [error]);
 
   return (

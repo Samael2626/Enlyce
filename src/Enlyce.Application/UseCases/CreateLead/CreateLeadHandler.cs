@@ -71,8 +71,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
 
         // Criterio de duplicados por correo (ver comentario al final de la clase).
         // Un correo repetido no es un error: es una persona que vuelve.
-        var existing = await _leadRepo.GetByEmailAsync(email);
-        if (existing is not null && !IsDistinctOpportunity(existing, publicationId))
+        var opportunityKey = Lead.CreateOpportunityKey(email, publicationId);
+        var existing = await _leadRepo.GetByOpportunityKeyAsync(opportunityKey, ct);
+        if (existing is not null)
             return await RegisterRepeatContactAsync(existing, command, publication, ct);
 
         var source = BuildSource(
@@ -90,7 +91,11 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         if (publication is not null)
             lead.AsignarAsesor(publication.AdvisorId);
 
-        var saved = await _leadRepo.SaveAsync(lead);
+        var creation = await _leadRepo.CreateOrGetExistingAsync(lead, ct);
+        if (!creation.Created)
+            return await RegisterRepeatContactAsync(creation.Lead, command, publication, ct);
+
+        var saved = creation.Lead;
 
         await RegisterConsentAsync(saved.Id, command);
 
@@ -106,12 +111,6 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             saved.PublicationId,
             continuation.Token);
     }
-
-    // Interes por una publicacion distinta a la que ya trae el lead: es otra
-    // oportunidad comercial y merece su propia ficha en el pipeline. Sin
-    // publicacion, o con la misma, se trata como recontacto.
-    private static bool IsDistinctOpportunity(Lead existing, Guid? publicationId) =>
-        publicationId.HasValue && existing.PublicationId != publicationId;
 
     private async Task<CreateLeadResponse> RegisterRepeatContactAsync(
         Lead existing,

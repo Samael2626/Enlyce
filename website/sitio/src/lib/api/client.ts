@@ -91,7 +91,7 @@ export async function apiGet<T>(path: string, options: RequestOptions = {}): Pro
 
   if (!response.ok) {
     // Fallar ruidoso: la pagina decide si es 404 o error, nunca se traga.
-    throw new ApiError(response.status, `GET ${path} respondio ${response.status}`);
+    throw new ApiError(response.status, `La API respondió ${response.status}`);
   }
 
   return (await response.json()) as T;

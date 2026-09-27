@@ -15,6 +15,9 @@ public sealed class RegisterAsesorCommandHandler
 
     public async Task<RegisterAsesorResult> HandleAsync(RegisterAsesorCommand command)
     {
+        if (command.Password.Length is < 8 or > 200)
+            throw new Domain.Errors.DomainError("La contraseña debe tener entre 8 y 200 caracteres.");
+
         var correo = Email.Create(command.Correo);
 
         if (await _asesorRepository.ExisteCorreoAsync(correo.Value))

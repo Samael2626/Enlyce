@@ -49,6 +49,11 @@ function statusHistogram(responses) {
   }, {});
 }
 
+function authToken(response) {
+  const cookie = response.headers.get("set-cookie") ?? "";
+  return cookie.match(/(?:^|;\s*)_enlyce_auth=([^;]+)/)?.[1] ?? null;
+}
+
 function unsignedJwt(token) {
   const [, payload] = token.split(".");
   const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString("base64url");
@@ -65,28 +70,11 @@ const login = await request(
   "/api/auth/login",
   json("POST", { correo: "admin@enlyce.com", password: seedPassword }),
 );
-if (login.status !== 200 || !login.body?.token) {
+const token = authToken(login);
+if (login.status !== 200 || !token) {
   throw new Error(`No fue posible autenticar el administrador sintético: ${login.status}`);
 }
-const token = login.body.token;
-report.checks.validLogin = { status: login.status, returnedTokenInBody: true };
-
-const invalidLogins = await Promise.all(
-  Array.from({ length: 60 }, (_, index) =>
-    request(
-      "/api/auth/login",
-      json("POST", {
-        correo: "admin@enlyce.com",
-        password: `wrong-${runId}-${index}`,
-      }),
-    ),
-  ),
-);
-report.checks.loginBurst = {
-  requests: invalidLogins.length,
-  statuses: statusHistogram(invalidLogins),
-  rateLimited: invalidLogins.some((response) => response.status === 429),
-};
+report.checks.validLogin = { status: login.status, returnedTokenInBody: Boolean(login.body?.token) };
 
 const privatePaths = [
   "/api/auth/me",
@@ -145,8 +133,8 @@ const advisorBLogin = await request(
 );
 const advisorAId = advisorARegistration.body?.id;
 const advisorBId = advisorBRegistration.body?.id;
-const advisorAHeaders = { authorization: `Bearer ${advisorALogin.body?.token}` };
-const advisorBHeaders = { authorization: `Bearer ${advisorBLogin.body?.token}` };
+const advisorAHeaders = { authorization: `Bearer ${authToken(advisorALogin)}` };
+const advisorBHeaders = { authorization: `Bearer ${authToken(advisorBLogin)}` };
 
 const scopedLead = await request(
   "/api/leads",
@@ -159,7 +147,10 @@ const scopedLead = await request(
     canal: "auditoria_local",
   }),
 );
-const scopedLeadId = scopedLead.body?.id;
+const scopedPipeline = await request("/api/pipeline", { headers: adminHeaders });
+const scopedLeadId = scopedPipeline.body?.leads?.find(
+  (lead) => lead.email === `scoped-${runId}@example.test`,
+)?.id;
 const assignment = await request(
   `/api/pipeline/${scopedLeadId}/asignar`,
   json("PUT", { asesorId: advisorAId }, adminHeaders),
@@ -220,14 +211,15 @@ const leadBody = {
 const concurrentCreates = await Promise.all(
   Array.from({ length: 30 }, () => request("/api/leads", json("POST", leadBody))),
 );
-const returnedIds = concurrentCreates
-  .map((response) => response.body?.id)
-  .filter(Boolean);
+const racePipeline = await request("/api/pipeline", { headers: adminHeaders });
+const persistedRaceRecords = racePipeline.body?.leads?.filter(
+  (lead) => lead.email === concurrentEmail,
+) ?? [];
 report.checks.concurrentLeadCreation = {
   requests: concurrentCreates.length,
   statuses: statusHistogram(concurrentCreates),
-  returnedIds: returnedIds.length,
-  uniqueIds: new Set(returnedIds).size,
+  persistedRecords: persistedRaceRecords.length,
+  deduplicated: persistedRaceRecords.length === 1,
 };
 
 const victimEmail = `victim-${runId}@example.test`;
@@ -239,10 +231,10 @@ const recontact = await request(
   "/api/leads",
   json("POST", { ...leadBody, nombre: "Atacante", email: victimEmail, ownerService: "Sell" }),
 );
-const leakedId = recontact.body?.id;
-const overwrite = leakedId
-  ? await request(
-      `/api/leads/${leakedId}/owner-details`,
+const victimPipeline = await request("/api/pipeline", { headers: adminHeaders });
+const victimId = victimPipeline.body?.leads?.find((lead) => lead.email === victimEmail)?.id;
+const overwrite = await request(
+      `/api/leads/${victimId}/owner-details`,
       json("PUT", {
         email: victimEmail,
         propertyType: "Apartment",
@@ -252,12 +244,11 @@ const overwrite = leakedId
         message: "Prueba ofensiva aislada",
         preferredContactChannel: "Email",
       }),
-    )
-  : { status: null, body: null };
+    );
 report.checks.publicObjectAuthorization = {
   initialStatus: initial.status,
   recontactStatus: recontact.status,
-  sameIdDisclosed: Boolean(initial.body?.id && initial.body.id === leakedId),
+  sameIdDisclosed: Boolean(recontact.body?.id),
   disclosedFields: recontact.body && typeof recontact.body === "object"
     ? Object.keys(recontact.body).sort()
     : [],
@@ -273,6 +264,23 @@ const oversized = await request(
   }),
 );
 report.checks.oversizedPublicPayload = { status: oversized.status };
+
+const invalidLogins = await Promise.all(
+  Array.from({ length: 60 }, (_, index) =>
+    request(
+      "/api/auth/login",
+      json("POST", {
+        correo: "admin@enlyce.com",
+        password: `wrong-${runId}-${index}`,
+      }),
+    ),
+  ),
+);
+report.checks.loginBurst = {
+  requests: invalidLogins.length,
+  statuses: statusHistogram(invalidLogins),
+  rateLimited: invalidLogins.some((response) => response.status === 429),
+};
 
 const evilPreflight = await fetch(new URL("/api/leads", target), {
   method: "OPTIONS",

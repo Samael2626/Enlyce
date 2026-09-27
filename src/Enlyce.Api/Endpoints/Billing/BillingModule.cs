@@ -86,6 +86,8 @@ public static class BillingModule
             return Results.Ok(new { processed });
         })
         .AllowAnonymous()
+        .RequireRateLimiting("wompi-webhook")
+        .WithMetadata(new RequestSizeLimitAttribute(256 * 1024))
         .WithName("ReceiveWompiWebhook")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized);

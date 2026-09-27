@@ -22,6 +22,31 @@ public class LeadRepository : ILeadRepository
             .FirstOrDefaultAsync(l => l.Email.Value == email.Value);
     }
 
+    public Task<Lead?> GetByOpportunityKeyAsync(string opportunityKey, CancellationToken ct = default) =>
+        _context.Leads.FirstOrDefaultAsync(
+            lead => lead.OpportunityKey == opportunityKey && lead.Activo, ct);
+
+    public async Task<LeadCreationResult> CreateOrGetExistingAsync(
+        Lead lead,
+        CancellationToken ct = default)
+    {
+        _context.Leads.Add(lead);
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+            return new LeadCreationResult(lead, true);
+        }
+        catch (DbUpdateException)
+        {
+            _context.Entry(lead).State = EntityState.Detached;
+            var existing = await GetByOpportunityKeyAsync(lead.OpportunityKey, ct);
+            if (existing is null)
+                throw;
+
+            return new LeadCreationResult(existing, false);
+        }
+    }
+
     public async Task<Lead?> ConsumeOwnerInquiryTokenAsync(
         string tokenHash,
         DateTime consumedAt,

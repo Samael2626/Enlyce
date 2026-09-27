@@ -8,5 +8,6 @@ public interface IAsesorRepository
     Task<Asesor?> ObtenerPorIdAsync(Guid id);
     Task<bool> ExisteCorreoAsync(string correo);
     Task AgregarAsync(Asesor asesor);
+    Task GuardarAsync(Asesor asesor);
     Task<List<Asesor>> ObtenerTodosAsync();
 }

@@ -4,6 +4,33 @@ const apiUrl = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5019
 const isLocalApi = ["localhost", "127.0.0.1", "::1"].includes(apiUrl.hostname);
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    const connectSource = apiUrl.origin;
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      `img-src 'self' data: blob: ${connectSource}`,
+      `connect-src 'self' ${connectSource}`,
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join("; ");
+
+    return [{
+      source: "/:path*",
+      headers: [
+        { key: "Content-Security-Policy", value: csp },
+        { key: "X-Frame-Options", value: "DENY" },
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+      ],
+    }];
+  },
   images: {
     // Las fotos las sirve Enlyce.Api bajo /media; en produccion sera el CDN.
     remotePatterns: [

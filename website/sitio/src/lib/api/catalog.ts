@@ -48,7 +48,7 @@ export function parseFilters(params: Record<string, string | string[] | undefine
     }
 
     if (["operation", "propertyType", "municipality", "neighborhood"].includes(key)) {
-      Object.assign(filters, { [key]: value });
+      if (value.length <= 100) Object.assign(filters, { [key]: value });
       continue;
     }
 

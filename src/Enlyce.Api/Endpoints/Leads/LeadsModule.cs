@@ -50,6 +50,8 @@ public static class LeadsModule
                 "Recibimos tu solicitud. Un asesor continuará el proceso contigo."));
         })
         .AllowAnonymous()
+        .RequireRateLimiting("public-leads")
+        .WithMetadata(new RequestSizeLimitAttribute(32 * 1024))
         .WithName("CreateLead")
         .Produces<PublicLeadSubmissionResponse>(StatusCodes.Status202Accepted)
         .ProducesProblem(StatusCodes.Status400BadRequest);
@@ -74,6 +76,8 @@ public static class LeadsModule
             return Results.Accepted();
         })
         .AllowAnonymous()
+        .RequireRateLimiting("owner-details")
+        .WithMetadata(new RequestSizeLimitAttribute(32 * 1024))
         .WithName("EnrichOwnerInquiry")
         .Produces(StatusCodes.Status202Accepted)
         .ProducesProblem(StatusCodes.Status400BadRequest);

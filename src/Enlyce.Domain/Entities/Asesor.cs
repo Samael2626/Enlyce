@@ -12,11 +12,12 @@ public sealed class Asesor
     public string Rol { get; private set; } = "Asesor";
     public DateTime FechaCreacion { get; private set; }
     public bool Activo { get; private set; } = true;
+    public int SessionVersion { get; private set; }
 
     private Asesor() { }
 
     private Asesor(Guid id, string nombre, Email correo, string passwordHash,
-        string rol, DateTime fechaCreacion, bool activo)
+        string rol, DateTime fechaCreacion, bool activo, int sessionVersion = 0)
     {
         Id = id;
         Nombre = nombre;
@@ -25,12 +26,16 @@ public sealed class Asesor
         Rol = rol;
         FechaCreacion = fechaCreacion;
         Activo = activo;
+        SessionVersion = sessionVersion;
     }
 
     public static Asesor Crear(string nombre, Email correo, string passwordHash, string rol = "Asesor")
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre es obligatorio.");
+
+        if (nombre.Trim().Length > 200)
+            throw new DomainError("El nombre no puede superar 200 caracteres.");
 
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new DomainError("El password hash es obligatorio.");
@@ -49,13 +54,15 @@ public sealed class Asesor
     }
 
     public static Asesor Reconstituir(Guid id, string nombre, Email correo, string passwordHash,
-        string rol, DateTime fechaCreacion, bool activo)
+        string rol, DateTime fechaCreacion, bool activo, int sessionVersion = 0)
     {
-        return new Asesor(id, nombre, correo, passwordHash, rol, fechaCreacion, activo);
+        return new Asesor(id, nombre, correo, passwordHash, rol, fechaCreacion, activo, sessionVersion);
     }
 
     public bool VerificarPassword(string password)
     {
         return BCrypt.Net.BCrypt.Verify(password, PasswordHash);
     }
+
+    public void RevocarSesiones() => SessionVersion++;
 }

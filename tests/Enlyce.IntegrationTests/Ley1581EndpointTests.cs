@@ -46,9 +46,7 @@ public class Ley1581EndpointTests : IClassFixture<TestWebApplicationFactory>
         var loginRequest = new { Correo = AdminCorreo, Password = AdminPassword };
         var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
 
-        var json = await response.Content.ReadAsStringAsync();
-        var doc = JsonDocument.Parse(json);
-        return doc.RootElement.GetProperty("token").GetString()!;
+        return AuthCookieTestHelper.ReadToken(response);
     }
 
     private void SetAuthHeader(string token)

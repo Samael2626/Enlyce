@@ -24,6 +24,13 @@ public sealed class CreateLeadHandlerTests
     {
         _leadRepository.SaveAsync(Arg.Any<Lead>())
             .Returns(call => _savedLead = call.Arg<Lead>());
+        _leadRepository.CreateOrGetExistingAsync(Arg.Any<Lead>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var lead = call.Arg<Lead>();
+                _savedLead = lead;
+                return new LeadCreationResult(lead, true);
+            });
         _policyRepository.ObtenerActivaAsync()
             .Returns((PoliticaTratamiento?)null);
         _consentRepository.AgregarAsync(Arg.Do<Consentimiento>(item => _savedConsent = item));
@@ -90,7 +97,7 @@ public sealed class CreateLeadHandlerTests
     public async Task Handle_RepeatedEmailWithoutPublication_AddsInteractionInsteadOfFailing()
     {
         var existing = CreateExistingLead(publicationId: null, advisorId: Guid.NewGuid());
-        _leadRepository.GetByEmailAsync(Arg.Any<Domain.ValueObjects.Email>()).Returns(existing);
+        _leadRepository.GetByOpportunityKeyAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(existing);
 
         var result = await CreateHandler().HandleAsync(CreateCommand(null, "repite@test.com"));
 
@@ -108,7 +115,7 @@ public sealed class CreateLeadHandlerTests
         _publicationRepository.GetPublishedByIdAsync(publication.Id).Returns(publication);
 
         var existing = CreateExistingLead(publication.Id, publication.AdvisorId);
-        _leadRepository.GetByEmailAsync(Arg.Any<Domain.ValueObjects.Email>()).Returns(existing);
+        _leadRepository.GetByOpportunityKeyAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(existing);
 
         var result = await CreateHandler().HandleAsync(
             CreateCommand(publication.Id.ToString(), "repite@test.com"));
@@ -126,7 +133,7 @@ public sealed class CreateLeadHandlerTests
 
         // El lead previo miraba otro inmueble: es otra oportunidad comercial.
         var existing = CreateExistingLead(Guid.NewGuid(), Guid.NewGuid());
-        _leadRepository.GetByEmailAsync(Arg.Any<Domain.ValueObjects.Email>()).Returns(existing);
+        _leadRepository.GetByOpportunityKeyAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns((Lead?)null);
 
         var result = await CreateHandler().HandleAsync(
             CreateCommand(publication.Id.ToString(), "repite@test.com"));
@@ -142,7 +149,7 @@ public sealed class CreateLeadHandlerTests
     public async Task Handle_RepeatedEmailWithoutAdvisor_StillCountsTheContact()
     {
         var existing = CreateExistingLead(publicationId: null, advisorId: null);
-        _leadRepository.GetByEmailAsync(Arg.Any<Domain.ValueObjects.Email>()).Returns(existing);
+        _leadRepository.GetByOpportunityKeyAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(existing);
 
         var result = await CreateHandler().HandleAsync(CreateCommand(null, "repite@test.com"));
 
@@ -188,7 +195,7 @@ public sealed class CreateLeadHandlerTests
     {
         GivenActivePolicy();
         var existing = CreateExistingLead(publicationId: null, advisorId: Guid.NewGuid());
-        _leadRepository.GetByEmailAsync(Arg.Any<Domain.ValueObjects.Email>()).Returns(existing);
+        _leadRepository.GetByOpportunityKeyAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(existing);
 
         await CreateHandler().HandleAsync(CreateCommand(null, "repite@test.com") with
         {
@@ -297,7 +304,6 @@ public sealed class CreateLeadHandlerTests
 
     private Lead GetSavedLead()
     {
-        _leadRepository.Received(1).SaveAsync(Arg.Any<Lead>());
         return Assert.IsType<Lead>(_savedLead);
     }
 

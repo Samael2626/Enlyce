@@ -7,6 +7,8 @@ public interface ILeadRepository
 {
     Task<Lead?> GetByIdAsync(Guid id);
     Task<Lead?> GetByEmailAsync(Email email);
+    Task<Lead?> GetByOpportunityKeyAsync(string opportunityKey, CancellationToken ct = default);
+    Task<LeadCreationResult> CreateOrGetExistingAsync(Lead lead, CancellationToken ct = default);
     Task<Lead?> ConsumeOwnerInquiryTokenAsync(string tokenHash, DateTime consumedAt, CancellationToken ct = default);
     Task<IReadOnlyList<Lead>> GetAllAsync();
     Task<IReadOnlyList<Lead>> GetByAsesorIdAsync(Guid asesorId);
@@ -17,3 +19,5 @@ public interface ILeadRepository
     Task<int> ContarPorAsesorAsync(Guid asesorId);
     Task<int> ContarPorEtapaAsync(string etapa);
 }
+
+public sealed record LeadCreationResult(Lead Lead, bool Created);

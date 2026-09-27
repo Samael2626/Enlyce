@@ -19,10 +19,14 @@ public sealed record Email
         if (string.IsNullOrWhiteSpace(value))
             throw new DomainError("Email no puede ser vacio.");
 
-        if (!EmailRegex.IsMatch(value))
+        var normalized = value.Trim();
+        if (normalized.Length > 320)
+            throw new DomainError("Email no puede superar 320 caracteres.");
+
+        if (!EmailRegex.IsMatch(normalized))
             throw new DomainError($"Email invalido: {value}");
 
-        return new Email(value.ToLowerInvariant());
+        return new Email(normalized.ToLowerInvariant());
     }
 
     public override string ToString() => Value;

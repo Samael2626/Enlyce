@@ -6,7 +6,12 @@ using Enlyce.Application.Commands.RegisterAsesor;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
+using Enlyce.Application.Auth;
+using Enlyce.Api.Security;
+using Enlyce.Domain.Ports;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Enlyce.Api.Endpoints.Auth;
 
@@ -20,9 +25,31 @@ public static class AuthModule
         group.MapPost("/login", async (
             LoginCommand command,
             LoginCommandHandler handler,
+            LoginAttemptGuard attempts,
+            IOptions<JwtSettings> jwtSettings,
             HttpContext http) =>
         {
-            var result = await handler.HandleAsync(command);
+            if (command.Correo.Length > 320 || command.Password.Length > 200)
+                return Results.BadRequest(new { message = "Datos de acceso no válidos." });
+
+            if (!attempts.CanAttempt(command.Correo, out var retryAfter))
+            {
+                http.Response.Headers.RetryAfter = Math.Ceiling(retryAfter.TotalSeconds).ToString();
+                return Results.Problem(statusCode: StatusCodes.Status429TooManyRequests,
+                    title: "Demasiados intentos. Intenta más tarde.");
+            }
+
+            LoginResult result;
+            try
+            {
+                result = await handler.HandleAsync(command);
+                attempts.Reset(command.Correo);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                attempts.RegisterFailure(command.Correo);
+                throw;
+            }
 
             var cookieOptions = new CookieOptions
             {
@@ -30,14 +57,16 @@ public static class AuthModule
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Path = "/",
-                MaxAge = TimeSpan.FromHours(8)
+                MaxAge = TimeSpan.FromMinutes(jwtSettings.Value.ExpirationMinutes)
             };
 
             http.Response.Cookies.Append("_enlyce_auth", result.Token, cookieOptions);
 
-            return Results.Ok(new { result.Token, result.Rol, result.Nombre });
+            return Results.Ok(new { result.Rol, result.Nombre });
         })
         .AllowAnonymous()
+        .RequireRateLimiting("auth-login")
+        .WithMetadata(new RequestSizeLimitAttribute(16 * 1024))
         .WithName("Login");
 
         group.MapPost("/register", async (
@@ -50,9 +79,27 @@ public static class AuthModule
         .RequireAuthorization("Administrador")
         .WithName("RegisterAsesor");
 
-        group.MapPost("/logout", (HttpContext http) =>
+        group.MapPost("/logout", async (HttpContext http, IAsesorRepository asesores) =>
         {
-            http.Response.Cookies.Delete("_enlyce_auth");
+            var subject = http.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                ?? http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(subject, out var asesorId))
+            {
+                var asesor = await asesores.ObtenerPorIdAsync(asesorId);
+                if (asesor is not null)
+                {
+                    asesor.RevocarSesiones();
+                    await asesores.GuardarAsync(asesor);
+                }
+            }
+
+            http.Response.Cookies.Delete("_enlyce_auth", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Path = "/"
+            });
             return Results.Ok(new { message = "Sesion cerrada." });
         })
         .RequireAuthorization()

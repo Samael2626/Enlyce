@@ -24,18 +24,21 @@ public class ExceptionHandlerMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Excepcion no manejada: {Message}", ex.Message);
+            if (ex is DomainError or UnauthorizedAccessException or InvalidOperationException or BadHttpRequestException)
+                _logger.LogWarning("Solicitud rechazada: {ExceptionType}", ex.GetType().Name);
+            else
+                _logger.LogError(ex, "Excepcion no manejada: {ExceptionType}", ex.GetType().Name);
             await HandleExceptionAsync(context, ex);
         }
     }
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        if (exception is BadHttpRequestException)
+        if (exception is BadHttpRequestException badRequest)
         {
             context.Response.Headers.CacheControl = "no-store";
             await Results.Problem(
-                statusCode: StatusCodes.Status400BadRequest,
+                statusCode: badRequest.StatusCode,
                 title: "Solicitud inválida",
                 detail: "Uno o más parámetros no tienen el formato esperado.")
                 .ExecuteAsync(context);

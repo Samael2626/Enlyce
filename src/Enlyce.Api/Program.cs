@@ -16,6 +16,7 @@ using Enlyce.Api.Endpoints.PublicationMedia;
 using Enlyce.Api.Endpoints.PublicCatalog;
 using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
+using Enlyce.Api.Security;
 using Enlyce.Application;
 using Enlyce.Application.Auth;
 using Enlyce.Domain.Ports;
@@ -32,6 +33,12 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+    options.Limits.MaxRequestBodySize = 12 * 1024 * 1024;
+});
+
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 builder.Services.AddAuthentication(options =>
@@ -41,11 +48,27 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+    options.SaveToken = false;
     options.Events = new JwtBearerEvents
     {
-        OnTokenValidated = _ => Task.CompletedTask
+        OnTokenValidated = async context =>
+        {
+            var subject = context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                ?? context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var version = context.Principal?.FindFirst("session_version")?.Value;
+            if (!Guid.TryParse(subject, out var asesorId) || !int.TryParse(version, out var sessionVersion))
+            {
+                context.Fail("Sesion invalida.");
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices.GetRequiredService<EnlyceDbContext>();
+            var valid = await db.Asesores.AsNoTracking().AnyAsync(asesor =>
+                asesor.Id == asesorId && asesor.Activo && asesor.SessionVersion == sessionVersion);
+            if (!valid)
+                context.Fail("Sesion revocada.");
+        }
     };
 });
 builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
@@ -75,9 +98,26 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<LoginAttemptGuard>();
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(180);
+    options.IncludeSubDomains = true;
+});
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = (context, _) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            context.HttpContext.Response.Headers.RetryAfter = Math.Ceiling(retryAfter.TotalSeconds).ToString();
+
+        return ValueTask.CompletedTask;
+    };
+    options.AddPolicy("auth-login", context => CreateIpLimiter(context, 10));
+    options.AddPolicy("public-leads", context => CreateIpLimiter(context, 40));
+    options.AddPolicy("owner-details", context => CreateIpLimiter(context, 20));
+    options.AddPolicy("wompi-webhook", context => CreateIpLimiter(context, 120));
     options.AddPolicy("billing-checkout", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -170,6 +210,12 @@ var app = builder.Build();
 if (trustForwardedHeaders)
     app.UseForwardedHeaders();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
 var signingKey = app.Services.GetRequiredService<IOptions<JwtSettings>>().Value.SecretKey;
 if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
     throw new InvalidOperationException("Configura JwtSettings:SecretKey fuera del repositorio (minimo 32 bytes).");
@@ -187,6 +233,9 @@ if (app.Environment.IsDevelopment() &&
     await DemoCatalogSeeder.SeedAsync(db, mediaStorage, Path.GetFullPath(photoSource));
 }
 
+app.UseMiddleware<ExceptionHandlerMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
 // Sirve las variantes generadas por LocalMediaStorage bajo /media.
 var mediaRoot = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "media");
 Directory.CreateDirectory(mediaRoot);
@@ -198,8 +247,6 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseCors();
 app.UseRateLimiter();
-
-app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseMiddleware<CookieAuthenticationMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -224,6 +271,17 @@ app.MapAlertas();
 app.MapPublicCatalog();
 app.MapPublicationMedia();
 app.MapBilling();
+
+static RateLimitPartition<string> CreateIpLimiter(HttpContext context, int permitLimit) =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permitLimit,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
 
 app.Run();
 
