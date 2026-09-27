@@ -9,7 +9,7 @@ status: activo
 
 Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CRM-Web]]
 
-**Corte verificado:** 26 de septiembre de 2026
+**Corte verificado:** 27 de septiembre de 2026
 **Alcance:** CRM privado, web pública, captación, publicaciones y facturación.
 
 ## Terminado
@@ -55,12 +55,14 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ### Prioridad P0 — bloquea producción
 
-- [ ] Corregir la fuga crítica del recontacto: no revelar una oportunidad existente ni permitir enriquecerla con correo + GUID.
-- [ ] Hacer atómica la deduplicación de oportunidades; 30 capturas simultáneas llegaron a crear 30 registros para el mismo correo.
-- [ ] Proteger login, captación pública y enriquecimiento con rate limiting y telemetría de abuso.
-- [ ] Limitar tamaño de cuerpos y campos públicos, validar filtros sin lanzar excepciones y reducir amplificación de logs.
-- [ ] Añadir CSP, anti-clickjacking, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HTTPS y HSTS.
-- [ ] Dejar de devolver el JWT en el JSON de login y definir vigencia/revocación de sesión.
+- [x] Corregir la fuga crítica del recontacto: no revela la oportunidad existente y la continuación usa un token temporal de un solo uso.
+- [x] Hacer atómica la deduplicación: 30 capturas simultáneas producen un solo registro activo.
+- [x] Proteger login, captación pública, enriquecimiento y webhook con rate limiting independiente.
+- [x] Limitar tamaño de cuerpos y campos públicos, validar filtros y reducir amplificación de logs.
+- [x] Añadir CSP, anti-clickjacking, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HTTPS y HSTS.
+- [x] Dejar de devolver el JWT en el JSON, reducir su vigencia y revocarlo al cerrar sesión.
+- [x] Ejecutar regresión ofensiva local y ZAP API activo sin fallos confirmados altos o medios.
+- [ ] Crear staging de ENLYCE y repetir migraciones, smoke y ZAP sobre la configuración remota.
 - [ ] Configurar secretos fuera del repositorio, backups y recuperación.
 - [ ] Revisión jurídica final de política de privacidad y textos de consentimiento.
 - [ ] Smoke visual manual completo con API y PostgreSQL reales.
@@ -105,7 +107,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ## Próxima secuencia recomendada
 
-1. Corregir y probar los frentes de seguridad P0.
-2. Crear E2E de los recorridos comerciales y de las regresiones de autorización.
-3. Completar brochure, analítica, accesibilidad y rendimiento.
-4. Al cierre: material real, Wompi sandbox y despliegue.
+1. Crear E2E de los recorridos comerciales y de las regresiones de autorización.
+2. Completar brochure, analítica, accesibilidad y rendimiento.
+3. Crear staging y validar secretos, backups restaurables, migraciones y ZAP remoto.
+4. Al cierre: material real, Wompi sandbox y despliegue definitivo.
