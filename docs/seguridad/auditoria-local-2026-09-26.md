@@ -36,6 +36,27 @@ No existe limitación específica para login, creación pública de oportunidade
 
 **Corrección exigida:** límites por IP y por identidad normalizada, respuesta `429`, ventana progresiva y telemetría. El webhook debe conservar la validación criptográfica y recibir protección de volumen independiente.
 
+### Alta — deduplicación vulnerable a condiciones de carrera
+
+**Estado:** reproducido dos veces contra PostgreSQL desechable.
+
+Una ráfaga de 30 capturas simultáneas con el mismo correo creó 30 identificadores distintos en la primera ejecución y 19 en la segunda. La secuencia “consultar si existe” y luego “insertar” no es atómica y la base no impide el duplicado.
+
+**Impacto:** contaminación masiva del pipeline, correos repetidos, asignaciones contradictorias y consumo evitable de recursos.
+
+**Corrección exigida:** restricción o índice coherente con la verdadera clave de oportunidad y operación atómica con manejo explícito del conflicto. Una comprobación previa en código no basta.
+
+### Alta — amplificación de recursos y registros
+
+**Estado:** reproducido con harness propio y escaneo activo.
+
+- Sesenta logins inválidos simultáneos produjeron 60 respuestas `401` y ninguna `429`.
+- `POST /api/leads` aceptó un cuerpo con un campo de 1 MB y respondió `201`; el valor se recorta después, pero el cuerpo completo ya fue recibido, materializado y procesado.
+- Filtros hostiles del catálogo producen excepciones y stacks completos en el log de Next.js. El cliente recibe solo un digest, pero una ráfaga puede saturar CPU, disco y observabilidad.
+- El API registra excepciones completas por credenciales inválidas; durante la prueba generó un volumen desproporcionado de logs para respuestas esperables.
+
+**Corrección exigida:** límites de cuerpo y longitud antes de materializar comandos, rate limiting, validación temprana de filtros y logging resumido para fallos esperables sin stack por petición.
+
 ### Media — cabeceras defensivas ausentes
 
 **Estado:** confirmado manualmente y mediante OWASP ZAP sobre el build de producción de Next.js.
@@ -62,6 +83,8 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 - Rutas privadas representativas devolvieron `401` sin sesión.
 - CORS no autorizó el origen malicioso probado y sí reconoció el origen local permitido.
 - Cookie de autenticación con `HttpOnly`, `Secure` y `SameSite=Strict`.
+- JWT alterado y JWT con `alg: none` rechazados con `401`.
+- Autorización horizontal validada: un asesor ajeno recibió `403` al leer, mover, reasignar, suplantar o administrar una oportunidad de otro asesor.
 - Firma del webhook Wompi comparada en tiempo constante.
 - Carga de imágenes autenticada, limitada y decodificada antes de persistir.
 - Sin secretos reales encontrados en archivos versionables.
@@ -69,20 +92,23 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 - Auditoría NuGet: cero paquetes vulnerables conocidos.
 - Payload XSS reflejado por filtros: codificado, no ejecutable.
 - Payload de inyección SQL en catálogo: respondió normalmente; EF Core parametriza la consulta.
+- ZAP API activo no confirmó SQLi, XSS, traversal, XXE, RCE, inyección de comandos ni inclusión de archivos.
 
 ## Herramientas y evidencia
 
 - Revisión manual de autenticación, autorización, CORS, endpoints públicos, medios y webhook.
 - Pruebas HTTP contra `localhost:5019` y build Next.js en `localhost:3100`.
 - OWASP ZAP Baseline: 602 URL, 0 fallos altos, 10 familias de advertencias.
+- OWASP ZAP API activo: 157 URL importadas, 119 reglas superadas, 0 alertas altas/medias y 4 bajas. Los `503` repetidos del webhook fueron causados por el secreto Wompi ausente en el entorno desechable, no por ejecución del payload.
+- Harness ofensivo reproducible: fuerza bruta, integridad JWT, RBAC horizontal, carrera de duplicados, BOLA, cuerpos grandes, CORS y method override.
+- El escaneo web activo con navegador fue detenido después de diez minutos: ZAP abrió decenas de procesos Firefox y superó un consumo razonable. Sus resultados son parciales y no se presentan como cobertura completa.
 - Suite .NET: 400 de 400 pruebas superadas (`--no-build --no-restore`).
 - Reportes ZAP locales en `security-reports/`; son artefactos de diagnóstico, no producto final.
 
 ## Orden obligatorio
 
 1. Cerrar la fuga y modificación del recontacto.
-2. Agregar rate limiting a login y captación pública.
-3. Añadir cabeceras, HTTPS/HSTS y endurecer sesión.
-4. Crear pruebas de regresión ofensivas para cada corrección.
-5. Repetir ZAP y pruebas manuales antes de staging público.
-
+2. Hacer atómica la deduplicación y probarla con concurrencia real.
+3. Agregar límites de cuerpo, rate limiting y logging resistente al abuso.
+4. Añadir cabeceras, HTTPS/HSTS y endurecer sesión.
+5. Convertir el harness ofensivo en prueba de regresión y repetir ZAP antes de staging público.

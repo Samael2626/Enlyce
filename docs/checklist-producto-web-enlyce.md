@@ -56,7 +56,9 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 ### Prioridad P0 — bloquea producción
 
 - [ ] Corregir la fuga crítica del recontacto: no revelar una oportunidad existente ni permitir enriquecerla con correo + GUID.
+- [ ] Hacer atómica la deduplicación de oportunidades; 30 capturas simultáneas llegaron a crear 30 registros para el mismo correo.
 - [ ] Proteger login, captación pública y enriquecimiento con rate limiting y telemetría de abuso.
+- [ ] Limitar tamaño de cuerpos y campos públicos, validar filtros sin lanzar excepciones y reducir amplificación de logs.
 - [ ] Añadir CSP, anti-clickjacking, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HTTPS y HSTS.
 - [ ] Dejar de devolver el JWT en el JSON de login y definir vigencia/revocación de sesión.
 - [ ] Configurar secretos fuera del repositorio, backups y recuperación.
@@ -103,7 +105,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ## Próxima secuencia recomendada
 
-1. Corregir y probar los cuatro frentes de seguridad P0.
+1. Corregir y probar los frentes de seguridad P0.
 2. Crear E2E de los recorridos comerciales y de las regresiones de autorización.
 3. Completar brochure, analítica, accesibilidad y rendimiento.
 4. Al cierre: material real, Wompi sandbox y despliegue.
