@@ -1,0 +1,9 @@
+{
+  "name": "enlyce-actividad-8-docx",
+  "private": true,
+  "description": "Generador local del informe universitario de pruebas de ENLYCE",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "docx": "^9.7.2"
+  }
+}

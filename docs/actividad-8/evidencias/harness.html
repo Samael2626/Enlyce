@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box} body{margin:0;background:#f5f0e8;color:#10203d;font:21px Arial,sans-serif}
+  main{width:1400px;min-height:900px;padding:48px 60px} h1{font:700 38px Georgia,serif;margin:0 0 8px}
+  .sub{color:#667085;margin-bottom:30px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .card{background:white;border-left:7px solid #d5aa4f;padding:20px 24px;box-shadow:0 8px 25px #14213d18}
+  .bad{border-color:#a62935}.good{border-color:#23885b}.label{font-weight:bold;margin-bottom:8px}.value{font:700 31px Georgia,serif}
+  .detail{color:#59657a;margin-top:7px;line-height:1.35}
+</style>
+<main>
+  <h1>Harness ofensivo aislado</h1>
+  <div class="sub">Ejecución real · API localhost:5029 · PostgreSQL desechable</div>
+  <div class="grid">
+    <div class="card bad"><div class="label">Fuerza bruta</div><div class="value">60 × 401 · 0 × 429</div><div class="detail">No se activó limitación de intentos.</div></div>
+    <div class="card bad"><div class="label">Condición de carrera</div><div class="value">19 IDs distintos</div><div class="detail">30 capturas simultáneas con el mismo correo.</div></div>
+    <div class="card bad"><div class="label">BOLA / IDOR</div><div class="value">200 OK al sobrescribir</div><div class="detail">El recontacto reveló el ID y permitió modificar datos sin sesión.</div></div>
+    <div class="card bad"><div class="label">Cuerpo sobredimensionado</div><div class="value">1 MB → 201 Created</div><div class="detail">El servidor recibió y procesó el cuerpo completo.</div></div>
+    <div class="card good"><div class="label">Integridad JWT</div><div class="value">401 / 401</div><div class="detail">Token alterado y token sin firma rechazados.</div></div>
+    <div class="card good"><div class="label">Autorización horizontal</div><div class="value">403 Forbidden</div><div class="detail">El asesor ajeno no pudo leer, mover, reasignar ni suplantar.</div></div>
+  </div>
+</main>
+</html>
