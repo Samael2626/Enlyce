@@ -55,10 +55,11 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ### Prioridad P0 — bloquea producción
 
-- [ ] Cargar inventario, fotografías, textos, teléfonos y enlaces sociales reales de L&C.
-- [ ] Completar credenciales de Wompi sandbox y ejecutar un pago PSE de extremo a extremo.
-- [ ] Definir dominio, hosting, PostgreSQL, almacenamiento de medios, correo y CDN.
-- [ ] Configurar secretos, CORS, rate limiting, backups y recuperación.
+- [ ] Corregir la fuga crítica del recontacto: no revelar una oportunidad existente ni permitir enriquecerla con correo + GUID.
+- [ ] Proteger login, captación pública y enriquecimiento con rate limiting y telemetría de abuso.
+- [ ] Añadir CSP, anti-clickjacking, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HTTPS y HSTS.
+- [ ] Dejar de devolver el JWT en el JSON de login y definir vigencia/revocación de sesión.
+- [ ] Configurar secretos fuera del repositorio, backups y recuperación.
 - [ ] Revisión jurídica final de política de privacidad y textos de consentimiento.
 - [ ] Smoke visual manual completo con API y PostgreSQL reales.
 - [ ] Pruebas E2E del catálogo, ficha, favoritos, contacto, propietarios y pago.
@@ -87,6 +88,12 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [ ] Exportación CSV de oportunidades.
 - [ ] Automatización de seguimiento y SLA de respuesta.
 
+## Aplazado para el cierre
+
+- [ ] Cargar inventario, fotografías, textos, teléfonos y enlaces sociales reales de L&C.
+- [ ] Completar credenciales de Wompi sandbox y ejecutar un pago PSE de extremo a extremo.
+- [ ] Definir dominio, hosting, PostgreSQL, almacenamiento de medios, correo y CDN.
+
 ## Bloqueos externos
 
 - [ ] L&C debe entregar fotografías e inventario publicable con autorización.
@@ -96,7 +103,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ## Próxima secuencia recomendada
 
-1. Probar Wompi/PSE en sandbox de extremo a extremo.
-2. Sustituir contenido sintético por material real autorizado.
-3. Crear E2E de los recorridos que generan dinero.
-4. Desplegar staging y medir accesibilidad, rendimiento y conversión.
+1. Corregir y probar los cuatro frentes de seguridad P0.
+2. Crear E2E de los recorridos comerciales y de las regresiones de autorización.
+3. Completar brochure, analítica, accesibilidad y rendimiento.
+4. Al cierre: material real, Wompi sandbox y despliegue.
