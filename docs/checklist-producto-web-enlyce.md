@@ -62,6 +62,9 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Añadir CSP, anti-clickjacking, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HTTPS y HSTS.
 - [x] Dejar de devolver el JWT en el JSON, reducir su vigencia y revocarlo al cerrar sesión.
 - [x] Ejecutar regresión ofensiva local y ZAP API activo sin fallos confirmados altos o medios.
+- [x] Reconstruir la web de producción local en `3100` y confirmar sus cabeceras con Nmap y Burp.
+- [x] Limitar PostgreSQL 17 nativo a loopback y comprobar que `5432` no responde por la IP LAN.
+- [ ] Bloquear `TRACE` en el proxy de staging y verificar respuesta `405`; localmente no reflejó la solicitud.
 - [ ] Crear staging de ENLYCE y repetir migraciones, smoke y ZAP sobre la configuración remota.
 - [ ] Configurar secretos fuera del repositorio, backups y recuperación.
 - [ ] Revisión jurídica final de política de privacidad y textos de consentimiento.

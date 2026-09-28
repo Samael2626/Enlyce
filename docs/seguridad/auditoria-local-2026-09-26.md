@@ -11,7 +11,7 @@ Relacionado: [[Enlyce-MOC]] · [[Checklist-Producto-Web-Enlyce]] · [[Arquitectu
 
 ## Veredicto
 
-Los hallazgos críticos, altos, medios y bajos de esta auditoría quedaron corregidos y verificados localmente el 27 de septiembre de 2026. La salida a Internet sigue condicionada a desplegar esta versión, configurar secretos reales y repetir el escaneo en staging.
+Los hallazgos críticos, altos y medios de esta auditoría quedaron corregidos y verificados localmente el 27 de septiembre de 2026. La salida a Internet sigue condicionada a desplegar esta versión, configurar secretos reales y repetir el escaneo en staging. Queda como endurecimiento bajo bloquear `TRACE` en el proxy del futuro despliegue.
 
 ## Hallazgos
 
@@ -122,6 +122,9 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 - ZAP API activo importó 56 operaciones, recorrió 156 URL y superó 120 reglas sin fallos confirmados. No encontró inyección SQL, XSS, traversal, XXE, ejecución de comandos ni inclusión remota.
 - ZAP mostró tres advertencias operativas: respuestas `503` del webhook Wompi porque el entorno desechable no tenía secreto del proveedor, tipo de contenido inesperado en Swagger y cabecera `Cross-Origin-Resource-Policy` ausente en cuatro rutas de desarrollo. Ninguna demostró una explotación.
 - La cuenta Railway fue consultada y solo contiene `BotLaw` y `Arcanum`. ENLYCE aún no tiene staging remoto; por eso no se ejecutó un ataque sobre una URL pública inventada ni sobre producción.
+- Nmap confirmó las cabeceras defensivas en la compilación reconstruida de Next.js servida en `3100`; dejó de revelar `X-Powered-By`.
+- Burp confirmó `404` para rutas inexistentes y no encontró reflexión del payload XSS básico. `TRACE` devuelve la página sin reflejar la solicitud, por lo que no se reprodujo Cross-Site Tracing clásico. Next.js no permite interceptar correctamente ese método desde `proxy.ts`; se bloqueará en el proxy de despliegue para evitar introducir un servidor personalizado que elimine optimizaciones.
+- PostgreSQL 17 nativo se limitó de `listen_addresses='*'` a `listen_addresses='localhost'`. `pg_isready` confirmó servicio local y Nmap mostró `5432` abierto en `127.0.0.1` pero cerrado en `192.168.40.7`. La configuración anterior quedó respaldada como `postgresql.conf.bak-20260927-2115`.
 
 ## Cierre aplicado
 
@@ -130,3 +133,5 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 3. Límites, rate limiting y logging: corregidos.
 4. Cabeceras, HTTPS/HSTS y sesión: corregidos.
 5. Migración y ZAP: repetidos satisfactoriamente en un entorno local aislado. Queda una última repetición remota cuando se cree el staging público de ENLYCE.
+6. Web `3100` y PostgreSQL local: compilación defensiva actualizada y puerto de base de datos retirado de la LAN.
+7. `TRACE`: impacto bajo, sin reflexión confirmada; pendiente de bloqueo en el proxy de staging.
