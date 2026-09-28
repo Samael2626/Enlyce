@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import Link from "next/link";
+import { Suspense } from "react";
+import { AnalyticsPageView } from "@/components/AnalyticsPageView";
 import { SocialContactDock } from "@/components/SocialContactDock";
 import "./globals.css";
 
@@ -35,12 +37,14 @@ const aboutNavigation = [
   { href: "/nosotros", label: "Quiénes somos", description: "Historia, propósito y forma de trabajar" },
   { href: "/nosotros#servicios", label: "Servicios", description: "Acompañamiento inmobiliario integral" },
   { href: "/zonas", label: "Zonas", description: "Conocimiento local del Valle de Aburrá" },
+  { href: "/brochure", label: "Brochure", description: "Presentación institucional interactiva y PDF" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-CO" className={`${fraunces.variable} ${dmSans.variable}`}>
       <body className="min-h-dvh flex flex-col">
+        <Suspense fallback={null}><AnalyticsPageView /></Suspense>
         <a
           href="#contenido"
           className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-4 focus:rounded focus:bg-accent focus:px-4 focus:py-2 focus:text-surface"

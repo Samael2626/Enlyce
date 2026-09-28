@@ -1,3 +1,7 @@
+"use client";
+
+import { trackFunnelEvent } from "@/lib/analytics";
+
 const operations = [
   { value: "", label: "Venta y arriendo" },
   { value: "Venta", label: "Comprar" },
@@ -35,7 +39,13 @@ const bedroomOptions = [
 
 export function PropertySearchPanel() {
   return (
-    <form className="property-search-panel" action="/inmuebles" method="get" aria-label="Buscar inmuebles">
+    <form
+      className="property-search-panel"
+      action="/inmuebles"
+      method="get"
+      aria-label="Buscar inmuebles"
+      onSubmit={() => trackFunnelEvent("search")}
+    >
       <div className="property-search-grid">
         <label className="property-search-field property-search-location">
           <span>Ubicación</span>

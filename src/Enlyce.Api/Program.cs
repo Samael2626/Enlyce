@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
 using Enlyce.Api.Endpoints.Billing;
+using Enlyce.Api.Endpoints.Analytics;
 using Enlyce.Api.Development;
 using Enlyce.Api.Endpoints.Alertas;
 using Enlyce.Api.Endpoints.Auth;
@@ -116,6 +117,7 @@ builder.Services.AddRateLimiter(options =>
     };
     options.AddPolicy("auth-login", context => CreateIpLimiter(context, 10));
     options.AddPolicy("public-leads", context => CreateIpLimiter(context, 40));
+    options.AddPolicy("public-analytics", context => CreateIpLimiter(context, 120));
     options.AddPolicy("owner-details", context => CreateIpLimiter(context, 20));
     options.AddPolicy("wompi-webhook", context => CreateIpLimiter(context, 120));
     options.AddPolicy("billing-checkout", context =>
@@ -271,6 +273,7 @@ app.MapAlertas();
 app.MapPublicCatalog();
 app.MapPublicationMedia();
 app.MapBilling();
+app.MapAnalytics();
 
 static RateLimitPartition<string> CreateIpLimiter(HttpContext context, int permitLimit) =>
     RateLimitPartition.GetFixedWindowLimiter(

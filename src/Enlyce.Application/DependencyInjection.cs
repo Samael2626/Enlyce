@@ -1,4 +1,5 @@
 using Enlyce.Application.Abstractions;
+using Enlyce.Application.Analytics;
 using Enlyce.Application.Billing;
 using Enlyce.Application.Commands.Consentimiento;
 using Enlyce.Application.Commands.Lead;
@@ -22,6 +23,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddSingleton<TimeProvider>(TimeProvider.System);
+        services.AddScoped<ICommandHandler<RecordWebAnalyticsEventCommand>, RecordWebAnalyticsEventHandler>();
+        services.AddScoped<IQueryHandler<GetWebAnalyticsFunnelQuery, WebAnalyticsFunnelResponse>, GetWebAnalyticsFunnelHandler>();
         services.AddScoped<ICommandHandler<CreateCheckoutSessionCommand, CreateCheckoutSessionResponse>, CreateCheckoutSessionHandler>();
         services.AddScoped<ProcessPaymentNotificationHandler>();
         services.AddScoped<ICommandHandler<CreateLeadCommand, CreateLeadResponse>, CreateLeadHandler>();

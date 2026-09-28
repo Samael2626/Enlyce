@@ -167,6 +167,17 @@ class ApiClient {
     )
   }
 
+  // Analitica web
+  async getAnalyticsFunnel(days: number) {
+    const to = new Date()
+    const from = new Date(to)
+    from.setUTCDate(from.getUTCDate() - days)
+    const query = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() })
+    return this.request<import("@/lib/types").WebAnalyticsFunnel>(
+      `/api/analytics/funnel?${query.toString()}`
+    )
+  }
+
   // Politica
   async getPoliticaActiva() {
     return this.request<any>("/api/politica/activa")

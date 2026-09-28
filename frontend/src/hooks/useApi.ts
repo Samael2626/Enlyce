@@ -213,6 +213,13 @@ export function usePaymentOrderStatus(reference: string | null) {
   })
 }
 
+export function useAnalyticsFunnel(days: number) {
+  return useQuery({
+    queryKey: ["analytics", "funnel", days],
+    queryFn: () => api.getAnalyticsFunnel(days),
+  })
+}
+
 // Ley 1581
 export function usePoliticaActiva() {
   return useQuery({

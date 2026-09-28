@@ -72,13 +72,24 @@ La respuesta también contiene el token para conservar el contrato de la API, pe
 5. Application valida los datos, identifica contactos repetidos, registra el consentimiento y vincula la oportunidad con una publicación cuando corresponde.
 6. PostgreSQL conserva el lead, consentimiento e interacciones aplicables.
 
+### Brochure y analítica comercial
+
+1. `/brochure` presenta seis páginas editoriales navegables y ofrece el archivo estático `/brochure-lyc.pdf` con las mismas seis páginas en formato A4 horizontal.
+2. `AnalyticsPageView` registra una visita por ubicación durante la sesión del navegador.
+3. Búsquedas, favoritos, primer foco en formulario y creación confirmada de oportunidad emiten eventos first-party.
+4. `POST /api/public/analytics/events` recibe únicamente sesión aleatoria, tipo de evento, ruta y slug opcional. No recibe nombre, correo, teléfono, texto buscado ni dirección IP como dato analítico.
+5. Application valida el evento y reemplaza el identificador de sesión por un hash SHA-256 antes de persistirlo en `WebAnalyticsEvents`.
+6. `GET /api/analytics/funnel` agrega sesiones únicas y eventos por etapa. Solo el rol `Administrador` puede consultarlo desde “Analítica web” en el CRM.
+
 El catálogo puede consultarse desde el servidor de Next.js sin depender de CORS. El formulario de contacto se ejecuta en el navegador y llama directamente a la API. La política CORS local permite los orígenes de Vite (`5173` y `4173`) y de Next.js (`3000`), tanto con `localhost` como con `127.0.0.1` cuando aplica.
 
 La portada y las páginas dinámicas de zona se renderizan bajo demanda. Así el build de Next.js no necesita una API activa; el `sitemap` conserva una degradación controlada cuando el catálogo no responde.
 
 ## Fronteras de seguridad
 
-- Catálogo, política activa, creación de lead, login y salud son públicos.
+- Catálogo, política activa, creación de lead, recolección analítica, login y salud son públicos.
+- El recolector analítico tiene cuerpo máximo de 8 KB y límite independiente de 120 solicitudes por minuto e IP.
+- El embudo agregado requiere autenticación y rol `Administrador`.
 - CRM, pipeline, inmuebles, visitas, interacciones y administración de publicaciones requieren autenticación.
 - Registrar asesores, asignar y reasignar leads requiere rol `Administrador`.
 - CORS usa orígenes explícitos y credenciales; no permite cualquier origen.
@@ -98,12 +109,12 @@ La portada y las páginas dinámicas de zona se renderizan bajo demanda. Así el
 
 ## Estado técnico comprobado
 
-- Dominio: 190 pruebas superadas.
-- Application: 33 pruebas superadas.
-- Integración: 150 pruebas superadas.
+- Dominio: 207 pruebas superadas.
+- Application: 38 pruebas superadas.
+- Integración: 170 pruebas superadas.
 - CRM React: build de producción superado.
 - Sitio Next.js: lint, typecheck y build de producción superados con API y PostgreSQL locales apagados.
-- API: build correcto; 190 pruebas de dominio, 33 de Application y 150 de integración superadas.
+- API: build correcto; 415 pruebas superadas entre dominio, Application e integración.
 - Deuda conocida: advertencias de nulabilidad en .NET y advertencia futura por `__dirname` en Vite.
 
 ## Decisión PlantUML

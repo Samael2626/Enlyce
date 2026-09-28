@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IVisitaRepository, VisitaRepository>();
         services.AddScoped<IPaymentOrderRepository, PaymentOrderRepository>();
         services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
+        services.AddScoped<IWebAnalyticsRepository, WebAnalyticsRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();

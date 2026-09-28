@@ -77,8 +77,8 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Ampliar la captación de propietarios con ciudad, barrio, tipo de inmueble y mensaje.
 - [x] Guardar esos datos en campos estructurados del CRM, no incrustados en `Fuente`.
 - [ ] Mostrar en la ficha de la oportunidad la ruta, campaña, publicación y servicio de origen.
-- [ ] Crear brochure comercial descargable y versión web tipo flipbook.
-- [ ] Añadir analítica de embudo: visita, búsqueda, favorito, formulario iniciado y conversión.
+- [x] Crear brochure comercial descargable y versión web tipo flipbook.
+- [x] Añadir analítica de embudo: visita, búsqueda, favorito, formulario iniciado y conversión.
 - [ ] Añadir datos estructurados JSON-LD para organización e inmuebles.
 - [ ] Auditoría completa WCAG AA: teclado, foco, labels, contraste y lector de pantalla.
 - [ ] Medir y corregir Core Web Vitals: LCP, CLS e INP.
@@ -112,6 +112,6 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 ## Próxima secuencia recomendada
 
 1. Crear E2E de los recorridos comerciales y de las regresiones de autorización.
-2. Completar brochure, analítica, accesibilidad y rendimiento.
+2. Completar accesibilidad, datos estructurados y rendimiento.
 3. Crear staging y validar secretos, backups restaurables, migraciones y ZAP remoto.
 4. Al cierre: material real, Wompi sandbox y despliegue definitivo.

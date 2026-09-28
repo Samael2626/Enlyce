@@ -10,6 +10,7 @@ import { InmueblesPage } from "@/pages/InmueblesPage"
 import { AlertasPage } from "@/pages/AlertasPage"
 import { BillingPage } from "@/pages/BillingPage"
 import { BillingResultPage } from "@/pages/BillingResultPage"
+import { AnaliticaPage } from "@/pages/AnaliticaPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,7 +43,7 @@ export function App() {
               <Route path="/facturacion/respuesta" element={<BillingResultPage />} />
               <Route path="/calendario" element={<Placeholder title="Calendario" />} />
               <Route path="/chat" element={<Placeholder title="Chat" />} />
-              <Route path="/reportes" element={<Placeholder title="Reportes" />} />
+              <Route path="/reportes" element={<AnaliticaPage />} />
               <Route path="/config" element={<Placeholder title="Configuración" />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

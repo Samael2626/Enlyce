@@ -226,6 +226,20 @@ export interface PaymentOrderStatus {
   status: "Pending" | "Approved" | "Declined" | "Voided" | "Error"
 }
 
+// Analitica web
+export interface WebAnalyticsStep {
+  event: "page_view" | "search" | "favorite" | "form_started" | "conversion"
+  uniqueSessions: number
+  totalEvents: number
+  rateFromVisits: number
+}
+
+export interface WebAnalyticsFunnel {
+  from: string
+  to: string
+  steps: WebAnalyticsStep[]
+}
+
 // Politica
 export interface ObtenerPoliticaActivaResponse {
   id: string

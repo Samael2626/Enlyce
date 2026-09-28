@@ -85,6 +85,7 @@ export default function NosotrosPage() {
         <div className="flex flex-wrap gap-3">
           <Link href="/propietarios" className="about-cta-primary">Soy propietario</Link>
           <Link href="/inmuebles" className="about-cta-secondary">Ver inmuebles</Link>
+          <Link href="/brochure" className="about-cta-secondary">Ver brochure</Link>
         </div>
       </section>
     </div>

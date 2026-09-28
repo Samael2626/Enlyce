@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useTransition } from "react";
+import { trackFunnelEvent } from "@/lib/analytics";
 
 const operations = [
   { value: "", label: "Todos" },
@@ -63,12 +64,14 @@ export function CatalogFilters({ total }: { total: number }) {
       if (typeof value === "string" && value.trim()) params.set(key, value.trim());
     }
     params.delete("page");
+    trackFunnelEvent("search");
     navigate(params);
   }
 
   function handleLocationSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = new FormData(event.currentTarget).get("neighborhood");
+    trackFunnelEvent("search");
     update("neighborhood", typeof value === "string" ? value.trim() : "");
   }
 

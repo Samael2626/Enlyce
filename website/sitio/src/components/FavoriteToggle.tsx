@@ -1,6 +1,7 @@
 "use client";
 
 import { useFavorites } from "@/lib/favorites";
+import { trackFunnelEvent } from "@/lib/analytics";
 
 type Props = { slug: string; title: string; className?: string };
 
@@ -16,7 +17,10 @@ export function FavoriteToggle({ slug, title, className = overlayClass }: Props)
       type="button"
       className={className}
       aria-pressed={saved}
-      onClick={() => toggle({ slug, title })}
+      onClick={() => {
+        if (!saved) trackFunnelEvent("favorite", { propertySlug: slug });
+        toggle({ slug, title });
+      }}
     >
       {saved ? "Guardado" : "Guardar"}
     </button>

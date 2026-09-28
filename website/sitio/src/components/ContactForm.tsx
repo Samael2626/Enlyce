@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ApiProblemError } from "@/lib/api/client";
+import { trackFunnelEvent } from "@/lib/analytics";
 import {
   CONTACT_CHANNELS,
   OWNER_SERVICES,
@@ -53,6 +54,7 @@ export function ContactForm({
   const [authorized, setAuthorized] = useState(false);
   const [service, setService] = useState<OwnerServiceValue>(initialOwnerService ?? "vender");
   const [detailsStatus, setDetailsStatus] = useState<DetailsStatus>({ kind: "idle" });
+  const formStarted = useRef(false);
 
   // El texto escrito no se pierde al fallar: se controla aqui y el formulario
   // nunca se desmonta entre intentos.
@@ -68,6 +70,12 @@ export function ContactForm({
 
   const selected = OWNER_SERVICES.find((item) => item.value === service) ?? OWNER_SERVICES[0];
   const sending = status.kind === "sending";
+
+  function handleFormStart() {
+    if (formStarted.current) return;
+    formStarted.current = true;
+    trackFunnelEvent("form_started", { propertySlug });
+  }
 
   function buildSource(): string {
     const base = propertySlug
@@ -101,6 +109,7 @@ export function ContactForm({
         kind: "captured",
         continuationToken: result.continuationToken,
       });
+      trackFunnelEvent("conversion", { propertySlug });
     } catch (error) {
       const messages =
         error instanceof ApiProblemError
@@ -279,6 +288,7 @@ export function ContactForm({
   return (
     <form
       onSubmit={handleSubmit}
+      onFocusCapture={handleFormStart}
       className={isOwnerInquiry ? "contact-form contact-form-owner" : "contact-form"}
     >
       <div className="grid gap-4 sm:grid-cols-2">
