@@ -74,12 +74,14 @@ La respuesta también contiene el token para conservar el contrato de la API, pe
 
 ### Brochure y analítica comercial
 
-1. `/brochure` presenta seis páginas editoriales navegables y ofrece el archivo estático `/brochure-lyc.pdf` con las mismas seis páginas en formato A4 horizontal.
-2. `AnalyticsPageView` registra una visita por ubicación durante la sesión del navegador.
-3. Búsquedas, favoritos, primer foco en formulario y creación confirmada de oportunidad emiten eventos first-party.
-4. `POST /api/public/analytics/events` recibe únicamente sesión aleatoria, tipo de evento, ruta y slug opcional. No recibe nombre, correo, teléfono, texto buscado ni dirección IP como dato analítico.
-5. Application valida el evento y reemplaza el identificador de sesión por un hash SHA-256 antes de persistirlo en `WebAnalyticsEvents`.
-6. `GET /api/analytics/funnel` agrega sesiones únicas y eventos por etapa. Solo el rol `Administrador` puede consultarlo desde “Analítica web” en el CRM.
+1. `/brochure` presenta un libro interactivo de diez páginas con portada y contraportada rígidas, pliegue, sombras, arrastre, navegación por teclado y modo de pantalla completa. El visor usa `page-flip`, una dependencia sin dependencias transitivas.
+2. `/brochure-lyc.pdf` contiene la misma edición en diez páginas A5 verticales, preparada para lectura digital o impresión como cuadernillo.
+3. Las fotografías editoriales temporales y sus fuentes están registradas en `website/sitio/public/brochure/FUENTES.md`; deben reemplazarse por inventario autorizado de L&C antes de producción.
+4. `AnalyticsPageView` registra una visita por ubicación durante la sesión del navegador.
+5. Búsquedas, favoritos, primer foco en formulario y creación confirmada de oportunidad emiten eventos first-party.
+6. `POST /api/public/analytics/events` recibe únicamente sesión aleatoria, tipo de evento, ruta y slug opcional. No recibe nombre, correo, teléfono, texto buscado ni dirección IP como dato analítico.
+7. Application valida el evento y reemplaza el identificador de sesión por un hash SHA-256 antes de persistirlo en `WebAnalyticsEvents`.
+8. `GET /api/analytics/funnel` agrega sesiones únicas y eventos por etapa. Solo el rol `Administrador` puede consultarlo desde “Analítica web” en el CRM.
 
 El catálogo puede consultarse desde el servidor de Next.js sin depender de CORS. El formulario de contacto se ejecuta en el navegador y llama directamente a la API. La política CORS local permite los orígenes de Vite (`5173` y `4173`) y de Next.js (`3000`), tanto con `localhost` como con `127.0.0.1` cuando aplica.
 
