@@ -11,7 +11,7 @@ Relacionado: [[Enlyce-MOC]] · [[Checklist-Producto-Web-Enlyce]] · [[Arquitectu
 
 ## Veredicto
 
-Los hallazgos críticos, altos y medios de esta auditoría quedaron corregidos y verificados localmente el 27 de septiembre de 2026. La salida a Internet sigue condicionada a desplegar esta versión, configurar secretos reales y repetir el escaneo en staging. Queda como endurecimiento bajo bloquear `TRACE` en el proxy del futuro despliegue.
+Los hallazgos críticos, altos y medios de esta auditoría quedaron corregidos y verificados localmente el 27 de septiembre de 2026. Los servicios de desarrollo quedaron limitados al propio equipo. La salida a Internet sigue condicionada a desplegar esta versión, configurar secretos reales y repetir el escaneo en staging. `TRACE` queda aceptado solo en local y debe bloquearse en el proxy del futuro despliegue.
 
 ## Hallazgos
 
@@ -125,6 +125,8 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 - Nmap confirmó las cabeceras defensivas en la compilación reconstruida de Next.js servida en `3100`; dejó de revelar `X-Powered-By`.
 - Burp confirmó `404` para rutas inexistentes y no encontró reflexión del payload XSS básico. `TRACE` devuelve la página sin reflejar la solicitud, por lo que no se reprodujo Cross-Site Tracing clásico. Next.js no permite interceptar correctamente ese método desde `proxy.ts`; se bloqueará en el proxy de despliegue para evitar introducir un servidor personalizado que elimine optimizaciones.
 - PostgreSQL 17 nativo se limitó de `listen_addresses='*'` a `listen_addresses='localhost'`. `pg_isready` confirmó servicio local y Nmap mostró `5432` abierto en `127.0.0.1` pero cerrado en `192.168.40.7`. La configuración anterior quedó respaldada como `postgresql.conf.bak-20260927-2115`.
+- Los scripts `dev` y `start` de Next.js ahora enlazan `3000` y `3100` exclusivamente a `127.0.0.1`. El contenedor `enlyce-db` conservó su volumen y cambió `5436` de todas las interfaces a `127.0.0.1`.
+- La regresión final de Nmap mostró `3000`, `3100`, `5432` y `5436` abiertos por loopback y cerrados mediante `192.168.40.7`. Ambos PostgreSQL respondieron localmente y Burp siguió alcanzando las dos webs a través de su proxy local.
 
 ## Cierre aplicado
 
@@ -135,3 +137,4 @@ Las respuestas revelan Next.js y Kestrel. No entrega acceso por sí sola, pero f
 5. Migración y ZAP: repetidos satisfactoriamente en un entorno local aislado. Queda una última repetición remota cuando se cree el staging público de ENLYCE.
 6. Web `3100` y PostgreSQL local: compilación defensiva actualizada y puerto de base de datos retirado de la LAN.
 7. `TRACE`: impacto bajo, sin reflexión confirmada; pendiente de bloqueo en el proxy de staging.
+8. Superficie LAN local: webs y las dos instancias PostgreSQL de ENLYCE quedaron inaccesibles mediante la dirección de red del equipo.

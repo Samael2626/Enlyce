@@ -64,6 +64,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Ejecutar regresión ofensiva local y ZAP API activo sin fallos confirmados altos o medios.
 - [x] Reconstruir la web de producción local en `3100` y confirmar sus cabeceras con Nmap y Burp.
 - [x] Limitar PostgreSQL 17 nativo a loopback y comprobar que `5432` no responde por la IP LAN.
+- [x] Limitar las webs locales `3000/3100` y PostgreSQL Docker `5436` a `127.0.0.1`.
 - [ ] Bloquear `TRACE` en el proxy de staging y verificar respuesta `405`; localmente no reflejó la solicitud.
 - [ ] Crear staging de ENLYCE y repetir migraciones, smoke y ZAP sobre la configuración remota.
 - [ ] Configurar secretos fuera del repositorio, backups y recuperación.
