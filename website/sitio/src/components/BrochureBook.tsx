@@ -1,16 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { PageFlip } from "page-flip";
 
 const PAGE_COUNT = 10;
+const subscribeToHydration = () => () => undefined;
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
 
 export function BrochureBook() {
   const bookRef = useRef<HTMLDivElement>(null);
   const readerRef = useRef<HTMLElement>(null);
   const pageFlipRef = useRef<PageFlip | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -88,7 +96,7 @@ export function BrochureBook() {
           type="button"
           className="brochure-turn brochure-turn-previous"
           onClick={() => pageFlipRef.current?.flipPrev()}
-          disabled={currentPage === 0}
+          disabled={isHydrated && currentPage === 0}
           aria-label="Página anterior"
         >
           <span aria-hidden="true">←</span>
@@ -207,7 +215,7 @@ export function BrochureBook() {
           type="button"
           className="brochure-turn brochure-turn-next"
           onClick={() => pageFlipRef.current?.flipNext()}
-          disabled={currentPage >= PAGE_COUNT - 1}
+          disabled={isHydrated && currentPage >= PAGE_COUNT - 1}
           aria-label="Página siguiente"
         >
           <span aria-hidden="true">→</span>
