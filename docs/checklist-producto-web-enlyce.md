@@ -116,3 +116,10 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 2. Completar accesibilidad, datos estructurados y rendimiento.
 3. Crear staging y validar secretos, backups restaurables, migraciones y ZAP remoto.
 4. Al cierre: material real, Wompi sandbox y despliegue definitivo.
+
+## Cobertura verificada al 9 de octubre de 2026
+
+- `node website/funcional.test.mjs`: 26 pruebas de logica del sitio legacy, todas verdes.
+- `PublicCatalogEndpointTests` y `CrmJourneyE2ETests` son pruebas HTTP con `WebApplicationFactory` + SQLite; no recorren navegador.
+- El sitio Next no tiene runner E2E de navegador instalado. Pago tampoco tiene E2E; Wompi queda fuera sin credenciales sandbox.
+- Siguen pendientes el smoke visual con PostgreSQL y las E2E de catalogo, ficha, favoritos, contacto, propietarios y pago.
