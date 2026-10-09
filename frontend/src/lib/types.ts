@@ -58,11 +58,159 @@ export interface GetLeadByIdResponse {
   ownerPreferredContactChannel?: string
 }
 
+export interface ContactSummary {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ContactInteraction {
+  id: string
+  type: string
+  summary?: string
+  date: string
+  advisorId: string
+}
+
+export interface ContactVisit {
+  id: string
+  propertyId: string
+  scheduledAt: string
+  completedAt?: string
+  status: string
+  feedback?: string
+}
+
+export interface ContactOpportunity {
+  id: string
+  operation: string
+  stage: string
+  source: string
+  publicationId?: string
+  createdAt: string
+  advisorId?: string
+  interactions: ContactInteraction[]
+  visits: ContactVisit[]
+}
+
+export interface ContactDetail {
+  contact: ContactSummary
+  opportunities: ContactOpportunity[]
+  tasks: ContactTask[]
+}
+
+export interface ContactTask {
+  id: string
+  leadId?: string
+  advisorId: string
+  type: string
+  title: string
+  description?: string
+  dueAt: string
+  reminderAt?: string
+  priority: string
+  status: string
+  completedAt?: string
+}
+
+export interface CommercialTask extends ContactTask {
+  contactId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateCommercialTaskInput {
+  contactId: string
+  leadId?: string
+  advisorId?: string
+  type: string
+  title: string
+  description?: string
+  dueAt: string
+  reminderAt?: string
+  priority: string
+}
+
+export interface CommercialTaskEvent {
+  id: string
+  taskId: string
+  actorId: string
+  action: string
+  comment?: string
+  occurredAt: string
+}
+
+export interface CustomerDemand {
+  id: string
+  contactId: string
+  leadId?: string
+  operation: string
+  propertyType?: string
+  city: string
+  neighborhood?: string
+  minimumPrice?: number
+  maximumPrice?: number
+  bedrooms?: number
+  bathrooms?: number
+  parkingSpaces?: number
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DemandPropertyMatch {
+  propertyId: string
+  name: string
+  propertyType: string
+  operation: string
+  city: string
+  neighborhood?: string
+  price: number
+  currency: string
+  bedrooms: number
+  bathrooms: number
+  parkingSpaces: number
+  relationshipStatus?: string
+}
+
+export interface CreateCustomerDemandInput {
+  contactId: string
+  leadId?: string
+  operation: string
+  propertyType?: string
+  city: string
+  neighborhood?: string
+  minimumPrice?: number
+  maximumPrice?: number
+  bedrooms?: number
+  bathrooms?: number
+  parkingSpaces?: number
+  notes?: string
+}
+
 // Pipeline
 export interface PipelineResponse {
   etapas: EtapaPipelineDto[]
   leads: LeadDto[]
   total: number
+}
+
+export interface FirstResponseMetric {
+  name: string
+  respondedLeads: number
+  averageHours: number
+}
+
+export interface FirstResponseMetrics {
+  from: string
+  to: string
+  respondedLeads: number
+  averageHours: number | null
+  byAdvisor: FirstResponseMetric[]
+  bySource: FirstResponseMetric[]
 }
 
 export interface EtapaPipelineDto {
@@ -83,6 +231,20 @@ export interface LeadDto {
   fechaUltimaInteraccion?: string
   fechaCreacion: string
   asesorNombre?: string
+  fechaPrimerContacto?: string
+}
+
+export interface LeadAssignmentHistory {
+  id: string
+  previousAdvisorId?: string
+  previousAdvisorName?: string
+  newAdvisorId: string
+  newAdvisorName?: string
+  changedByAdvisorId?: string
+  changedByName?: string
+  reason: string
+  source: string
+  changedAt: string
 }
 
 export interface MoverEtapaRequest {
@@ -181,6 +343,72 @@ export interface GetInmuebleByIdResponse {
   activo: boolean
 }
 
+// Publicaciones
+export interface PublicationPhoto {
+  url: string
+  altText: string
+  order: number
+  isCover: boolean
+}
+
+export interface PropertyPublicationAdmin {
+  id: string
+  propertyId: string
+  propertyName: string
+  propertyType: string
+  operation: string
+  advisorId: string
+  advisorName: string
+  slug: string
+  publicTitle: string
+  publicDescription: string
+  status: "Draft" | "Published" | "Paused" | "Withdrawn"
+  priceAmount?: number
+  priceCurrency?: string
+  municipality?: string
+  neighborhood?: string
+  approximateLatitude?: number
+  approximateLongitude?: number
+  createdAt: string
+  publishedAt?: string
+  photos: PublicationPhoto[]
+}
+
+export interface PublicationPropertyOption {
+  id: string
+  name: string
+  propertyType: string
+  operation: string
+  municipality: string
+  neighborhood?: string
+  priceAmount: number
+  priceCurrency: string
+}
+
+export interface PublicationAdvisorOption {
+  id: string
+  name: string
+}
+
+export interface PropertyPublicationOptions {
+  properties: PublicationPropertyOption[]
+  advisors: PublicationAdvisorOption[]
+}
+
+export interface PropertyPublicationInput {
+  propertyId?: string
+  advisorId?: string
+  slug: string
+  publicTitle: string
+  publicDescription?: string
+  priceAmount: number
+  priceCurrency: string
+  municipality: string
+  neighborhood: string
+  approximateLatitude: number
+  approximateLongitude: number
+}
+
 // Facturacion
 export interface BillingPricing {
   basePlanInCents: number
@@ -239,6 +467,8 @@ export interface WebAnalyticsFunnel {
   to: string
   steps: WebAnalyticsStep[]
 }
+
+export type LeadDistributionRule = "LeastOpenLeads" | "RoundRobin"
 
 // Politica
 export interface ObtenerPoliticaActivaResponse {

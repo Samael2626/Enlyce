@@ -8,7 +8,7 @@ import {
   Draggable,
   type DropResult,
 } from "@hello-pangea/dnd"
-import { User, Phone, Mail, Clock, MoreHorizontal } from "lucide-react"
+import { User, Phone, Mail, Clock, MoreHorizontal, AlertCircle } from "lucide-react"
 import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -60,6 +60,15 @@ export function PipelinePage() {
           Arrastra las oportunidades entre etapas para actualizar su estado
         </p>
       </div>
+
+      {moveLead.isError && (
+        <div role="alert" className="mb-4 flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>
+            {moveLead.error?.message || "No se pudo cambiar de etapa la oportunidad."}
+          </span>
+        </div>
+      )}
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-x-auto">

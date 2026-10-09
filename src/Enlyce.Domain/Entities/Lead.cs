@@ -63,10 +63,12 @@ public sealed class Lead
     public Guid? AsesorAsignadoId { get; internal set; }
     public DateTime FechaCreacion { get; internal set; }
     public DateTime? FechaUltimoContacto { get; internal set; }
+    public DateTime? FechaPrimerContacto { get; internal set; }
     public DateTime? FechaAsignacion { get; internal set; }
     public bool AutorizacionDatos { get; internal set; }
     public bool Activo { get; internal set; }
     public string OpportunityKey { get; internal set; } = string.Empty;
+    public Guid? ContactId { get; internal set; }
 
     public string TipoOperacion { get; internal set; } = "Venta";
     public OwnerInquiryService? OwnerService { get; internal set; }
@@ -95,7 +97,7 @@ public sealed class Lead
         string tipoOperacion, string etapaPipeline,
         int interaccionesCount, DateTime? fechaUltimaInteraccion,
         DateTime fechaActualizacion, OwnerInquiryService? ownerService,
-        Guid? publicationId)
+        Guid? publicationId, Guid? contactId, DateTime? fechaPrimerContacto)
     {
         Id = id;
         Nombre = nombre;
@@ -108,12 +110,14 @@ public sealed class Lead
         AsesorAsignadoId = asesorAsignadoId;
         FechaCreacion = fechaCreacion;
         FechaUltimoContacto = fechaUltimoContacto;
+        FechaPrimerContacto = fechaPrimerContacto;
         FechaAsignacion = fechaAsignacion;
         AutorizacionDatos = autorizacionDatos;
         Activo = activo;
         TipoOperacion = tipoOperacion;
         OwnerService = ownerService;
         PublicationId = publicationId;
+        ContactId = contactId;
         OpportunityKey = CreateOpportunityKey(email, publicationId);
         EtapaPipeline = etapaPipeline;
         InteraccionesCount = interaccionesCount;
@@ -123,7 +127,7 @@ public sealed class Lead
 
     public static Lead Crear(string nombre, Email email, Telefono? telefono,
         string fuente, bool autorizacionDatos, string tipoOperacion = "Venta",
-        OwnerInquiryService? ownerService = null, Guid? publicationId = null)
+        OwnerInquiryService? ownerService = null, Guid? publicationId = null, Guid? contactId = null)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del lead no puede ser vacio.");
@@ -165,11 +169,22 @@ public sealed class Lead
             null,
             now,
             ownerService,
-            publicationId);
+            publicationId,
+            contactId,
+            null);
     }
 
     public static string CreateOpportunityKey(Email email, Guid? publicationId) =>
         $"{email.Value}|{publicationId?.ToString("N") ?? "general"}";
+
+    public void LinkContact(Guid contactId)
+    {
+        if (contactId == Guid.Empty)
+            throw new DomainError("El contacto es obligatorio.");
+
+        ContactId = contactId;
+        FechaActualizacion = DateTime.UtcNow;
+    }
 
     public static Lead Reconstituir(Guid id, string nombre, Email email, Telefono? telefono,
         string fuente, EstadoLead estado, MotivoCierre motivoCierre,
@@ -180,7 +195,8 @@ public sealed class Lead
         int interaccionesCount = 0, DateTime? fechaUltimaInteraccion = null,
         DateTime? fechaActualizacion = null,
         OwnerInquiryService? ownerService = null,
-        Guid? publicationId = null)
+        Guid? publicationId = null, Guid? contactId = null,
+        DateTime? fechaPrimerContacto = null)
     {
         return new Lead(id, nombre, email, telefono, fuente, estado, motivoCierre,
             notasCierre, asesorAsignadoId, fechaCreacion, fechaUltimoContacto,
@@ -191,7 +207,9 @@ public sealed class Lead
             fechaUltimaInteraccion,
             fechaActualizacion ?? fechaCreacion,
             ownerService,
-            publicationId);
+            publicationId,
+            contactId,
+            fechaPrimerContacto);
     }
 
     private static void ValidateOwnerService(
@@ -284,17 +302,18 @@ public sealed class Lead
     {
         AsesorAsignadoId = asesorId;
         FechaAsignacion = DateTime.UtcNow;
-        Estado = EstadoLead.Contactado;
         FechaActualizacion = DateTime.UtcNow;
     }
 
     public void RegistrarContacto()
     {
-        FechaUltimoContacto = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+        FechaPrimerContacto ??= now;
+        FechaUltimoContacto = now;
         FechaActualizacion = DateTime.UtcNow;
 
-        if (Estado == EstadoLead.Contactado)
-            Estado = EstadoLead.Interesado;
+        if (Estado == EstadoLead.Nuevo)
+            Estado = EstadoLead.Contactado;
     }
 
     public void MoverEtapa(string nuevaEtapa)
@@ -316,7 +335,7 @@ public sealed class Lead
 
     public void AgendarVisita()
     {
-        if (Estado < EstadoLead.Interesado)
+        if (Estado < EstadoLead.Contactado)
             throw new DomainError("Un lead necesita al menos una interaccion antes de agendar visita.");
 
         Estado = EstadoLead.VisitaAgendada;

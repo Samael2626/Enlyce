@@ -15,4 +15,5 @@ public sealed record LeadDto(
     Guid Id, string Nombre, string Email, string? Telefono,
     string Fuente, string EtapaPipeline, string TipoOperacion,
     int InteraccionesCount, DateTime? FechaUltimaInteraccion,
-    DateTime FechaCreacion, string? AsesorNombre);
+    DateTime FechaCreacion, string? AsesorNombre,
+    DateTime? FechaPrimerContacto);

@@ -51,6 +51,7 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(l => l.EtapaPipeline).HasMaxLength(50).IsRequired();
         builder.Property(l => l.InteraccionesCount).IsRequired();
         builder.Property(l => l.FechaUltimaInteraccion);
+        builder.Property(l => l.FechaPrimerContacto);
         builder.Property(l => l.FechaActualizacion).IsRequired();
 
         builder.HasIndex(l => l.EtapaPipeline);
@@ -63,5 +64,10 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.HasIndex(l => l.OpportunityKey)
             .IsUnique()
             .HasFilter("\"Activo\" = TRUE");
+        builder.HasIndex(l => l.ContactId);
+        builder.HasOne<Contact>()
+            .WithMany()
+            .HasForeignKey(l => l.ContactId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

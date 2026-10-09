@@ -8,6 +8,7 @@ using Enlyce.Application.Commands.RegisterAsesor;
 using Enlyce.Application.Queries.Lead;
 using Enlyce.Application.Queries.Politica;
 using Enlyce.Application.PublicCatalog;
+using Enlyce.Application.Publications;
 using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.CreateLead;
 using Enlyce.Application.UseCases.EnrichOwnerInquiry;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddSingleton<TimeProvider>(TimeProvider.System);
         services.AddScoped<ICommandHandler<RecordWebAnalyticsEventCommand>, RecordWebAnalyticsEventHandler>();
         services.AddScoped<IQueryHandler<GetWebAnalyticsFunnelQuery, WebAnalyticsFunnelResponse>, GetWebAnalyticsFunnelHandler>();
+        services.AddScoped<GetFirstResponseMetricsHandler>();
         services.AddScoped<ICommandHandler<CreateCheckoutSessionCommand, CreateCheckoutSessionResponse>, CreateCheckoutSessionHandler>();
         services.AddScoped<ProcessPaymentNotificationHandler>();
         services.AddScoped<ICommandHandler<CreateLeadCommand, CreateLeadResponse>, CreateLeadHandler>();
@@ -35,6 +37,11 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetInmuebleByIdQuery, GetInmuebleByIdResponse?>, GetInmuebleByIdHandler>();
         services.AddScoped<IQueryHandler<GetPublicPropertiesQuery, PublicPropertyPageResponse>, GetPublicPropertiesHandler>();
         services.AddScoped<IQueryHandler<GetPublicPropertyBySlugQuery, PublicPropertyDetailResponse?>, GetPublicPropertyBySlugHandler>();
+        services.AddScoped<IQueryHandler<GetPropertyPublicationsQuery, IReadOnlyList<PropertyPublicationAdminData>>, GetPropertyPublicationsHandler>();
+        services.AddScoped<IQueryHandler<GetPropertyPublicationOptionsQuery, PropertyPublicationOptions>, GetPropertyPublicationOptionsHandler>();
+        services.AddScoped<ICommandHandler<CreatePropertyPublicationCommand, PropertyPublicationMutationResponse>, CreatePropertyPublicationHandler>();
+        services.AddScoped<ICommandHandler<UpdatePropertyPublicationCommand, PropertyPublicationMutationResponse>, UpdatePropertyPublicationHandler>();
+        services.AddScoped<ICommandHandler<ChangePropertyPublicationStatusCommand, PropertyPublicationMutationResponse>, ChangePropertyPublicationStatusHandler>();
 
         services.AddScoped<LoginCommandHandler>();
         services.AddScoped<RegisterAsesorCommandHandler>();

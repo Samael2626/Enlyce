@@ -17,10 +17,9 @@ public sealed class PropertyPublication
 {
     private const int MinimumPhotos = 3;
 
-    // Tres decimales son unos 111 m: cubren la manzana sin salirse del barrio.
-    // Con cuatro (unos 11 m) la coordenada senala el portal del inmueble, y con
-    // dos (1,1 km) en Medellin se cruza de comuna y el pin apunta al barrio
-    // equivocado, que es enganar en la direccion contraria.
+    // Tres decimales son unos 111 m: conservan utilidad dentro del sector sin
+    // entregar precision de portal. Dos decimales degradan la ubicacion a unos
+    // 1,1 km; no se demostro que crucen de comuna con los datos actuales.
     private const int PublicCoordinateDecimals = 3;
     private readonly List<PropertyPhoto> _photos = [];
 
@@ -156,9 +155,8 @@ public sealed class PropertyPublication
             publicPriceCurrency,
             municipality,
             neighborhood,
-            // Red de seguridad para filas guardadas antes de que el redondeo
-            // existiera. No sustituye a la migracion que limpia la tabla: solo
-            // evita que una fila vieja se reexponga con precision de portal.
+            // Protege rehidrataciones explicitas y adaptadores futuros. EF no
+            // llama esta fabrica; la migracion sanea las filas que materializa.
             RoundPublicCoordinate(approximateLatitude),
             RoundPublicCoordinate(approximateLongitude),
             exactAddressVisible,
@@ -178,6 +176,26 @@ public sealed class PropertyPublication
 
         PublicPriceAmount = amount;
         PublicPriceCurrency = currency.Trim().ToUpperInvariant();
+    }
+
+    public void UpdatePublicContent(string slug, string publicTitle, string? publicDescription)
+    {
+        EnsureNotWithdrawn();
+
+        if (string.IsNullOrWhiteSpace(publicTitle))
+            throw new DomainError("El titulo publico es obligatorio.");
+
+        var trimmedTitle = publicTitle.Trim();
+        if (trimmedTitle.Length > 200)
+            throw new DomainError("El titulo publico no puede superar 200 caracteres.");
+
+        var trimmedDescription = publicDescription?.Trim() ?? string.Empty;
+        if (trimmedDescription.Length > 4_000)
+            throw new DomainError("La descripcion publica no puede superar 4000 caracteres.");
+
+        Slug = NormalizeSlug(slug);
+        PublicTitle = trimmedTitle;
+        PublicDescription = trimmedDescription;
     }
 
     public void SetPublicLocation(

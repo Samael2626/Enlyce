@@ -1,3 +1,3 @@
 namespace Enlyce.Application.Commands.Lead;
 
-public sealed record AsignarLeadCommand(Guid LeadId, Guid AsesorId);
+public sealed record AsignarLeadCommand(Guid LeadId, Guid AsesorId, Guid ActorId, string Reason);

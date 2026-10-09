@@ -31,6 +31,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
     private const string UtmMarker = "|utm=";
     private const int MaxChannelLength = 50;
     private readonly ILeadRepository _leadRepo;
+    private readonly IAsesorRepository _asesorRepo;
+    private readonly ILeadDistributionSettingsRepository _distributionSettings;
+    private readonly IContactRepository _contactRepo;
     private readonly IPropertyPublicationRepository _publicationRepo;
     private readonly IConsentimientoRepository _consentimientoRepo;
     private readonly IPoliticaTratamientoRepository _politicaRepo;
@@ -39,6 +42,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
 
     public CreateLeadHandler(
         ILeadRepository leadRepo,
+        IAsesorRepository asesorRepo,
+        ILeadDistributionSettingsRepository distributionSettings,
+        IContactRepository contactRepo,
         IPropertyPublicationRepository publicationRepo,
         IConsentimientoRepository consentimientoRepo,
         IPoliticaTratamientoRepository politicaRepo,
@@ -46,6 +52,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         IEmailSender emailSender)
     {
         _leadRepo = leadRepo;
+        _asesorRepo = asesorRepo;
+        _distributionSettings = distributionSettings;
+        _contactRepo = contactRepo;
         _publicationRepo = publicationRepo;
         _consentimientoRepo = consentimientoRepo;
         _politicaRepo = politicaRepo;
@@ -57,8 +66,11 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
     {
         var email = Email.Create(command.Email);
         var telefono = command.Telefono is not null ? Telefono.Create(command.Telefono) : null;
+        if (!command.AutorizacionDatos)
+            throw new DomainError("Se requiere autorizacion de tratamiento de datos (Ley 1581).");
         var ownerService = ParseOwnerService(command.OwnerService);
         var publicationId = ParsePublicationId(command.PublicationId);
+        var assignmentSource = LeadAssignmentSource.AutomaticLoadBalance;
 
         PropertyPublication? publication = null;
         var requiresPublicationReview = !string.IsNullOrWhiteSpace(command.PublicationId);
@@ -82,6 +94,8 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             requiresPublicationReview);
         var lead = Lead.Crear(command.Nombre, email, telefono, source,
             command.AutorizacionDatos, command.TipoOperacion, ownerService, publicationId);
+        var contact = await _contactRepo.CreateOrGetAsync(Contact.Create(command.Nombre, email, telefono), ct);
+        lead.LinkContact(contact.Id);
 
         var continuation = OwnerInquiryContinuationToken.Issue();
         lead.IssueOwnerInquiryContinuation(
@@ -90,8 +104,20 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
 
         if (publication is not null)
             lead.AsignarAsesor(publication.AdvisorId);
+        else if (!requiresPublicationReview)
+        {
+            var rule = await _distributionSettings.GetRuleAsync(ct);
+            assignmentSource = rule == LeadDistributionRule.RoundRobin
+                ? LeadAssignmentSource.AutomaticRoundRobin
+                : LeadAssignmentSource.AutomaticLoadBalance;
+            var advisorId = rule == LeadDistributionRule.RoundRobin
+                ? await _asesorRepo.ObtenerSiguienteAsesorEnRotacionAsync(ct)
+                : await _asesorRepo.ObtenerAsesorConMenosOportunidadesAbiertasAsync(ct);
+            if (advisorId.HasValue)
+                lead.AsignarAsesor(advisorId.Value);
+        }
 
-        var creation = await _leadRepo.CreateOrGetExistingAsync(lead, ct);
+        var creation = await _leadRepo.CreateOrGetExistingAsync(lead, ct, assignmentSource);
         if (!creation.Created)
             return await RegisterRepeatContactAsync(creation.Lead, command, publication, ct);
 

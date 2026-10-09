@@ -6,6 +6,13 @@ namespace Enlyce.Infrastructure.Persistence;
 public class EnlyceDbContext : DbContext
 {
     public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<LeadAssignmentHistory> LeadAssignmentHistory => Set<LeadAssignmentHistory>();
+    public DbSet<LeadDistributionSettings> LeadDistributionSettings => Set<LeadDistributionSettings>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<CommercialTask> CommercialTasks => Set<CommercialTask>();
+    public DbSet<CommercialTaskEvent> CommercialTaskEvents => Set<CommercialTaskEvent>();
+    public DbSet<CustomerDemand> CustomerDemands => Set<CustomerDemand>();
+    public DbSet<DemandPropertyLink> DemandPropertyLinks => Set<DemandPropertyLink>();
     public DbSet<Inmueble> Inmuebles => Set<Inmueble>();
     public DbSet<Propietario> Propietarios => Set<Propietario>();
     public DbSet<Asesor> Asesores => Set<Asesor>();

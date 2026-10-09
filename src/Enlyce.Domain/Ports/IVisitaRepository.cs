@@ -9,4 +9,5 @@ public interface IVisitaRepository
     Task<List<Visita>> ObtenerPorAsesorAsync(Guid asesorId, DateTime desde);
     Task<Visita?> ObtenerPorIdAsync(Guid id);
     Task AgregarAsync(Visita visita);
+    Task GuardarAsync(Visita visita);
 }

@@ -45,4 +45,10 @@ public class VisitaRepository : IVisitaRepository
         await _context.Visitas.AddAsync(visita);
         await _context.SaveChangesAsync();
     }
+
+    public async Task GuardarAsync(Visita visita)
+    {
+        _context.Visitas.Update(visita);
+        await _context.SaveChangesAsync();
+    }
 }

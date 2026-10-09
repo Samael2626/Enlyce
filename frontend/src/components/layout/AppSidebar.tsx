@@ -12,6 +12,7 @@ import {
   Bell,
   Settings,
   LayoutDashboard,
+  GalleryVerticalEnd,
   CreditCard,
 } from "lucide-react"
 
@@ -25,6 +26,7 @@ const iconMap: Record<string, React.ElementType> = {
   Bell,
   Settings,
   LayoutDashboard,
+  GalleryVerticalEnd,
   CreditCard,
 }
 

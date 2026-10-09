@@ -1,6 +1,7 @@
 using Enlyce.Application.Auth;
 using Enlyce.Application.Billing;
 using Enlyce.Application.PublicCatalog;
+using Enlyce.Application.Publications;
 using Enlyce.Domain.Ports;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Billing;
@@ -23,6 +24,11 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("Default")));
 
         services.AddScoped<ILeadRepository, LeadRepository>();
+        services.AddScoped<ILeadAssignmentHistoryRepository, LeadAssignmentHistoryRepository>();
+        services.AddScoped<ILeadDistributionSettingsRepository, LeadDistributionSettingsRepository>();
+        services.AddScoped<IContactRepository, ContactRepository>();
+        services.AddScoped<ICommercialTaskRepository, CommercialTaskRepository>();
+        services.AddScoped<ICustomerDemandRepository, CustomerDemandRepository>();
         services.AddScoped<IPropertyPublicationRepository, PropertyPublicationRepository>();
         services.AddScoped<IInmuebleRepository, InmuebleRepository>();
         services.AddScoped<IPropietarioRepository, PropietarioRepository>();
@@ -35,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentOrderRepository, PaymentOrderRepository>();
         services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
         services.AddScoped<IWebAnalyticsRepository, WebAnalyticsRepository>();
+        services.AddScoped<IPropertyPublicationAdminReadRepository, PropertyPublicationAdminReadRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();

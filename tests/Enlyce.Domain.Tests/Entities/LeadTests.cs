@@ -180,11 +180,11 @@ public class LeadTests
     }
 
     [Fact]
-    public void AsignarAsesor_DesdeNuevo_CambiaAContactado()
+    public void AsignarAsesor_DesdeNuevo_NoFingeContacto()
     {
         var lead = CrearLead();
         lead.AsignarAsesor(Guid.NewGuid());
-        Assert.Equal(EstadoLead.Contactado, lead.Estado);
+        Assert.Equal(EstadoLead.Nuevo, lead.Estado);
         Assert.NotNull(lead.AsesorAsignadoId);
         Assert.NotNull(lead.FechaAsignacion);
     }
@@ -195,7 +195,7 @@ public class LeadTests
         var lead = CrearLead();
         var primerAsesor = Guid.NewGuid();
         lead.AsignarAsesor(primerAsesor);
-        Assert.Equal(EstadoLead.Contactado, lead.Estado);
+        Assert.Equal(EstadoLead.Nuevo, lead.Estado);
         Assert.Equal(primerAsesor, lead.AsesorAsignadoId);
 
         var segundoAsesor = Guid.NewGuid();
@@ -205,21 +205,23 @@ public class LeadTests
     }
 
     [Fact]
-    public void RegistrarContacto_DesdeContactado_CambiaAInteresado()
+    public void RegistrarContacto_DesdeAsignado_RegistraPrimerContacto()
     {
         var lead = CrearLead();
         lead.AsignarAsesor(Guid.NewGuid()); // Nuevo -> Contactado
-        lead.RegistrarContacto(); // Contactado -> Interesado
-        Assert.Equal(EstadoLead.Interesado, lead.Estado);
+        lead.RegistrarContacto();
+        Assert.Equal(EstadoLead.Contactado, lead.Estado);
         Assert.NotNull(lead.FechaUltimoContacto);
+        Assert.NotNull(lead.FechaPrimerContacto);
     }
 
     [Fact]
-    public void RegistrarContacto_DesdeNuevo_NoCambiaEstado()
+    public void RegistrarContacto_DesdeNuevo_RegistraContacto()
     {
         var lead = CrearLead();
         lead.RegistrarContacto();
-        Assert.Equal(EstadoLead.Nuevo, lead.Estado);
+        Assert.Equal(EstadoLead.Contactado, lead.Estado);
+        Assert.NotNull(lead.FechaPrimerContacto);
     }
 
     [Fact]

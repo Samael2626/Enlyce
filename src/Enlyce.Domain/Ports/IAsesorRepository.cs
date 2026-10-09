@@ -10,4 +10,6 @@ public interface IAsesorRepository
     Task AgregarAsync(Asesor asesor);
     Task GuardarAsync(Asesor asesor);
     Task<List<Asesor>> ObtenerTodosAsync();
+    Task<Guid?> ObtenerAsesorConMenosOportunidadesAbiertasAsync(CancellationToken ct = default);
+    Task<Guid?> ObtenerSiguienteAsesorEnRotacionAsync(CancellationToken ct = default);
 }

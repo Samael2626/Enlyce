@@ -9,7 +9,12 @@ public sealed class CorsPolicyTests
     [Fact]
     public async Task DefaultPolicy_AllowsLocalhostButRejectsTryCloudflare()
     {
-        using var factory = new TestWebApplicationFactory();
+        using var factory = new TestWebApplicationFactory().WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((_, configuration) =>
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Cors:AllowTrycloudflareOrigins"] = "false"
+                })));
         using var client = factory.CreateClient();
 
         Assert.True(await AllowsOrigin(client, "http://localhost:4173"));

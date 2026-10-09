@@ -68,6 +68,31 @@ public class PropertyPublicationTests
     }
 
     [Fact]
+    public void UpdatePublicContent_NormalizesAndReplacesEditableContent()
+    {
+        var publication = CreatePublication();
+
+        publication.UpdatePublicContent(
+            "  Casa en Zúñiga  ",
+            "  Casa renovada  ",
+            "  Lista para visitar.  ");
+
+        Assert.Equal("casa-en-zuniga", publication.Slug);
+        Assert.Equal("Casa renovada", publication.PublicTitle);
+        Assert.Equal("Lista para visitar.", publication.PublicDescription);
+    }
+
+    [Fact]
+    public void UpdatePublicContent_WhenWithdrawn_ThrowsDomainError()
+    {
+        var publication = CreatePublishedPublication();
+        publication.Withdraw();
+
+        Assert.Throws<DomainError>(() =>
+            publication.UpdatePublicContent("nuevo-slug", "Nuevo titulo", null));
+    }
+
+    [Fact]
     public void Reconstitute_RoundsLegacyCoordinatesStoredBeforeTheRule()
     {
         var publication = PropertyPublication.Reconstitute(

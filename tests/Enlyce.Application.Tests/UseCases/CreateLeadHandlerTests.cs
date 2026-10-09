@@ -8,6 +8,9 @@ namespace Enlyce.Application.Tests.UseCases;
 public sealed class CreateLeadHandlerTests
 {
     private readonly ILeadRepository _leadRepository = Substitute.For<ILeadRepository>();
+    private readonly IAsesorRepository _asesorRepository = Substitute.For<IAsesorRepository>();
+    private readonly ILeadDistributionSettingsRepository _distributionSettings = Substitute.For<ILeadDistributionSettingsRepository>();
+    private readonly IContactRepository _contactRepository = Substitute.For<IContactRepository>();
     private readonly IPropertyPublicationRepository _publicationRepository =
         Substitute.For<IPropertyPublicationRepository>();
     private readonly IConsentimientoRepository _consentRepository =
@@ -22,9 +25,16 @@ public sealed class CreateLeadHandlerTests
 
     public CreateLeadHandlerTests()
     {
+        _contactRepository.CreateOrGetAsync(Arg.Any<Contact>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.Arg<Contact>());
+        _asesorRepository.ObtenerAsesorConMenosOportunidadesAbiertasAsync(Arg.Any<CancellationToken>())
+            .Returns((Guid?)null);
+        _distributionSettings.GetRuleAsync(Arg.Any<CancellationToken>())
+            .Returns(LeadDistributionRule.LeastOpenLeads);
         _leadRepository.SaveAsync(Arg.Any<Lead>())
             .Returns(call => _savedLead = call.Arg<Lead>());
-        _leadRepository.CreateOrGetExistingAsync(Arg.Any<Lead>(), Arg.Any<CancellationToken>())
+        _leadRepository.CreateOrGetExistingAsync(
+                Arg.Any<Lead>(), Arg.Any<CancellationToken>(), Arg.Any<LeadAssignmentSource>())
             .Returns(call =>
             {
                 var lead = call.Arg<Lead>();
@@ -49,7 +59,25 @@ public sealed class CreateLeadHandlerTests
         Assert.Equal(publication.Id, result.PublicationId);
         Assert.Equal(publication.Id, saved.PublicationId);
         Assert.Equal(publication.AdvisorId, saved.AsesorAsignadoId);
-        Assert.Equal(EstadoLead.Contactado, saved.Estado);
+        Assert.Equal(EstadoLead.Nuevo, saved.Estado);
+    }
+
+    [Fact]
+    public async Task Handle_WithRoundRobinRule_UsesRoundRobinAdvisorSelection()
+    {
+        var advisorId = Guid.NewGuid();
+        _distributionSettings.GetRuleAsync(Arg.Any<CancellationToken>())
+            .Returns(LeadDistributionRule.RoundRobin);
+        _asesorRepository.ObtenerSiguienteAsesorEnRotacionAsync(Arg.Any<CancellationToken>())
+            .Returns(advisorId);
+
+        await CreateHandler().HandleAsync(CreateCommand(null));
+
+        Assert.Equal(advisorId, GetSavedLead().AsesorAsignadoId);
+        await _asesorRepository.Received(1)
+            .ObtenerSiguienteAsesorEnRotacionAsync(Arg.Any<CancellationToken>());
+        await _asesorRepository.DidNotReceive()
+            .ObtenerAsesorConMenosOportunidadesAbiertasAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -79,6 +107,19 @@ public sealed class CreateLeadHandlerTests
         Assert.Null(saved.AsesorAsignadoId);
         await _publicationRepository.DidNotReceiveWithAnyArgs()
             .GetPublishedByIdAsync(default);
+    }
+
+    [Fact]
+    public async Task Handle_WithoutPublication_AssignsLeastBusyAdvisor()
+    {
+        var advisorId = Guid.NewGuid();
+        _asesorRepository.ObtenerAsesorConMenosOportunidadesAbiertasAsync(Arg.Any<CancellationToken>())
+            .Returns(advisorId);
+
+        await CreateHandler().HandleAsync(CreateCommand(null));
+
+        Assert.Equal(advisorId, GetSavedLead().AsesorAsignadoId);
+        Assert.Equal(EstadoLead.Nuevo, GetSavedLead().Estado);
     }
 
     [Fact]
@@ -286,6 +327,9 @@ public sealed class CreateLeadHandlerTests
 
     private CreateLeadHandler CreateHandler() => new(
         _leadRepository,
+        _asesorRepository,
+        _distributionSettings,
+        _contactRepository,
         _publicationRepository,
         _consentRepository,
         _policyRepository,

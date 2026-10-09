@@ -130,13 +130,13 @@ public class PipelineTests
     }
 
     [Fact]
-    public void Asignar_CambiaEtapaAContactado()
+    public void Asignar_NoCambiaLaEtapaComercial()
     {
         var lead = Lead.Crear("Juan", ValidEmail(), null, "Web", true);
         Assert.Equal(EtapasPipeline.LeadNuevo, lead.EtapaPipeline);
 
         lead.AsignarAsesor(Guid.NewGuid());
-        Assert.Equal(EstadoLead.Contactado, lead.Estado);
+        Assert.Equal(EstadoLead.Nuevo, lead.Estado);
         Assert.NotNull(lead.AsesorAsignadoId);
     }
 

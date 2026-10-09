@@ -11,9 +11,14 @@ public static class EndpointAccess
         if (!user.IsInRole("Asesor"))
             return null;
 
+        return ActorId(user);
+    }
+
+    public static Guid? ActorId(ClaimsPrincipal user)
+    {
         var claim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-        return Guid.TryParse(claim, out var advisorId) ? advisorId : null;
+        return Guid.TryParse(claim, out var actorId) ? actorId : null;
     }
 
     public static bool CanActAsAdvisor(ClaimsPrincipal user, Guid advisorId) =>
@@ -31,5 +36,36 @@ public static class EndpointAccess
 
         var lead = await leads.GetByIdAsync(leadId);
         return lead?.AsesorAsignadoId == advisorId;
+    }
+
+    public static async Task<bool> CanAccessContactAsync(
+        ClaimsPrincipal user, Guid contactId, ILeadRepository leads)
+    {
+        if (user.IsInRole("Administrador"))
+            return true;
+
+        var advisorId = AdvisorId(user);
+        if (advisorId is null)
+            return false;
+
+        return (await leads.GetByContactIdAsync(contactId))
+            .Any(lead => lead.AsesorAsignadoId == advisorId);
+    }
+
+    public static async Task<bool> CanAccessPublicationAsync(
+        ClaimsPrincipal user,
+        Guid publicationId,
+        IPropertyPublicationRepository publications,
+        CancellationToken ct = default)
+    {
+        if (user.IsInRole("Administrador"))
+            return true;
+
+        var advisorId = AdvisorId(user);
+        if (advisorId is null)
+            return false;
+
+        var publication = await publications.GetByIdAsync(publicationId, ct);
+        return publication?.AdvisorId == advisorId;
     }
 }

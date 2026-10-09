@@ -65,6 +65,7 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
     [InlineData("GET", "/api/interacciones/lead/11111111-1111-1111-1111-111111111111")]
     [InlineData("GET", "/api/alertas")]
     [InlineData("GET", "/api/pipeline")]
+    [InlineData("GET", "/api/pipeline/11111111-1111-1111-1111-111111111111/asignaciones")]
     [InlineData("PUT", "/api/pipeline/11111111-1111-1111-1111-111111111111/mover-etapa")]
     [InlineData("PUT", "/api/pipeline/11111111-1111-1111-1111-111111111111/asignar")]
     [InlineData("PUT", "/api/pipeline/11111111-1111-1111-1111-111111111111/reasignar")]
@@ -74,10 +75,16 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
     [InlineData("GET", "/api/visitas")]
     [InlineData("GET", "/api/visitas/lead/11111111-1111-1111-1111-111111111111")]
     [InlineData("GET", "/api/visitas/asesor/11111111-1111-1111-1111-111111111111?Desde=2020-01-01T00:00:00Z")]
+    [InlineData("GET", "/api/publicaciones")]
+    [InlineData("GET", "/api/publicaciones/opciones")]
+    [InlineData("POST", "/api/publicaciones")]
+    [InlineData("PUT", "/api/publicaciones/11111111-1111-1111-1111-111111111111")]
+    [InlineData("PUT", "/api/publicaciones/11111111-1111-1111-1111-111111111111/estado")]
     [InlineData("GET", "/api/billing/pricing")]
     [InlineData("POST", "/api/billing/checkout-sessions")]
     [InlineData("GET", "/api/billing/orders/ENL-11111111111111111111111111111111")]
     [InlineData("GET", "/api/analytics/funnel")]
+    [InlineData("GET", "/api/configuracion/reparto-leads")]
     public async Task PrivateEndpoint_WithoutToken_ReturnsUnauthorized(string method, string path)
     {
         using var client = _factory.CreateClient();
@@ -86,9 +93,21 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task LeadDistributionSettings_AdvisorIsForbidden()
+    {
+        var (client, _) = _factory.CreateAuthenticatedClient("Asesor");
+        using (client)
+        {
+            var response = await client.GetAsync("/api/configuracion/reparto-leads");
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+    }
+
     [Theory]
     [InlineData("GET", "/api/leads/{0}")]
     [InlineData("GET", "/api/interacciones/lead/{0}")]
+    [InlineData("GET", "/api/pipeline/{0}/asignaciones")]
     [InlineData("GET", "/api/datos-personales/{0}")]
     [InlineData("DELETE", "/api/datos-personales/{0}")]
     public async Task LeadResource_OtherAdvisor_ReturnsForbidden(string method, string pathFormat)

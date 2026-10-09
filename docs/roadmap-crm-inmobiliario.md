@@ -12,6 +12,9 @@
 - [x] Reporte CRM inicial por origen y tipo de operación, junto al embudo anónimo de la web.
 - [x] Captaciones web sin publicación asignadas al asesor activo con menor carga abierta; publicaciones conservan su asesor y referencias inválidas quedan en revisión.
 - [x] Asignar ya no marca como contactada la oportunidad; la primera interacción del asesor registra `FechaPrimerContacto` y alimenta el promedio de respuesta.
+- [x] Permisos de demandas e historial para contactos compartidos: cada asesor ve demandas ligadas a sus oportunidades; prueba encontró y corrigió exposición entre asesores.
+- [x] Alertas internas consultan tareas pendientes por vencimiento o recordatorio y permiten completar/reprogramar desde la pantalla.
+- [x] Métricas de primera respuesta por asesor, origen y rango inclusivo; solo cuentan oportunidades con respuesta registrada.
 - [x] Pruebas de dominio, aplicación y rutas nuevas; compilación de API y frontend.
 
 ## Trabajo pendiente, en orden
@@ -20,9 +23,9 @@
 
 - [x] Validar migraciones, deduplicación, backup y restore en copia anonimizada PostgreSQL 17 (4 leads); antes de cada despliegue, respaldar y restaurar la base objetivo exacta.
 - [x] Regla configurable de reparto (menor carga abierta o turnos rotativos), con actor, motivo, origen y hora en el historial.
-- [ ] Cerrar autorización para contactos compartidos; no se encontró bypass claro. [x] Pruebas de integración cubren aislamiento de oportunidades/tareas y bloqueo de edición ajena; falta cubrir demandas e historial del contacto compartido.
-- [ ] Alertas accionables dentro del CRM: filtrar tareas pendientes por `DueAt` o `ReminderAt` y mostrar recordatorios aunque el vencimiento esté fuera de ventana. `ReminderAt` hoy solo se persiste; correo es stub, dejar proveedor real para una fase posterior.
-- [ ] Registrar y mostrar la primera respuesta segmentada por asesor, fuente y periodo; hoy se expone promedio general de oportunidades que ya tienen interacción registrada.
+- [x] Cerrar autorización de contactos compartidos para oportunidades, demandas e historial; restringir mutaciones de demanda al asesor del lead.
+- [x] Alertas internas accionables: mostrar tareas pendientes con `DueAt` o `ReminderAt` dentro de ventana y permitir completar/reprogramar. Correo y aviso con navegador cerrado quedan fuera.
+- [x] Mostrar primera respuesta por asesor, origen y periodo inclusivo; oportunidades sin respuesta no entran en el promedio.
 
 ### P1 — operación y control
 
@@ -55,7 +58,7 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 1. Una persona se conserva como contacto único y puede tener varias oportunidades independientes.
 2. Cada asesor ve solo los registros que tiene asignados o que una regla explícita le comparte; administración tiene vista global.
 3. Se puede llevar una oportunidad desde captación hasta cierre dejando responsable, fechas e historial verificables.
-4. Las tareas vencidas y compromisos próximos son visibles y notificables.
+4. Las tareas vencidas y compromisos próximos son visibles y accionables dentro del CRM.
 5. Los reportes concilian con los registros consultables y permiten explicar cada indicador.
 6. Migraciones probadas sobre copia, suite verde y recorrido E2E antes de tocar producción.
 
@@ -63,7 +66,7 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 
 - Domain: 217 pruebas aprobadas.
 - Application: 40 pruebas aprobadas.
-- Integration: 189 pruebas aprobadas. Se aisló la configuración de la prueba CORS por defecto para que no dependa de la política de demo.
+- Integration: 196 pruebas aprobadas. Incluyen aislamiento de demandas e historial, recordatorios y métricas de primera respuesta.
 - Frontend: `npm run build` aprobado.
 - SQL EF Core aplicado en copia PostgreSQL anonimizada; no aplicado a producción.
 

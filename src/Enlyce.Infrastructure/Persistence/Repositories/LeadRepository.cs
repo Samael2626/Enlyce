@@ -28,9 +28,24 @@ public class LeadRepository : ILeadRepository
 
     public async Task<LeadCreationResult> CreateOrGetExistingAsync(
         Lead lead,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        LeadAssignmentSource assignmentSource = LeadAssignmentSource.AutomaticLoadBalance)
     {
         _context.Leads.Add(lead);
+        LeadAssignmentHistory? assignmentHistory = null;
+        if (lead.AsesorAsignadoId is Guid advisorId)
+        {
+            var source = lead.PublicationId.HasValue ? LeadAssignmentSource.Publication : assignmentSource;
+            var reason = lead.PublicationId.HasValue
+                ? "Asignada al asesor responsable de la publicacion"
+                : source == LeadAssignmentSource.AutomaticRoundRobin
+                    ? "Asignada automaticamente por turnos rotativos"
+                    : "Asignada automaticamente por menor carga abierta";
+            assignmentHistory = LeadAssignmentHistory.Create(
+                lead.Id, null, advisorId, null, reason, source, lead.FechaAsignacion);
+            _context.LeadAssignmentHistory.Add(assignmentHistory);
+        }
+
         try
         {
             await _context.SaveChangesAsync(ct);
@@ -39,6 +54,8 @@ public class LeadRepository : ILeadRepository
         catch (DbUpdateException)
         {
             _context.Entry(lead).State = EntityState.Detached;
+            if (assignmentHistory is not null)
+                _context.Entry(assignmentHistory).State = EntityState.Detached;
             var existing = await GetByOpportunityKeyAsync(lead.OpportunityKey, ct);
             if (existing is null)
                 throw;
@@ -95,6 +112,11 @@ public class LeadRepository : ILeadRepository
             .OrderByDescending(l => l.FechaCreacion)
             .ToListAsync();
     }
+
+    public async Task<IReadOnlyList<Lead>> GetByContactIdAsync(Guid contactId, CancellationToken ct = default) =>
+        await _context.Leads.Where(lead => lead.ContactId == contactId && lead.Activo)
+            .OrderByDescending(lead => lead.FechaCreacion)
+            .ToListAsync(ct);
 
     public async Task<Lead> SaveAsync(Lead lead)
     {

@@ -8,9 +8,13 @@ import { PipelinePage } from "@/pages/PipelinePage"
 import { LeadsPage } from "@/pages/LeadsPage"
 import { InmueblesPage } from "@/pages/InmueblesPage"
 import { AlertasPage } from "@/pages/AlertasPage"
+import { PublicacionesPage } from "@/pages/PublicacionesPage"
 import { BillingPage } from "@/pages/BillingPage"
 import { BillingResultPage } from "@/pages/BillingResultPage"
 import { AnaliticaPage } from "@/pages/AnaliticaPage"
+import { ContactsPage } from "@/pages/ContactsPage"
+import { CalendarPage } from "@/pages/CalendarPage"
+import { SettingsPage } from "@/pages/SettingsPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,14 +41,16 @@ export function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/pipeline" element={<PipelinePage />} />
               <Route path="/leads" element={<LeadsPage />} />
+              <Route path="/contactos" element={<ContactsPage />} />
               <Route path="/inmuebles" element={<InmueblesPage />} />
+              <Route path="/publicaciones" element={<PublicacionesPage />} />
               <Route path="/alertas" element={<AlertasPage />} />
               <Route path="/facturacion" element={<BillingPage />} />
               <Route path="/facturacion/respuesta" element={<BillingResultPage />} />
-              <Route path="/calendario" element={<Placeholder title="Calendario" />} />
+              <Route path="/calendario" element={<CalendarPage />} />
               <Route path="/chat" element={<Placeholder title="Chat" />} />
               <Route path="/reportes" element={<AnaliticaPage />} />
-              <Route path="/config" element={<Placeholder title="Configuración" />} />
+              <Route path="/config" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

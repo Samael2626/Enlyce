@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react"
-import { usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead } from "@/hooks/useApi"
+import { usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead, useLeadAssignmentHistory } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 import {
   User,
@@ -274,6 +274,8 @@ function LeadCard({
   )
   const { data: interacciones, isLoading: loadingInteracciones } =
     useInteracciones(isExpanded ? lead.id : "")
+  const { data: assignments, isLoading: loadingAssignments } =
+    useLeadAssignmentHistory(isExpanded ? lead.id : "")
   const registrarInteraccion = useRegistrarInteraccion()
   const user = useAuthStore((s) => s.user)
 
@@ -442,6 +444,21 @@ function LeadCard({
                 </section>
               )}
 
+              <section aria-label="Historial de asignaciones">
+                <h4 className="mb-2 text-sm font-medium text-foreground">Historial de responsables</h4>
+                {loadingAssignments ? <p className="text-sm text-muted-foreground">Cargando historial…</p> :
+                  !assignments?.length ? <p className="text-sm text-muted-foreground">Sin cambios de responsable registrados.</p> :
+                  <ol className="space-y-2">
+                    {assignments.map((item) => <li key={item.id} className="border-l-2 border-accent bg-muted/35 px-3 py-2 text-sm">
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <strong>{item.previousAdvisorName ?? "Sin responsable"} → {item.newAdvisorName ?? "Asesor no disponible"}</strong>
+                        <time className="text-xs text-muted-foreground">{format(parseISO(item.changedAt), "dd MMM yyyy HH:mm", { locale: es })}</time>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{item.reason} · {item.changedByName ? `Por ${item.changedByName}` : "Sistema"} · {assignmentSourceLabels[item.source] ?? item.source}</p>
+                    </li>)}
+                  </ol>}
+              </section>
+
               {/* Interacciones */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -534,6 +551,15 @@ function LeadCard({
       )}
     </div>
   )
+}
+
+const assignmentSourceLabels: Record<string, string> = {
+  Publication: "Asesor de publicación",
+  AutomaticLoadBalance: "Menor carga abierta",
+  AutomaticRoundRobin: "Turnos rotativos",
+  ManualAssignment: "Asignación manual",
+  ManualReassignment: "Reasignación manual",
+  Legacy: "Asignación previa al historial",
 }
 
 function DetailItem({

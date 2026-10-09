@@ -56,6 +56,17 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
         return asesor.Id;
     }
 
+    private Guid SeedLeadWithoutAssignment()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+        var lead = Lead.Crear("Sin asignar", Email.Create($"unassigned-{Guid.NewGuid():N}@test.com"),
+            null, "Test", true);
+        db.Leads.Add(lead);
+        db.SaveChanges();
+        return lead.Id;
+    }
+
     [Fact]
     public async Task ConsultarPipeline_ReturnsOk()
     {
@@ -94,9 +105,33 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         var response = await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/asignar", new
         {
-            AsesorId = asesorId
+            AsesorId = asesorId,
+            Reason = "Cobertura de zona"
         });
         response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task AsignarLead_RechazaAsesorInactivo()
+    {
+        var leadId = await CreateLeadAsync();
+        var advisor = Asesor.Reconstituir(Guid.NewGuid(), "Asesor inactivo",
+            Email.Create($"inactive-{Guid.NewGuid():N}@test.com"), "test-hash", "Asesor",
+            DateTime.UtcNow, false);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+            db.Asesores.Add(advisor);
+            await db.SaveChangesAsync();
+        }
+
+        var response = await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/asignar", new
+        {
+            AsesorId = advisor.Id,
+            Reason = "Asignacion para prueba"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -108,14 +143,67 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/asignar", new
         {
-            AsesorId = asesor1
+            AsesorId = asesor1,
+            Reason = "Asignacion inicial"
         });
 
         var response = await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/reasignar", new
         {
-            NuevoAsesorId = asesor2
+            NuevoAsesorId = asesor2,
+            Reason = "Cambio de responsable"
         });
         response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task AssignmentHistory_StoresActorReasonAndPreviousAndNewAdvisor()
+    {
+        var leadId = SeedLeadWithoutAssignment();
+        var firstAdvisor = SeedAsesor();
+        var secondAdvisor = SeedAsesor();
+
+        var firstAssignment = await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/asignar", new
+        {
+            AsesorId = firstAdvisor,
+            Reason = "Cobertura inicial"
+        });
+        firstAssignment.EnsureSuccessStatusCode();
+        var reassignment = await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/reasignar", new
+        {
+            NuevoAsesorId = secondAdvisor,
+            Reason = "Cambio de zona"
+        });
+        reassignment.EnsureSuccessStatusCode();
+
+        var history = await _client.GetFromJsonAsync<AssignmentHistoryDto[]>(
+            $"/api/pipeline/{leadId}/asignaciones");
+        Assert.NotNull(history);
+        Assert.Equal(2, history.Length);
+        Assert.Null(history[0].PreviousAdvisorId);
+        Assert.Equal(firstAdvisor, history[0].NewAdvisorId);
+        Assert.Equal("ManualAssignment", history[0].Source);
+        Assert.Equal("Cobertura inicial", history[0].Reason);
+        Assert.Equal(secondAdvisor, history[1].NewAdvisorId);
+        Assert.Equal(firstAdvisor, history[1].PreviousAdvisorId);
+        Assert.Equal("Cambio de zona", history[1].Reason);
+        Assert.Equal("ManualReassignment", history[1].Source);
+        Assert.All(history, item => Assert.NotNull(item.ChangedByAdvisorId));
+    }
+
+    [Fact]
+    public async Task AssignmentHistory_RecordsAutomaticWebAssignment()
+    {
+        SeedAsesor();
+        var leadId = await CreateLeadAsync();
+
+        var history = await _client.GetFromJsonAsync<AssignmentHistoryDto[]>(
+            $"/api/pipeline/{leadId}/asignaciones");
+
+        Assert.NotNull(history);
+        Assert.NotEmpty(history);
+        Assert.Equal("AutomaticLoadBalance", history[0].Source);
+        Assert.Null(history[0].PreviousAdvisorId);
+        Assert.Null(history[0].ChangedByAdvisorId);
     }
 
     [Fact]
@@ -133,6 +221,9 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
         });
         response.EnsureSuccessStatusCode();
     }
+
+    private sealed record AssignmentHistoryDto(Guid? PreviousAdvisorId, Guid NewAdvisorId,
+        Guid? ChangedByAdvisorId, string Reason, string Source, DateTime ChangedAt);
 
     [Fact]
     public async Task RegistrarInteraccion_NonExistingLead_ReturnsNotFound()
@@ -171,7 +262,8 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
 
         await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/asignar", new
         {
-            AsesorId = asesorId
+            AsesorId = asesorId,
+            Reason = "Flujo de prueba"
         });
 
         await _client.PutAsJsonAsync($"/api/pipeline/{leadId}/mover-etapa", new

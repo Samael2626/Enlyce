@@ -32,6 +32,23 @@ public static class VisitasModule
         .WithName("ObtenerVisitas")
         .Produces<List<Domain.Entities.Visita>>();
 
+        group.MapGet("/{id:guid}", async Task<IResult> (
+            Guid id,
+            HttpContext http,
+            IVisitaRepository visits,
+            ILeadRepository leads) =>
+        {
+            var visit = await visits.ObtenerPorIdAsync(id);
+            if (visit is null)
+                return Results.NotFound();
+            if (!await EndpointAccess.CanAccessLeadAsync(http.User, visit.LeadId, leads) ||
+                !EndpointAccess.CanActAsAdvisor(http.User, visit.AsesorId))
+                return Results.Forbid();
+            return Results.Ok(visit);
+        })
+        .RequireAuthorization()
+        .WithName("ObtenerVisita");
+
         group.MapPost("/", async Task<IResult> (
             [FromBody] RegistrarVisitaRequest request,
             HttpContext http,
@@ -77,6 +94,62 @@ public static class VisitasModule
         .WithName("ObtenerVisitasPorLead")
         .Produces<List<Domain.Entities.Visita>>();
 
+        group.MapPut("/{id:guid}/reprogramar", async Task<IResult> (
+            Guid id,
+            [FromBody] ReprogramarVisitaRequest request,
+            HttpContext http,
+            IVisitaRepository visits,
+            ILeadRepository leads) =>
+        {
+            var visit = await visits.ObtenerPorIdAsync(id);
+            if (visit is null)
+                return Results.NotFound();
+            if (!await CanManageVisitAsync(http, visit, leads))
+                return Results.Forbid();
+            visit.Reprogramar(request.FechaProgramada);
+            await visits.GuardarAsync(visit);
+            return Results.Ok(visit);
+        })
+        .RequireAuthorization()
+        .WithName("ReprogramarVisita");
+
+        group.MapPut("/{id:guid}/realizada", async Task<IResult> (
+            Guid id,
+            [FromBody] CompletarVisitaRequest request,
+            HttpContext http,
+            IVisitaRepository visits,
+            ILeadRepository leads) =>
+        {
+            var visit = await visits.ObtenerPorIdAsync(id);
+            if (visit is null)
+                return Results.NotFound();
+            if (!await CanManageVisitAsync(http, visit, leads))
+                return Results.Forbid();
+            visit.MarcarRealizada(request.Feedback);
+            await visits.GuardarAsync(visit);
+            return Results.Ok(visit);
+        })
+        .RequireAuthorization()
+        .WithName("CompletarVisita");
+
+        group.MapPut("/{id:guid}/cancelar", async Task<IResult> (
+            Guid id,
+            HttpContext http,
+            IVisitaRepository visits,
+            ILeadRepository leads) =>
+        {
+            var visit = await visits.ObtenerPorIdAsync(id);
+            if (visit is null)
+                return Results.NotFound();
+            if (!await CanManageVisitAsync(http, visit, leads))
+                return Results.Forbid();
+            visit.Cancelar();
+            await visits.GuardarAsync(visit);
+            return Results.Ok(visit);
+        })
+        .RequireAuthorization()
+        .WithName("CancelarVisita");
+
         group.MapGet("/asesor/{asesorId:guid}", async Task<IResult> (
             Guid asesorId,
             [AsParameters] ConsultarVisitasAsesorRequest query,
@@ -104,9 +177,16 @@ public static class VisitasModule
             ?? http.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
         return Guid.TryParse(claim, out var advisorId) ? advisorId : null;
     }
+
+    private static async Task<bool> CanManageVisitAsync(
+        HttpContext http, Domain.Entities.Visita visit, ILeadRepository leads) =>
+        await EndpointAccess.CanAccessLeadAsync(http.User, visit.LeadId, leads) &&
+        EndpointAccess.CanActAsAdvisor(http.User, visit.AsesorId);
 }
 
 public record RegistrarVisitaRequest(
     Guid LeadId, Guid InmuebleId, Guid AsesorId, DateTime FechaProgramada);
 
 public record ConsultarVisitasAsesorRequest(DateTime Desde);
+public record ReprogramarVisitaRequest(DateTime FechaProgramada);
+public record CompletarVisitaRequest(string? Feedback);

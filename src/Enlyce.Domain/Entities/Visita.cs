@@ -52,13 +52,31 @@ public sealed class Visita
 
     public void MarcarRealizada(string? feedback = null)
     {
+        EnsureProgramada();
+        if (feedback?.Trim().Length > 2_000)
+            throw new DomainError("La retroalimentacion no puede superar 2000 caracteres.");
         FechaRealizada = DateTime.UtcNow;
-        Feedback = feedback;
+        Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
         Estado = "Realizada";
     }
 
     public void Cancelar()
     {
+        EnsureProgramada();
         Estado = "Cancelada";
+    }
+
+    public void Reprogramar(DateTime nuevaFecha)
+    {
+        EnsureProgramada();
+        if (nuevaFecha.Kind != DateTimeKind.Utc)
+            throw new DomainError("La fecha de visita debe estar en UTC.");
+        FechaProgramada = nuevaFecha;
+    }
+
+    private void EnsureProgramada()
+    {
+        if (Estado != "Programada")
+            throw new DomainError("Solo se pueden modificar visitas programadas.");
     }
 }

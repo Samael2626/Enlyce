@@ -73,6 +73,19 @@ public class VisitaTests
     }
 
     [Fact]
+    public void Reprogramar_CambiaFechaSoloCuandoSigueProgramada()
+    {
+        var visita = Visita.Programar(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow);
+        var nuevaFecha = DateTime.UtcNow.AddDays(2);
+
+        visita.Reprogramar(nuevaFecha);
+        Assert.Equal(nuevaFecha, visita.FechaProgramada);
+
+        visita.Cancelar();
+        Assert.Throws<DomainError>(() => visita.Reprogramar(DateTime.UtcNow.AddDays(3)));
+    }
+
+    [Fact]
     public void Reconstituir_MantieneValores()
     {
         var id = Guid.NewGuid();

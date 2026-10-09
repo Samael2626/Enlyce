@@ -25,10 +25,26 @@ public sealed class PropertyPublicationRepository : IPropertyPublicationReposito
             .Include(publication => publication.Photos)
             .SingleOrDefaultAsync(publication => publication.Id == id, ct);
 
+    public Task<bool> ExistsForPropertyAsync(Guid propertyId, CancellationToken ct = default) =>
+        _context.PropertyPublications.AnyAsync(publication => publication.PropertyId == propertyId, ct);
+
+    public Task<bool> SlugExistsAsync(
+        string slug, Guid? excludingId = null, CancellationToken ct = default) =>
+        _context.PropertyPublications.AnyAsync(publication =>
+            publication.Slug == slug &&
+            (!excludingId.HasValue || publication.Id != excludingId.Value), ct);
+
     public async Task SaveAsync(PropertyPublication publication, CancellationToken ct = default)
     {
         if (_context.Entry(publication).State == EntityState.Detached)
-            _context.PropertyPublications.Update(publication);
+        {
+            var exists = await _context.PropertyPublications
+                .AnyAsync(item => item.Id == publication.Id, ct);
+            if (exists)
+                _context.PropertyPublications.Update(publication);
+            else
+                _context.PropertyPublications.Add(publication);
+        }
 
         await _context.SaveChangesAsync(ct);
     }

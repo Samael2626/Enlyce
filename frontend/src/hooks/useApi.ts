@@ -57,6 +57,13 @@ export function usePipeline() {
   })
 }
 
+export function useFirstResponseMetrics(from: string, to: string) {
+  return useQuery({
+    queryKey: ["analytics", "first-response", from, to],
+    queryFn: () => api.getFirstResponseMetrics(from, to),
+  })
+}
+
 export function useMoveLeadInPipeline() {
   const queryClient = useQueryClient()
 
@@ -68,7 +75,27 @@ export function useMoveLeadInPipeline() {
       leadId: string
       nuevaEtapa: string
     }) => api.moveLeadInPipeline(leadId, nuevaEtapa),
-    onSuccess: () => {
+    onMutate: async ({ leadId, nuevaEtapa }) => {
+      await queryClient.cancelQueries({ queryKey: ["pipeline"] })
+      const previousPipeline = queryClient.getQueryData<any>(["pipeline"])
+
+      if (previousPipeline?.leads) {
+        queryClient.setQueryData(["pipeline"], {
+          ...previousPipeline,
+          leads: previousPipeline.leads.map((lead: any) =>
+            lead.id === leadId ? { ...lead, etapaPipeline: nuevaEtapa } : lead
+          ),
+        })
+      }
+
+      return { previousPipeline }
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousPipeline) {
+        queryClient.setQueryData(["pipeline"], context.previousPipeline)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["pipeline"] })
     },
   })
@@ -81,13 +108,23 @@ export function useAssignLead() {
     mutationFn: ({
       leadId,
       asesorId,
+      reason,
     }: {
       leadId: string
       asesorId: string
-    }) => api.assignLeadToAsesor(leadId, asesorId),
+      reason: string
+    }) => api.assignLeadToAsesor(leadId, asesorId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pipeline"] })
     },
+  })
+}
+
+export function useLeadAssignmentHistory(leadId: string) {
+  return useQuery({
+    queryKey: ["leads", leadId, "assignment-history"],
+    queryFn: () => api.getLeadAssignmentHistory(leadId),
+    enabled: !!leadId,
   })
 }
 
@@ -109,6 +146,147 @@ export function useCreateLead() {
       queryClient.invalidateQueries({ queryKey: ["pipeline"] })
       queryClient.invalidateQueries({ queryKey: ["leads"] })
     },
+  })
+}
+
+export function useContacts() {
+  return useQuery({
+    queryKey: ["contacts"],
+    queryFn: () => api.getContacts(),
+  })
+}
+
+export function useContact(id: string) {
+  return useQuery({
+    queryKey: ["contacts", id],
+    queryFn: () => api.getContact(id),
+    enabled: !!id,
+  })
+}
+
+export function useUpdateContact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, name, phone }: { id: string; name: string; phone?: string }) =>
+      api.updateContact(id, { name, phone }),
+    onSuccess: (_contact, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts", variables.id] })
+    },
+  })
+}
+
+export function useCreateCommercialTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: import("@/lib/types").CreateCommercialTaskInput) => api.createCommercialTask(data),
+    onSuccess: (_task, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts", variables.contactId] })
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    },
+  })
+}
+
+export function useCommercialTasks(from?: string, to?: string, contactId?: string) {
+  return useQuery({
+    queryKey: ["tasks", from, to, contactId],
+    queryFn: () => api.getCommercialTasks(from, to, contactId),
+  })
+}
+
+export function useCommercialTaskAlerts(through: string) {
+  return useQuery({
+    queryKey: ["tasks", "alerts", through],
+    queryFn: () => api.getCommercialTaskAlerts(through),
+  })
+}
+
+export function useCompleteCommercialTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.completeCommercialTask(id),
+    onSuccess: (task) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts", task.contactId] })
+    },
+  })
+}
+
+export function useCancelCommercialTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.cancelCommercialTask(id),
+    onSuccess: (task) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts", task.contactId] })
+    },
+  })
+}
+
+export function useRescheduleCommercialTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, dueAt, reminderAt }: { id: string; dueAt: string; reminderAt?: string }) => api.rescheduleCommercialTask(id, dueAt, reminderAt),
+    onSuccess: (task) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts", task.contactId] })
+    },
+  })
+}
+
+export function useCommercialTaskHistory(taskId: string) {
+  return useQuery({
+    queryKey: ["tasks", taskId, "history"],
+    queryFn: () => api.getCommercialTaskHistory(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useAddCommercialTaskComment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, comment }: { id: string; comment: string }) => api.addCommercialTaskComment(id, comment),
+    onSuccess: (_event, variables) => queryClient.invalidateQueries({ queryKey: ["tasks", variables.id, "history"] }),
+  })
+}
+
+export function useCustomerDemands(contactId: string) {
+  return useQuery({
+    queryKey: ["demands", contactId],
+    queryFn: () => api.getCustomerDemands(contactId),
+    enabled: !!contactId,
+  })
+}
+
+export function useCreateCustomerDemand() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: import("@/lib/types").CreateCustomerDemandInput) => api.createCustomerDemand(data),
+    onSuccess: (_demand, variables) => queryClient.invalidateQueries({ queryKey: ["demands", variables.contactId] }),
+  })
+}
+
+export function useDemandMatches(demandId: string) {
+  return useQuery({
+    queryKey: ["demand-matches", demandId],
+    queryFn: () => api.getDemandMatches(demandId),
+    enabled: !!demandId,
+  })
+}
+
+export function useLinkDemandProperty() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ demandId, propertyId }: { demandId: string; propertyId: string }) => api.linkDemandProperty(demandId, propertyId),
+    onSuccess: (_result, variables) => queryClient.invalidateQueries({ queryKey: ["demand-matches", variables.demandId] }),
+  })
+}
+
+export function useSetDemandPropertyStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ demandId, propertyId, status }: { demandId: string; propertyId: string; status: string }) => api.setDemandPropertyStatus(demandId, propertyId, status),
+    onSuccess: (_result, variables) => queryClient.invalidateQueries({ queryKey: ["demand-matches", variables.demandId] }),
   })
 }
 
@@ -161,6 +339,21 @@ export function useRegistrarVisita() {
   })
 }
 
+export function useManageVisit() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, action, value }: { id: string; action: "complete" | "cancel" | "reschedule"; value?: string }) => {
+      if (action === "complete") return api.completeVisit(id, value)
+      if (action === "cancel") return api.cancelVisit(id)
+      return api.rescheduleVisit(id, value ?? "")
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["visitas"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+    },
+  })
+}
+
 // Alertas
 export function useAlertas() {
   return useQuery({
@@ -186,6 +379,72 @@ export function useCreateInmueble() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inmuebles"] })
     },
+  })
+}
+
+// Publicaciones
+export function usePublications() {
+  return useQuery({
+    queryKey: ["publicaciones"],
+    queryFn: () => api.getPublications(),
+  })
+}
+
+export function usePublicationOptions() {
+  return useQuery({
+    queryKey: ["publicaciones", "opciones"],
+    queryFn: () => api.getPublicationOptions(),
+  })
+}
+
+export function useCreatePublication() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.createPublication.bind(api),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["publicaciones"] })
+    },
+  })
+}
+
+export function useUpdatePublication() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: import("@/lib/types").PropertyPublicationInput }) =>
+      api.updatePublication(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["publicaciones"] }),
+  })
+}
+
+export function useChangePublicationStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      action,
+    }: {
+      id: string
+      action: "publish" | "pause" | "withdraw"
+    }) => api.changePublicationStatus(id, action),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["publicaciones"] }),
+  })
+}
+
+export function useUploadPublicationPhoto() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      publicationId,
+      file,
+      altText,
+      isCover,
+    }: {
+      publicationId: string
+      file: File
+      altText: string
+      isCover: boolean
+    }) => api.uploadPublicationPhoto(publicationId, file, altText, isCover),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["publicaciones"] }),
   })
 }
 

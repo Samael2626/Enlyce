@@ -25,6 +25,7 @@ public sealed class RegistrarInteraccionHandler
             command.LeadId, command.AsesorId, command.Tipo, command.Resumen);
 
         lead.IncrementarInteracciones();
+        lead.RegistrarContacto();
 
         await _interaccionRepo.AgregarAsync(interaccion);
         await _leadRepo.SaveAsync(lead);

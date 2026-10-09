@@ -31,7 +31,7 @@ public sealed class ConsultarPipelineHandler
             l.Telefono?.Value, l.Fuente,
             l.EtapaPipeline, l.TipoOperacion,
             l.InteraccionesCount, l.FechaUltimaInteraccion,
-            l.FechaCreacion, null)).ToList();
+            l.FechaCreacion, null, l.FechaPrimerContacto)).ToList();
 
         return new PipelineResponse(etapas, leadDtos, leads.Count);
     }

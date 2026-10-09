@@ -1,6 +1,7 @@
 using Enlyce.Application.Abstractions;
 using Enlyce.Application.UseCases.UploadPublicationPhoto;
 using Enlyce.Domain.Media;
+using Enlyce.Domain.Ports;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Enlyce.Api.Endpoints.PublicationMedia;
@@ -19,9 +20,14 @@ public static class PublicationMediaModule
             IFormFile archivo,
             [FromForm] string textoAlternativo,
             [FromForm] bool esPortada,
+            HttpContext http,
+            IPropertyPublicationRepository publications,
             ICommandHandler<UploadPublicationPhotoCommand, UploadPublicationPhotoResponse> handler,
             CancellationToken ct) =>
         {
+            if (!await EndpointAccess.CanAccessPublicationAsync(http.User, publicationId, publications, ct))
+                return Results.Forbid();
+
             await using var content = archivo.OpenReadStream();
 
             var result = await handler.HandleAsync(new UploadPublicationPhotoCommand(

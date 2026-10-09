@@ -7,6 +7,11 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
+  resolveMediaUrl(url: string) {
+    if (/^https?:\/\//i.test(url)) return url
+    return `${this.baseUrl}${url.startsWith("/") ? url : `/${url}`}`
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -22,17 +27,27 @@ class ApiClient {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: `Error ${response.status}`,
-      }))
-      throw new Error(error.message || `Error ${response.status}`)
+      const error = await response.json().catch(() => ({})) as {
+        error?: string
+        detail?: string
+        title?: string
+        message?: string
+      }
+      throw new Error(
+        error.error || error.detail || error.title || error.message || `Error ${response.status}`
+      )
     }
 
     if (response.status === 204) {
       return undefined as T
     }
 
-    return response.json()
+    const text = await response.text()
+    if (!text || text.trim() === "") {
+      return undefined as T
+    }
+
+    return JSON.parse(text)
   }
 
   // Auth
@@ -75,9 +90,104 @@ class ApiClient {
     return this.request<any>(`/api/leads/${id}`)
   }
 
+  // Contactos
+  async getContacts() {
+    return this.request<import("@/lib/types").ContactSummary[]>("/api/contactos")
+  }
+
+  async getContact(id: string) {
+    return this.request<import("@/lib/types").ContactDetail>(`/api/contactos/${id}`)
+  }
+
+  async updateContact(id: string, data: { name: string; phone?: string }) {
+    return this.request<import("@/lib/types").ContactSummary>(`/api/contactos/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async createCommercialTask(data: import("@/lib/types").CreateCommercialTaskInput) {
+    return this.request<import("@/lib/types").CommercialTask>("/api/tareas", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getCommercialTasks(from?: string, to?: string, contactId?: string) {
+    const query = new URLSearchParams()
+    if (from) query.set("From", from)
+    if (to) query.set("To", to)
+    if (contactId) query.set("ContactId", contactId)
+    const suffix = query.size ? `?${query.toString()}` : ""
+    return this.request<import("@/lib/types").CommercialTask[]>(`/api/tareas${suffix}`)
+  }
+
+  async getCommercialTaskAlerts(through: string) {
+    const query = new URLSearchParams({ through })
+    return this.request<import("@/lib/types").CommercialTask[]>(`/api/tareas/alertas?${query.toString()}`)
+  }
+
+  async completeCommercialTask(id: string) {
+    return this.request<import("@/lib/types").CommercialTask>(`/api/tareas/${id}/completar`, { method: "PUT" })
+  }
+
+  async cancelCommercialTask(id: string) {
+    return this.request<import("@/lib/types").CommercialTask>(`/api/tareas/${id}/cancelar`, { method: "PUT" })
+  }
+
+  async rescheduleCommercialTask(id: string, dueAt: string, reminderAt?: string) {
+    return this.request<import("@/lib/types").CommercialTask>(`/api/tareas/${id}/reprogramar`, {
+      method: "PUT",
+      body: JSON.stringify({ dueAt, reminderAt }),
+    })
+  }
+
+  async addCommercialTaskComment(id: string, comment: string) {
+    return this.request(`/api/tareas/${id}/comentarios`, {
+      method: "POST",
+      body: JSON.stringify({ comment }),
+    })
+  }
+
+  async getCommercialTaskHistory(id: string) {
+    return this.request<import("@/lib/types").CommercialTaskEvent[]>(`/api/tareas/${id}/historial`)
+  }
+
+  async getCustomerDemands(contactId: string) {
+    const query = new URLSearchParams({ ContactId: contactId })
+    return this.request<import("@/lib/types").CustomerDemand[]>(`/api/demandas?${query.toString()}`)
+  }
+
+  async createCustomerDemand(data: import("@/lib/types").CreateCustomerDemandInput) {
+    return this.request<import("@/lib/types").CustomerDemand>("/api/demandas", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getDemandMatches(demandId: string) {
+    return this.request<import("@/lib/types").DemandPropertyMatch[]>(`/api/demandas/${demandId}/coincidencias`)
+  }
+
+  async linkDemandProperty(demandId: string, propertyId: string) {
+    return this.request(`/api/demandas/${demandId}/inmuebles/${propertyId}`, { method: "POST" })
+  }
+
+  async setDemandPropertyStatus(demandId: string, propertyId: string, status: string) {
+    return this.request(`/api/demandas/${demandId}/inmuebles/${propertyId}/estado`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    })
+  }
+
   // Pipeline
   async getPipeline() {
     return this.request<any>("/api/pipeline")
+  }
+
+  async getFirstResponseMetrics(from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    return this.request<import("@/lib/types").FirstResponseMetrics>(`/api/analytics/first-response?${query}`)
   }
 
   async moveLeadInPipeline(leadId: string, nuevaEtapa: string) {
@@ -87,11 +197,15 @@ class ApiClient {
     })
   }
 
-  async assignLeadToAsesor(leadId: string, asesorId: string) {
+  async assignLeadToAsesor(leadId: string, asesorId: string, reason: string) {
     return this.request<void>(`/api/pipeline/${leadId}/asignar`, {
       method: "PUT",
-      body: JSON.stringify({ asesorId }),
+      body: JSON.stringify({ asesorId, reason }),
     })
+  }
+
+  async getLeadAssignmentHistory(leadId: string) {
+    return this.request<import("@/lib/types").LeadAssignmentHistory[]>(`/api/pipeline/${leadId}/asignaciones`)
   }
 
   // Interacciones
@@ -132,6 +246,24 @@ class ApiClient {
     })
   }
 
+  async rescheduleVisit(id: string, fechaProgramada: string) {
+    return this.request<import("@/lib/types").Visita>(`/api/visitas/${id}/reprogramar`, {
+      method: "PUT",
+      body: JSON.stringify({ fechaProgramada }),
+    })
+  }
+
+  async completeVisit(id: string, feedback?: string) {
+    return this.request<import("@/lib/types").Visita>(`/api/visitas/${id}/realizada`, {
+      method: "PUT",
+      body: JSON.stringify({ feedback }),
+    })
+  }
+
+  async cancelVisit(id: string) {
+    return this.request<import("@/lib/types").Visita>(`/api/visitas/${id}/cancelar`, { method: "PUT" })
+  }
+
   // Alertas
   async getAlertas() {
     return this.request<any>("/api/alertas")
@@ -147,6 +279,63 @@ class ApiClient {
 
   async getInmuebleById(id: string) {
     return this.request<any>(`/api/inmuebles/${id}`)
+  }
+
+  // Publicaciones
+  async getPublications() {
+    return this.request<import("@/lib/types").PropertyPublicationAdmin[]>("/api/publicaciones")
+  }
+
+  async getPublicationOptions() {
+    return this.request<import("@/lib/types").PropertyPublicationOptions>(
+      "/api/publicaciones/opciones"
+    )
+  }
+
+  async createPublication(data: import("@/lib/types").PropertyPublicationInput) {
+    return this.request<{ id: string; status: string }>("/api/publicaciones", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updatePublication(
+    id: string,
+    data: import("@/lib/types").PropertyPublicationInput
+  ) {
+    return this.request<{ id: string; status: string }>(`/api/publicaciones/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async changePublicationStatus(id: string, action: "publish" | "pause" | "withdraw") {
+    return this.request<{ id: string; status: string }>(
+      `/api/publicaciones/${id}/estado`,
+      { method: "PUT", body: JSON.stringify({ action }) }
+    )
+  }
+
+  async uploadPublicationPhoto(
+    publicationId: string,
+    file: File,
+    altText: string,
+    isCover: boolean
+  ) {
+    const data = new FormData()
+    data.append("archivo", file)
+    data.append("textoAlternativo", altText)
+    data.append("esPortada", String(isCover))
+
+    const response = await fetch(
+      `${this.baseUrl}/api/publicaciones/${publicationId}/fotos`,
+      { method: "POST", credentials: "include", body: data }
+    )
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({})) as { error?: string; detail?: string }
+      throw new Error(error.error || error.detail || `Error ${response.status}`)
+    }
+    return response.json()
   }
 
   // Facturacion
@@ -176,6 +365,17 @@ class ApiClient {
     return this.request<import("@/lib/types").WebAnalyticsFunnel>(
       `/api/analytics/funnel?${query.toString()}`
     )
+  }
+
+  async getLeadDistributionRule() {
+    return this.request<{ rule: import("@/lib/types").LeadDistributionRule }>("/api/configuracion/reparto-leads")
+  }
+
+  async setLeadDistributionRule(rule: import("@/lib/types").LeadDistributionRule) {
+    return this.request<{ rule: import("@/lib/types").LeadDistributionRule }>("/api/configuracion/reparto-leads", {
+      method: "PUT",
+      body: JSON.stringify({ rule }),
+    })
   }
 
   // Politica

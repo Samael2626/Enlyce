@@ -105,6 +105,102 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("AuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.CommercialTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AdvisorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LeadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("ReminderAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeadId");
+
+                    b.HasIndex("AdvisorId", "DueAt");
+
+                    b.HasIndex("ContactId", "DueAt");
+
+                    b.ToTable("CommercialTasks", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.CommercialTaskEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("TaskId", "OccurredAt");
+
+                    b.ToTable("CommercialTaskEvents", (string)null);
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.Consentimiento", b =>
                 {
                     b.Property<Guid>("Id")
@@ -140,6 +236,143 @@ namespace Enlyce.Infrastructure.Migrations
                     b.HasIndex("LeadId");
 
                     b.ToTable("Consentimientos", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Contact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Phone", "Enlyce.Domain.Entities.Contact.Phone#Telefono", b1 =>
+                        {
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("Phone");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Contacts", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("Bathrooms")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Bedrooms")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LeadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("MaximumPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("MinimumPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Neighborhood")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("ParkingSpaces")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PropertyType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeadId");
+
+                    b.HasIndex("ContactId", "Active");
+
+                    b.HasIndex("City", "PropertyType", "Operation");
+
+                    b.ToTable("CustomerDemands", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.DemandPropertyLink", b =>
+                {
+                    b.Property<Guid>("DemandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("LinkedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("DemandId", "PropertyId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("DemandPropertyLinks", (string)null);
                 });
 
             modelBuilder.Entity("Enlyce.Domain.Entities.Inmueble", b =>
@@ -290,6 +523,9 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<bool>("AutorizacionDatos")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid?>("ContactId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -307,6 +543,9 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaPrimerContacto")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("FechaUltimaInteraccion")
@@ -412,6 +651,8 @@ namespace Enlyce.Infrastructure.Migrations
 
                     b.HasIndex("AsesorAsignadoId");
 
+                    b.HasIndex("ContactId");
+
                     b.HasIndex("EtapaPipeline");
 
                     b.HasIndex("OpportunityKey")
@@ -430,6 +671,70 @@ namespace Enlyce.Infrastructure.Migrations
                     b.HasIndex("PublicationId");
 
                     b.ToTable("Leads", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.LeadAssignmentHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ChangedByAdvisorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LeadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("NewAdvisorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PreviousAdvisorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedByAdvisorId");
+
+                    b.HasIndex("NewAdvisorId");
+
+                    b.HasIndex("PreviousAdvisorId");
+
+                    b.HasIndex("LeadId", "ChangedAt");
+
+                    b.ToTable("LeadAssignmentHistory", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.LeadDistributionSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("RoundRobinCursor")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Rule")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeadDistributionSettings", (string)null);
                 });
 
             modelBuilder.Entity("Enlyce.Domain.Entities.PaymentOrder", b =>
@@ -769,12 +1074,76 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("WebAnalyticsEvents", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.CommercialTask", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("AdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.CommercialTaskEvent", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.CommercialTask", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.Consentimiento", b =>
                 {
                     b.HasOne("Enlyce.Domain.Entities.Lead", null)
                         .WithMany()
                         .HasForeignKey("LeadId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.DemandPropertyLink", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.CustomerDemand", null)
+                        .WithMany()
+                        .HasForeignKey("DemandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Inmueble", null)
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -785,6 +1154,39 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasForeignKey("LeadId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Lead", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.LeadAssignmentHistory", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("ChangedByAdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enlyce.Domain.Entities.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("NewAdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("PreviousAdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Enlyce.Domain.Entities.PropertyPhoto", b =>
