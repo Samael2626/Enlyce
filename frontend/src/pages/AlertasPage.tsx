@@ -1,13 +1,15 @@
 import { useState } from "react"
-import { useAlertas, useCommercialTaskAlerts, useCompleteCommercialTask, useRescheduleCommercialTask } from "@/hooks/useApi"
-import { AlertTriangle, Clock, Mail, CalendarClock, Check } from "lucide-react"
-import { parseISO, formatDistanceToNow } from "date-fns"
+import { Link } from "react-router-dom"
+import { useAlertas, useCommercialTaskAlerts, useCompleteCommercialTask, useLeadSlaAlerts, useRescheduleCommercialTask } from "@/hooks/useApi"
+import { AlertTriangle, Clock, Mail, CalendarClock, Check, Timer } from "lucide-react"
+import { parseISO, format, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { ETIQUETAS_PIPELINE } from "@/lib/constants"
 
 export function AlertasPage() {
   const { data: alertas, isLoading } = useAlertas()
-  const [now] = useState(() => new Date())
+  const slaQuery = useLeadSlaAlerts()
+  const now = new Date()
   const [newDates, setNewDates] = useState<Record<string, string>>({})
   const taskWindowEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
   const tasksQuery = useCommercialTaskAlerts(taskWindowEnd)
@@ -16,8 +18,9 @@ export function AlertasPage() {
 
   const leads = alertas?.leads || []
   const tasks = tasksQuery.data ?? []
+  const slaAlerts = slaQuery.data?.alerts ?? []
 
-  if (isLoading || tasksQuery.isLoading) {
+  if (isLoading || tasksQuery.isLoading || slaQuery.isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">Cargando alertas...</div>
@@ -35,7 +38,7 @@ export function AlertasPage() {
         </p>
       </div>
 
-      {leads.length === 0 && tasks.length === 0 ? (
+      {leads.length === 0 && tasks.length === 0 && slaAlerts.length === 0 ? (
         <div className="crm-panel border-t-4 border-t-accent py-16 text-center">
           <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-accent" />
           <h3 className="font-display text-2xl">Sin alertas</h3>
@@ -45,6 +48,39 @@ export function AlertasPage() {
         </div>
       ) : (
         <>
+        {slaAlerts.length > 0 && <section className="space-y-3" aria-labelledby="sla-alerts-title">
+          <div>
+            <h2 id="sla-alerts-title" className="font-display text-2xl">Objetivos SLA</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Seguimiento interno según las reglas configuradas. No crea tareas ni envía avisos.</p>
+          </div>
+          {(["FirstResponse", "Inactivity"] as const).map((kind) => {
+            const sectionAlerts = slaAlerts.filter((alert) => alert.kind === kind)
+            if (sectionAlerts.length === 0) return null
+            return <div key={kind} className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground">{kind === "FirstResponse" ? "Primera respuesta pendiente" : "Inactividad"}</h3>
+              {sectionAlerts.map((alert) => {
+                const dueAt = parseISO(alert.dueAtUtc)
+                const overdue = dueAt < now
+                return <article key={`${alert.leadId}:${alert.kind}`} className="crm-panel flex flex-wrap items-start gap-4 p-5">
+                  <Timer className={`mt-1 h-5 w-5 shrink-0 ${overdue ? "text-destructive" : "text-accent"}`} aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-medium">{alert.nombre}</h4>
+                    <p className={`mt-1 text-sm ${overdue ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
+                      {overdue ? `Venció ${format(dueAt, "d MMM yyyy, HH:mm", { locale: es })} · atraso ${alert.overdueHours} h` : `Vence ${formatDistanceToNow(dueAt, { addSuffix: true, locale: es })}`}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {alert.email} · {alert.operationType} · {alert.sourceKey} · {ETIQUETAS_PIPELINE[alert.stage] || alert.stage}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Cuenta desde {formatDistanceToNow(parseISO(alert.startedAtUtc), { addSuffix: true, locale: es })}</p>
+                  </div>
+                  <Link className="crm-button min-h-9 px-3 py-1.5 text-xs" to={`/leads?q=${encodeURIComponent(alert.email)}&leadId=${encodeURIComponent(alert.leadId)}`}>
+                    Abrir oportunidad
+                  </Link>
+                </article>
+              })}
+            </div>
+          })}
+        </section>}
         {tasks.length > 0 && <section className="space-y-3" aria-labelledby="task-alerts-title">
           <h2 id="task-alerts-title" className="font-display text-2xl">Tareas próximas y vencidas</h2>
           {tasks.map((task) => {
@@ -119,6 +155,7 @@ export function AlertasPage() {
         </>
       )}
       {tasksQuery.isError && <p role="alert" className="text-sm text-destructive">No se pudieron cargar las tareas pendientes.</p>}
+      {slaQuery.isError && <p role="alert" className="text-sm text-destructive">No se pudieron cargar las alertas SLA.</p>}
       {(completeTask.isError || rescheduleTask.isError) && <p role="alert" className="text-sm text-destructive">No se pudo guardar el cambio. Revisa que la tarea siga pendiente.</p>}
     </div>
   )

@@ -312,6 +312,10 @@ class ApiClient {
     return this.request<any>("/api/alertas")
   }
 
+  async getLeadSlaAlerts() {
+    return this.request<import("@/lib/types").LeadSlaAlertsResponse>("/api/alertas/sla")
+  }
+
   // Inmuebles
   async createInmueble(data: any) {
     return this.request<any>("/api/inmuebles", {

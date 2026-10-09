@@ -145,6 +145,8 @@ public sealed class CreateLeadHandlerTests
         Assert.True(result.EsContactoRepetido);
         Assert.Equal(existing.Id, result.Id);
         Assert.Equal(1, existing.InteraccionesCount);
+        Assert.Null(existing.FechaPrimerContacto);
+        Assert.NotNull(existing.FechaUltimaInteraccion);
         await _interaccionRepository.Received(1).AgregarAsync(
             Arg.Is<Interaccion>(item => item.LeadId == existing.Id && item.Tipo == "ContactoWeb"));
     }

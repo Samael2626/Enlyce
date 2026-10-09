@@ -380,6 +380,26 @@ export interface AlertaLeadDto {
   diasSinActividad: number
 }
 
+export type LeadSlaAlertKind = "FirstResponse" | "Inactivity"
+
+export interface LeadSlaAlert {
+  leadId: string
+  nombre: string
+  email: string
+  operationType: "Venta" | "Arriendo"
+  sourceKey: string
+  stage: string
+  kind: LeadSlaAlertKind
+  startedAtUtc: string
+  dueAtUtc: string
+  overdueHours: number
+}
+
+export interface LeadSlaAlertsResponse {
+  alerts: LeadSlaAlert[]
+  total: number
+}
+
 // Inmuebles
 export interface CreateInmuebleRequest {
   nombre: string

@@ -58,6 +58,7 @@ public static class DependencyInjection
         services.AddScoped<RegistrarVisitaHandler>();
         services.AddScoped<ConsultarPipelineHandler>();
         services.AddScoped<ObtenerAlertasHandler>();
+        services.AddScoped<ObtenerAlertasSlaHandler>();
 
         return services;
     }

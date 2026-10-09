@@ -26,6 +26,22 @@ public static class AlertasModule
         })
         .WithName("ObtenerAlertas")
         .Produces<AlertasResponse>();
+
+        group.MapGet("/sla", async Task<IResult> (
+            HttpContext http,
+            ObtenerAlertasSlaHandler handler,
+            CancellationToken ct) =>
+        {
+            var isAdministrator = http.User.IsInRole("Administrador");
+            var advisorId = isAdministrator ? null : EndpointAccess.AdvisorId(http.User);
+            if (!isAdministrator && advisorId is null)
+                return Results.Forbid();
+
+            var result = await handler.HandleAsync(new ObtenerAlertasSlaQuery(advisorId), ct);
+            return Results.Ok(result);
+        })
+        .WithName("ObtenerAlertasSla")
+        .Produces<AlertasSlaResponse>();
     }
 }
 

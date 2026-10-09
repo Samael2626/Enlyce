@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react"
+import { useSearchParams } from "react-router-dom"
 import { api } from "@/api/client"
 import { useAdvisors, useBulkAssignLeads, usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead, useLeadHistory } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
@@ -52,9 +53,11 @@ const currency = new Intl.NumberFormat("es-CO", {
 })
 
 export function LeadsPage() {
+  const [searchParams] = useSearchParams()
+  const requestedLeadId = searchParams.get("leadId")
   const user = useAuthStore((state) => state.user)
   const pageSize = 20
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "")
   const [stage, setStage] = useState("")
   const [operation, setOperation] = useState("")
   const [createdFrom, setCreatedFrom] = useState("")
@@ -81,6 +84,11 @@ export function LeadsPage() {
 
   const leads = pipeline?.leads || []
   const pageCount = Math.max(1, Math.ceil((pipeline?.total ?? 0) / pageSize))
+
+  useEffect(() => {
+    if (requestedLeadId && leads.some((lead: any) => lead.id === requestedLeadId))
+      setExpandedId(requestedLeadId)
+  }, [requestedLeadId, pipeline?.leads])
 
   if (isLoading) {
     return (

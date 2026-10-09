@@ -415,6 +415,13 @@ export function useAlertas() {
   })
 }
 
+export function useLeadSlaAlerts() {
+  return useQuery({
+    queryKey: ["alertas", "sla"],
+    queryFn: () => api.getLeadSlaAlerts(),
+  })
+}
+
 // Inmuebles
 export function useInmueble(id: string) {
   return useQuery({

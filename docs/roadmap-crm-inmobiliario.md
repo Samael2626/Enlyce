@@ -38,7 +38,8 @@
 ### P2 — integración y automatización
 
 - [x] Configurar reglas SLA por raíz UTM y tipo de operación en Administración; no crea tareas ni envía avisos.
-- [ ] Acordar con operación los umbrales reales y cuándo inicia cada reloj; después evaluar reglas en alertas internas y generar tareas sin duplicados.
+- [x] Evaluar reglas activas en alertas internas: primera asignación, horas calendario, primer contacto, inactividad y precedencia; sin tareas automáticas ni mensajes.
+- [ ] Acordar con operación los umbrales reales para cada origen y operación; las reglas siguen vacías hasta que administración las configure.
 - [ ] Plantillas y notificaciones por correo con proveedor real y registro de entrega.
 - [ ] Evaluar WhatsApp Business Platform oficial: consentimiento, ventanas de conversación, plantillas, costos y bandeja compartida.
 - [ ] Construir en Enlyce las funciones contables necesarias, sin depender de Siigo ni duplicar datos; empezar por arriendos y cartera después de cerrar CRM.
@@ -77,6 +78,15 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - Migración `AddLeadSlaRules` aplicada en PostgreSQL 17 efímero desde backup anonimizado; conservó 4 leads y 2 asesores. Clave única verificada; backup posterior restaurado con la regla sintética y migración vigentes.
 - Pruebas: Domain 221, Application 40, Integration 221; frontend `npm run build` aprobado. Graphify sin LLM: 4999 nodos, 9882 relaciones.
 - No se tocó producción. Email y WhatsApp siguen fuera hasta definir política y costos aceptables.
+
+### Evaluación de alertas SLA internas (9 de octubre)
+
+- `/api/alertas/sla` muestra hasta 100 incumplimientos más antiguos y conserva el total; asesor solo ve oportunidades propias y administración la vista global.
+- El reloj de primera respuesta inicia en la primera asignación y no reinicia al reasignar; `FechaPrimerContacto` lo detiene. Inactividad corre solo después de responder, desde la última interacción (o primer contacto como respaldo).
+- Un recontacto web actualiza actividad, pero no se toma como respuesta del asesor; la prueba de aplicación fija este comportamiento.
+- Prioridad: fuente+operación, fuente+todas, todas+operación, global. Una regla más específica deshabilitada bloquea fallback. Se omiten oportunidades cerradas/inactivas y no asignadas.
+- La consulta usa dos lecturas SQL agrupadas (sin N+1). Alertas informativas: no crean tareas ni envían correo/WhatsApp.
+- Verificación: Domain 221, Application 40, Integration 226; frontend `npm run build` aprobado. Graphify sin LLM: 5060 nodos, 10030 relaciones, 370 comunidades; vista HTML agregada por superar 5000 nodos.
 - SQL EF Core aplicado en copia PostgreSQL anonimizada; no aplicado a producción.
 
 ## Avance del 9 de octubre de 2026
