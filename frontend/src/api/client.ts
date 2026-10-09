@@ -421,6 +421,17 @@ class ApiClient {
     })
   }
 
+  async getLeadSlaRules() {
+    return this.request<{ rules: import("@/lib/types").LeadSlaRule[] }>("/api/configuracion/sla-leads")
+  }
+
+  async upsertLeadSlaRule(rule: import("@/lib/types").UpsertLeadSlaRule) {
+    return this.request<void>("/api/configuracion/sla-leads", {
+      method: "PUT",
+      body: JSON.stringify(rule),
+    })
+  }
+
   // Politica
   async getPoliticaActiva() {
     return this.request<any>("/api/politica/activa")

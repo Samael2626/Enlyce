@@ -544,6 +544,17 @@ export interface WebAnalyticsFunnel {
 
 export type LeadDistributionRule = "LeastOpenLeads" | "RoundRobin"
 
+export interface LeadSlaRule {
+  sourceKey: string
+  operationType: "*" | "Venta" | "Arriendo"
+  firstResponseHours: number
+  inactivityDays: number | null
+  enabled: boolean
+  updatedAtUtc: string
+}
+
+export type UpsertLeadSlaRule = Omit<LeadSlaRule, "updatedAtUtc">
+
 // Politica
 export interface ObtenerPoliticaActivaResponse {
   id: string

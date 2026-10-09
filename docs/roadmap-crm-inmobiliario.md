@@ -37,7 +37,8 @@
 
 ### P2 — integración y automatización
 
-- [ ] Definir reglas de seguimiento y SLA por fuente y tipo de operación; hacerlas configurables antes de automatizar.
+- [x] Configurar reglas SLA por raíz UTM y tipo de operación en Administración; no crea tareas ni envía avisos.
+- [ ] Acordar con operación los umbrales reales y cuándo inicia cada reloj; después evaluar reglas en alertas internas y generar tareas sin duplicados.
 - [ ] Plantillas y notificaciones por correo con proveedor real y registro de entrega.
 - [ ] Evaluar WhatsApp Business Platform oficial: consentimiento, ventanas de conversación, plantillas, costos y bandeja compartida.
 - [ ] Construir en Enlyce las funciones contables necesarias, sin depender de Siigo ni duplicar datos; empezar por arriendos y cartera después de cerrar CRM.
@@ -68,6 +69,14 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - Application: 40 pruebas aprobadas.
 - Integration: 212 pruebas aprobadas. Incluyen aislamiento, recordatorios, métricas, exportación, recorrido comercial, filtros/paginación y acciones masivas auditadas.
 - Frontend: `npm run build` aprobado.
+
+### Configuración de reglas SLA (9 de octubre)
+
+- Administración puede crear/editar/deshabilitar reglas por raíz UTM y operación (`Venta`/`Arriendo` o todas); admite alcance global y objetivos de primera respuesta/inactividad.
+- Sin umbrales precargados ni activación automática. La UI y API solo persisten la política; no modifica oportunidades/tareas ni envía avisos.
+- Migración `AddLeadSlaRules` aplicada en PostgreSQL 17 efímero desde backup anonimizado; conservó 4 leads y 2 asesores. Clave única verificada; backup posterior restaurado con la regla sintética y migración vigentes.
+- Pruebas: Domain 221, Application 40, Integration 221; frontend `npm run build` aprobado. Graphify sin LLM: 4999 nodos, 9882 relaciones.
+- No se tocó producción. Email y WhatsApp siguen fuera hasta definir política y costos aceptables.
 - SQL EF Core aplicado en copia PostgreSQL anonimizada; no aplicado a producción.
 
 ## Avance del 9 de octubre de 2026
