@@ -81,14 +81,17 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Crear brochure comercial descargable y versión web tipo libro: 10 páginas A5, portada rígida, doble página, arrastre, sombras, pantalla completa y navegación por teclado.
 - [ ] Sustituir las fotografías editoriales temporales del brochure por fotografías autorizadas del inventario real de L&C.
 - [x] Añadir analítica de embudo: visita, búsqueda, favorito, formulario iniciado y conversión.
-- [ ] Añadir datos estructurados JSON-LD para organización e inmuebles.
+- [x] Añadir datos estructurados JSON-LD para organización e inmuebles (datos veraces; falta validar en producción).
+- [x] Aplicar correcciones WCAG puntuales en filtros, consentimiento, mapa y brochure.
 - [ ] Auditoría completa WCAG AA: teclado, foco, labels, contraste y lector de pantalla.
-- [ ] Medir y corregir Core Web Vitals: LCP, CLS e INP.
+- [ ] Medir y corregir Core Web Vitals: LCP, CLS e INP (sin métricas de navegador aún).
 - [ ] Correo de confirmación real y notificación inmediata al asesor responsable.
 - [ ] Trazabilidad de cambios y estado de la suscripción después del pago aprobado.
 
 ### Prioridad P2 — crecimiento
 
+- [x] MVP de mapa en catálogo: sincroniza lista/pines, usa solo publicaciones de la página y zonas aproximadas; falta aprobación legal de privacidad antes de publicar.
+- [ ] Radar privado de captaciones en CRM, separado del DTO público y con permisos por asesor/administrador.
 - [ ] Alertas de nuevas propiedades y cambios de precio.
 - [ ] Comparador de inmuebles.
 - [ ] Búsquedas guardadas.

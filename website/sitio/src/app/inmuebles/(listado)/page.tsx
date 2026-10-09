@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CatalogFilters } from "@/components/CatalogFilters";
+import { CatalogExplorer } from "@/components/CatalogExplorer";
 import { PropertyCard } from "@/components/PropertyCard";
 import { buildQuery, getProperties, parseFilters } from "@/lib/api/catalog";
 
@@ -36,13 +37,28 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
             <Link href="/inmuebles">Limpiar la búsqueda</Link>
           </div>
         ) : (
-          <ul className="catalog-results">
-            {page.items.map((property) => (
-              <li key={property.id}>
-                <PropertyCard property={property} />
-              </li>
-            ))}
-          </ul>
+          <CatalogExplorer
+            properties={page.items.map((property) => ({
+              slug: property.slug,
+              title: property.publicTitle,
+              municipality: property.location.municipality,
+              neighborhood: property.location.neighborhood,
+              latitude: property.location.approximateLatitude,
+              longitude: property.location.approximateLongitude,
+            }))}
+          >
+            <ul className="catalog-results" aria-label="Publicaciones de esta página">
+              {page.items.map((property) => (
+                <li
+                  key={property.id}
+                  id={`catalog-property-${property.slug}`}
+                  data-catalog-slug={property.slug}
+                >
+                  <PropertyCard property={property} />
+                </li>
+              ))}
+            </ul>
+          </CatalogExplorer>
         )}
 
         {lastPage > 1 && (

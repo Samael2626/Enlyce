@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const apiUrl = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5019");
+const mapTileUrl = process.env.NEXT_PUBLIC_MAP_TILE_URL?.trim() || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const mapTileOrigin = new URL(mapTileUrl.replace(/\{[^}]+\}/g, "0")).origin;
 const isLocalApi = ["localhost", "127.0.0.1", "::1"].includes(apiUrl.hostname);
 const developmentScriptSource = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
 
@@ -13,7 +15,7 @@ const nextConfig: NextConfig = {
       `script-src 'self' 'unsafe-inline'${developmentScriptSource}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      `img-src 'self' data: blob: ${connectSource}`,
+      `img-src 'self' data: blob: ${connectSource} ${mapTileOrigin}`,
       `connect-src 'self' ${connectSource}`,
       "object-src 'none'",
       "base-uri 'self'",

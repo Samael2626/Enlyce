@@ -8,7 +8,15 @@ public sealed class PropertyPublicationConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<PropertyPublication> builder)
     {
-        builder.ToTable("PropertyPublications");
+        builder.ToTable("PropertyPublications", table =>
+        {
+            table.HasCheckConstraint(
+                "CK_PropertyPublications_ApproximateLatitude_ThreeDecimals",
+                "\"ApproximateLatitude\" IS NULL OR ROUND(\"ApproximateLatitude\", 3) = \"ApproximateLatitude\"");
+            table.HasCheckConstraint(
+                "CK_PropertyPublications_ApproximateLongitude_ThreeDecimals",
+                "\"ApproximateLongitude\" IS NULL OR ROUND(\"ApproximateLongitude\", 3) = \"ApproximateLongitude\"");
+        });
         builder.HasKey(publication => publication.Id);
         builder.Property(publication => publication.Id).ValueGeneratedNever();
 

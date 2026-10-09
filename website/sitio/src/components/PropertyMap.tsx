@@ -9,6 +9,7 @@ import {
   MAX_DETAIL_ZOOM,
   type ApproximateLocation,
 } from "@/lib/geo";
+import { PUBLIC_MAP_TILE_URL } from "./map-config";
 
 type Props = {
   location: ApproximateLocation;
@@ -40,7 +41,7 @@ export default function PropertyMap({ location, label }: Props) {
         <TileLayer
           // Atribucion obligatoria por la licencia de OpenStreetMap.
           attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url={PUBLIC_MAP_TILE_URL}
           maxZoom={MAX_DETAIL_ZOOM}
         />
         <Circle

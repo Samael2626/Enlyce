@@ -48,6 +48,9 @@ export function PropertyLocation({
           <figcaption className="text-sm text-muted">
             El círculo marca la zona aproximada, no la dirección. La dirección exacta se
             comparte al agendar la visita.
+            <span className="mt-2 block">
+              Mapa externo OpenStreetMap: al cargarlo, tu navegador solicita mosaicos y comparte el origen del sitio. No enviamos búsquedas ni datos de formularios.
+            </span>
           </figcaption>
         </figure>
       ) : (

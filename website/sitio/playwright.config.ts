@@ -29,6 +29,7 @@ export default defineConfig({
       url: siteUrl,
       env: {
         NEXT_PUBLIC_API_URL: apiUrl,
+        NEXT_PUBLIC_MAP_TILE_URL: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         NEXT_PUBLIC_SITE_URL: siteUrl,
         NEXT_TELEMETRY_DISABLED: "1",
       },

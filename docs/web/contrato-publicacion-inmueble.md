@@ -47,8 +47,10 @@ tres fotografías válidas. La publicación conserva un slug normalizado y únic
 
 La respuesta pública usa municipio, barrio y coordenadas aproximadas. La
 dirección exacta se mantiene oculta por defecto y no forma parte de estos DTO.
-La estrategia de aproximación y el proveedor de mapas quedan abiertos para una
-fase posterior.
+El dominio y PostgreSQL limitan las coordenadas a 3 decimales; el mapa representa
+un área de 350 m, no un domicilio. La web usa mosaicos OpenStreetMap configurables;
+su servidor público es externo, best-effort y requiere aprobación de privacidad
+antes de publicar el radar.
 
 ## Reglas de los campos
 
@@ -96,8 +98,8 @@ Los errores usan `no-store`.
       "location": {
         "municipality": "Medellín",
         "neighborhood": "Laureles",
-        "approximateLatitude": 6.2443,
-        "approximateLongitude": -75.5934
+        "approximateLatitude": 6.244,
+        "approximateLongitude": -75.593
       },
       "areaSquareMeters": 92,
       "bedrooms": 3,
