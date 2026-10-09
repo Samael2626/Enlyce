@@ -70,7 +70,8 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [ ] Configurar secretos fuera del repositorio, backups y recuperación.
 - [ ] Revisión jurídica final de política de privacidad y textos de consentimiento.
 - [ ] Smoke visual manual completo con API y PostgreSQL reales.
-- [ ] Pruebas E2E del catálogo, ficha, favoritos, contacto, propietarios y pago.
+- [x] E2E Playwright de catálogo, ficha, favoritos, contacto y propietarios con API local simulada.
+- [ ] E2E de pago/Wompi con credenciales sandbox aprobadas.
 
 ### Prioridad P1 — estándar comercial
 
@@ -112,7 +113,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ## Próxima secuencia recomendada
 
-1. Crear E2E de los recorridos comerciales y de las regresiones de autorización.
+1. Smoke visual con PostgreSQL local y corregir fallback de sitemap al compilar sin API.
 2. Completar accesibilidad, datos estructurados y rendimiento.
 3. Crear staging y validar secretos, backups restaurables, migraciones y ZAP remoto.
 4. Al cierre: material real, Wompi sandbox y despliegue definitivo.
@@ -121,5 +122,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 - `node website/funcional.test.mjs`: 26 pruebas de logica del sitio legacy, todas verdes.
 - `PublicCatalogEndpointTests` y `CrmJourneyE2ETests` son pruebas HTTP con `WebApplicationFactory` + SQLite; no recorren navegador.
-- El sitio Next no tiene runner E2E de navegador instalado. Pago tampoco tiene E2E; Wompi queda fuera sin credenciales sandbox.
-- Siguen pendientes el smoke visual con PostgreSQL y las E2E de catalogo, ficha, favoritos, contacto, propietarios y pago.
+- Playwright con Chrome local: catálogo, detalle, favoritos, contacto y flujo de propietarios pasan (3/3). Usa API simulada local, no toca PostgreSQL ni servicios externos.
+- `npm run build` y `npm run typecheck` pasan con Next.js 16.4.0; sitemap avisa que API local no está levantada durante build.
+- `npm audit --omit=dev`: 0 vulnerabilidades. Auditoría completa conserva 5 altas en `braces`, dependencia de desarrollo de `eslint-config-next` sin corrección publicada; no incluir `npm audit fix --force` porque degradaría Next 16 a 14.
+- Siguen pendientes el smoke visual con PostgreSQL real, E2E de pago/Wompi y corregir el fallback del sitemap durante build sin API disponible.
