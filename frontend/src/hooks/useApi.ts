@@ -64,6 +64,13 @@ export function useFirstResponseMetrics(from: string, to: string) {
   })
 }
 
+export function useCrmReportMetrics(from: string, to: string) {
+  return useQuery({
+    queryKey: ["analytics", "crm-report", from, to],
+    queryFn: () => api.getCrmReportMetrics(from, to),
+  })
+}
+
 export function useMoveLeadInPipeline() {
   const queryClient = useQueryClient()
 

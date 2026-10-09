@@ -63,6 +63,29 @@ public static class AnalyticsModule
         .WithName("GetFirstResponseMetrics")
         .Produces<FirstResponseMetricsResponse>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        app.MapGet("/api/analytics/crm-report", async (
+            DateOnly? from,
+            DateOnly? to,
+            Enlyce.Domain.Ports.ILeadRepository leads,
+            Enlyce.Domain.Ports.IAsesorRepository advisors,
+            Enlyce.Domain.Ports.IVisitaRepository visits,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var until = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? until.AddDays(-29);
+            if (since > until)
+                return Results.BadRequest(new { error = "La fecha inicial debe ser anterior o igual a la final." });
+
+            var handler = new GetCrmReportMetricsHandler(leads, advisors, visits);
+            var result = await handler.HandleAsync(new GetCrmReportMetricsQuery(since, until), ct);
+            return Results.Ok(result);
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetCrmReportMetrics")
+        .Produces<CrmReportMetricsResponse>()
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static DateTime EnsureUtc(DateTime value) => value.Kind switch

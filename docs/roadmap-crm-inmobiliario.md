@@ -29,11 +29,11 @@
 
 ### P1 — operación y control
 
-- [ ] Reportes por asesor, etapa, fuente/campaña, operación, tiempo de primera respuesta, visitas y cierres.
-- [ ] Exportación CSV y filtros por periodo; definir permisos y campos exportables.
+- [x] Reportes por asesor, etapa, fuente/campaña, operación, tiempo de primera respuesta, visitas y cierres; fechas inclusivas, cohortes y límites documentados en pantalla.
+- [x] Exportación CSV por periodo con alcance administrador/asesor, neutralización de fórmulas y campos operativos sin consentimiento ni IP.
 - [ ] Búsqueda, filtros, paginación y acciones masivas para contactos, oportunidades y tareas.
 - [ ] Historial unificado e inmutable de cambios a oportunidad, asignación y etapa (asignaciones implementadas; cambios de etapa pendientes).
-- [ ] Pruebas E2E de contacto → oportunidad → tarea/visita → demanda → cierre.
+- [x] Recorrido de integración HTTP contacto → oportunidad → asignación → interacción/tarea/visita → demanda → cierre; prueba estado y vínculos persistidos.
 
 ### P2 — integración y automatización
 
@@ -66,7 +66,7 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 
 - Domain: 217 pruebas aprobadas.
 - Application: 40 pruebas aprobadas.
-- Integration: 196 pruebas aprobadas. Incluyen aislamiento de demandas e historial, recordatorios y métricas de primera respuesta.
+- Integration: 202 pruebas aprobadas. Incluyen aislamiento de demandas e historial, recordatorios, métricas, exportación y recorrido comercial HTTP.
 - Frontend: `npm run build` aprobado.
 - SQL EF Core aplicado en copia PostgreSQL anonimizada; no aplicado a producción.
 
@@ -76,7 +76,14 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - La pantalla Alertas incluye tareas pendientes vencidas y próximas a 7 días; avisos por correo o navegador siguen pendientes.
 - Verificación de esa entrega: Domain 214, Application 39 e Integration 181 pruebas aprobadas; frontend compila. Ver conteos vigentes en «Verificación de esta entrega».
 - En esa entrega se generó SQL para inspección. Estado vigente: migraciones aplicadas en copia PostgreSQL anonimizada; no en producción.
-- Sigue pendiente segmentar métricas de respuesta y validar permisos de contacto compartido.
+- En la actualización P1 se completaron reportes ampliados y validación de permisos para el flujo comercial.
+
+## Avance P1 del 9 de octubre de 2026
+
+- Reportes CRM ahora agrupan por asesor/etapa/origen/campaña/operación; respuesta, visitas y cierres usan cohortes explícitas. Cierres describen el estado actual de los leads creados en el rango porque no existe fecha histórica de cierre.
+- CSV filtra fechas inclusivas, limita filas a oportunidades propias del asesor y neutraliza fórmulas al abrir en hoja de cálculo.
+- Recorrido HTTP integrado de captación a cierre. Historial inmutable de cambios de etapa, búsquedas/filtros/paginación/acciones masivas siguen pendientes.
+- Verificación: Domain 217, Application 40, Integration 202; frontend `npm run build` aprobado.
 
 ### Auditoría de asignaciones
 

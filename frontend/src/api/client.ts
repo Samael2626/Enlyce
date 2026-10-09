@@ -190,6 +190,20 @@ class ApiClient {
     return this.request<import("@/lib/types").FirstResponseMetrics>(`/api/analytics/first-response?${query}`)
   }
 
+  async getCrmReportMetrics(from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    return this.request<import("@/lib/types").CrmReportMetrics>(`/api/analytics/crm-report?${query}`)
+  }
+
+  async downloadOpportunitiesCsv(from: string, to: string): Promise<Blob> {
+    const query = new URLSearchParams({ from, to })
+    const response = await fetch(`${this.baseUrl}/api/opportunities/export.csv?${query}`, {
+      credentials: "include",
+    })
+    if (!response.ok) throw new Error(`Error ${response.status}`)
+    return response.blob()
+  }
+
   async moveLeadInPipeline(leadId: string, nuevaEtapa: string) {
     return this.request<void>(`/api/pipeline/${leadId}/mover-etapa`, {
       method: "PUT",

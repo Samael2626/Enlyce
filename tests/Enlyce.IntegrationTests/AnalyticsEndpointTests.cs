@@ -88,6 +88,47 @@ public sealed class AnalyticsEndpointTests(TestWebApplicationFactory factory)
         Assert.DoesNotContain(payload.ByAdvisor, item => item.Name == "Current Owner");
     }
 
+    [Fact]
+    public async Task CrmReportUsesInclusiveLeadAndVisitDateRangesAndGroupsAllDimensions()
+    {
+        var from = new DateOnly(2091, 2, 3);
+        var start = from.ToDateTime(new TimeOnly(9, 0), DateTimeKind.Utc);
+        var end = from.AddDays(1).ToDateTime(new TimeOnly(23, 59), DateTimeKind.Utc);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+            var advisor = Asesor.Crear("Report Advisor", Email.Create($"{Guid.NewGuid():N}@test.com"), "password-hash");
+            var lead = Lead.Reconstituir(
+                Guid.NewGuid(), "Report lead", Email.Create($"{Guid.NewGuid():N}@test.com"), null,
+                "Website:listing-42|utm=google/cpc/campana-abril", EstadoLead.CerradoGanado, MotivoCierre.CerradoGanado, null, advisor.Id,
+                start, null, null, true, true, "Venta", "Cerrado ganado", fechaPrimerContacto: start.AddHours(2));
+            db.Asesores.Add(advisor);
+            db.Leads.Add(lead);
+            db.Visitas.Add(Visita.Reconstituir(
+                Guid.NewGuid(), lead.Id, Guid.NewGuid(), advisor.Id, end, end, null, "Realizada"));
+            await db.SaveChangesAsync();
+        }
+
+        var (administrator, _) = factory.CreateAuthenticatedClient();
+        var response = await administrator.GetAsync("/api/analytics/crm-report?from=2091-02-03&to=2091-02-04");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<CrmReportResponse>();
+        Assert.Equal(1, payload!.Leads);
+        Assert.Equal(1, payload.RespondedLeads);
+        Assert.Equal(1, payload.Visits);
+        Assert.Equal(1, payload.WonLeads);
+        Assert.Equal(0, payload.LostLeads);
+        Assert.Equal("Report Advisor", Assert.Single(payload.ByAdvisor).Name);
+        Assert.Equal("Cerrado ganado", Assert.Single(payload.ByStage).Name);
+        Assert.Equal("Website:listing-42", Assert.Single(payload.BySource).Name);
+        Assert.Equal("campana-abril", Assert.Single(payload.ByCampaign).Name);
+        Assert.Equal("Venta", Assert.Single(payload.ByOperation).Name);
+
+        var maxDateResponse = await administrator.GetAsync("/api/analytics/crm-report?from=9999-12-31&to=9999-12-31");
+        Assert.Equal(HttpStatusCode.OK, maxDateResponse.StatusCode);
+    }
+
     private static Lead CreateLead(string source, DateTime createdAt, DateTime? firstContact, Guid? advisorId = null) =>
         Lead.Reconstituir(
             Guid.NewGuid(), "Metric lead", Email.Create($"{Guid.NewGuid():N}@test.com"), null,
@@ -98,4 +139,12 @@ public sealed class AnalyticsEndpointTests(TestWebApplicationFactory factory)
     private sealed record FunnelStep(string Event, int UniqueSessions, int TotalEvents, decimal RateFromVisits);
     private sealed record FirstResponseResponse(int RespondedLeads, double? AverageHours, IReadOnlyList<FirstResponseGroup> ByAdvisor, IReadOnlyList<FirstResponseGroup> BySource);
     private sealed record FirstResponseGroup(string Name, int RespondedLeads, double AverageHours);
+    private sealed record CrmReportResponse(
+        int Leads, int RespondedLeads, int Visits, int WonLeads, int LostLeads,
+        IReadOnlyList<CrmReportGroup> ByAdvisor,
+        IReadOnlyList<CrmReportGroup> ByStage,
+        IReadOnlyList<CrmReportGroup> BySource,
+        IReadOnlyList<CrmReportGroup> ByCampaign,
+        IReadOnlyList<CrmReportGroup> ByOperation);
+    private sealed record CrmReportGroup(string Name, int Leads, int RespondedLeads, int Visits, int WonLeads, int LostLeads);
 }

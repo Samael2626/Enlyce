@@ -213,6 +213,31 @@ export interface FirstResponseMetrics {
   bySource: FirstResponseMetric[]
 }
 
+export interface CrmReportMetric {
+  name: string
+  leads: number
+  respondedLeads: number
+  averageResponseHours: number | null
+  visits: number
+  wonLeads: number
+  lostLeads: number
+}
+
+export interface CrmReportMetrics {
+  from: string
+  to: string
+  leads: number
+  respondedLeads: number
+  visits: number
+  wonLeads: number
+  lostLeads: number
+  byAdvisor: CrmReportMetric[]
+  byStage: CrmReportMetric[]
+  bySource: CrmReportMetric[]
+  byCampaign: CrmReportMetric[]
+  byOperation: CrmReportMetric[]
+}
+
 export interface EtapaPipelineDto {
   nombre: string
   etiqueta: string

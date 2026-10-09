@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react"
+import { api } from "@/api/client"
 import { usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead, useLeadAssignmentHistory } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 import {
@@ -52,6 +53,12 @@ export function LeadsPage() {
   const { data: pipeline, isLoading } = usePipeline()
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showNewLead, setShowNewLead] = useState(false)
+  const [exportFrom, setExportFrom] = useState(() => `${new Date().getFullYear()}-01-01`)
+  const [exportTo, setExportTo] = useState(() => {
+    const today = new Date()
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+  })
+  const [exportError, setExportError] = useState<string | null>(null)
 
   const leads = pipeline?.leads || []
 
@@ -73,11 +80,41 @@ export function LeadsPage() {
             {leads.length} oportunidades registradas
           </p>
         </div>
-        <button className="crm-button" onClick={() => setShowNewLead(true)}>
-          <Plus className="h-4 w-4" />
-          Nueva oportunidad
-        </button>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="text-xs text-muted-foreground">
+            Desde
+            <input type="date" value={exportFrom} onChange={(event) => setExportFrom(event.target.value)} className="mt-1 block rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
+          </label>
+          <label className="text-xs text-muted-foreground">
+            Hasta
+            <input type="date" value={exportTo} onChange={(event) => setExportTo(event.target.value)} className="mt-1 block rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
+          </label>
+          <button className="crm-button" onClick={async () => {
+            setExportError(null)
+            if (!exportFrom || !exportTo || exportFrom > exportTo) {
+              setExportError("El rango de fechas no es válido.")
+              return
+            }
+            try {
+              const url = URL.createObjectURL(await api.downloadOpportunitiesCsv(exportFrom, exportTo))
+              const link = document.createElement("a")
+              link.href = url
+              link.download = `oportunidades-${exportFrom}-${exportTo}.csv`
+              link.click()
+              URL.revokeObjectURL(url)
+            } catch {
+              setExportError("No se pudo exportar el archivo.")
+            }
+          }}>
+            Descargar CSV
+          </button>
+          <button className="crm-button" onClick={() => setShowNewLead(true)}>
+            <Plus className="h-4 w-4" />
+            Nueva oportunidad
+          </button>
+        </div>
       </div>
+      {exportError && <p role="alert" className="text-sm text-destructive">{exportError}</p>}
 
       {showNewLead && <NewLeadModal onClose={() => setShowNewLead(false)} />}
 

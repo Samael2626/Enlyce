@@ -7,6 +7,7 @@ using Enlyce.Api.Development;
 using Enlyce.Api.Endpoints.Alertas;
 using Enlyce.Api.Endpoints.Auth;
 using Enlyce.Api.Endpoints.Contacts;
+using Enlyce.Api.Endpoints.CsvExport;
 using Enlyce.Api.Endpoints.Demands;
 using Enlyce.Api.Endpoints.Tasks;
 using Enlyce.Api.Endpoints.DatosPersonales;
@@ -267,6 +268,7 @@ app.UseAuthorization();
 
 app.MapHealth();
 app.MapLeads();
+app.MapCsvExport();
 app.MapLeadDistribution();
 app.MapContacts();
 app.MapTasks();
