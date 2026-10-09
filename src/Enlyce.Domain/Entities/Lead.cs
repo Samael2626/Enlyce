@@ -57,6 +57,8 @@ public sealed class Lead
     public Email Email { get; internal set; }
     public Telefono? Telefono { get; internal set; }
     public string Fuente { get; internal set; }
+    public string? SourceRoute { get; internal set; }
+    public string? UtmCampaign { get; internal set; }
     public EstadoLead Estado { get; internal set; }
     public MotivoCierre MotivoCierre { get; internal set; }
     public string? NotasCierre { get; internal set; }
@@ -127,7 +129,8 @@ public sealed class Lead
 
     public static Lead Crear(string nombre, Email email, Telefono? telefono,
         string fuente, bool autorizacionDatos, string tipoOperacion = "Venta",
-        OwnerInquiryService? ownerService = null, Guid? publicationId = null, Guid? contactId = null)
+        OwnerInquiryService? ownerService = null, Guid? publicationId = null, Guid? contactId = null,
+        string? sourceRoute = null, string? utmCampaign = null)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del lead no puede ser vacio.");
@@ -148,7 +151,7 @@ public sealed class Lead
 
         var now = DateTime.UtcNow;
 
-        return new Lead(
+        var lead = new Lead(
             Guid.NewGuid(),
             nombre.Trim(),
             email,
@@ -172,6 +175,9 @@ public sealed class Lead
             publicationId,
             contactId,
             null);
+        lead.SourceRoute = sourceRoute;
+        lead.UtmCampaign = utmCampaign;
+        return lead;
     }
 
     public static string CreateOpportunityKey(Email email, Guid? publicationId) =>

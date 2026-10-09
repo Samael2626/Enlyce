@@ -4,6 +4,7 @@ import { ContactForm } from "@/components/ContactForm";
 import {
   findOwnerService,
   getActivePolicy,
+  type CampaignParams,
   type OwnerServiceValue,
 } from "@/lib/api/leads";
 
@@ -55,6 +56,11 @@ export default async function PropietariosPage({ searchParams }: PageProps) {
   const initialService = findOwnerService(first(params.servicio))?.value as
     | OwnerServiceValue
     | undefined;
+  const campaign: CampaignParams = {
+    source: first(params.utm_source),
+    medium: first(params.utm_medium),
+    campaign: first(params.utm_campaign),
+  };
 
   return (
     <div className="owners-page">
@@ -152,6 +158,7 @@ export default async function PropietariosPage({ searchParams }: PageProps) {
           isOwnerInquiry
           initialOwnerService={initialService}
           policyVersion={policy?.version}
+          campaign={campaign}
         />
       </section>
     </div>

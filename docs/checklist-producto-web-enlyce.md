@@ -76,7 +76,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 - [x] Ampliar la captación de propietarios con ciudad, barrio, tipo de inmueble y mensaje.
 - [x] Guardar esos datos en campos estructurados del CRM, no incrustados en `Fuente`.
-- [ ] Mostrar en la ficha de la oportunidad la ruta, campaña, publicación y servicio de origen.
+- [x] Mostrar en la ficha de la oportunidad la ruta, campaña, publicación y servicio de origen.
 - [x] Crear brochure comercial descargable y versión web tipo libro: 10 páginas A5, portada rígida, doble página, arrastre, sombras, pantalla completa y navegación por teclado.
 - [ ] Sustituir las fotografías editoriales temporales del brochure por fotografías autorizadas del inventario real de L&C.
 - [x] Añadir analítica de embudo: visita, búsqueda, favorito, formulario iniciado y conversión.

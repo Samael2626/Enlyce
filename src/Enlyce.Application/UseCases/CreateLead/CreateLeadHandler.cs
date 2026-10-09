@@ -93,7 +93,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             command.PublicationId,
             requiresPublicationReview);
         var lead = Lead.Crear(command.Nombre, email, telefono, source,
-            command.AutorizacionDatos, command.TipoOperacion, ownerService, publicationId);
+            command.AutorizacionDatos, command.TipoOperacion, ownerService, publicationId,
+            sourceRoute: NormalizeSourceRoute(command.SourceRoute),
+            utmCampaign: NormalizeUtmCampaign(command.UtmCampaign));
         var contact = await _contactRepo.CreateOrGetAsync(Contact.Create(command.Nombre, email, telefono), ct);
         lead.LinkContact(contact.Id);
 
@@ -224,6 +226,31 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         return Guid.TryParse(value, out var publicationId) && publicationId != Guid.Empty
             ? publicationId
             : null;
+    }
+
+    private static string? NormalizeSourceRoute(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var route = value.Trim();
+        return route.Length <= 500 && route.StartsWith("/", StringComparison.Ordinal) &&
+               !route.StartsWith("//", StringComparison.Ordinal) &&
+               !route.Contains("//", StringComparison.Ordinal) &&
+               !route.Contains('?') &&
+               !route.Contains('#') &&
+               !route.Any(char.IsControl)
+            ? route
+            : null;
+    }
+
+    private static string? NormalizeUtmCampaign(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var campaign = value.Trim();
+        return campaign.Length <= 200 ? campaign : null;
     }
 
     private static string BuildSource(

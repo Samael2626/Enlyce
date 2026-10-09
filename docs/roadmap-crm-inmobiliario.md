@@ -34,6 +34,7 @@
 - [x] Búsqueda, filtros y paginación desde servidor para contactos, oportunidades y tareas; exportación de contactos seleccionados, asignación masiva de oportunidades y completar/cancelar tareas en lote.
 - [x] Historial cronológico unificado de asignaciones y etapas, con actor, motivo y fecha; los cambios nuevos de etapa se guardan como eventos append-only.
 - [x] Recorrido de integración HTTP contacto → oportunidad → asignación → interacción/tarea/visita → demanda → cierre; prueba estado y vínculos persistidos.
+- [x] Capturar y mostrar ruta, campaña UTM, publicación y servicio de origen de cada oportunidad; ruta/campaña quedan en campos separados de `Fuente`.
 
 ### P2 — integración y automatización
 
@@ -88,6 +89,14 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - La consulta usa dos lecturas SQL agrupadas (sin N+1). Alertas informativas: no crean tareas ni envían correo/WhatsApp.
 - Verificación: Domain 221, Application 40, Integration 226; frontend `npm run build` aprobado. Graphify sin LLM: 5060 nodos, 10030 relaciones, 370 comunidades; vista HTML agregada por superar 5000 nodos.
 - SQL EF Core aplicado en copia PostgreSQL anonimizada; no aplicado a producción.
+
+### Atribución de captaciones web (9 de octubre)
+
+- Contacto y propietarios envían ruta relativa (`pathname`) y `utm_campaign` por separado; API descarta ruta externa, query, fragmentos, controles y valores fuera de límite.
+- `SourceRoute` (500) y `UtmCampaign` (200) son nullable; `Fuente` histórica no cambia. Recontactos conservan la atribución original.
+- Ficha CRM muestra ruta/campaña, servicio y publicación por título/slug cuando está disponible; no expone GUID.
+- Migración `20261009190152_CaptureLeadSourceAttribution` aplicada a un restore anonimizado PostgreSQL 17; 4 oportunidades y 2 asesores preservados. Backup posterior restaurado con columnas y migración vigentes. No se tocó producción.
+- Verificación: Domain 221, Application 51, Integration 226 (498 total); `npm run build` frontend y `npm run typecheck` web aprobados. Graphify actualizado sin LLM ni clustering: 5086 nodos, 10229 relaciones; sin regenerar HTML por superar 5000 nodos.
 
 ## Avance del 9 de octubre de 2026
 

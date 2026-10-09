@@ -13,4 +13,6 @@ public record CreateLeadCommand(
     // como desconocido.
     string? Canal = null,
     // La fija el endpoint desde la conexion, jamas el cuerpo de la peticion.
-    string? DireccionIp = null);
+    string? DireccionIp = null,
+    string? SourceRoute = null,
+    string? UtmCampaign = null);

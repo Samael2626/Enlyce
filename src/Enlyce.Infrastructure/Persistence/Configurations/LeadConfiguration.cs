@@ -29,6 +29,8 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
 
         builder.Property(l => l.Nombre).HasMaxLength(200).IsRequired();
         builder.Property(l => l.Fuente).HasMaxLength(100);
+        builder.Property(l => l.SourceRoute).HasMaxLength(500);
+        builder.Property(l => l.UtmCampaign).HasMaxLength(200);
         builder.Property(l => l.Estado).HasConversion<string>().HasMaxLength(30);
         builder.Property(l => l.MotivoCierre).HasConversion<string>().HasMaxLength(30);
         builder.Property(l => l.NotasCierre).HasMaxLength(1000);

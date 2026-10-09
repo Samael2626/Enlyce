@@ -504,6 +504,8 @@ export interface components {
             tipoOperacion?: string | null;
             ownerService?: string | null;
             publicationId?: string | null;
+            sourceRoute?: string | null;
+            utmCampaign?: string | null;
             canal?: string | null;
         };
         CreateLeadResponse: {
@@ -574,6 +576,8 @@ export interface components {
             ownerService?: string | null;
             /** Format: uuid */
             publicationId?: string | null;
+            sourceRoute?: string | null;
+            utmCampaign?: string | null;
         };
         HttpValidationProblemDetails: {
             type?: string | null;

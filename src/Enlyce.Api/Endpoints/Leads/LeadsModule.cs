@@ -42,7 +42,9 @@ public static class LeadsModule
                 request.TipoOperacion, request.OwnerService,
                 request.PublicationId,
                 request.Canal,
-                ResolveClientIp(http));
+                ResolveClientIp(http),
+                request.SourceRoute,
+                request.UtmCampaign);
 
             var result = await handler.HandleAsync(command);
             return Results.Accepted(value: new PublicLeadSubmissionResponse(
@@ -116,7 +118,9 @@ public record CreateLeadRequest(
     string? OwnerService = null,
     string? PublicationId = null,
     // Lo declara cada frontend: "sitio_web", "funcional_legacy", etc.
-    string? Canal = null);
+    string? Canal = null,
+    string? SourceRoute = null,
+    string? UtmCampaign = null);
 
 public sealed record PublicLeadSubmissionResponse(
     string ContinuationToken,

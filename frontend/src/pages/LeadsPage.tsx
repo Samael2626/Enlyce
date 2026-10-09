@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useSearchParams } from "react-router-dom"
 import { api } from "@/api/client"
-import { useAdvisors, useBulkAssignLeads, usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead, useLeadHistory } from "@/hooks/useApi"
+import { useAdvisors, useBulkAssignLeads, usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead, useLeadHistory, usePublications } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 import {
   User,
@@ -51,6 +51,13 @@ const currency = new Intl.NumberFormat("es-CO", {
   currency: "COP",
   maximumFractionDigits: 0,
 })
+const PUBLIC_SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "")
+
+function getWebsitePublicationSlug(source: string | undefined): string | null {
+  const match = source?.match(/^Website:([^|]+)(?:\||$)/)
+  const slug = match?.[1]?.trim()
+  return slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null
+}
 
 export function LeadsPage() {
   const [searchParams] = useSearchParams()
@@ -365,6 +372,7 @@ function LeadCard({
   const { data: leadDetail, isLoading: loadingDetail } = useLead(
     isExpanded ? lead.id : ""
   )
+  const { data: publications = [] } = usePublications()
   const { data: interacciones, isLoading: loadingInteracciones } =
     useInteracciones(isExpanded ? lead.id : "")
   const { data: history, isLoading: loadingHistory } = useLeadHistory(isExpanded ? lead.id : "")
@@ -488,6 +496,31 @@ function LeadCard({
                   label="Autorización"
                   value={leadDetail.autorizacionDatos ? "Sí" : "No"}
                 />
+                <DetailItem
+                  icon={<FileText className="h-4 w-4" />}
+                  label="Ruta de origen"
+                  value={leadDetail.sourceRoute || "No registrada"}
+                />
+                <DetailItem
+                  icon={<FileText className="h-4 w-4" />}
+                  label="Campaña UTM"
+                  value={leadDetail.utmCampaign || "Sin campaña"}
+                />
+                <div className="flex items-start gap-2">
+                  <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Publicación asociada</p>
+                    {leadDetail.publicationId ? (() => {
+                      const publication = publications.find((item) => item.id === leadDetail.publicationId)
+                      const slug = publication?.slug || getWebsitePublicationSlug(leadDetail.fuente)
+                      return slug ? (
+                        <a className="text-sm font-medium text-foreground underline" href={`${PUBLIC_SITE_URL}/inmuebles/${encodeURIComponent(slug)}`} target="_blank" rel="noreferrer">
+                          {publication?.publicTitle || publication?.propertyName || "Inmueble relacionado"} · /{slug}
+                        </a>
+                      ) : <p className="text-sm font-medium text-foreground">Publicación no disponible</p>
+                    })() : <p className="text-sm font-medium text-foreground">Sin publicación</p>}
+                  </div>
+                </div>
               </div>
 
               {leadDetail.ownerService && (

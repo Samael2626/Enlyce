@@ -145,10 +145,88 @@ public sealed class CreateLeadHandlerTests
         Assert.True(result.EsContactoRepetido);
         Assert.Equal(existing.Id, result.Id);
         Assert.Equal(1, existing.InteraccionesCount);
+        Assert.Null(existing.SourceRoute);
+        Assert.Null(existing.UtmCampaign);
         Assert.Null(existing.FechaPrimerContacto);
         Assert.NotNull(existing.FechaUltimaInteraccion);
         await _interaccionRepository.Received(1).AgregarAsync(
             Arg.Is<Interaccion>(item => item.LeadId == existing.Id && item.Tipo == "ContactoWeb"));
+    }
+
+    [Fact]
+    public async Task Handle_StoresValidSourceRouteAndTrimmedCampaign()
+    {
+        await CreateHandler().HandleAsync(CreateCommand(null) with
+        {
+            SourceRoute = " /propiedades/apartamento ",
+            UtmCampaign = "  lanzamiento-octubre  ",
+        });
+
+        Assert.Equal("/propiedades/apartamento", GetSavedLead().SourceRoute);
+        Assert.Equal("lanzamiento-octubre", GetSavedLead().UtmCampaign);
+        Assert.Equal("Website:apartamento-laureles", GetSavedLead().Fuente);
+    }
+
+    [Theory]
+    [InlineData("https://example.com/a")]
+    [InlineData("//example.com/a")]
+    [InlineData("/a//b")]
+    [InlineData("/a?x=1")]
+    [InlineData("/a#section")]
+    [InlineData("/a\nb")]
+    [InlineData("relative/path")]
+    public async Task Handle_InvalidSourceRouteIsDiscarded(string route)
+    {
+        await CreateHandler().HandleAsync(CreateCommand(null) with { SourceRoute = route });
+
+        Assert.Null(GetSavedLead().SourceRoute);
+    }
+
+    [Fact]
+    public async Task Handle_SourceRouteAndCampaignAtLimitsAreAccepted()
+    {
+        var route = "/" + new string('r', 499);
+        var campaign = new string('c', 200);
+
+        await CreateHandler().HandleAsync(CreateCommand(null) with
+        {
+            SourceRoute = route,
+            UtmCampaign = campaign,
+        });
+
+        Assert.Equal(route, GetSavedLead().SourceRoute);
+        Assert.Equal(campaign, GetSavedLead().UtmCampaign);
+    }
+
+    [Fact]
+    public async Task Handle_OverLimitSourceRouteAndCampaignAreDiscarded()
+    {
+        await CreateHandler().HandleAsync(CreateCommand(null) with
+        {
+            SourceRoute = "/" + new string('r', 500),
+            UtmCampaign = new string('c', 201),
+        });
+
+        Assert.Null(GetSavedLead().SourceRoute);
+        Assert.Null(GetSavedLead().UtmCampaign);
+    }
+
+    [Fact]
+    public async Task Handle_RecontactDoesNotReplaceOriginalAttribution()
+    {
+        var existing = CreateExistingLead(publicationId: null, advisorId: Guid.NewGuid());
+        _leadRepository.GetByOpportunityKeyAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(existing);
+
+        var result = await CreateHandler().HandleAsync(CreateCommand(null, "repite@test.com") with
+        {
+            SourceRoute = "/repeat",
+            UtmCampaign = "repeat-campaign",
+        });
+
+        Assert.True(result.EsContactoRepetido);
+        Assert.Null(existing.SourceRoute);
+        Assert.Null(existing.UtmCampaign);
+        await _leadRepository.DidNotReceiveWithAnyArgs().CreateOrGetExistingAsync(default!, default, default);
     }
 
     [Fact]

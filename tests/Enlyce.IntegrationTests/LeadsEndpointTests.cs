@@ -75,7 +75,9 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
     {
         // Create a lead first
         var createRequest = new CreateLeadRequest(
-            "Test Lead", "testget@test.com", "3109999888", "Web", true);
+            "Test Lead", "testget@test.com", "3109999888", "Web", true,
+            SourceRoute: "/inmuebles/apartamento-prueba",
+            UtmCampaign: "lanzamiento-octubre");
         var createResponse = await _client.PostAsJsonAsync("/api/leads", createRequest);
         var created = await FindLeadByEmailAsync("testget@test.com");
 
@@ -87,6 +89,8 @@ public class LeadsEndpointTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(lead);
         Assert.Equal("Test Lead", lead!.Nombre);
         Assert.Equal("testget@test.com", lead.Email);
+        Assert.Equal("/inmuebles/apartamento-prueba", lead.SourceRoute);
+        Assert.Equal("lanzamiento-octubre", lead.UtmCampaign);
     }
 
     [Fact]

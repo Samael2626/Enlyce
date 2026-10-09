@@ -21,4 +21,6 @@ public record GetLeadByIdResponse(
     string? OwnerPropertyNeighborhood,
     decimal? OwnerExpectedPrice,
     string? OwnerPropertyMessage,
-    string? OwnerPreferredContactChannel);
+    string? OwnerPreferredContactChannel,
+    string? SourceRoute,
+    string? UtmCampaign);

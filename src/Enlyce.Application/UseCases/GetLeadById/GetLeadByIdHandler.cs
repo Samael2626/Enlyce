@@ -38,6 +38,8 @@ public class GetLeadByIdHandler : IQueryHandler<GetLeadByIdQuery, GetLeadByIdRes
             lead.OwnerPropertyNeighborhood,
             lead.OwnerExpectedPrice,
             lead.OwnerPropertyMessage,
-            lead.OwnerPreferredContactChannel?.ToString());
+            lead.OwnerPreferredContactChannel?.ToString(),
+            lead.SourceRoute,
+            lead.UtmCampaign);
     }
 }

@@ -89,6 +89,8 @@ export type CreateLeadInput = {
   tipoOperacion: string;
   ownerService?: string | null;
   publicationId?: string | null;
+  sourceRoute: string;
+  utmCampaign?: string | null;
 };
 
 export async function createLead(input: CreateLeadInput): Promise<LeadResult> {
@@ -103,6 +105,8 @@ export async function createLead(input: CreateLeadInput): Promise<LeadResult> {
     tipoOperacion: input.tipoOperacion,
     ownerService: input.ownerService ?? null,
     publicationId: input.publicationId ?? null,
+    sourceRoute: input.sourceRoute,
+    utmCampaign: input.utmCampaign?.trim() || null,
     canal: SITE_CHANNEL,
   };
 

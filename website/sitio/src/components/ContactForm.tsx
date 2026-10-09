@@ -103,6 +103,8 @@ export function ContactForm({
         tipoOperacion: isOwnerInquiry ? selected.operation : "Venta",
         ownerService: isOwnerInquiry ? selected.ownerService : null,
         publicationId: publicationId ?? null,
+        sourceRoute: window.location.pathname,
+        utmCampaign: campaign?.campaign,
       });
 
       setStatus({

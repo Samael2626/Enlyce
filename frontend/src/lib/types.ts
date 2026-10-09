@@ -50,6 +50,8 @@ export interface GetLeadByIdResponse {
   tipoOperacion: string
   ownerService?: string
   publicationId?: string
+  sourceRoute?: string
+  utmCampaign?: string
   ownerPropertyType?: string
   ownerPropertyCity?: string
   ownerPropertyNeighborhood?: string
