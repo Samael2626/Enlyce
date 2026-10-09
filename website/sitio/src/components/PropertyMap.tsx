@@ -28,33 +28,33 @@ export default function PropertyMap({ location, label }: Props) {
   const center: [number, number] = [location.latitude, location.longitude];
 
   return (
-    <MapContainer
-      center={center}
-      zoom={DEFAULT_DETAIL_ZOOM}
-      maxZoom={MAX_DETAIL_ZOOM}
-      minZoom={11}
-      scrollWheelZoom={false}
-      className="h-full w-full"
-      // El teclado sigue funcionando: se navega con tab y flechas.
-      aria-label={`Mapa de la zona aproximada de ${label}`}
-    >
-      <TileLayer
-        // Atribucion obligatoria por la licencia de OpenStreetMap.
-        attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={MAX_DETAIL_ZOOM}
-      />
-      <Circle
+    <div className="h-full w-full" role="region" aria-label={`Mapa de la zona aproximada de ${label}`}>
+      <MapContainer
         center={center}
-        radius={APPROXIMATE_RADIUS_METERS}
-        pathOptions={{
-          color: "#ae6b48",
-          weight: 1.5,
-          fillColor: "#ae6b48",
-          fillOpacity: 0.12,
-        }}
-      />
-      <Marker position={center} icon={marker} />
-    </MapContainer>
+        zoom={DEFAULT_DETAIL_ZOOM}
+        maxZoom={MAX_DETAIL_ZOOM}
+        minZoom={11}
+        scrollWheelZoom={false}
+        className="h-full w-full"
+      >
+        <TileLayer
+          // Atribucion obligatoria por la licencia de OpenStreetMap.
+          attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={MAX_DETAIL_ZOOM}
+        />
+        <Circle
+          center={center}
+          radius={APPROXIMATE_RADIUS_METERS}
+          pathOptions={{
+            color: "#ae6b48",
+            weight: 1.5,
+            fillColor: "#ae6b48",
+            fillOpacity: 0.12,
+          }}
+        />
+        <Marker position={center} icon={marker} />
+      </MapContainer>
+    </div>
   );
 }

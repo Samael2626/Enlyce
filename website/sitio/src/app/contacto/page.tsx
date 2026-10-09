@@ -25,8 +25,10 @@ export default async function ContactoPage({ searchParams }: PageProps) {
   // El enlace de la ficha trae el slug, pero el CRM espera el GUID de la
   // publicacion. Se resuelve aqui; si el slug no existe se ignora y el
   // formulario sigue funcionando como contacto general.
-  const property = slug ? await getPropertyBySlug(slug) : null;
-  const policy = await getActivePolicy();
+  const [property, policy] = await Promise.all([
+    slug ? getPropertyBySlug(slug) : Promise.resolve(null),
+    getActivePolicy(),
+  ]);
 
   // Campana: mismo patron que ?inmueble= y ?motivo=. No se guarda como entidad
   // propia todavia, solo se anexa a la fuente del lead.

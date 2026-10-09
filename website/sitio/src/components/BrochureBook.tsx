@@ -21,6 +21,7 @@ export function BrochureBook() {
   );
 
   useEffect(() => {
+    const reader = readerRef.current;
     let cancelled = false;
     let instance: PageFlip | null = null;
 
@@ -56,14 +57,15 @@ export function BrochureBook() {
     void initializeBook();
 
     function handleKeyDown(event: KeyboardEvent) {
+      if (!bookRef.current?.contains(event.target as Node)) return;
       if (event.key === "ArrowRight") pageFlipRef.current?.flipNext();
       if (event.key === "ArrowLeft") pageFlipRef.current?.flipPrev();
     }
 
-    window.addEventListener("keydown", handleKeyDown);
+    reader?.addEventListener("keydown", handleKeyDown);
     return () => {
       cancelled = true;
-      window.removeEventListener("keydown", handleKeyDown);
+      reader?.removeEventListener("keydown", handleKeyDown);
       if (instance) {
         instance.destroy();
         pageFlipRef.current = null;
@@ -222,11 +224,12 @@ export function BrochureBook() {
         </button>
       </div>
 
-      <div className="brochure-status" aria-live="polite">
-        <span>{String(currentPage + 1).padStart(2, "0")}</span>
+      <div className="brochure-status" role="status">
+        <span className="sr-only">Página {currentPage + 1} de {PAGE_COUNT}</span>
+        <span aria-hidden="true">{String(currentPage + 1).padStart(2, "0")}</span>
         <i aria-hidden="true"><b style={{ width: `${((currentPage + 1) / PAGE_COUNT) * 100}%` }} /></i>
-        <span>{String(PAGE_COUNT).padStart(2, "0")}</span>
-        <p>Arrastra la esquina o usa las flechas.</p>
+        <span aria-hidden="true">{String(PAGE_COUNT).padStart(2, "0")}</span>
+        <p aria-hidden="true">Arrastra la esquina o usa las flechas.</p>
       </div>
     </section>
   );

@@ -280,7 +280,7 @@ export function ContactForm({
         {propertyTitle && (
           <p className="mt-2 text-sm text-muted">Consulta sobre: {propertyTitle}</p>
         )}
-        <Link href="/inmuebles" className="mt-4 inline-block text-accent underline">
+        <Link href="/inmuebles" className="mt-4 inline-block text-accent-strong underline">
           Seguir viendo inmuebles
         </Link>
       </section>
@@ -356,7 +356,7 @@ export function ContactForm({
         />
         <span>
           Autorizo el tratamiento de mis datos personales conforme a la{" "}
-          <Link href="/privacidad" className="text-accent underline">
+          <Link href="/privacidad" className="text-accent-strong underline">
             política de tratamiento de datos
           </Link>
           {policyVersion ? ` (versión ${policyVersion})` : ""} y a la Ley 1581 de 2012.
@@ -377,7 +377,7 @@ export function ContactForm({
       <button
         type="submit"
         disabled={!authorized || sending}
-        className="rounded bg-accent px-5 py-2 text-surface hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded bg-accent-strong px-5 py-2 text-surface hover:bg-ink disabled:cursor-not-allowed disabled:opacity-50"
       >
         {sending ? "Enviando…" : isOwnerInquiry ? "Guardar y continuar" : "Enviar solicitud"}
       </button>

@@ -122,16 +122,16 @@ export function CatalogFilters({ total }: { total: number }) {
           <fieldset>
             <legend>Rango de precio</legend>
             <div className="catalog-filter-pair">
-              <input className={fieldClass} name="minPrice" type="number" min="0" placeholder="Desde $" defaultValue={current("minPrice")} />
-              <input className={fieldClass} name="maxPrice" type="number" min="0" placeholder="Hasta $" defaultValue={current("maxPrice")} />
+              <input className={fieldClass} name="minPrice" type="number" min="0" placeholder="Desde $" aria-label="Precio mínimo" defaultValue={current("minPrice")} />
+              <input className={fieldClass} name="maxPrice" type="number" min="0" placeholder="Hasta $" aria-label="Precio máximo" defaultValue={current("maxPrice")} />
             </div>
           </fieldset>
 
           <fieldset>
             <legend>Área</legend>
             <div className="catalog-filter-pair">
-              <input className={fieldClass} name="minArea" type="number" min="0" placeholder="Mín. m²" defaultValue={current("minArea")} />
-              <input className={fieldClass} name="maxArea" type="number" min="0" placeholder="Máx. m²" defaultValue={current("maxArea")} />
+              <input className={fieldClass} name="minArea" type="number" min="0" placeholder="Mín. m²" aria-label="Área mínima en metros cuadrados" defaultValue={current("minArea")} />
+              <input className={fieldClass} name="maxArea" type="number" min="0" placeholder="Máx. m²" aria-label="Área máxima en metros cuadrados" defaultValue={current("maxArea")} />
             </div>
           </fieldset>
 
@@ -170,7 +170,7 @@ export function CatalogFilters({ total }: { total: number }) {
         </div>
 
         {activeFilters.length > 0 && (
-          <div className="catalog-active-filters" aria-label="Filtros activos">
+          <div className="catalog-active-filters" role="group" aria-label="Filtros activos">
             {activeFilters.map(([key, value]) => (
               <button key={key} type="button" onClick={() => update(key, "")}>{value}<span aria-hidden="true">×</span></button>
             ))}

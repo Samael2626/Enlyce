@@ -3,14 +3,51 @@ import Link from "next/link";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertySearchPanel } from "@/components/PropertySearchPanel";
 import { getProperties } from "@/lib/api/catalog";
+import { serializeJsonLd } from "@/lib/seo/json-ld";
+
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const page = await getProperties({ pageSize: 6 });
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "RealEstateAgent",
+        "@id": `${siteUrl}/#organization`,
+        name: "L&C Propiedad Raíz S.A.S.",
+        url: siteUrl,
+        logo: `${siteUrl}/lyc-logo-transparent.png`,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        name: "L&C Propiedad Raíz",
+        url: siteUrl,
+        inLanguage: "es-CO",
+        publisher: { "@id": `${siteUrl}/#organization` },
+      },
+      {
+        "@type": "ItemList",
+        name: "Propiedades destacadas",
+        itemListElement: page.items.map((property, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: property.publicTitle,
+          url: `${siteUrl}/inmuebles/${encodeURIComponent(property.slug)}`,
+        })),
+      },
+    ],
+  };
 
   return (
     <div className="space-y-20 pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      />
       <div>
         <section className="hero-shell">
           <div className="hero-visual" aria-hidden="true" />

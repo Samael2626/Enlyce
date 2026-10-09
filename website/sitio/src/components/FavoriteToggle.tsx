@@ -6,7 +6,7 @@ import { trackFunnelEvent } from "@/lib/analytics";
 type Props = { slug: string; title: string; className?: string };
 
 const overlayClass =
-  "absolute right-3 top-3 z-10 rounded-full bg-surface/90 px-3 py-1 text-xs shadow-card hover:text-accent";
+  "absolute right-3 top-3 z-10 rounded-full bg-surface/90 px-3 py-1 text-xs shadow-card hover:text-accent-strong";
 
 export function FavoriteToggle({ slug, title, className = overlayClass }: Props) {
   const { favorites, toggle } = useFavorites();

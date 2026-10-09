@@ -6,8 +6,10 @@ import { FavoriteToggle } from "@/components/FavoriteToggle";
 import { PropertyLocation } from "@/components/PropertyLocation";
 import { getPropertyBySlug } from "@/lib/api/catalog";
 import { formatArea, formatOperation, formatPrice } from "@/lib/format";
+import { serializeJsonLd } from "@/lib/seo/json-ld";
 
 type PageProps = { params: Promise<{ slug: string }> };
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
 // Metadatos por inmueble: la razon principal de traer Next a la web publica.
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -41,9 +43,59 @@ export default async function InmueblePage({ params }: PageProps) {
   const photos = [...property.photos].sort((a, b) => a.order - b.order);
   const cover = photos.find((photo) => photo.isCover) ?? photos[0];
   const rest = photos.filter((photo) => photo !== cover);
+  const canonicalUrl = `${siteUrl}/inmuebles/${encodeURIComponent(property.slug)}`;
+  const propertyType = property.propertyType === "Apartamento"
+    ? "Apartment"
+    : property.propertyType === "Casa"
+      ? "House"
+      : "Place";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: property.publicTitle,
+    description: property.publicDescription,
+    url: canonicalUrl,
+    datePosted: property.publishedAt,
+    image: photos.map((photo) => photo.url),
+    mainEntity: {
+      "@type": propertyType,
+      name: property.publicTitle,
+      containedInPlace: {
+        "@type": "Place",
+        name: property.location.neighborhood,
+        containedInPlace: { "@type": "City", name: property.location.municipality },
+      },
+      geo: Number.isFinite(property.location.approximateLatitude) && Number.isFinite(property.location.approximateLongitude)
+        ? {
+            "@type": "GeoCoordinates",
+            latitude: property.location.approximateLatitude,
+            longitude: property.location.approximateLongitude,
+          }
+        : undefined,
+      additionalProperty: [
+        { "@type": "PropertyValue", name: "Área", value: property.features.areaSquareMeters, unitCode: "MTK" },
+        { "@type": "PropertyValue", name: "Habitaciones", value: property.features.bedrooms },
+        { "@type": "PropertyValue", name: "Baños", value: property.features.bathrooms },
+        { "@type": "PropertyValue", name: "Parqueaderos", value: property.features.parkingSpaces },
+      ],
+    },
+    offers: Number.isFinite(property.price.amount) && property.price.amount > 0 && /^[A-Z]{3}$/.test(property.price.currency)
+      ? {
+          "@type": "Offer",
+          price: property.price.amount,
+          priceCurrency: property.price.currency,
+          category: property.operation,
+          url: canonicalUrl,
+        }
+      : undefined,
+  };
 
   return (
     <article className="mx-auto max-w-5xl space-y-8 px-4 py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      />
       <nav aria-label="Ruta" className="text-sm text-muted">
         <Link href="/inmuebles" className="hover:text-accent">Inmuebles</Link>
         <span aria-hidden="true"> / </span>
