@@ -67,6 +67,55 @@ export interface ContactSummary {
   updatedAt: string
 }
 
+export interface PagedItems<T> {
+  total: number
+  items: T[]
+  page?: number
+  pageSize?: number
+}
+
+export interface PipelineResult {
+  etapas: { nombre: string; etiqueta: string; leadCount: number }[]
+  leads: LeadDto[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export interface LeadDto {
+  id: string
+  nombre: string
+  email: string
+  telefono?: string
+  fuente: string
+  etapaPipeline: string
+  tipoOperacion: string
+  interaccionesCount: number
+  fechaUltimaInteraccion?: string
+  fechaCreacion: string
+  asesorNombre?: string
+  fechaPrimerContacto?: string
+}
+
+export interface LeadHistoryItem {
+  id: string
+  type: string
+  from: string
+  to: string
+  actor: string
+  reason: string
+  occurredAt: string
+}
+
+export interface AdvisorOption {
+  id: string
+  name: string
+}
+
+export interface BulkTaskResult {
+  results: { id: string; result: string }[]
+}
+
 export interface ContactInteraction {
   id: string
   type: string

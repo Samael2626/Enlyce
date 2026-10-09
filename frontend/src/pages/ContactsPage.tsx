@@ -1,23 +1,27 @@
 import { useEffect, useMemo, useState } from "react"
-import { Mail, Phone, Search, UserRound } from "lucide-react"
+import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
 import { useContact, useContacts, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 export function ContactsPage() {
-  const contactsQuery = useContacts()
+  const pageSize = 20
   const [selectedId, setSelectedId] = useState("")
   const [search, setSearch] = useState("")
-  const filteredContacts = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase()
-    return (contactsQuery.data ?? []).filter((contact) =>
-      !term || `${contact.name} ${contact.email} ${contact.phone ?? ""}`.toLocaleLowerCase().includes(term)
-    )
-  }, [contactsQuery.data, search])
+  const [createdFrom, setCreatedFrom] = useState("")
+  const [createdTo, setCreatedTo] = useState("")
+  const [page, setPage] = useState(1)
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
+  const contactsQuery = useContacts({ q: search, from: createdFrom, to: createdTo, page, pageSize })
+  const contacts = contactsQuery.data?.items ?? []
+  const totalContacts = contactsQuery.data?.total ?? 0
+  const pageCount = Math.max(1, Math.ceil(totalContacts / pageSize))
 
   useEffect(() => {
-    if (!filteredContacts.some((contact) => contact.id === selectedId))
-      setSelectedId(filteredContacts[0]?.id ?? "")
-  }, [filteredContacts, selectedId])
+    if (!contacts.some((contact) => contact.id === selectedId))
+      setSelectedId(contacts[0]?.id ?? "")
+  }, [contacts, selectedId])
+
+  useEffect(() => setSelectedContactIds([]), [search, createdFrom, createdTo, page])
 
   const detailQuery = useContact(selectedId)
   const contact = detailQuery.data?.contact
@@ -89,36 +93,57 @@ export function ContactsPage() {
 
       <div className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
         <section className="crm-panel overflow-hidden">
-          <div className="border-b border-border p-4">
+          <div className="space-y-3 border-b border-border p-4">
             <label className="relative block">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 className="w-full rounded-md border border-border bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:border-accent"
                 placeholder="Buscar contacto"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => { setSearch(event.target.value); setPage(1) }}
               />
             </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs text-muted-foreground">Desde
+                <input type="date" value={createdFrom} max={createdTo || undefined} onChange={(event) => { setCreatedFrom(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
+              </label>
+              <label className="text-xs text-muted-foreground">Hasta
+                <input type="date" value={createdTo} min={createdFrom || undefined} onChange={(event) => { setCreatedTo(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={contacts.length > 0 && contacts.every((item) => selectedContactIds.includes(item.id))} onChange={(event) => setSelectedContactIds(event.target.checked ? contacts.map((item) => item.id) : [])} />
+                Seleccionar página
+              </label>
+              <button type="button" disabled={!selectedContactIds.length} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1.5 font-semibold text-foreground disabled:opacity-40" onClick={() => exportContactsCsv(contacts.filter((item) => selectedContactIds.includes(item.id)))}>
+                <Download className="h-3.5 w-3.5" /> Exportar ({selectedContactIds.length})
+              </button>
+            </div>
           </div>
           <div className="max-h-[70vh] overflow-y-auto">
             {contactsQuery.isPending && <p className="p-5 text-sm text-muted-foreground">Cargando contactos…</p>}
             {contactsQuery.isError && <p role="alert" className="p-5 text-sm text-destructive">No se pudieron cargar los contactos.</p>}
-            {!contactsQuery.isPending && filteredContacts.length === 0 && (
+            {!contactsQuery.isPending && contacts.length === 0 && (
               <p className="p-5 text-sm text-muted-foreground">Todavía no hay contactos para mostrar.</p>
             )}
-            {filteredContacts.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setSelectedId(item.id)}
-                aria-pressed={selectedId === item.id}
-                className={`block w-full border-b border-border px-4 py-4 text-left transition-colors hover:bg-muted/60 ${selectedId === item.id ? "bg-muted" : ""}`}
-              >
-                <span className="block font-semibold text-foreground">{item.name}</span>
-                <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email}</span>
-                {item.phone && <span className="mt-1 block text-xs text-muted-foreground">{item.phone}</span>}
-              </button>
+            {contacts.map((item) => (
+              <div key={item.id} className={`flex items-start gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-muted/60 ${selectedId === item.id ? "bg-muted" : ""}`}>
+                <input aria-label={`Seleccionar ${item.name}`} type="checkbox" checked={selectedContactIds.includes(item.id)} onChange={(event) => setSelectedContactIds((ids) => event.target.checked ? [...ids, item.id] : ids.filter((id) => id !== item.id))} />
+                <button type="button" onClick={() => setSelectedId(item.id)} aria-pressed={selectedId === item.id} className="min-w-0 flex-1 text-left">
+                  <span className="block font-semibold text-foreground">{item.name}</span>
+                  <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email}</span>
+                  {item.phone && <span className="mt-1 block text-xs text-muted-foreground">{item.phone}</span>}
+                </button>
+              </div>
             ))}
+          </div>
+          <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs">
+            <span className="text-muted-foreground">{totalContacts} contactos · página {page} de {pageCount}</span>
+            <span className="flex gap-1">
+              <button aria-label="Página anterior" disabled={page <= 1} onClick={() => setPage((value) => value - 1)} className="rounded border border-border p-1.5 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button>
+              <button aria-label="Página siguiente" disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)} className="rounded border border-border p-1.5 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button>
+            </span>
           </div>
         </section>
 
@@ -356,4 +381,21 @@ export function ContactsPage() {
 function toLocalDateTimeInput(date: Date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
   return local.toISOString().slice(0, 16)
+}
+
+function exportContactsCsv(contacts: { name: string; email: string; phone?: string; createdAt: string }[]) {
+  const encode = (value: string) => {
+    const formulaSafe = /^[\s\u0000]*[=+@-]/.test(value) ? `'${value}` : value
+    return `"${formulaSafe.replaceAll('"', '""')}"`
+  }
+  const rows = [
+    ["nombre", "correo", "telefono", "creado"],
+    ...contacts.map((item) => [item.name, item.email, item.phone ?? "", item.createdAt]),
+  ].map((row) => row.map(encode).join(",")).join("\r\n")
+  const url = URL.createObjectURL(new Blob(["\uFEFF", rows], { type: "text/csv;charset=utf-8" }))
+  const link = document.createElement("a")
+  link.href = url
+  link.download = "contactos-seleccionados.csv"
+  link.click()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

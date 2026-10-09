@@ -25,6 +25,7 @@ public static class DependencyInjection
 
         services.AddScoped<ILeadRepository, LeadRepository>();
         services.AddScoped<ILeadAssignmentHistoryRepository, LeadAssignmentHistoryRepository>();
+        services.AddScoped<ILeadStageHistoryRepository, LeadStageHistoryRepository>();
         services.AddScoped<ILeadDistributionSettingsRepository, LeadDistributionSettingsRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<ICommercialTaskRepository, CommercialTaskRepository>();

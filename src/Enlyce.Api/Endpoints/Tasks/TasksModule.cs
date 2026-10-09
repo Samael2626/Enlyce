@@ -22,6 +22,15 @@ public static class TasksModule
         {
             if (!ValidRange(request.From, request.To))
                 return Results.BadRequest(new { error = "El rango debe usar fechas UTC y no superar 366 dias." });
+            if (request.Page < 1 || request.PageSize is < 1 or > 100 ||
+                ((long)request.Page - 1) * request.PageSize > int.MaxValue)
+                return Results.BadRequest(new { error = "La pagina debe ser positiva y pageSize debe estar entre 1 y 100." });
+            if (request.Query?.Length > 200)
+                return Results.BadRequest(new { error = "La busqueda no puede superar 200 caracteres." });
+            if (request.Status is not null && !TryParse(request.Status, out CommercialTaskStatus _))
+                return Results.BadRequest(new { error = "El estado no es valido." });
+            if (request.Priority is not null && !TryParse(request.Priority, out CommercialTaskPriority _))
+                return Results.BadRequest(new { error = "La prioridad no es valida." });
 
             var advisorId = http.User.IsInRole("Administrador") ? null : EndpointAccess.AdvisorId(http.User);
             if (!http.User.IsInRole("Administrador") && advisorId is null)
@@ -32,10 +41,27 @@ public static class TasksModule
                     .Any(lead => lead.AsesorAsignadoId == advisorId))
                 return Results.Forbid();
 
-            var items = await tasks.GetForAdvisorAsync(advisorId, request.From, request.To, request.ContactId, ct);
-            return Results.Ok(items.Select(ToDto));
+            var result = await tasks.SearchAsync(advisorId, request.Query,
+                request.Status is null ? null : Enum.Parse<CommercialTaskStatus>(request.Status, true),
+                request.Priority is null ? null : Enum.Parse<CommercialTaskPriority>(request.Priority, true),
+                request.From, request.To, request.ContactId, request.Page, request.PageSize, ct);
+            return Results.Ok(new TaskSearchResponse(result.Total, result.Items.Select(ToDto).ToArray()));
         })
         .WithName("ListCommercialTasks");
+
+        group.MapPost("/bulk/completar", (
+            [FromBody] BulkTaskRequest request,
+            HttpContext http,
+            ICommercialTaskRepository tasks,
+            CancellationToken ct) => ApplyBulkActionAsync(request, true, http, tasks, ct))
+        .WithName("BulkCompleteCommercialTasks");
+
+        group.MapPost("/bulk/cancelar", (
+            [FromBody] BulkTaskRequest request,
+            HttpContext http,
+            ICommercialTaskRepository tasks,
+            CancellationToken ct) => ApplyBulkActionAsync(request, false, http, tasks, ct))
+        .WithName("BulkCancelCommercialTasks");
 
         group.MapGet("/alertas", async Task<IResult> (
             DateTime? through, HttpContext http, ICommercialTaskRepository tasks, CancellationToken ct) =>
@@ -197,6 +223,59 @@ public static class TasksModule
     private static CommercialTaskEventDto ToEventDto(CommercialTaskEvent item) =>
         new(item.Id, item.TaskId, item.ActorId, item.Action, item.Comment, item.OccurredAt);
 
+    private static async Task<IResult> ApplyBulkActionAsync(
+        BulkTaskRequest request, bool complete, HttpContext http,
+        ICommercialTaskRepository tasks, CancellationToken ct)
+    {
+        if (request.Ids is null || request.Ids.Count is < 1 or > 100 || request.Ids.Contains(Guid.Empty))
+            return Results.BadRequest(new { error = "Se requieren entre 1 y 100 IDs de tareas validos." });
+
+        var actorId = GetActorId(http.User);
+        var isAdministrator = http.User.IsInRole("Administrador");
+        var advisorId = isAdministrator ? null : EndpointAccess.AdvisorId(http.User);
+        if (actorId is null || (!isAdministrator && (!http.User.IsInRole("Asesor") || advisorId is null)))
+            return Results.Forbid();
+
+        var eligibleTasks = await tasks.GetByIdsAsync(request.Ids.Distinct().ToArray(), advisorId, ct);
+        var taskById = eligibleTasks.ToDictionary(task => task.Id);
+        var changedTasks = new List<CommercialTask>();
+        var events = new List<CommercialTaskEvent>();
+        var seen = new HashSet<Guid>();
+        var results = new List<BulkTaskResult>(request.Ids.Count);
+
+        foreach (var id in request.Ids)
+        {
+            if (!seen.Add(id))
+            {
+                results.Add(new BulkTaskResult(id, "Duplicate"));
+                continue;
+            }
+            if (!taskById.TryGetValue(id, out var task))
+            {
+                results.Add(new BulkTaskResult(id, "NotFound"));
+                continue;
+            }
+            if (task.Status != CommercialTaskStatus.Pending)
+            {
+                results.Add(new BulkTaskResult(id, "NotPending"));
+                continue;
+            }
+
+            if (complete)
+                task.Complete();
+            else
+                task.Cancel();
+            changedTasks.Add(task);
+            events.Add(CommercialTaskEvent.Create(id, actorId.Value,
+                complete ? "Completed" : "Cancelled", "Accion masiva"));
+            results.Add(new BulkTaskResult(id, complete ? "Completed" : "Cancelled"));
+        }
+
+        if (changedTasks.Count > 0)
+            await tasks.SaveManyAsync(changedTasks, events, ct);
+        return Results.Ok(new BulkTaskResponse(results));
+    }
+
     private static bool CanAccessTask(ClaimsPrincipal user, CommercialTask task) =>
         user.IsInRole("Administrador") || EndpointAccess.AdvisorId(user) == task.AdvisorId;
 
@@ -215,7 +294,14 @@ public static class TasksModule
         Enum.TryParse(value, true, out parsed) && Enum.IsDefined(parsed);
 }
 
-public sealed record ListTasksRequest(DateTime? From = null, DateTime? To = null, Guid? ContactId = null);
+public sealed record ListTasksRequest(
+    string? Query = null, string? Status = null, string? Priority = null,
+    DateTime? From = null, DateTime? To = null, Guid? ContactId = null,
+    int Page = 1, int PageSize = 20);
+public sealed record TaskSearchResponse(int Total, IReadOnlyList<CommercialTaskDto> Items);
+public sealed record BulkTaskRequest(IReadOnlyList<Guid> Ids);
+public sealed record BulkTaskResult(Guid Id, string Result);
+public sealed record BulkTaskResponse(IReadOnlyList<BulkTaskResult> Results);
 public sealed record CreateTaskRequest(Guid ContactId, Guid? LeadId, Guid? AdvisorId, string Type,
     string Title, string? Description, DateTime DueAt, DateTime? ReminderAt, string Priority);
 public sealed record RescheduleTaskRequest(DateTime DueAt, DateTime? ReminderAt);

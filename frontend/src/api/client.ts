@@ -91,8 +91,12 @@ class ApiClient {
   }
 
   // Contactos
-  async getContacts() {
-    return this.request<import("@/lib/types").ContactSummary[]>("/api/contactos")
+  async getContacts(filters: { q?: string; from?: string; to?: string; page?: number; pageSize?: number } = {}) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, String(value))
+    })
+    return this.request<import("@/lib/types").PagedItems<import("@/lib/types").ContactSummary>>(`/api/contactos?${query}`)
   }
 
   async getContact(id: string) {
@@ -113,13 +117,20 @@ class ApiClient {
     })
   }
 
-  async getCommercialTasks(from?: string, to?: string, contactId?: string) {
+  async getCommercialTasks(filters: { from?: string; to?: string; contactId?: string; query?: string; status?: string; priority?: string; page?: number; pageSize?: number } = {}) {
     const query = new URLSearchParams()
-    if (from) query.set("From", from)
-    if (to) query.set("To", to)
-    if (contactId) query.set("ContactId", contactId)
-    const suffix = query.size ? `?${query.toString()}` : ""
-    return this.request<import("@/lib/types").CommercialTask[]>(`/api/tareas${suffix}`)
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, String(value))
+    })
+    return this.request<import("@/lib/types").PagedItems<import("@/lib/types").CommercialTask>>(`/api/tareas?${query}`)
+  }
+
+  async bulkCompleteTasks(ids: string[]) {
+    return this.request<import("@/lib/types").BulkTaskResult>("/api/tareas/bulk/completar", { method: "POST", body: JSON.stringify({ ids }) })
+  }
+
+  async bulkCancelTasks(ids: string[]) {
+    return this.request<import("@/lib/types").BulkTaskResult>("/api/tareas/bulk/cancelar", { method: "POST", body: JSON.stringify({ ids }) })
   }
 
   async getCommercialTaskAlerts(through: string) {
@@ -181,8 +192,26 @@ class ApiClient {
   }
 
   // Pipeline
-  async getPipeline() {
-    return this.request<any>("/api/pipeline")
+  async getPipeline(filters: { q?: string; etapa?: string; operacion?: string; asesorId?: string; desde?: string; hasta?: string; page?: number; pageSize?: number } = {}) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, String(value))
+    })
+    return this.request<import("@/lib/types").PipelineResult>(`/api/pipeline?${query}`)
+  }
+
+  async bulkAssignLeads(leadIds: string[], advisorId: string, reason: string) {
+    return this.request<{ results: { leadId: string; success: boolean; error?: string }[]; succeeded: number; failed: number }>("/api/pipeline/asignar-masivo", {
+      method: "PUT", body: JSON.stringify({ leadIds, asesorId: advisorId, reason }),
+    })
+  }
+
+  async getLeadHistory(leadId: string) {
+    return this.request<import("@/lib/types").LeadHistoryItem[]>(`/api/pipeline/${leadId}/historial`)
+  }
+
+  async getAdvisors() {
+    return this.request<import("@/lib/types").AdvisorOption[]>("/api/asesores")
   }
 
   async getFirstResponseMetrics(from: string, to: string) {
@@ -204,10 +233,10 @@ class ApiClient {
     return response.blob()
   }
 
-  async moveLeadInPipeline(leadId: string, nuevaEtapa: string) {
+  async moveLeadInPipeline(leadId: string, nuevaEtapa: string, reason = "Cambio desde pipeline") {
     return this.request<void>(`/api/pipeline/${leadId}/mover-etapa`, {
       method: "PUT",
-      body: JSON.stringify({ nuevaEtapa }),
+      body: JSON.stringify({ nuevaEtapa, reason }),
     })
   }
 

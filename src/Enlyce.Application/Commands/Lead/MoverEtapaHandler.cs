@@ -5,17 +5,13 @@ namespace Enlyce.Application.Commands.Lead;
 
 public sealed class MoverEtapaHandler
 {
-    private readonly ILeadRepository _leadRepo;
+    private readonly ILeadStageHistoryRepository _history;
 
-    public MoverEtapaHandler(ILeadRepository leadRepo) => _leadRepo = leadRepo;
+    public MoverEtapaHandler(ILeadStageHistoryRepository history) => _history = history;
 
     public async Task<bool> HandleAsync(MoverEtapaCommand command, CancellationToken ct = default)
     {
-        var lead = await _leadRepo.GetByIdAsync(command.LeadId);
-        if (lead is null) return false;
-
-        lead.MoverEtapa(command.NuevaEtapa);
-        await _leadRepo.SaveAsync(lead);
-        return true;
+        return await _history.MoveStageAsync(
+            command.LeadId, command.NuevaEtapa, command.ActorId, command.Reason, ct);
     }
 }

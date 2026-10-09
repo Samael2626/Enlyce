@@ -105,6 +105,65 @@ public class LeadRepository : ILeadRepository
             .ToListAsync();
     }
 
+    public async Task<LeadSearchPage> SearchPipelineAsync(
+        Guid? advisorId,
+        string? stage,
+        string? search,
+        string? operation,
+        Guid? assignedAdvisorId,
+        DateOnly? createdFrom,
+        DateOnly? createdTo,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        IQueryable<Lead> query = _context.Leads.AsNoTracking().Where(lead => lead.Activo);
+        if (advisorId is Guid scopedAdvisorId)
+            query = query.Where(lead => lead.AsesorAsignadoId == scopedAdvisorId);
+        if (!string.IsNullOrWhiteSpace(stage))
+            query = query.Where(lead => lead.EtapaPipeline == stage);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(lead =>
+                lead.Nombre.ToLower().Contains(term) ||
+                lead.Email.Value.ToLower().Contains(term) ||
+                (lead.Telefono != null && lead.Telefono.Value.ToLower().Contains(term)));
+        }
+        if (!string.IsNullOrWhiteSpace(operation))
+        {
+            var normalizedOperation = operation.Trim().ToLower();
+            query = query.Where(lead => lead.TipoOperacion.ToLower() == normalizedOperation);
+        }
+        if (assignedAdvisorId is Guid selectedAdvisorId)
+            query = query.Where(lead => lead.AsesorAsignadoId == selectedAdvisorId);
+        if (createdFrom is DateOnly from)
+        {
+            var start = from.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(lead => lead.FechaCreacion >= start);
+        }
+        if (createdTo is DateOnly to && to < DateOnly.MaxValue)
+        {
+            var endExclusive = to.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(lead => lead.FechaCreacion < endExclusive);
+        }
+
+        var total = await query.CountAsync(ct);
+        var stageCounts = await query
+            .GroupBy(lead => lead.EtapaPipeline)
+            .Select(group => new { Stage = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.Stage, item => item.Count, ct);
+        var offset = (int)Math.Min((long)(page - 1) * pageSize, int.MaxValue);
+        var items = await query
+            .OrderByDescending(lead => lead.FechaCreacion)
+            .ThenBy(lead => lead.Id)
+            .Skip(offset)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return new LeadSearchPage(items, total, stageCounts);
+    }
+
     public async Task<IReadOnlyList<Lead>> GetByAsesorIdAsync(Guid asesorId)
     {
         return await _context.Leads

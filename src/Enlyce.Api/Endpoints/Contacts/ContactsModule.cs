@@ -13,15 +13,35 @@ public static class ContactsModule
         var group = app.MapGroup("/api/contactos").WithTags("Contactos").RequireAuthorization();
 
         group.MapGet("/", async Task<IResult> (
+            string? q,
+            DateOnly? from,
+            DateOnly? to,
+            int? page,
+            int? pageSize,
             HttpContext http,
             IContactRepository contacts,
             ILeadRepository leads,
             CancellationToken ct) =>
         {
-            var items = http.User.IsInRole("Administrador")
-                ? await contacts.GetAllAsync(ct)
-                : await GetAdvisorContactsAsync(http, contacts, leads, ct);
-            return Results.Ok(items.Select(ToSummary));
+            var currentPage = page ?? 1;
+            var currentPageSize = pageSize ?? 20;
+            if (currentPage < 1 || currentPageSize is < 1 or > 100 || (from.HasValue && to.HasValue && from.Value > to.Value))
+                return Results.BadRequest(new { error = "El rango o la paginacion no son validos." });
+
+            var skip = ((long)currentPage - 1) * currentPageSize;
+            if (skip > int.MaxValue)
+                return Results.BadRequest(new { error = "La pagina solicitada esta fuera de rango." });
+
+            var createdFrom = from?.ToDateTime(TimeOnly.MinValue);
+            var createdThrough = to?.ToDateTime(TimeOnly.MaxValue);
+            var allowedContactIds = http.User.IsInRole("Administrador")
+                ? null
+                : await GetAdvisorContactIdsAsync(http, leads);
+            var result = await contacts.SearchAsync(
+                q, createdFrom, createdThrough, allowedContactIds, (int)skip, currentPageSize, ct);
+            return Results.Ok(new ContactListResponse(
+                result.Total,
+                result.Items.Select(ToSummary).ToArray()));
         })
         .WithName("ListContacts");
 
@@ -112,22 +132,19 @@ public static class ContactsModule
         .WithName("UpdateContact");
     }
 
-    private static async Task<IReadOnlyList<Contact>> GetAdvisorContactsAsync(
+    private static async Task<IReadOnlyCollection<Guid>> GetAdvisorContactIdsAsync(
         HttpContext http,
-        IContactRepository contacts,
-        ILeadRepository leads,
-        CancellationToken ct)
+        ILeadRepository leads)
     {
         var advisorId = EndpointAccess.AdvisorId(http.User);
         if (advisorId is null)
             return [];
 
         var leadItems = await leads.GetByAsesorIdAsync(advisorId.Value);
-        var contactIds = leadItems.Where(lead => lead.ContactId.HasValue)
+        return leadItems.Where(lead => lead.ContactId.HasValue)
             .Select(lead => lead.ContactId!.Value)
             .Distinct()
             .ToArray();
-        return await contacts.GetByIdsAsync(contactIds, ct);
     }
 
     private static ContactSummaryDto ToSummary(Contact contact) => new(
@@ -136,6 +153,7 @@ public static class ContactsModule
 
 public sealed record UpdateContactRequest(string Name, string? Phone);
 public sealed record ContactSummaryDto(Guid Id, string Name, string Email, string? Phone, DateTime CreatedAt, DateTime UpdatedAt);
+public sealed record ContactListResponse(int Total, IReadOnlyList<ContactSummaryDto> Items);
 public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities, IReadOnlyList<ContactTaskDto> Tasks);
 public sealed record ContactTaskDto(Guid Id, Guid? LeadId, Guid AdvisorId, string Type, string Title,
     string? Description, DateTime DueAt, DateTime? ReminderAt, string Priority, string Status, DateTime? CompletedAt);

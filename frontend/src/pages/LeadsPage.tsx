@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { api } from "@/api/client"
-import { usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead, useLeadAssignmentHistory } from "@/hooks/useApi"
+import { useAdvisors, useBulkAssignLeads, usePipeline, useLead, useInteracciones, useRegistrarInteraccion, useCreateLead, useLeadHistory } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 import {
   User,
@@ -15,6 +15,8 @@ import {
   Building2,
   FileText,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { format, parseISO, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
@@ -50,7 +52,21 @@ const currency = new Intl.NumberFormat("es-CO", {
 })
 
 export function LeadsPage() {
-  const { data: pipeline, isLoading } = usePipeline()
+  const user = useAuthStore((state) => state.user)
+  const pageSize = 20
+  const [search, setSearch] = useState("")
+  const [stage, setStage] = useState("")
+  const [operation, setOperation] = useState("")
+  const [createdFrom, setCreatedFrom] = useState("")
+  const [createdTo, setCreatedTo] = useState("")
+  const [page, setPage] = useState(1)
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([])
+  const [targetAdvisorId, setTargetAdvisorId] = useState("")
+  const [assignmentReason, setAssignmentReason] = useState("")
+  const filters = { q: search, etapa: stage, operacion: operation, desde: createdFrom, hasta: createdTo, page, pageSize }
+  const { data: pipeline, isLoading } = usePipeline(filters)
+  const advisorQuery = useAdvisors(user?.rol === "Administrador")
+  const bulkAssign = useBulkAssignLeads()
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showNewLead, setShowNewLead] = useState(false)
   const [exportFrom, setExportFrom] = useState(() => `${new Date().getFullYear()}-01-01`)
@@ -60,7 +76,11 @@ export function LeadsPage() {
   })
   const [exportError, setExportError] = useState<string | null>(null)
 
+  useEffect(() => { setPage(1) }, [search, stage, operation, createdFrom, createdTo])
+  useEffect(() => { setSelectedLeadIds([]) }, [search, stage, operation, createdFrom, createdTo, page])
+
   const leads = pipeline?.leads || []
+  const pageCount = Math.max(1, Math.ceil((pipeline?.total ?? 0) / pageSize))
 
   if (isLoading) {
     return (
@@ -77,7 +97,7 @@ export function LeadsPage() {
           <span className="crm-eyebrow">Relaciones</span>
           <h1 className="crm-page-title mt-2">Oportunidades</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            {leads.length} oportunidades registradas
+            {pipeline?.total ?? 0} oportunidades · página {page} de {pageCount}
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
@@ -116,6 +136,24 @@ export function LeadsPage() {
       </div>
       {exportError && <p role="alert" className="text-sm text-destructive">{exportError}</p>}
 
+      <section className="crm-panel space-y-3 p-4" aria-label="Filtros de oportunidades">
+        <div className="grid gap-3 md:grid-cols-5">
+          <input aria-label="Buscar oportunidades" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nombre, correo o teléfono" className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground md:col-span-2" />
+          <select aria-label="Filtrar por etapa" value={stage} onChange={(event) => setStage(event.target.value)} className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"><option value="">Todas las etapas</option>{Object.entries(ETIQUETAS_PIPELINE).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+          <select aria-label="Filtrar por operación" value={operation} onChange={(event) => setOperation(event.target.value)} className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"><option value="">Venta y arriendo</option><option value="Venta">Venta</option><option value="Arriendo">Arriendo</option></select>
+          <label className="text-xs text-muted-foreground">Desde<input aria-label="Filtrar desde" type="date" value={createdFrom} max={createdTo || undefined} onChange={(event) => setCreatedFrom(event.target.value)} className="mt-1 block w-full rounded border border-border bg-background px-2 py-2 text-foreground" /></label>
+          <label className="text-xs text-muted-foreground">Hasta<input aria-label="Filtrar hasta" type="date" value={createdTo} min={createdFrom || undefined} onChange={(event) => setCreatedTo(event.target.value)} className="mt-1 block w-full rounded border border-border bg-background px-2 py-2 text-foreground" /></label>
+        </div>
+        {user?.rol === "Administrador" && <div className="flex flex-wrap items-end gap-2 border-t border-border pt-3">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={leads.length > 0 && leads.every((lead) => selectedLeadIds.includes(lead.id))} onChange={(event) => setSelectedLeadIds(event.target.checked ? leads.map((lead) => lead.id) : [])} />Seleccionar página</label>
+          <label className="text-xs text-muted-foreground">Asignar responsable<select value={targetAdvisorId} onChange={(event) => setTargetAdvisorId(event.target.value)} className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-foreground"><option value="">Elegir asesor</option>{(advisorQuery.data ?? []).map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>
+          <label className="min-w-56 flex-1 text-xs text-muted-foreground">Motivo<input value={assignmentReason} onChange={(event) => setAssignmentReason(event.target.value)} maxLength={500} placeholder="Motivo de reasignación" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-foreground" /></label>
+          <button disabled={!selectedLeadIds.length || !targetAdvisorId || !assignmentReason.trim() || bulkAssign.isPending} onClick={() => bulkAssign.mutate({ leadIds: selectedLeadIds, advisorId: targetAdvisorId, reason: assignmentReason }, { onSuccess: () => { setSelectedLeadIds([]); setAssignmentReason("") } })} className="crm-button disabled:opacity-40">Asignar seleccionadas ({selectedLeadIds.length})</button>
+        </div>}
+        {bulkAssign.data && <p role="status" className="text-sm text-muted-foreground">Asignadas: {bulkAssign.data.succeeded} · fallidas: {bulkAssign.data.failed}</p>}
+        {bulkAssign.isError && <p role="alert" className="text-sm text-destructive">No se pudo completar la asignación masiva.</p>}
+      </section>
+
       {showNewLead && <NewLeadModal onClose={() => setShowNewLead(false)} />}
 
       <div className="space-y-3 border-t border-border pt-6">
@@ -133,12 +171,18 @@ export function LeadsPage() {
               key={lead.id}
               lead={lead}
               isExpanded={expandedId === lead.id}
+              selected={selectedLeadIds.includes(lead.id)}
+              onSelect={(checked) => setSelectedLeadIds((ids) => checked ? [...ids, lead.id] : ids.filter((id) => id !== lead.id))}
               onToggle={() =>
                 setExpandedId(expandedId === lead.id ? null : lead.id)
               }
             />
           ))
         )}
+      </div>
+      <div className="flex items-center justify-between border-t border-border pt-3 text-xs">
+        <span className="text-muted-foreground">{pipeline?.total ?? 0} coincidencias</span>
+        <span className="flex gap-2"><button aria-label="Página anterior" disabled={page <= 1} onClick={() => setPage((value) => value - 1)} className="rounded border border-border px-3 py-2 disabled:opacity-40">Anterior</button><button aria-label="Página siguiente" disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)} className="rounded border border-border px-3 py-2 disabled:opacity-40">Siguiente</button></span>
       </div>
     </div>
   )
@@ -300,10 +344,14 @@ function NewLeadModal({ onClose }: { onClose: () => void }) {
 function LeadCard({
   lead,
   isExpanded,
+  selected,
+  onSelect,
   onToggle,
 }: {
   lead: any
   isExpanded: boolean
+  selected: boolean
+  onSelect: (checked: boolean) => void
   onToggle: () => void
 }) {
   const { data: leadDetail, isLoading: loadingDetail } = useLead(
@@ -311,8 +359,7 @@ function LeadCard({
   )
   const { data: interacciones, isLoading: loadingInteracciones } =
     useInteracciones(isExpanded ? lead.id : "")
-  const { data: assignments, isLoading: loadingAssignments } =
-    useLeadAssignmentHistory(isExpanded ? lead.id : "")
+  const { data: history, isLoading: loadingHistory } = useLeadHistory(isExpanded ? lead.id : "")
   const registrarInteraccion = useRegistrarInteraccion()
   const user = useAuthStore((s) => s.user)
 
@@ -346,6 +393,7 @@ function LeadCard({
         className="flex cursor-pointer items-center gap-4 p-4 transition-colors hover:bg-muted/40 md:p-5"
         onClick={onToggle}
       >
+        <input aria-label={`Seleccionar oportunidad de ${lead.nombre}`} type="checkbox" checked={selected} onClick={(event) => event.stopPropagation()} onChange={(event) => { event.stopPropagation(); onSelect(event.target.checked) }} />
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-sm bg-secondary">
           <User className="h-5 w-5 text-foreground" />
         </div>
@@ -481,17 +529,17 @@ function LeadCard({
                 </section>
               )}
 
-              <section aria-label="Historial de asignaciones">
-                <h4 className="mb-2 text-sm font-medium text-foreground">Historial de responsables</h4>
-                {loadingAssignments ? <p className="text-sm text-muted-foreground">Cargando historial…</p> :
-                  !assignments?.length ? <p className="text-sm text-muted-foreground">Sin cambios de responsable registrados.</p> :
+              <section aria-label="Historial de oportunidad">
+                <h4 className="mb-2 text-sm font-medium text-foreground">Historial de oportunidad</h4>
+                {loadingHistory ? <p className="text-sm text-muted-foreground">Cargando historial…</p> :
+                  !history?.length ? <p className="text-sm text-muted-foreground">Sin cambios registrados.</p> :
                   <ol className="space-y-2">
-                    {assignments.map((item) => <li key={item.id} className="border-l-2 border-accent bg-muted/35 px-3 py-2 text-sm">
+                    {history.map((item) => <li key={item.id} className="border-l-2 border-accent bg-muted/35 px-3 py-2 text-sm">
                       <div className="flex flex-wrap justify-between gap-2">
-                        <strong>{item.previousAdvisorName ?? "Sin responsable"} → {item.newAdvisorName ?? "Asesor no disponible"}</strong>
-                        <time className="text-xs text-muted-foreground">{format(parseISO(item.changedAt), "dd MMM yyyy HH:mm", { locale: es })}</time>
+                        <strong>{item.type}: {item.from} → {item.to}</strong>
+                        <time className="text-xs text-muted-foreground">{format(parseISO(item.occurredAt), "dd MMM yyyy HH:mm", { locale: es })}</time>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{item.reason} · {item.changedByName ? `Por ${item.changedByName}` : "Sistema"} · {assignmentSourceLabels[item.source] ?? item.source}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{item.reason} · Por {item.actor}</p>
                     </li>)}
                   </ol>}
               </section>

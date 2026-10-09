@@ -31,8 +31,8 @@
 
 - [x] Reportes por asesor, etapa, fuente/campaña, operación, tiempo de primera respuesta, visitas y cierres; fechas inclusivas, cohortes y límites documentados en pantalla.
 - [x] Exportación CSV por periodo con alcance administrador/asesor, neutralización de fórmulas y campos operativos sin consentimiento ni IP.
-- [ ] Búsqueda, filtros, paginación y acciones masivas para contactos, oportunidades y tareas.
-- [ ] Historial unificado e inmutable de cambios a oportunidad, asignación y etapa (asignaciones implementadas; cambios de etapa pendientes).
+- [x] Búsqueda, filtros y paginación desde servidor para contactos, oportunidades y tareas; exportación de contactos seleccionados, asignación masiva de oportunidades y completar/cancelar tareas en lote.
+- [x] Historial cronológico unificado de asignaciones y etapas, con actor, motivo y fecha; los cambios nuevos de etapa se guardan como eventos append-only.
 - [x] Recorrido de integración HTTP contacto → oportunidad → asignación → interacción/tarea/visita → demanda → cierre; prueba estado y vínculos persistidos.
 
 ### P2 — integración y automatización
@@ -64,9 +64,9 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 
 ## Verificación de esta entrega
 
-- Domain: 217 pruebas aprobadas.
+- Domain: 221 pruebas aprobadas.
 - Application: 40 pruebas aprobadas.
-- Integration: 202 pruebas aprobadas. Incluyen aislamiento de demandas e historial, recordatorios, métricas, exportación y recorrido comercial HTTP.
+- Integration: 212 pruebas aprobadas. Incluyen aislamiento, recordatorios, métricas, exportación, recorrido comercial, filtros/paginación y acciones masivas auditadas.
 - Frontend: `npm run build` aprobado.
 - SQL EF Core aplicado en copia PostgreSQL anonimizada; no aplicado a producción.
 
@@ -82,8 +82,9 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 
 - Reportes CRM ahora agrupan por asesor/etapa/origen/campaña/operación; respuesta, visitas y cierres usan cohortes explícitas. Cierres describen el estado actual de los leads creados en el rango porque no existe fecha histórica de cierre.
 - CSV filtra fechas inclusivas, limita filas a oportunidades propias del asesor y neutraliza fórmulas al abrir en hoja de cálculo.
-- Recorrido HTTP integrado de captación a cierre. Historial inmutable de cambios de etapa, búsquedas/filtros/paginación/acciones masivas siguen pendientes.
-- Verificación: Domain 217, Application 40, Integration 202; frontend `npm run build` aprobado.
+- Recorrido HTTP integrado de captación a cierre. Listas paginadas desde servidor; acciones masivas limitadas a 100 filas, con alcance por asesor y registro auditable.
+- Historial combina asignaciones previas con cambios de etapa nuevos. Migración `TrackLeadStageHistory` generada y probada por integración SQLite; pendiente aplicar a una copia PostgreSQL antes de producción.
+- Verificación: Domain 221, Application 40, Integration 212; frontend `npm run build` aprobado.
 
 ### Auditoría de asignaciones
 

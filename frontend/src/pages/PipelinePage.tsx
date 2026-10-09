@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { usePipeline, useMoveLeadInPipeline } from "@/hooks/useApi"
 import { ETAPAS_PIPELINE, ETIQUETAS_PIPELINE } from "@/lib/constants"
 import { cn } from "@/lib/utils"
@@ -13,10 +13,18 @@ import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 
 export function PipelinePage() {
-  const { data: pipeline, isLoading } = usePipeline()
+  const [query, setQuery] = useState("")
+  const [operation, setOperation] = useState("")
+  const [from, setFrom] = useState("")
+  const [to, setTo] = useState("")
+  const [page, setPage] = useState(1)
+  const pageSize = 50
+  const { data: pipeline, isLoading } = usePipeline({ q: query, operacion: operation, desde: from, hasta: to, page, pageSize })
   const moveLead = useMoveLeadInPipeline()
+  const pageCount = Math.max(1, Math.ceil((pipeline?.total ?? 0) / pageSize))
+  useEffect(() => setPage(1), [query, operation, from, to])
 
-  const etapas = ETAPAS_PIPELINE.VENTA
+  const etapas = [...new Set([...ETAPAS_PIPELINE.VENTA, ...ETAPAS_PIPELINE.ARRIENDO])]
 
   const leadsPorEtapa = etapas.reduce(
     (acc: Record<string, any[]>, etapa) => {
@@ -59,6 +67,14 @@ export function PipelinePage() {
         <p className="mt-3 text-sm text-muted-foreground">
           Arrastra las oportunidades entre etapas para actualizar su estado
         </p>
+      </div>
+
+      <div className="mb-5 grid gap-3 rounded-md border border-border bg-card p-4 md:grid-cols-[minmax(0,1fr)_160px_150px_150px_auto]">
+        <input aria-label="Buscar oportunidad" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar nombre, correo o teléfono" className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" />
+        <select aria-label="Filtrar operación" value={operation} onChange={(event) => setOperation(event.target.value)} className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"><option value="">Venta y arriendo</option><option value="Venta">Venta</option><option value="Arriendo">Arriendo</option></select>
+        <label className="text-xs text-muted-foreground">Desde<input aria-label="Desde" type="date" value={from} max={to || undefined} onChange={(event) => setFrom(event.target.value)} className="mt-1 block w-full rounded border border-border bg-background px-2 py-2 text-foreground" /></label>
+        <label className="text-xs text-muted-foreground">Hasta<input aria-label="Hasta" type="date" value={to} min={from || undefined} onChange={(event) => setTo(event.target.value)} className="mt-1 block w-full rounded border border-border bg-background px-2 py-2 text-foreground" /></label>
+        <div className="flex items-end text-xs text-muted-foreground">{pipeline?.total ?? 0} oportunidades · página {page}/{pageCount}</div>
       </div>
 
       {moveLead.isError && (
@@ -181,6 +197,10 @@ export function PipelinePage() {
           </div>
         </div>
       </DragDropContext>
+      <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs">
+        <span className="text-muted-foreground">{pipeline?.total ?? 0} coincidencias</span>
+        <span className="flex gap-2"><button disabled={page <= 1} onClick={() => setPage((value) => value - 1)} className="rounded border border-border px-3 py-2 disabled:opacity-40">Anterior</button><button disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)} className="rounded border border-border px-3 py-2 disabled:opacity-40">Siguiente</button></span>
+      </div>
     </div>
   )
 }

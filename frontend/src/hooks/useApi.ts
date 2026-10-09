@@ -50,10 +50,10 @@ export function useLogout() {
 }
 
 // Pipeline
-export function usePipeline() {
+export function usePipeline(filters: Parameters<typeof api.getPipeline>[0] = {}) {
   return useQuery({
-    queryKey: ["pipeline"],
-    queryFn: () => api.getPipeline(),
+    queryKey: ["pipeline", filters],
+    queryFn: () => api.getPipeline(filters),
   })
 }
 
@@ -78,10 +78,12 @@ export function useMoveLeadInPipeline() {
     mutationFn: ({
       leadId,
       nuevaEtapa,
+      reason,
     }: {
       leadId: string
       nuevaEtapa: string
-    }) => api.moveLeadInPipeline(leadId, nuevaEtapa),
+      reason?: string
+    }) => api.moveLeadInPipeline(leadId, nuevaEtapa, reason),
     onMutate: async ({ leadId, nuevaEtapa }) => {
       await queryClient.cancelQueries({ queryKey: ["pipeline"] })
       const previousPipeline = queryClient.getQueryData<any>(["pipeline"])
@@ -102,8 +104,9 @@ export function useMoveLeadInPipeline() {
         queryClient.setQueryData(["pipeline"], context.previousPipeline)
       }
     },
-    onSettled: () => {
+    onSettled: (_result, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: ["pipeline"] })
+      queryClient.invalidateQueries({ queryKey: ["leads", variables.leadId, "history"] })
     },
   })
 }
@@ -127,12 +130,33 @@ export function useAssignLead() {
   })
 }
 
+export function useBulkAssignLeads() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ leadIds, advisorId, reason }: { leadIds: string[]; advisorId: string; reason: string }) =>
+      api.bulkAssignLeads(leadIds, advisorId, reason),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pipeline"] }),
+  })
+}
+
 export function useLeadAssignmentHistory(leadId: string) {
   return useQuery({
     queryKey: ["leads", leadId, "assignment-history"],
     queryFn: () => api.getLeadAssignmentHistory(leadId),
     enabled: !!leadId,
   })
+}
+
+export function useLeadHistory(leadId: string) {
+  return useQuery({
+    queryKey: ["leads", leadId, "history"],
+    queryFn: () => api.getLeadHistory(leadId),
+    enabled: !!leadId,
+  })
+}
+
+export function useAdvisors(enabled = true) {
+  return useQuery({ queryKey: ["advisors"], queryFn: () => api.getAdvisors(), enabled })
 }
 
 // Leads
@@ -156,10 +180,10 @@ export function useCreateLead() {
   })
 }
 
-export function useContacts() {
+export function useContacts(filters: Parameters<typeof api.getContacts>[0] = {}) {
   return useQuery({
-    queryKey: ["contacts"],
-    queryFn: () => api.getContacts(),
+    queryKey: ["contacts", "list", filters],
+    queryFn: () => api.getContacts(filters),
   })
 }
 
@@ -194,10 +218,32 @@ export function useCreateCommercialTask() {
   })
 }
 
-export function useCommercialTasks(from?: string, to?: string, contactId?: string) {
+export function useCommercialTasks(filters: Parameters<typeof api.getCommercialTasks>[0] = {}) {
   return useQuery({
-    queryKey: ["tasks", from, to, contactId],
-    queryFn: () => api.getCommercialTasks(from, to, contactId),
+    queryKey: ["tasks", "list", filters],
+    queryFn: () => api.getCommercialTasks(filters),
+  })
+}
+
+export function useBulkCompleteCommercialTasks() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => api.bulkCompleteTasks(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+    },
+  })
+}
+
+export function useBulkCancelCommercialTasks() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => api.bulkCancelTasks(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+    },
   })
 }
 

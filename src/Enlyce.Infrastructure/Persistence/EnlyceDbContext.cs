@@ -7,6 +7,7 @@ public class EnlyceDbContext : DbContext
 {
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<LeadAssignmentHistory> LeadAssignmentHistory => Set<LeadAssignmentHistory>();
+    public DbSet<LeadStageHistory> LeadStageHistory => Set<LeadStageHistory>();
     public DbSet<LeadDistributionSettings> LeadDistributionSettings => Set<LeadDistributionSettings>();
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<CommercialTask> CommercialTasks => Set<CommercialTask>();

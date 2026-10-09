@@ -98,14 +98,54 @@ public sealed class ContactsEndpointTests(TestWebApplicationFactory factory)
         using (client)
         {
             var owned = SeedContact(advisor.Id).Contact;
-            SeedContact(Guid.NewGuid());
+            var unassigned = SeedContact(Guid.NewGuid()).Contact;
 
-            var response = await client.GetAsync("/api/contactos");
+            var response = await client.GetAsync("/api/contactos?pageSize=100");
             response.EnsureSuccessStatusCode();
-            var contacts = await response.Content.ReadFromJsonAsync<ContactDto[]>();
+            var contacts = await response.Content.ReadFromJsonAsync<ContactListDto>();
 
             Assert.NotNull(contacts);
-            Assert.Contains(contacts, contact => contact.Id == owned.Id);
+            Assert.Contains(contacts.Items, contact => contact.Id == owned.Id);
+            Assert.DoesNotContain(contacts.Items, contact => contact.Id == unassigned.Id);
+            Assert.True(contacts.Total >= contacts.Items.Length);
+        }
+    }
+
+    [Fact]
+    public async Task AdministratorCanSearchContactsByNameEmailOrPhoneWithinInclusiveDatesAndPageStably()
+    {
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var createdAt = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var alpha = Contact.Reconstitute(Guid.NewGuid(), "Match Alpha", "match-alpha@example.com",
+            Telefono.Create("3105550199"), createdAt, createdAt, true);
+        var beta = Contact.Reconstitute(Guid.NewGuid(), "Match Beta", "match-beta@example.com",
+            null, createdAt, createdAt, true);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+            db.Contacts.AddRange(alpha, beta);
+            db.SaveChanges();
+        }
+
+        var (client, _) = factory.CreateAuthenticatedClient();
+        using (client)
+        {
+            var range = $"from={date:yyyy-MM-dd}&to={date:yyyy-MM-dd}";
+            var page = await client.GetFromJsonAsync<ContactListDto>(
+                $"/api/contactos?q=match&{range}&page=2&pageSize=1");
+            Assert.NotNull(page);
+            Assert.Equal(2, page.Total);
+            Assert.Equal("Match Beta", Assert.Single(page.Items).Name);
+
+            var emailMatch = await client.GetFromJsonAsync<ContactListDto>(
+                $"/api/contactos?q=match-alpha%40example.com&{range}");
+            Assert.NotNull(emailMatch);
+            Assert.Equal(alpha.Id, Assert.Single(emailMatch.Items).Id);
+
+            var phoneMatch = await client.GetFromJsonAsync<ContactListDto>(
+                $"/api/contactos?q=3105550199&{range}");
+            Assert.NotNull(phoneMatch);
+            Assert.Equal(alpha.Id, Assert.Single(phoneMatch.Items).Id);
         }
     }
 
@@ -279,6 +319,7 @@ public sealed class ContactsEndpointTests(TestWebApplicationFactory factory)
     }
 
     private sealed record ContactDto(Guid Id, string Name, string Email, string? Phone, DateTime CreatedAt, DateTime UpdatedAt);
+    private sealed record ContactListDto(int Total, ContactDto[] Items);
     private sealed record ContactDetailDto(ContactDto Contact, OpportunityDto[] Opportunities, TaskDetailDto[] Tasks);
     private sealed record OpportunityDto(Guid Id);
     private sealed record TaskDetailDto(Guid Id);

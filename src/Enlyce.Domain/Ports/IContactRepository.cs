@@ -8,7 +8,17 @@ public interface IContactRepository
     Task<Contact?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<Contact?> GetByEmailAsync(Email email, CancellationToken ct = default);
     Task<IReadOnlyList<Contact>> GetAllAsync(CancellationToken ct = default);
+    Task<ContactSearchPage> SearchAsync(
+        string? query,
+        DateTime? createdFrom,
+        DateTime? createdThrough,
+        IReadOnlyCollection<Guid>? allowedContactIds,
+        int skip,
+        int take,
+        CancellationToken ct = default);
     Task<IReadOnlyList<Contact>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default);
     Task<Contact> CreateOrGetAsync(Contact contact, CancellationToken ct = default);
     Task SaveAsync(Contact contact, CancellationToken ct = default);
 }
+
+public sealed record ContactSearchPage(int Total, IReadOnlyList<Contact> Items);

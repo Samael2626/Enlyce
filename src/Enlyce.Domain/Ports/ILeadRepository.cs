@@ -14,6 +14,17 @@ public interface ILeadRepository
         LeadAssignmentSource assignmentSource = LeadAssignmentSource.AutomaticLoadBalance);
     Task<Lead?> ConsumeOwnerInquiryTokenAsync(string tokenHash, DateTime consumedAt, CancellationToken ct = default);
     Task<IReadOnlyList<Lead>> GetAllAsync();
+    Task<LeadSearchPage> SearchPipelineAsync(
+        Guid? advisorId,
+        string? stage,
+        string? search,
+        string? operation,
+        Guid? assignedAdvisorId,
+        DateOnly? createdFrom,
+        DateOnly? createdTo,
+        int page,
+        int pageSize,
+        CancellationToken ct = default);
     Task<IReadOnlyList<Lead>> GetByAsesorIdAsync(Guid asesorId);
     Task<IReadOnlyList<Lead>> GetByContactIdAsync(Guid contactId, CancellationToken ct = default);
     Task<Lead> SaveAsync(Lead lead);
@@ -25,3 +36,7 @@ public interface ILeadRepository
 }
 
 public sealed record LeadCreationResult(Lead Lead, bool Created);
+public sealed record LeadSearchPage(
+    IReadOnlyList<Lead> Items,
+    int Total,
+    IReadOnlyDictionary<string, int> StageCounts);

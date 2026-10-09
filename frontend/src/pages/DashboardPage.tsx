@@ -20,18 +20,15 @@ export function DashboardPage() {
   const user = useAuthStore((s) => s.user)
 
   const totalLeads = pipeline?.total || 0
-  const leadsPorEtapa = pipeline?.leads?.reduce(
-    (acc: Record<string, number>, lead: any) => {
-      acc[lead.etapaPipeline] = (acc[lead.etapaPipeline] || 0) + 1
+  const leadsPorEtapa = pipeline?.etapas?.reduce(
+    (acc: Record<string, number>, stage: { nombre: string; leadCount: number }) => {
+      acc[stage.nombre] = stage.leadCount
       return acc
     },
     {}
   ) || {}
 
-  const leadsActivos =
-    pipeline?.leads?.filter((l: any) =>
-      !["Cerrado ganado", "Cerrado perdido"].includes(l.etapaPipeline)
-    ) || []
+  const leadsActivos = totalLeads - (leadsPorEtapa["Cerrado ganado"] || 0) - (leadsPorEtapa["Cerrado perdido"] || 0)
 
   const visitasPendientes =
     visitas?.filter((v: any) => v.estado === "Programada") || []
@@ -71,7 +68,7 @@ export function DashboardPage() {
         <KPICard
           icon={<Activity className="h-5 w-5" />}
           label="Oportunidades activas"
-          value={leadsActivos.length}
+          value={leadsActivos}
           loading={loadingPipeline}
         />
         <KPICard

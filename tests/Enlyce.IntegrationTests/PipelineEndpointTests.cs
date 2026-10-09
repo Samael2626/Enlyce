@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Enlyce.Application.UseCases.GetLeadById;
 using Enlyce.Application.UseCases.CreateLead;
+using Enlyce.Application.Queries.Lead;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
@@ -72,6 +73,128 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
     {
         var response = await _client.GetAsync("/api/pipeline");
         response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task ConsultarPipeline_FiltersBySearchStageOperationAdvisorAndCreationDates()
+    {
+        var advisorA = SeedAsesor();
+        var advisorB = SeedAsesor();
+        var createdAt = new DateTime(2026, 6, 15, 14, 30, 0, DateTimeKind.Utc);
+        var suffix = Guid.NewGuid().ToString("N");
+        var targetName = $"PipelineFilter{suffix}";
+        var targetEmail = $"pipeline-filter-{suffix}@test.com";
+        var target = Lead.Reconstituir(
+            Guid.NewGuid(), targetName, Email.Create(targetEmail), Telefono.Create("3105551234"),
+            "Web", EstadoLead.Nuevo, MotivoCierre.Ninguno, null, advisorA,
+            createdAt, null, createdAt, true, true, "Venta", EtapasPipeline.LeadNuevo);
+        var otherAdvisorLead = Lead.Reconstituir(
+            Guid.NewGuid(), "Other advisor", Email.Create($"other-{suffix}@test.com"), null,
+            "Web", EstadoLead.Nuevo, MotivoCierre.Ninguno, null, advisorB,
+            createdAt, null, createdAt, true, true, "Venta", EtapasPipeline.LeadNuevo);
+        var otherOperationLead = Lead.Reconstituir(
+            Guid.NewGuid(), "Other operation", Email.Create($"rent-{suffix}@test.com"), null,
+            "Web", EstadoLead.Nuevo, MotivoCierre.Ninguno, null, advisorA,
+            createdAt, null, createdAt, true, true, "Arriendo", EtapasPipeline.LeadNuevo);
+        var outsideDateLead = Lead.Reconstituir(
+            Guid.NewGuid(), targetName, Email.Create($"outside-{suffix}@test.com"), Telefono.Create("3105551234"),
+            "Web", EstadoLead.Nuevo, MotivoCierre.Ninguno, null, advisorA,
+            createdAt.AddDays(-1), null, createdAt.AddDays(-1), true, true, "Venta", EtapasPipeline.LeadNuevo);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+            db.Leads.AddRange(target, otherAdvisorLead, otherOperationLead, outsideDateLead);
+            await db.SaveChangesAsync();
+        }
+
+        var url = $"/api/pipeline?q={targetName}&etapa={EtapasPipeline.LeadNuevo}" +
+            $"&operacion=Venta&asesorId={advisorA}&desde=2026-06-15&hasta=2026-06-15";
+        var result = await _client.GetFromJsonAsync<PipelineResponse>(url);
+
+        Assert.NotNull(result);
+        Assert.Single(result!.Leads);
+        Assert.Equal(target.Id, result.Leads[0].Id);
+
+        var emailSearch = await _client.GetFromJsonAsync<PipelineResponse>(
+            $"/api/pipeline?q={Uri.EscapeDataString(targetEmail)}");
+        Assert.NotNull(emailSearch);
+        Assert.Contains(emailSearch!.Leads, lead => lead.Id == target.Id);
+    }
+
+    [Fact]
+    public async Task ConsultarPipeline_PaginatesWithStablePageMetadataAndTotal()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        var createdAt = new DateTime(2026, 7, 20, 10, 0, 0, DateTimeKind.Utc);
+        var leads = Enumerable.Range(0, 3).Select(index => Lead.Reconstituir(
+            Guid.NewGuid(), $"Page{suffix}", Email.Create($"page-{index}-{suffix}@test.com"), null,
+            "Test", EstadoLead.Nuevo, MotivoCierre.Ninguno, null, null,
+            createdAt, null, null, true, true, "Venta", EtapasPipeline.LeadNuevo)).ToArray();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+            db.Leads.AddRange(leads);
+            await db.SaveChangesAsync();
+        }
+
+        var response = await _client.GetAsync($"/api/pipeline?q=Page{suffix}&page=2&pageSize=2");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<PipelineResponse>();
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result!.Total);
+        Assert.Equal(2, result.Page);
+        Assert.Equal(2, result.PageSize);
+        Assert.Single(result.Leads);
+        var repeated = await _client.GetFromJsonAsync<PipelineResponse>(
+            $"/api/pipeline?q=Page{suffix}&page=2&pageSize=2");
+        Assert.NotNull(repeated);
+        Assert.Equal(result.Leads[0].Id, repeated!.Leads[0].Id);
+    }
+
+    [Fact]
+    public async Task AsignarMasivo_ReturnsPerLeadResultsAndRecordsAudit()
+    {
+        var leadA = SeedLeadWithoutAssignment();
+        var leadB = SeedLeadWithoutAssignment();
+        var advisorId = SeedAsesor();
+        var missingLead = Guid.NewGuid();
+
+        var response = await _client.PutAsJsonAsync("/api/pipeline/asignar-masivo", new
+        {
+            LeadIds = new[] { leadA, leadB, missingLead },
+            AsesorId = advisorId,
+            Reason = "Distribución por zona"
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BulkAssignmentResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Succeeded);
+        Assert.Equal(1, result.Failed);
+        Assert.Contains(result.Results, item => item.LeadId == missingLead && !item.Success);
+        foreach (var leadId in new[] { leadA, leadB })
+        {
+            var history = await _client.GetFromJsonAsync<AssignmentHistoryDto[]>(
+                $"/api/pipeline/{leadId}/asignaciones");
+            Assert.NotNull(history);
+            Assert.Single(history!);
+            Assert.Equal("Distribución por zona", history[0].Reason);
+            Assert.Equal(advisorId, history[0].NewAdvisorId);
+        }
+    }
+
+    [Fact]
+    public async Task AsignarMasivo_RejectsMoreThanOneHundredIds()
+    {
+        var response = await _client.PutAsJsonAsync("/api/pipeline/asignar-masivo", new
+        {
+            LeadIds = Enumerable.Range(0, 101).Select(_ => Guid.NewGuid()).ToArray(),
+            AsesorId = SeedAsesor(),
+            Reason = "Lote grande"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -224,6 +347,9 @@ public class PipelineEndpointTests : IClassFixture<TestWebApplicationFactory>
 
     private sealed record AssignmentHistoryDto(Guid? PreviousAdvisorId, Guid NewAdvisorId,
         Guid? ChangedByAdvisorId, string Reason, string Source, DateTime ChangedAt);
+    private sealed record BulkAssignmentResponse(
+        BulkAssignmentItem[] Results, int Succeeded, int Failed);
+    private sealed record BulkAssignmentItem(Guid LeadId, bool Success, string? Error);
 
     [Fact]
     public async Task RegistrarInteraccion_NonExistingLead_ReturnsNotFound()
