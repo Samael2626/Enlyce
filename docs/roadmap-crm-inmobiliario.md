@@ -83,7 +83,7 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - Reportes CRM ahora agrupan por asesor/etapa/origen/campaña/operación; respuesta, visitas y cierres usan cohortes explícitas. Cierres describen el estado actual de los leads creados en el rango porque no existe fecha histórica de cierre.
 - CSV filtra fechas inclusivas, limita filas a oportunidades propias del asesor y neutraliza fórmulas al abrir en hoja de cálculo.
 - Recorrido HTTP integrado de captación a cierre. Listas paginadas desde servidor; acciones masivas limitadas a 100 filas, con alcance por asesor y registro auditable.
-- Historial combina asignaciones previas con cambios de etapa nuevos. Migración `TrackLeadStageHistory` generada y probada por integración SQLite; pendiente aplicar a una copia PostgreSQL antes de producción.
+- Historial combina asignaciones previas con cambios de etapa nuevos. Migración `TrackLeadStageHistory` probada por integración SQLite y en PostgreSQL 17 aislado; no aplicada a producción.
 - Verificación: Domain 221, Application 40, Integration 212; frontend `npm run build` aprobado.
 
 ### Auditoría de asignaciones
@@ -117,6 +117,14 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - La copia restaurada tenía 4 leads y 2 asesores. Con dos correos de prueba normalizados iguales, las migraciones pendientes llegaron a 20261009042459_AddRoundRobinCursor, crearon 3 contactos y enlazaron los 4 leads; el índice único rechazó el duplicado.
 - La copia local no tenía leads asignados ni primeras respuestas no web, así que esos dos backfills se habían verificado con el fixture sintético anterior.
 - El archivo dump conserva los datos originales locales; no compartirlo ni subirlo al repositorio.
+
+### Migración de historial de etapas en PostgreSQL (9 de octubre)
+
+- Origen: base `restore_validation` del contenedor `enlyce-restore-confirmation`, sin puerto publicado y ya anonimizada. Backup custom rehecho y restaurado en PostgreSQL 17 efímero, sin volumen.
+- Se aplicó el SQL generado de `AddRoundRobinCursor` a `TrackLeadStageHistory`; no se usó `dotnet ef database update` ni se conectó a producción.
+- Conservó 4 leads y 2 asesores. Verificados `__EFMigrationsHistory`, tabla `LeadStageHistory`, FK y sus tres índices; inserción sintética de historial aprobada.
+- Backup custom posterior restaurado a una segunda base: migración vigente, 4 leads, 2 asesores y fila de historial conservados.
+- El contenedor efímero se elimina al terminar; no se aplicó la migración a producción.
 
 
 - Repetición: dump nuevo guardado en D:\tmp\enlyce-local-backup-20261009.dump y restore anonimizado validado hasta la migración final; contenedor local de prueba enlyce-restore-confirmation queda disponible, sin puerto publicado. El origen enlyce-db quedó detenido.
