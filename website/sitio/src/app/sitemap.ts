@@ -5,6 +5,9 @@ import type { PropertyListItem } from "@/lib/api/client";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+// Se genera por solicitud para no congelar el catalogo durante el build.
+export const dynamic = "force-dynamic";
+
 // El catalogo pagina a 100 como maximo; el sitemap recorre todas las paginas.
 async function collectProperties(): Promise<PropertyListItem[]> {
   const items: PropertyListItem[] = [];
@@ -46,7 +49,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })),
     ];
   } catch (error) {
-    // Ruidoso en logs: un sitemap sin fichas es un fallo de SEO, no un detalle.
     console.error("Sitemap sin inmuebles: el catalogo no respondio.", error);
     return [...statics, ...zones];
   }

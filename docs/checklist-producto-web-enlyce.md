@@ -69,7 +69,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [ ] Crear staging de ENLYCE y repetir migraciones, smoke y ZAP sobre la configuración remota.
 - [ ] Configurar secretos fuera del repositorio, backups y recuperación.
 - [ ] Revisión jurídica final de política de privacidad y textos de consentimiento.
-- [ ] Smoke visual manual completo con API y PostgreSQL reales.
+- [x] Smoke Chrome local contra API + PostgreSQL: catálogo, ficha, contacto, propietarios y sitemap; sin enviar leads.
 - [x] E2E Playwright de catálogo, ficha, favoritos, contacto y propietarios con API local simulada.
 - [ ] E2E de pago/Wompi con credenciales sandbox aprobadas.
 
@@ -113,16 +113,15 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 
 ## Próxima secuencia recomendada
 
-1. Smoke visual con PostgreSQL local y corregir fallback de sitemap al compilar sin API.
-2. Completar accesibilidad, datos estructurados y rendimiento.
-3. Crear staging y validar secretos, backups restaurables, migraciones y ZAP remoto.
-4. Al cierre: material real, Wompi sandbox y despliegue definitivo.
+1. Completar accesibilidad, datos estructurados y rendimiento.
+2. Crear staging y validar secretos, backups restaurables, migraciones y ZAP remoto.
+3. Al cierre: material real, Wompi sandbox y despliegue definitivo.
 
 ## Cobertura verificada al 9 de octubre de 2026
 
 - `node website/funcional.test.mjs`: 26 pruebas de logica del sitio legacy, todas verdes.
 - `PublicCatalogEndpointTests` y `CrmJourneyE2ETests` son pruebas HTTP con `WebApplicationFactory` + SQLite; no recorren navegador.
-- Playwright con Chrome local: catálogo, detalle, favoritos, contacto y flujo de propietarios pasan (3/3). Usa API simulada local, no toca PostgreSQL ni servicios externos.
-- `npm run build` y `npm run typecheck` pasan con Next.js 16.4.0; sitemap avisa que API local no está levantada durante build.
+- Playwright con Chrome: 3/3 E2E con API simulada + 1/1 smoke con PostgreSQL real local; el smoke no envía leads. Se intercepta POST de analítica para no agregar `page_view` al repetirlo.
+- `npm run build`, `npm run typecheck` y `npm run lint` pasan con Next.js 16.4.0 y API apagada. Sitemap corre por solicitud; API caída deja fallback de rutas estáticas y error visible en logs.
 - `npm audit --omit=dev`: 0 vulnerabilidades. Auditoría completa conserva 5 altas en `braces`, dependencia de desarrollo de `eslint-config-next` sin corrección publicada; no incluir `npm audit fix --force` porque degradaría Next 16 a 14.
-- Siguen pendientes el smoke visual con PostgreSQL real, E2E de pago/Wompi y corregir el fallback del sitemap durante build sin API disponible.
+- Siguen pendientes E2E de pago/Wompi, accesibilidad WCAG AA, JSON-LD, Core Web Vitals, staging y material real autorizado.
