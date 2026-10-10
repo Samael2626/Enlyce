@@ -86,7 +86,8 @@ function Invoke-Backup {
         try {
             $registeredKeys = & $railway ssh keys list
             if ($LASTEXITCODE -ne 0) { throw 'No se pudo consultar las claves SSH registradas en Railway.' }
-            if (($registeredKeys -join "`n").Contains($fingerprint)) {
+            $registeredText = ($registeredKeys -join "`n").Split('Local Keys (not registered):')[0]
+            if ($registeredText.Contains($fingerprint)) {
                 & $railway ssh keys remove $fingerprint | Out-Null
                 if ($LASTEXITCODE -ne 0) { throw 'No se pudo retirar la clave SSH temporal anterior.' }
             }
