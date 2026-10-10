@@ -28,7 +28,9 @@ using Enlyce.Api.Middleware;
 using Enlyce.Api.Security;
 using Enlyce.Application;
 using Enlyce.Application.Auth;
+using Enlyce.Domain.Entities;
 using Enlyce.Domain.Ports;
+using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Persistence;
@@ -47,6 +49,9 @@ builder.WebHost.ConfigureKestrel(options =>
     options.AddServerHeader = false;
     options.Limits.MaxRequestBodySize = 12 * 1024 * 1024;
 });
+
+if (int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var railwayPort) && railwayPort is > 0 and <= 65535)
+    builder.WebHost.UseUrls($"http://0.0.0.0:{railwayPort}");
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
@@ -230,17 +235,37 @@ var signingKey = app.Services.GetRequiredService<IOptions<JwtSettings>>().Value.
 if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
     throw new InvalidOperationException("Configura JwtSettings:SecretKey fuera del repositorio (minimo 32 bytes).");
 
-if (app.Environment.IsDevelopment() &&
-    app.Configuration.GetValue<bool>("DemoData:SeedPublicCatalog"))
+var seedPublicCatalog = app.Environment.IsDevelopment() &&
+    app.Configuration.GetValue<bool>("DemoData:SeedPublicCatalog");
+var bootstrapAdministrator = app.Configuration.GetValue<bool>("Auth:BootstrapAdmin:Enabled");
+if (seedPublicCatalog || bootstrapAdministrator || app.Configuration.GetValue<bool>("Database:ApplyMigrations"))
 {
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
-    var mediaStorage = scope.ServiceProvider.GetRequiredService<IMediaStorage>();
-    var photoSource = app.Configuration.GetValue<string>("DemoData:PhotoSourceDirectory")
-        ?? Path.Combine(app.Environment.ContentRootPath, "..", "..", "website", "assets");
-
     await db.Database.MigrateAsync();
-    await DemoCatalogSeeder.SeedAsync(db, mediaStorage, Path.GetFullPath(photoSource));
+
+    if (bootstrapAdministrator && !await db.Asesores.AnyAsync())
+    {
+        var email = app.Configuration["Auth:BootstrapAdmin:Email"];
+        var password = app.Configuration["Auth:BootstrapAdmin:Password"];
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || password.Length < 16)
+            throw new InvalidOperationException("Configura el correo y una contrasena de bootstrap de al menos 16 caracteres.");
+
+        db.Asesores.Add(Asesor.Crear(
+            "Administrador",
+            Email.Create(email),
+            BCrypt.Net.BCrypt.HashPassword(password),
+            "Administrador"));
+        await db.SaveChangesAsync();
+    }
+
+    if (seedPublicCatalog)
+    {
+        var mediaStorage = scope.ServiceProvider.GetRequiredService<IMediaStorage>();
+        var photoSource = app.Configuration.GetValue<string>("DemoData:PhotoSourceDirectory")
+            ?? Path.Combine(app.Environment.ContentRootPath, "..", "..", "website", "assets");
+        await DemoCatalogSeeder.SeedAsync(db, mediaStorage, Path.GetFullPath(photoSource));
+    }
 }
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
@@ -254,6 +279,7 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(mediaRoot),
     RequestPath = "/media"
 });
+app.UseStaticFiles();
 
 app.UseCors();
 app.UseRateLimiter();
@@ -287,10 +313,20 @@ app.MapInteracciones();
 app.MapVisitas();
 app.MapAlertas();
 app.MapPublicCatalog();
-app.MapPublicationMedia();
+if (!app.Configuration.GetValue<bool>("MediaStorage:DisableUploads"))
+    app.MapPublicationMedia();
 app.MapPropertyPublications();
 app.MapBilling();
 app.MapAnalytics();
+
+var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+if (File.Exists(Path.Combine(webRoot, "index.html")))
+{
+    app.MapFallback("/{*path:nonfile}", (HttpContext context) =>
+        context.Request.Path.StartsWithSegments("/api")
+            ? Results.NotFound()
+            : Results.File(Path.Combine(webRoot, "index.html"), "text/html"));
+}
 
 static RateLimitPartition<string> CreateIpLimiter(HttpContext context, int permitLimit) =>
     RateLimitPartition.GetFixedWindowLimiter(

@@ -1,0 +1,17 @@
+*.dump
+*.backup
+**/.env
+**/.env.*
+**/bin
+**/obj
+.git
+.github
+.agents
+.claude
+.codex
+docs
+frontend/dist
+frontend/node_modules
+graphify-out
+tests
+website
