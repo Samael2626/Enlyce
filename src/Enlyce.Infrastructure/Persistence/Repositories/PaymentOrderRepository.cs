@@ -15,7 +15,9 @@ public sealed class PaymentOrderRepository(EnlyceDbContext context) : IPaymentOr
     public Task<PaymentOrder?> GetByReferenceAsync(
         string reference,
         CancellationToken cancellationToken = default) =>
-        context.PaymentOrders.SingleOrDefaultAsync(
+        context.PaymentOrders
+            .Include(order => order.StatusHistory)
+            .SingleOrDefaultAsync(
             order => order.Reference == reference,
             cancellationToken);
 

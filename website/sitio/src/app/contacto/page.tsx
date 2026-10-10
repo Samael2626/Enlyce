@@ -54,7 +54,7 @@ export default async function ContactoPage({ searchParams }: PageProps) {
       {property ? (
         <p className="rounded-sheet bg-surface p-4 text-sm shadow-card">
           Consulta sobre{" "}
-          <Link href={`/inmuebles/${property.slug}`} className="text-accent underline">
+          <Link href={`/inmuebles/${property.slug}`} className="text-accent-strong underline">
             {property.publicTitle}
           </Link>{" "}
           — {property.location.neighborhood}, {property.location.municipality}

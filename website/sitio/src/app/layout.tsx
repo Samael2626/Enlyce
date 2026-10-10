@@ -93,7 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="site-footer">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-10 text-sm">
             <p>L&amp;C Propiedad Raíz S.A.S. — Medellín, Colombia.</p>
-            <Link href="/privacidad" className="hover:text-accent w-fit">
+            <Link href="/privacidad" className="hover:text-accent-strong w-fit">
               Política de tratamiento de datos personales
             </Link>
           </div>

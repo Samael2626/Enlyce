@@ -97,20 +97,20 @@ export default async function InmueblePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <nav aria-label="Ruta" className="text-sm text-muted">
-        <Link href="/inmuebles" className="hover:text-accent">Inmuebles</Link>
+        <Link href="/inmuebles" className="hover:text-accent-strong">Inmuebles</Link>
         <span aria-hidden="true"> / </span>
         <span>{property.location.neighborhood}</span>
       </nav>
 
       <header className="space-y-3">
-        <p className="text-sm uppercase tracking-wide text-accent">
+        <p className="text-sm uppercase tracking-wide text-accent-strong">
           {formatOperation(property.operation)} · {property.propertyType}
         </p>
         <h1 className="text-4xl">{property.publicTitle}</h1>
         <p className="text-muted">
           {property.location.neighborhood}, {property.location.municipality}
         </p>
-        <p className="font-display text-3xl text-accent">
+        <p className="font-display text-3xl text-accent-strong">
           {formatPrice(property.price.amount, property.price.currency)}
         </p>
         {property.administrationFee && (
@@ -204,7 +204,7 @@ export default async function InmueblePage({ params }: PageProps) {
           <FavoriteToggle
             slug={property.slug}
             title={property.publicTitle}
-            className="rounded border border-line px-5 py-2 hover:text-accent"
+          className="rounded border border-line px-5 py-2 hover:text-accent-strong"
           />
         </div>
       </section>

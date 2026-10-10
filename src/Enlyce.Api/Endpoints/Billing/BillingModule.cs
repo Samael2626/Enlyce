@@ -63,7 +63,14 @@ public static class BillingModule
                     order.Reference,
                     order.AmountInCents,
                     order.Currency,
-                    order.Status.ToString()));
+                    order.Status.ToString(),
+                    order.StatusHistory
+                        .OrderBy(change => change.OccurredAt)
+                        .Select(change => new PaymentOrderStatusChangeResponse(
+                            change.PreviousStatus.ToString(),
+                            change.NewStatus.ToString(),
+                            change.OccurredAt))
+                        .ToArray()));
         })
         .RequireRateLimiting("billing-status")
         .WithName("GetPaymentOrderStatus")
@@ -108,7 +115,13 @@ public sealed record PaymentOrderStatusResponse(
     string Reference,
     long AmountInCents,
     string Currency,
-    string Status);
+    string Status,
+    IReadOnlyList<PaymentOrderStatusChangeResponse> StatusHistory);
+
+public sealed record PaymentOrderStatusChangeResponse(
+    string PreviousStatus,
+    string NewStatus,
+    DateTime OccurredAtUtc);
 
 public sealed record BillingPricingResponse(
     long BasePlanInCents,

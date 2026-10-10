@@ -29,7 +29,22 @@ public sealed class PaymentOrderTests
         order.ApplyProviderUpdate("wompi-1", PaymentOrderStatus.Approved, Now.AddMinutes(2));
 
         Assert.Equal(PaymentOrderStatus.Approved, order.Status);
-        Assert.Equal(Now.AddMinutes(2), order.UpdatedAt);
+        Assert.Equal(Now.AddMinutes(1), order.UpdatedAt);
+        Assert.Single(order.StatusHistory);
+    }
+
+    [Fact]
+    public void ApplyProviderUpdate_RecordsEveryDistinctStatusTransition()
+    {
+        var order = CreateOrder(default);
+
+        order.ApplyProviderUpdate("wompi-1", PaymentOrderStatus.Pending, Now.AddMinutes(1));
+        order.ApplyProviderUpdate("wompi-1", PaymentOrderStatus.Approved, Now.AddMinutes(2));
+
+        Assert.Equal(2, order.StatusHistory.Count);
+        Assert.Equal(PaymentOrderStatus.Pending, order.StatusHistory[0].PreviousStatus);
+        Assert.Equal(PaymentOrderStatus.Approved, order.StatusHistory[1].NewStatus);
+        Assert.Equal(Now.AddMinutes(2), order.StatusHistory[1].OccurredAt);
     }
 
     [Fact]

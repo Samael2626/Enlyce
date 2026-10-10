@@ -19,19 +19,19 @@ export default function FavoritosPage() {
       {favorites.length === 0 ? (
         <div className="rounded-sheet border border-line p-8 text-center">
           <p className="mb-3 text-muted">Todavía no has guardado ningún inmueble.</p>
-          <Link href="/inmuebles" className="text-accent underline">Explorar el inventario</Link>
+          <Link href="/inmuebles" className="text-accent-strong underline">Explorar el inventario</Link>
         </div>
       ) : (
         <ul className="divide-y divide-line rounded-sheet bg-surface shadow-card">
           {favorites.map((favorite) => (
             <li key={favorite.slug} className="flex items-center justify-between gap-4 p-4">
-              <Link href={propertyPath(favorite.slug)} className="hover:text-accent">
+              <Link href={propertyPath(favorite.slug)} className="hover:text-accent-strong">
                 {favorite.title}
               </Link>
               <button
                 type="button"
                 onClick={() => remove(favorite.slug)}
-                className="text-sm text-muted underline hover:text-accent"
+                className="text-sm text-muted underline hover:text-accent-strong"
               >
                 Quitar
               </button>

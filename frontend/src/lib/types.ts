@@ -548,6 +548,13 @@ export interface PaymentOrderStatus {
   amountInCents: number
   currency: string
   status: "Pending" | "Approved" | "Declined" | "Voided" | "Error"
+  statusHistory: PaymentOrderStatusChange[]
+}
+
+export interface PaymentOrderStatusChange {
+  previousStatus: PaymentOrderStatus["status"]
+  newStatus: PaymentOrderStatus["status"]
+  occurredAtUtc: string
 }
 
 // Analitica web

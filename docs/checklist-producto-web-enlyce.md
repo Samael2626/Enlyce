@@ -86,10 +86,12 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Añadir analítica de embudo: visita, búsqueda, favorito, formulario iniciado y conversión.
 - [x] Añadir datos estructurados JSON-LD para organización e inmuebles (datos veraces; falta validar en producción).
 - [x] Aplicar correcciones WCAG puntuales en filtros, consentimiento, mapa y brochure.
+- [x] Corregir contraste de textos dorados: de 3,14:1 a 5,30:1 sobre blanco y 4,91:1 sobre fondo claro.
 - [ ] Auditoría completa WCAG AA: teclado, foco, labels, contraste y lector de pantalla.
 - [ ] Medir y corregir Core Web Vitals: LCP, CLS e INP (sin métricas de navegador aún).
 - [ ] Correo de confirmación real y notificación inmediata al asesor responsable.
-- [ ] Trazabilidad de cambios y estado de la suscripción después del pago aprobado.
+- [x] Guardar y mostrar al administrador el historial de transiciones de estado Wompi con fecha; replay idempotente.
+- [ ] Definir empresa/tenant, titular, vigencia y ciclo de suscripción; activar el servicio tras pago aprobado. El modelo actual no vincula una suscripción a una empresa.
 - [ ] Acordar con Operación y configurar umbrales SLA por origen y tipo de operación; validar alertas dentro y fuera del plazo aprobado.
 
 ### Prioridad P2 — crecimiento

@@ -126,7 +126,7 @@ h1, h2, h3 {
 .home-opportunity-card > span { color: var(--color-accent-strong); font-size: .68rem; font-weight: 800; letter-spacing: .12em; }
 .home-opportunity-card strong { display: block; font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2.15rem); font-weight: 500; }
 .home-opportunity-card p { max-width: 30rem; margin-top: .55rem; color: var(--color-muted); font-size: .82rem; line-height: 1.6; }
-.home-opportunity-card::after { align-self: end; justify-self: end; color: var(--color-accent); content: '→'; font-size: 1.5rem; grid-column: 2; }
+.home-opportunity-card::after { align-self: end; justify-self: end; color: var(--color-accent-strong); content: '→'; font-size: 1.5rem; grid-column: 2; }
 .home-opportunity-card:hover { background: #f0ece2; padding-left: 1.4rem; }
 .home-opportunity-card-primary { background: var(--color-ink); color: white; }
 .home-opportunity-card-primary p { color: rgb(255 255 255 / 68%); }
@@ -229,7 +229,7 @@ h1, h2, h3 {
 .catalog-filter-pair { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 .catalog-filter-actions { position: sticky; bottom: -1.15rem; display: grid; grid-template-columns: .8fr 1.2fr; gap: .5rem; margin: 0 -1.15rem -1.15rem; padding: .9rem 1.15rem; border-top: 1px solid var(--color-line); background: var(--color-surface); }
 .catalog-filter-actions button { min-height: 2.8rem; border: 1px solid var(--color-line); border-radius: 4px; font-size: .76rem; font-weight: 800; }
-.catalog-filter-actions button:last-child { border-color: var(--color-accent); background: var(--color-accent); color: white; }
+.catalog-filter-actions button:last-child { border-color: var(--color-accent-strong); background: var(--color-accent-strong); color: white; }
 .catalog-filter-panel[data-pending] { opacity: .72; }
 
 .catalog-toolbar { display: grid; grid-area: toolbar; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; padding: 1rem; border: 1px solid var(--color-line); background: var(--color-surface); box-shadow: var(--shadow-card); }
@@ -318,7 +318,7 @@ h1, h2, h3 {
 .zones-cta h2 { max-width: 47rem; margin-top: .6rem; font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: .98; }
 .zones-cta > div:last-child { display: flex; flex-wrap: wrap; gap: .65rem; }
 .zones-cta a { display: inline-flex; min-height: 3.2rem; align-items: center; border: 1px solid var(--color-accent); padding-inline: 1rem; color: #e3be65; font-size: .75rem; font-weight: 800; }
-.zones-cta a:first-child { background: var(--color-accent); color: white; }
+.zones-cta a:first-child { background: var(--color-accent-strong); border-color: var(--color-accent-strong); color: white; }
 
 .zone-detail-hero { padding: 3rem max(1rem, calc((100vw - 76rem) / 2)) 0; background: var(--color-ink); color: white; }
 .zone-detail-hero > nav { display: flex; gap: .5rem; color: rgb(255 255 255 / 55%); font-size: .72rem; }
@@ -351,7 +351,7 @@ h1, h2, h3 {
 .zone-nearby a { display: grid; min-height: 11rem; padding: 1.25rem; grid-template-columns: 1fr auto; align-content: space-between; }
 .zone-nearby small { color: var(--color-muted); font-size: .62rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; grid-column: 1 / -1; }
 .zone-nearby strong { align-self: end; font-family: var(--font-display); font-size: 1.55rem; font-weight: 500; }
-.zone-nearby a > span { align-self: end; color: var(--color-accent); }
+.zone-nearby a > span { align-self: end; color: var(--color-accent-strong); }
 .zone-nearby a:hover { background: #f0ece2; }
 
 .zone-owner-cta { display: grid; padding: 5rem max(1rem, calc((100vw - 76rem) / 2)); grid-template-columns: minmax(0, 1fr) minmax(16rem, .55fr) auto; gap: 2.5rem; align-items: end; background: #efece4; }
@@ -413,8 +413,8 @@ h1, h2, h3 {
   font-weight: 800;
   transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
-.owners-primary-action { background: var(--color-accent); }
-.owners-primary-action:hover { background: #ca9b39; transform: translateY(-1px); }
+.owners-primary-action { background: var(--color-accent-strong); border-color: var(--color-accent-strong); color: white; }
+.owners-primary-action:hover { background: #765315; border-color: #765315; transform: translateY(-1px); }
 .owners-secondary-action { color: #e3be65; }
 .owners-secondary-action:hover { background: rgb(255 255 255 / 7%); }
 .owners-proof {
@@ -534,13 +534,13 @@ h1, h2, h3 {
 .about-values { padding-block: 5rem; border-bottom: 1px solid var(--color-line); }
 .about-values ul { display: grid; margin-top: 2.5rem; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--color-line); border-left: 1px solid var(--color-line); }
 .about-values li { display: flex; min-height: 7rem; align-items: end; justify-content: space-between; padding: 1rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); font-family: var(--font-display); font-size: 1.15rem; }
-.about-values li span, .about-services li span { color: var(--color-accent); font-family: var(--font-body); font-size: .7rem; font-weight: 800; }
+.about-values li span, .about-services li span { color: var(--color-accent-strong); font-family: var(--font-body); font-size: .7rem; font-weight: 800; }
 .about-services ol { display: grid; }
 .about-services li { display: grid; grid-template-columns: 2.5rem 1fr; gap: .75rem; padding: .9rem 0; border-bottom: 1px solid var(--color-line); }
 .about-cta { margin-top: 5rem; padding: 2.5rem; background: var(--color-ink); color: white; }
 .about-cta > div:last-child { align-self: end; justify-self: end; }
 .about-cta-primary, .about-cta-secondary { display: inline-flex; min-height: 3rem; align-items: center; padding-inline: 1rem; border: 1px solid var(--color-accent); font-size: .78rem; font-weight: 800; }
-.about-cta-primary { background: var(--color-accent); color: white; }
+.about-cta-primary { background: var(--color-accent-strong); border-color: var(--color-accent-strong); color: white; }
 .about-cta-secondary { color: #e3be65; }
 
 @media (max-width: 1050px) {
@@ -726,7 +726,7 @@ h1, h2, h3 {
 }
 
 .leaflet-control-attribution a {
-  color: var(--color-accent);
+  color: var(--color-accent-strong);
   text-decoration: underline;
 }
 
@@ -738,7 +738,7 @@ h1, h2, h3 {
 
 .leaflet-bar a:hover {
   background: var(--color-bg);
-  color: var(--color-accent);
+  color: var(--color-accent-strong);
 }
 
 /* Tipografia del control de zoom: el default se ve a sistema operativo. */

@@ -31,6 +31,9 @@ public sealed class PaymentOrder
     public string? ProviderTransactionId { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
+    public IReadOnlyList<PaymentOrderStatusChange> StatusHistory => _statusHistory;
+
+    private readonly List<PaymentOrderStatusChange> _statusHistory = [];
 
     private PaymentOrder() { }
 
@@ -76,12 +79,20 @@ public sealed class PaymentOrder
             !string.Equals(ProviderTransactionId, providerTransactionId, StringComparison.Ordinal))
             throw new DomainError("La orden ya esta asociada a otra transaccion.");
 
+        var previousStatus = Status;
+
+        // Wompi retries notifications. Replays must not change the audit timestamp.
+        if (ProviderTransactionId == providerTransactionId && Status == nextStatus)
+            return;
+
         if (!CanTransition(Status, nextStatus))
             throw new DomainError($"No se puede cambiar el pago de {Status} a {nextStatus}.");
 
         ProviderTransactionId = providerTransactionId;
         Status = nextStatus;
         UpdatedAt = now;
+        _statusHistory.Add(PaymentOrderStatusChange.Create(
+            Id, previousStatus, nextStatus, providerTransactionId, now));
     }
 
     private static bool CanTransition(PaymentOrderStatus current, PaymentOrderStatus next) =>

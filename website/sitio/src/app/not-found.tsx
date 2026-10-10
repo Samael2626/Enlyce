@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-muted">
         Puede que el inmueble se haya retirado o que la dirección esté mal escrita.
       </p>
-      <Link href="/inmuebles" className="text-accent underline">
+      <Link href="/inmuebles" className="text-accent-strong underline">
         Ver inmuebles publicados
       </Link>
     </div>

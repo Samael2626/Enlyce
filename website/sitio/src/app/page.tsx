@@ -104,7 +104,7 @@ export default async function HomePage() {
             <p className="section-kicker">Selección L&amp;C</p>
             <h2 className="mt-2 text-4xl">Propiedades destacadas</h2>
           </div>
-          <Link href="/inmuebles" className="text-accent underline">Ver todo el inventario</Link>
+          <Link href="/inmuebles" className="text-accent-strong underline">Ver todo el inventario</Link>
         </div>
 
         {page.items.length === 0 ? (

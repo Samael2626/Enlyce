@@ -22,5 +22,12 @@ public sealed class PaymentOrderConfiguration : IEntityTypeConfiguration<Payment
         builder.Property(order => order.UpdatedAt).IsRequired();
         builder.HasIndex(order => order.Reference).IsUnique();
         builder.HasIndex(order => order.ProviderTransactionId).IsUnique();
+        builder.HasMany(order => order.StatusHistory)
+            .WithOne()
+            .HasForeignKey(change => change.PaymentOrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(order => order.StatusHistory)
+            .HasField("_statusHistory")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
