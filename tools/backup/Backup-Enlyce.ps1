@@ -27,6 +27,19 @@ function Get-SupabaseKey {
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
 }
 
+function Test-LegacyServiceRoleKey([string] $Key) {
+    $parts = $Key.Split('.')
+    if ($parts.Count -ne 3) { return $false }
+
+    try {
+        $payload = $parts[1].Replace('-', '+').Replace('_', '/')
+        $payload += '=' * ((4 - ($payload.Length % 4)) % 4)
+        $claims = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload)) | ConvertFrom-Json
+        return $claims.role -eq 'service_role'
+    }
+    catch { return $false }
+}
+
 function Install-Backup {
     New-Item -ItemType Directory -Path $root -Force | Out-Null
     if (-not (Test-Path -LiteralPath $identityPath)) { throw "No existe la clave Railway: $identityPath" }
@@ -36,7 +49,9 @@ function Install-Backup {
     $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
     try { $plainKey = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) }
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
-    if (-not $plainKey.StartsWith('sb_secret_')) { throw 'Clave invalida: usa una API secret sb_secret_ del proyecto Enlyce-backups.' }
+    if (-not $plainKey.StartsWith('sb_secret_') -and -not (Test-LegacyServiceRoleKey $plainKey)) {
+        throw 'Clave invalida: usa sb_secret_ o la clave legacy service_role del proyecto Enlyce-backups. No uses publishable/anon ni la clave de Postgres.'
+    }
     $secureKey | ConvertFrom-SecureString | Set-Content -LiteralPath $secretPath -Encoding ASCII
     $plainKey = $null
     $secureKey = $null
@@ -104,6 +119,7 @@ function Invoke-Backup {
 
         $apiKey = Get-SupabaseKey
         $headers = @{ apikey = $apiKey; 'Content-Type' = 'application/octet-stream'; 'x-upsert' = 'false' }
+        if (-not $apiKey.StartsWith('sb_secret_')) { $headers.Authorization = "Bearer $apiKey" }
         $objectName = [Uri]::EscapeDataString($file.Name)
         $uploadUrl = "$projectUrl/storage/v1/object/$bucket/$objectName"
         Invoke-WebRequest -Uri $uploadUrl -Method Post -Headers $headers -InFile $dumpPath -UseBasicParsing | Out-Null

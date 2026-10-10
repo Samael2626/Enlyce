@@ -5,7 +5,7 @@
 - Windows ejecuta `Backup-Enlyce.ps1` cada dia a las 2:00 AM, hora local.
 - Railway CLI transmite un dump PostgreSQL custom; el archivo temporal queda fuera del repositorio.
 - El script valida el encabezado `PGDMP` y rechaza archivos de 49 MB o mas antes de subirlos.
-- Supabase Storage recibe el archivo en el bucket privado `enlyce-backups` por HTTPS. Solo envia el encabezado `apikey`; usa una API secret `sb_secret_` del proyecto.
+- Supabase Storage recibe el archivo en el bucket privado `enlyce-backups` por HTTPS. La API secret nueva usa `apikey`; la legacy `service_role` tambien usa `Authorization: Bearer`.
 - La clave se cifra con DPAPI para el usuario de Windows que instalo la tarea. No copiar ese archivo cifrado a otro usuario o equipo.
 - Se conservan siete dias de dumps locales tras una subida correcta. Los objetos de Supabase no se borran automaticamente.
 
@@ -19,7 +19,7 @@
 
 ## Instalar
 
-1. En Supabase Dashboard > Settings > API Keys, crea una API secret nueva con nombre `enlyce-backup-job`. No uses la clave `anon`/publishable ni publiques la secret en chat.
+1. En Supabase Dashboard > Settings > API Keys, crea una API secret nueva con nombre `enlyce-backup-job`. Tambien se acepta la legacy `service_role` si aun no tienes la nueva; no uses `anon`/publishable ni la clave de Postgres. No publiques la secret en chat.
 2. En PowerShell, desde la raiz del repo, ejecuta:
 
    ```powershell
