@@ -2,6 +2,8 @@ using Enlyce.Domain.Entities;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
 
 namespace Enlyce.IntegrationTests;
@@ -44,7 +46,10 @@ public sealed class PublicCoordinatePostgresConstraintTests
                     ("Id", "SourceKey", "OperationType", "FirstResponseHours", "InactivityDays", "Enabled", "UpdatedAtUtc")
                 VALUES ('4a8fd335-dc3d-44b6-8df2-8ad5d9df9b19', 'PORTAL', 'Venta', 2, NULL, TRUE, CURRENT_TIMESTAMP)
                 """);
-            await db.Database.MigrateAsync();
+            var migrationScript = db.GetService<IMigrator>().GenerateScript(
+                "20261010010224_TrackPaymentOrderStatusChanges",
+                options: MigrationsSqlGenerationOptions.Idempotent);
+            await db.Database.ExecuteSqlRawAsync(migrationScript);
 
             var slaRules = await db.LeadSlaRules.ToListAsync();
             Assert.Equal(2, slaRules.Count);
