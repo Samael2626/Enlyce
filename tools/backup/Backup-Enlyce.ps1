@@ -84,7 +84,12 @@ function Invoke-Backup {
         $repository = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
         Push-Location $repository
         try {
-            & $railway ssh keys remove $fingerprint 2>$null | Out-Null
+            $registeredKeys = & $railway ssh keys list
+            if ($LASTEXITCODE -ne 0) { throw 'No se pudo consultar las claves SSH registradas en Railway.' }
+            if (($registeredKeys -join "`n").Contains($fingerprint)) {
+                & $railway ssh keys remove $fingerprint | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw 'No se pudo retirar la clave SSH temporal anterior.' }
+            }
             & $railway ssh keys add --key $identityPath --name 'EnlyceBackupAuto'
             if ($LASTEXITCODE -ne 0) { throw 'Railway rechazo el registro temporal de la clave SSH.' }
             $remoteKeyAdded = $true
