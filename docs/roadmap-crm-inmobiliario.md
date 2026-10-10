@@ -146,6 +146,12 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - La copia local no tenía leads asignados ni primeras respuestas no web, así que esos dos backfills se habían verificado con el fixture sintético anterior.
 - El archivo dump conserva los datos originales locales; no compartirlo ni subirlo al repositorio.
 
+### Gate local de precisión geoespacial P0 (10 de octubre)
+
+- PostgreSQL 17 efímero en loopback, sin volumen ni datos reales; se eliminaron contenedor y esquema al terminar.
+- `PublicCoordinatePostgresConstraintTests`: 1 aprobada, 0 omitidas. Aplicó migraciones completas y verificó `NULL`, 3 decimales y rechazo de mayor precisión.
+- El gate de staging sigue pendiente: ENLYCE no tiene staging remoto ni proxy configurado. Runbook preparado en `docs/seguridad/runbook-p0-staging.md`.
+
 ### Migración de historial de etapas en PostgreSQL (9 de octubre)
 
 - Origen: base `restore_validation` del contenedor `enlyce-restore-confirmation`, sin puerto publicado y ya anonimizada. Backup custom rehecho y restaurado en PostgreSQL 17 efímero, sin volumen.

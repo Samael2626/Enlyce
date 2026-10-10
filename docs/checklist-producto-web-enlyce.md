@@ -67,6 +67,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Limitar las webs locales `3000/3100` y PostgreSQL Docker `5436` a `127.0.0.1`.
 - [ ] Bloquear `TRACE` en el proxy de staging y verificar respuesta `405`; localmente no reflejó la solicitud.
 - [ ] Crear staging de ENLYCE y repetir migraciones, smoke y ZAP sobre la configuración remota.
+- [x] Probar localmente en PostgreSQL 17 efímero la migración de precisión: `NULL`/3 decimales válidos y mayor precisión rechazada.
 - [ ] En staging, probar `20261009224818_EnforcePublicCoordinatePrecision`: confirmar historial EF y restricciones PostgreSQL; aceptar `NULL` y 3 decimales, rechazar mayor precisión y conservar datos.
 - [ ] Definir y ejecutar runbook de salida: backup restaurable, migraciones, smoke posterior, rollback verificado y monitoreo de errores.
 - [ ] Configurar secretos fuera del repositorio y backups automatizados con restauración probada.
