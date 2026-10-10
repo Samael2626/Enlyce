@@ -35,12 +35,12 @@
 - [x] Historial cronológico unificado de asignaciones y etapas, con actor, motivo y fecha; los cambios nuevos de etapa se guardan como eventos append-only.
 - [x] Recorrido de integración HTTP contacto → oportunidad → asignación → interacción/tarea/visita → demanda → cierre; prueba estado y vínculos persistidos.
 - [x] Capturar y mostrar ruta, campaña UTM, publicación y servicio de origen de cada oportunidad; ruta/campaña quedan en campos separados de `Fuente`.
+- [ ] Acordar con Operación y configurar umbrales SLA por origen y tipo de operación; validar alertas dentro y fuera del plazo aprobado.
 
 ### P2 — integración y automatización
 
 - [x] Configurar reglas SLA por raíz UTM y tipo de operación en Administración; no crea tareas ni envía avisos.
 - [x] Evaluar reglas activas en alertas internas: primera asignación, horas calendario, primer contacto, inactividad y precedencia; sin tareas automáticas ni mensajes.
-- [ ] Acordar con operación los umbrales reales para cada origen y operación; las reglas siguen vacías hasta que administración las configure.
 - [ ] Plantillas y notificaciones por correo con proveedor real y registro de entrega.
 - [ ] Evaluar WhatsApp Business Platform oficial: consentimiento, ventanas de conversación, plantillas, costos y bandeja compartida.
 - [ ] Construir en Enlyce las funciones contables necesarias, sin depender de Siigo ni duplicar datos; empezar por arriendos y cartera después de cerrar CRM.
