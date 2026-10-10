@@ -21,7 +21,8 @@ function Get-SupabaseKey {
         throw 'Falta la clave cifrada. Ejecuta el modo Install y configura una clave sb_secret_.'
     }
 
-    $secureKey = Get-Content -LiteralPath $secretPath -Raw | ConvertTo-SecureString
+    $encryptedKey = (Get-Content -LiteralPath $secretPath -Raw).Trim()
+    $secureKey = ConvertTo-SecureString $encryptedKey
     $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
     try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) }
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
