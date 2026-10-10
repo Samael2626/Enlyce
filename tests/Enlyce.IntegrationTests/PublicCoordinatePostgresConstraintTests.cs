@@ -38,7 +38,20 @@ public sealed class PublicCoordinatePostgresConstraintTests
                 .Options;
 
             await using var db = new EnlyceDbContext(options);
+            await db.Database.MigrateAsync("20261010010224_TrackPaymentOrderStatusChanges");
+            await db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "LeadSlaRules"
+                    ("Id", "SourceKey", "OperationType", "FirstResponseHours", "InactivityDays", "Enabled", "UpdatedAtUtc")
+                VALUES ('4a8fd335-dc3d-44b6-8df2-8ad5d9df9b19', 'PORTAL', 'Venta', 2, NULL, TRUE, CURRENT_TIMESTAMP)
+                """);
             await db.Database.MigrateAsync();
+
+            var slaRules = await db.LeadSlaRules.ToListAsync();
+            Assert.Equal(2, slaRules.Count);
+            Assert.Equal(45, Assert.Single(slaRules, rule => rule.SourceKey == "PORTAL").FirstResponseMinutes);
+            var defaultSla = Assert.Single(slaRules, rule => rule.SourceKey == "*" && rule.OperationType == "*");
+            Assert.Equal(45, defaultSla.FirstResponseMinutes);
+            Assert.True(defaultSla.Enabled);
 
             var owner = Propietario.Crear(
                 "Dueño de prueba",

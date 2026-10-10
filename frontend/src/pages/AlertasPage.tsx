@@ -66,7 +66,7 @@ export function AlertasPage() {
                   <div className="min-w-0 flex-1">
                     <h4 className="font-medium">{alert.nombre}</h4>
                     <p className={`mt-1 text-sm ${overdue ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
-                      {overdue ? `Venció ${format(dueAt, "d MMM yyyy, HH:mm", { locale: es })} · atraso ${alert.overdueHours} h` : `Vence ${formatDistanceToNow(dueAt, { addSuffix: true, locale: es })}`}
+                      {overdue ? `Venció ${format(dueAt, "d MMM yyyy, HH:mm", { locale: es })} · atraso ${alert.overdueMinutes} min` : `Vence ${formatDistanceToNow(dueAt, { addSuffix: true, locale: es })}`}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {alert.email} · {alert.operationType} · {alert.sourceKey} · {ETIQUETAS_PIPELINE[alert.stage] || alert.stage}

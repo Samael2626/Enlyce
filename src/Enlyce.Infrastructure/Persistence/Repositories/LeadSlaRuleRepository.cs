@@ -23,7 +23,7 @@ public sealed class LeadSlaRuleRepository(EnlyceDbContext context) : ILeadSlaRul
         }
         else
         {
-            existing.Update(rule.FirstResponseHours, rule.InactivityDays, rule.Enabled);
+            existing.Update(rule.FirstResponseMinutes, rule.InactivityDays, rule.Enabled);
         }
 
         await context.SaveChangesAsync(ct);

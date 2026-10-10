@@ -37,7 +37,7 @@ public sealed class ObtenerAlertasSlaHandler(
             if (lead.FechaPrimerContacto is null)
             {
                 startedAt = assignedAt;
-                dueAt = assignedAt.AddHours(rule.FirstResponseHours);
+                dueAt = assignedAt.AddMinutes(rule.FirstResponseMinutes);
                 kind = "FirstResponse";
             }
             else
@@ -63,11 +63,11 @@ public sealed class ObtenerAlertasSlaHandler(
                 kind,
                 startedAt,
                 dueAt,
-                (int)Math.Floor((now - dueAt).TotalHours)));
+                (int)Math.Floor((now - dueAt).TotalMinutes)));
         }
 
         var ordered = results
-            .OrderByDescending(alert => alert.OverdueHours)
+            .OrderByDescending(alert => alert.OverdueMinutes)
             .ThenBy(alert => alert.DueAtUtc)
             .ThenBy(alert => alert.LeadId)
             .ToArray();
@@ -123,4 +123,4 @@ public sealed record AlertaSlaLeadDto(
     string Kind,
     DateTime StartedAtUtc,
     DateTime DueAtUtc,
-    int OverdueHours);
+    int OverdueMinutes);

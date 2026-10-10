@@ -7,7 +7,7 @@ public sealed class LeadSlaRule
     public Guid Id { get; private set; }
     public string SourceKey { get; private set; } = string.Empty;
     public string OperationType { get; private set; } = string.Empty;
-    public int FirstResponseHours { get; private set; }
+    public int FirstResponseMinutes { get; private set; }
     public int? InactivityDays { get; private set; }
     public bool Enabled { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
@@ -15,12 +15,12 @@ public sealed class LeadSlaRule
     private LeadSlaRule() { }
 
     public static LeadSlaRule Create(
-        string sourceKey, string operationType, int firstResponseHours,
+        string sourceKey, string operationType, int firstResponseMinutes,
         int? inactivityDays, bool enabled, DateTime? updatedAtUtc = null)
     {
         var normalizedSource = NormalizeSourceKey(sourceKey);
         var normalizedOperation = NormalizeOperationType(operationType);
-        ValidateThresholds(firstResponseHours, inactivityDays);
+        ValidateThresholds(firstResponseMinutes, inactivityDays);
         var updatedAt = updatedAtUtc ?? DateTime.UtcNow;
         if (updatedAt.Kind != DateTimeKind.Utc)
             throw new DomainError("La fecha de actualizacion debe estar en UTC.");
@@ -30,17 +30,17 @@ public sealed class LeadSlaRule
             Id = Guid.NewGuid(),
             SourceKey = normalizedSource,
             OperationType = normalizedOperation,
-            FirstResponseHours = firstResponseHours,
+            FirstResponseMinutes = firstResponseMinutes,
             InactivityDays = inactivityDays,
             Enabled = enabled,
             UpdatedAtUtc = updatedAt
         };
     }
 
-    public void Update(int firstResponseHours, int? inactivityDays, bool enabled)
+    public void Update(int firstResponseMinutes, int? inactivityDays, bool enabled)
     {
-        ValidateThresholds(firstResponseHours, inactivityDays);
-        FirstResponseHours = firstResponseHours;
+        ValidateThresholds(firstResponseMinutes, inactivityDays);
+        FirstResponseMinutes = firstResponseMinutes;
         InactivityDays = inactivityDays;
         Enabled = enabled;
         UpdatedAtUtc = DateTime.UtcNow;
@@ -84,10 +84,10 @@ public sealed class LeadSlaRule
         };
     }
 
-    private static void ValidateThresholds(int firstResponseHours, int? inactivityDays)
+    private static void ValidateThresholds(int firstResponseMinutes, int? inactivityDays)
     {
-        if (firstResponseHours is < 1 or > 720)
-            throw new DomainError("Las horas de primera respuesta deben estar entre 1 y 720.");
+        if (firstResponseMinutes is < 1 or > 43200)
+            throw new DomainError("Los minutos de primera respuesta deben estar entre 1 y 43200.");
         if (inactivityDays is < 1 or > 90)
             throw new DomainError("Los dias de inactividad deben estar entre 1 y 90.");
     }

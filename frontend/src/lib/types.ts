@@ -394,7 +394,7 @@ export interface LeadSlaAlert {
   kind: LeadSlaAlertKind
   startedAtUtc: string
   dueAtUtc: string
-  overdueHours: number
+  overdueMinutes: number
 }
 
 export interface LeadSlaAlertsResponse {
@@ -576,7 +576,7 @@ export type LeadDistributionRule = "LeastOpenLeads" | "RoundRobin"
 export interface LeadSlaRule {
   sourceKey: string
   operationType: "*" | "Venta" | "Arriendo"
-  firstResponseHours: number
+  firstResponseMinutes: number
   inactivityDays: number | null
   enabled: boolean
   updatedAtUtc: string

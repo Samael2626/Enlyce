@@ -74,7 +74,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [ ] Revisión jurídica final de política de privacidad y textos de consentimiento.
 - [x] Smoke Chrome local contra API + PostgreSQL: catálogo, ficha, contacto, propietarios y sitemap; sin enviar leads.
 - [x] E2E Playwright de catálogo, ficha, favoritos, contacto y propietarios con API local simulada.
-- [ ] E2E de pago/Wompi con credenciales sandbox aprobadas.
+- [x] Cobro SaaS/suscripciones Wompi: fuera del alcance; CRM interno para L&C, no se vende como servicio.
 
 ### Prioridad P1 — estándar comercial
 
@@ -91,8 +91,9 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [ ] Medir y corregir Core Web Vitals: LCP, CLS e INP (sin métricas de navegador aún).
 - [ ] Correo de confirmación real y notificación inmediata al asesor responsable.
 - [x] Guardar y mostrar al administrador el historial de transiciones de estado Wompi con fecha; replay idempotente.
-- [ ] Definir empresa/tenant, titular, vigencia y ciclo de suscripción; activar el servicio tras pago aprobado. El modelo actual no vincula una suscripción a una empresa.
-- [ ] Acordar con Operación y configurar umbrales SLA por origen y tipo de operación; validar alertas dentro y fuera del plazo aprobado.
+- [x] Modelo multiempresa y suscripciones de venta: fuera del alcance del CRM interno.
+- [x] Definir SLA inicial: primer contacto en 45 minutos calendario; migración actualiza reglas previas y crea regla global si falta.
+- [ ] Definir horario laboral y medir alertas durante 30 días; hoy el contador corre 24/7.
 
 ### Prioridad P2 — crecimiento
 

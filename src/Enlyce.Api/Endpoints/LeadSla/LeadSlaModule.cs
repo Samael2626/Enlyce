@@ -29,7 +29,7 @@ public static class LeadSlaModule
             try
             {
                 var rule = LeadSlaRule.Create(request.SourceKey, request.OperationType,
-                    request.FirstResponseHours, request.InactivityDays, request.Enabled);
+                    request.FirstResponseMinutes, request.InactivityDays, request.Enabled);
                 return Results.Ok(ToDto(await rules.UpsertAsync(rule, ct)));
             }
             catch (DomainError error)
@@ -46,14 +46,14 @@ public static class LeadSlaModule
     }
 
     private static LeadSlaRuleDto ToDto(LeadSlaRule rule) => new(
-        rule.SourceKey, rule.OperationType, rule.FirstResponseHours,
+        rule.SourceKey, rule.OperationType, rule.FirstResponseMinutes,
         rule.InactivityDays, rule.Enabled, rule.UpdatedAtUtc);
 }
 
 public sealed record LeadSlaRuleRequest(
-    string SourceKey, string OperationType, int FirstResponseHours,
+    string SourceKey, string OperationType, int FirstResponseMinutes,
     int? InactivityDays, bool Enabled);
 public sealed record LeadSlaRuleDto(
-    string SourceKey, string OperationType, int FirstResponseHours,
+    string SourceKey, string OperationType, int FirstResponseMinutes,
     int? InactivityDays, bool Enabled, DateTime UpdatedAtUtc);
 public sealed record LeadSlaRulesResponse(IReadOnlyList<LeadSlaRuleDto> Rules);

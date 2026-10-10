@@ -18,11 +18,11 @@ public sealed class LeadSlaAlertsEndpointTests
         using var client = admin.Client;
         var advisor = admin.User;
         var now = DateTime.UtcNow;
-        SeedRule(factory, "*", "*", 1, 1, true);
-        SeedRule(factory, "PORTAL", "Venta", 5, 1, true);
-        SeedRule(factory, "WEB", "*", 5, 1, true);
-        SeedRule(factory, "*", "Arriendo", 5, 1, true);
-        SeedRule(factory, "BLOCKED", "Venta", 1, 1, false);
+        SeedRule(factory, "*", "*", 60, 1, true);
+        SeedRule(factory, "PORTAL", "Venta", 300, 1, true);
+        SeedRule(factory, "WEB", "*", 300, 1, true);
+        SeedRule(factory, "*", "Arriendo", 300, 1, true);
+        SeedRule(factory, "BLOCKED", "Venta", 60, 1, false);
         SeedLead(factory, advisor.Id, "Portal|utm=cpc", "Venta", now.AddHours(-4));
         SeedLead(factory, advisor.Id, "Web|PublicationReview:x", "Venta", now.AddHours(-4));
         SeedLead(factory, advisor.Id, "Other", "Arriendo", now.AddHours(-4));
@@ -91,6 +91,28 @@ public sealed class LeadSlaAlertsEndpointTests
             item.Kind == "Inactivity");
         Assert.Contains(response.Alerts, item => item.LeadId == unanswered.Id &&
             item.Kind == "FirstResponse");
+    }
+
+    [Fact]
+    public async Task FirstResponseSlaExpiresAtConfiguredMinuteThreshold()
+    {
+        using var factory = new TestWebApplicationFactory();
+        using var client = factory.CreateAuthenticatedClient("Administrador").Client;
+        var advisor = factory.CreateAuthenticatedClient("Administrador").User;
+        var now = DateTime.UtcNow;
+        var assignedAt = now.AddMinutes(-46);
+        SeedRule(factory, "*", "*", 45, null, true);
+        var lead = SeedLead(factory, advisor.Id, "Source", "Venta", assignedAt);
+        var earlyLead = SeedLead(factory, advisor.Id, "Source", "Venta", now.AddMinutes(-44));
+
+        var response = await GetSlaAsync(client, "/api/alertas/sla");
+
+        Assert.NotNull(response);
+        var alert = Assert.Single(response.Alerts);
+        Assert.Equal(lead.Id, alert.LeadId);
+        Assert.Equal(assignedAt.AddMinutes(45), alert.DueAtUtc);
+        Assert.True(alert.OverdueMinutes >= 1);
+        Assert.DoesNotContain(response.Alerts, item => item.LeadId == earlyLead.Id);
     }
 
     [Fact]
@@ -169,11 +191,11 @@ public sealed class LeadSlaAlertsEndpointTests
     }
 
     private static void SeedRule(TestWebApplicationFactory factory, string source,
-        string operation, int hours, int? days, bool enabled)
+        string operation, int minutes, int? days, bool enabled)
     {
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
-        db.LeadSlaRules.Add(LeadSlaRule.Create(source, operation, hours, days, enabled));
+        db.LeadSlaRules.Add(LeadSlaRule.Create(source, operation, minutes, days, enabled));
         db.SaveChanges();
     }
 
@@ -200,5 +222,5 @@ public sealed class LeadSlaAlertsEndpointTests
     private sealed record SlaResponse(IReadOnlyList<SlaAlert> Alerts, int Total);
     private sealed record SlaAlert(Guid LeadId, string Nombre, string Email, string OperationType,
         string SourceKey, string Stage, string Kind, DateTime StartedAtUtc, DateTime DueAtUtc,
-        int OverdueHours);
+        int OverdueMinutes);
 }

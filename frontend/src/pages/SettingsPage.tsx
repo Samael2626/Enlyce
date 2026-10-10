@@ -52,15 +52,15 @@ export function SettingsPage() {
     setSlaDraft(rule ? {
       sourceKey: rule.sourceKey,
       operationType: rule.operationType,
-      firstResponseHours: rule.firstResponseHours,
+      firstResponseMinutes: rule.firstResponseMinutes,
       inactivityDays: rule.inactivityDays,
       enabled: rule.enabled,
     } : {
-      sourceKey: "",
+      sourceKey: "*",
       operationType: "*",
-      firstResponseHours: 0,
+      firstResponseMinutes: 45,
       inactivityDays: null,
-      enabled: false,
+      enabled: true,
     })
   }
 
@@ -72,8 +72,8 @@ export function SettingsPage() {
       setSlaError("Escribe * para cualquier origen o una raíz UTM de hasta 100 caracteres.")
       return
     }
-    if (!Number.isInteger(slaDraft.firstResponseHours) || slaDraft.firstResponseHours < 1 || slaDraft.firstResponseHours > 720) {
-      setSlaError("La primera respuesta debe estar entre 1 y 720 horas.")
+    if (!Number.isInteger(slaDraft.firstResponseMinutes) || slaDraft.firstResponseMinutes < 1 || slaDraft.firstResponseMinutes > 43200) {
+      setSlaError("La primera respuesta debe estar entre 1 y 43200 minutos.")
       return
     }
     if (slaDraft.inactivityDays !== null && (!Number.isInteger(slaDraft.inactivityDays) || slaDraft.inactivityDays < 1 || slaDraft.inactivityDays > 90)) {
@@ -150,7 +150,7 @@ export function SettingsPage() {
             <tbody>{slaQuery.data.rules.map((item) => <tr key={`${item.sourceKey}:${item.operationType}`} className="border-b last:border-0">
               <td className="py-3 pr-3 font-medium">{item.sourceKey}</td>
               <td className="py-3 pr-3">{item.operationType === "*" ? "Todas" : item.operationType}</td>
-              <td className="py-3 pr-3">{item.firstResponseHours} h</td>
+              <td className="py-3 pr-3">{item.firstResponseMinutes} min</td>
               <td className="py-3 pr-3">{item.inactivityDays === null ? "Sin objetivo" : `${item.inactivityDays} días`}</td>
               <td className="py-3 pr-3">{item.enabled ? "Activa" : "Deshabilitada"}</td>
               <td className="py-3 pr-3">{new Date(item.updatedAtUtc).toLocaleString("es-CO")}</td>
@@ -176,8 +176,8 @@ export function SettingsPage() {
               <option value="*">Todas</option><option value="Venta">Venta</option><option value="Arriendo">Arriendo</option>
             </select>
           </label>
-          <label className="grid gap-1 text-sm font-medium">Objetivo de primera respuesta (horas calendario)
-            <input className="mt-1 w-full rounded border border-border bg-background px-3 py-2 font-normal" type="number" min={1} max={720} step={1} required value={slaDraft.firstResponseHours || ""} onChange={(event) => setSlaDraft({ ...slaDraft, firstResponseHours: event.target.value === "" ? 0 : Number(event.target.value) })} />
+          <label className="grid gap-1 text-sm font-medium">Objetivo de primera respuesta (minutos calendario)
+            <input className="mt-1 w-full rounded border border-border bg-background px-3 py-2 font-normal" type="number" min={1} max={43200} step={1} required value={slaDraft.firstResponseMinutes || ""} onChange={(event) => setSlaDraft({ ...slaDraft, firstResponseMinutes: event.target.value === "" ? 0 : Number(event.target.value) })} />
           </label>
           <label className="grid gap-1 text-sm font-medium">Días de inactividad
             <input className="mt-1 w-full rounded border border-border bg-background px-3 py-2 font-normal" type="number" min={1} max={90} step={1} placeholder="Sin objetivo" value={slaDraft.inactivityDays ?? ""} onChange={(event) => setSlaDraft({ ...slaDraft, inactivityDays: event.target.value === "" ? null : Number(event.target.value) })} />

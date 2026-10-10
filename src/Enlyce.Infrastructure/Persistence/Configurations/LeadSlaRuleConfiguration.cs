@@ -13,7 +13,7 @@ public sealed class LeadSlaRuleConfiguration : IEntityTypeConfiguration<LeadSlaR
         builder.Property(rule => rule.Id).ValueGeneratedNever();
         builder.Property(rule => rule.SourceKey).HasMaxLength(100).IsRequired();
         builder.Property(rule => rule.OperationType).HasMaxLength(10).IsRequired();
-        builder.Property(rule => rule.FirstResponseHours).IsRequired();
+        builder.Property(rule => rule.FirstResponseMinutes).IsRequired();
         builder.Property(rule => rule.InactivityDays);
         builder.Property(rule => rule.Enabled).IsRequired();
         builder.Property(rule => rule.UpdatedAtUtc).IsRequired();

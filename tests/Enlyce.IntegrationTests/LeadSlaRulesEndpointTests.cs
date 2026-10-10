@@ -18,7 +18,7 @@ public sealed class LeadSlaRulesEndpointTests
         {
             SourceKey = "  Website|utm=campaign-1  ",
             OperationType = " venta ",
-            FirstResponseHours = 4,
+            FirstResponseMinutes = 45,
             InactivityDays = (int?)12,
             Enabled = true
         });
@@ -27,7 +27,7 @@ public sealed class LeadSlaRulesEndpointTests
         var created = (await first.Content.ReadFromJsonAsync<LeadSlaRuleDto>())!;
         Assert.Equal("WEBSITE", created.SourceKey);
         Assert.Equal("Venta", created.OperationType);
-        Assert.Equal(4, created.FirstResponseHours);
+        Assert.Equal(45, created.FirstResponseMinutes);
         Assert.Equal(12, created.InactivityDays);
         Assert.True(created.Enabled);
         Assert.Equal(DateTimeKind.Utc, created.UpdatedAtUtc.Kind);
@@ -36,7 +36,7 @@ public sealed class LeadSlaRulesEndpointTests
         {
             SourceKey = "website|PublicationReview:invalid",
             OperationType = "VENTA",
-            FirstResponseHours = 8,
+            FirstResponseMinutes = 120,
             InactivityDays = (int?)null,
             Enabled = false
         });
@@ -47,7 +47,7 @@ public sealed class LeadSlaRulesEndpointTests
         var rule = Assert.Single(response.Rules);
         Assert.Equal("WEBSITE", rule.SourceKey);
         Assert.Equal("Venta", rule.OperationType);
-        Assert.Equal(8, rule.FirstResponseHours);
+        Assert.Equal(120, rule.FirstResponseMinutes);
         Assert.Null(rule.InactivityDays);
         Assert.False(rule.Enabled);
 
@@ -57,13 +57,13 @@ public sealed class LeadSlaRulesEndpointTests
     }
 
     [Theory]
-    [InlineData("", "Venta", 1, null)]
-    [InlineData("Website", "Compra", 1, null)]
+    [InlineData("", "Venta", 45, null)]
+    [InlineData("Website", "Compra", 45, null)]
     [InlineData("Website", "Venta", 0, null)]
-    [InlineData("Website", "Venta", 721, null)]
-    [InlineData("Website", "Venta", 1, 0)]
-    [InlineData("Website", "Venta", 1, 91)]
-    public async Task RejectsInvalidRuleValues(string source, string operation, int hours, int? days)
+    [InlineData("Website", "Venta", 43201, null)]
+    [InlineData("Website", "Venta", 45, 0)]
+    [InlineData("Website", "Venta", 45, 91)]
+    public async Task RejectsInvalidRuleValues(string source, string operation, int minutes, int? days)
     {
         using var factory = new TestWebApplicationFactory();
         using var client = factory.CreateAuthenticatedClient("Administrador").Client;
@@ -72,7 +72,7 @@ public sealed class LeadSlaRulesEndpointTests
         {
             SourceKey = source,
             OperationType = operation,
-            FirstResponseHours = hours,
+            FirstResponseMinutes = minutes,
             InactivityDays = days,
             Enabled = true
         });
@@ -92,7 +92,7 @@ public sealed class LeadSlaRulesEndpointTests
         {
             SourceKey = "*",
             OperationType = "*",
-            FirstResponseHours = 1,
+            FirstResponseMinutes = 45,
             InactivityDays = (int?)null,
             Enabled = true
         });
@@ -103,7 +103,7 @@ public sealed class LeadSlaRulesEndpointTests
         Assert.Equal(HttpStatusCode.Forbidden,
             (await advisor.PutAsJsonAsync("/api/configuracion/sla-leads", new
             {
-                SourceKey = "*", OperationType = "*", FirstResponseHours = 2,
+                SourceKey = "*", OperationType = "*", FirstResponseMinutes = 45,
                 InactivityDays = (int?)null, Enabled = true
             })).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized,
@@ -126,6 +126,6 @@ public sealed class LeadSlaRulesEndpointTests
     }
 
     private sealed record LeadSlaRuleDto(string SourceKey, string OperationType,
-        int FirstResponseHours, int? InactivityDays, bool Enabled, DateTime UpdatedAtUtc);
+        int FirstResponseMinutes, int? InactivityDays, bool Enabled, DateTime UpdatedAtUtc);
     private sealed record LeadSlaRulesResponse(IReadOnlyList<LeadSlaRuleDto> Rules);
 }
