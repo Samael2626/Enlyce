@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1120" role="img" aria-labelledby="title desc">
+  <title id="title">L&amp;C Propiedad Raíz S.A.S.</title>
+  <desc id="desc">Versión del logotipo para fondos oscuros.</desc>
+  <g fill="none" stroke="#D7B668" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M190 610V360l180-102v352" stroke-width="54"/>
+    <path d="M360 610V270L625 92v518" stroke-width="54"/>
+    <path d="M555 610V458l196-102v254" stroke-width="54"/>
+    <path d="M190 610h561" stroke-width="22"/>
+  </g>
+  <text x="500" y="800" fill="#D7B668" font-family="'Times New Roman', Times, serif" font-size="190" font-weight="700" letter-spacing="-8" text-anchor="middle">L&amp;C</text>
+  <path d="M175 850h650" stroke="#D7B668" stroke-width="3"/>
+  <text x="500" y="925" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="47" font-weight="700" letter-spacing="15" text-anchor="middle">PROPIEDAD RAÍZ</text>
+  <text x="500" y="1000" fill="#FFFFFF" fill-opacity=".72" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700" letter-spacing="18" text-anchor="middle">S.A.S.</text>
+</svg>

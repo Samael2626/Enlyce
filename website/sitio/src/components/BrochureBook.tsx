@@ -152,11 +152,12 @@ export function BrochureBook() {
       <div className="brochure-reader-bar" role="toolbar" aria-label="Herramientas del brochure">
         <div className="brochure-reader-edition">
           <Image
-            src="/lyc-logo-transparent.png"
-            width={1254}
-            height={1254}
+            src="/brand/lyc-logo-master.svg"
+            width={1000}
+            height={1120}
             alt="L&C Propiedad Raíz S.A.S."
             className="brochure-reader-logo"
+            unoptimized
           />
           <span><small>Brochure institucional</small><strong>Medellín · 2026</strong></span>
         </div>
@@ -193,12 +194,13 @@ export function BrochureBook() {
           <article className="brochure-leaf brochure-cover" data-density="hard" aria-label="Página 1: Portada">
             <div className="brochure-cover-shade" />
             <Image
-              src="/lyc-logo-transparent.png"
-              width={1254}
-              height={1254}
+              src="/brand/lyc-logo-master-reverse.svg"
+              width={1000}
+              height={1120}
               alt="L&C Propiedad Raíz S.A.S."
               className="brochure-cover-logo"
               preload
+              unoptimized
             />
             <div className="brochure-cover-brand">
               <span className="brochure-kicker">Portafolio institucional · 2026</span>
@@ -302,11 +304,12 @@ export function BrochureBook() {
 
           <article className="brochure-leaf brochure-back-cover" data-density="hard" aria-label="Página 10: Contraportada">
             <Image
-              src="/lyc-logo-transparent.png"
-              width={1254}
-              height={1254}
+              src="/brand/lyc-logo-master-reverse.svg"
+              width={1000}
+              height={1120}
               alt="L&C Propiedad Raíz S.A.S."
               className="brochure-back-logo"
+              unoptimized
             />
             <p>Tu hogar, nuestra prioridad.</p>
             <span>Medellín · Valle de Aburrá</span>

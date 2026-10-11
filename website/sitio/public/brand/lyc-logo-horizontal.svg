@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 520" role="img" aria-labelledby="title desc">
+  <title id="title">L&amp;C Propiedad Raíz S.A.S.</title>
+  <desc id="desc">Versión horizontal del logotipo corporativo.</desc>
+  <g transform="translate(22 18) scale(.7)" fill="none" stroke="#B78A2D" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M92 558V290l166-94v362" stroke-width="48"/>
+    <path d="M258 558V208L500 44v514" stroke-width="48"/>
+    <path d="M435 558V420l132-69v207" stroke-width="48"/>
+    <path d="M92 558h475" stroke-width="20"/>
+  </g>
+  <text x="530" y="245" fill="#B78A2D" font-family="'Times New Roman', Times, serif" font-size="190" font-weight="700" letter-spacing="-8">L&amp;C</text>
+  <path d="M535 285h850" stroke="#B78A2D" stroke-width="3"/>
+  <text x="540" y="365" fill="#0F1A3D" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700" letter-spacing="12">PROPIEDAD RAÍZ S.A.S.</text>
+</svg>

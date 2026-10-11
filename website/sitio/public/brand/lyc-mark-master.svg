@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-labelledby="title desc">
+  <title id="title">Símbolo L&amp;C Propiedad Raíz</title>
+  <desc id="desc">Monograma arquitectónico de tres edificios.</desc>
+  <g fill="none" stroke="#B78A2D" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M92 558V290l166-94v362" stroke-width="48"/>
+    <path d="M258 558V208L500 44v514" stroke-width="48"/>
+    <path d="M435 558V420l132-69v207" stroke-width="48"/>
+    <path d="M92 558h475" stroke-width="20"/>
+  </g>
+</svg>
