@@ -1,6 +1,6 @@
 ﻿# Hoja de ruta del CRM inmobiliario
 
-**Estado al 9 de octubre de 2026.** Prioridad inmediata: cerrar CRM comercial. La hoja también define la ruta para incorporar en Enlyce contabilidad y administración de arriendos; facturación electrónica queda sujeta a habilitación DIAN por emisor. No se presupone operar como proveedor tecnológico para terceros.
+**Estado al 11 de octubre de 2026.** Prioridad inmediata: cerrar CRM comercial. La hoja también define la ruta para incorporar en Enlyce contabilidad y administración de arriendos; facturación electrónica queda sujeta a habilitación DIAN por emisor. No se presupone operar como proveedor tecnológico para terceros.
 
 ## Entrega implementada en esta sesión
 
@@ -21,7 +21,10 @@
 
 ### P0 — cerrar el flujo comercial
 
-- [x] Validar migraciones, deduplicación, backup y restore en copia anonimizada PostgreSQL 17 (4 leads); antes de cada despliegue, respaldar y restaurar la base objetivo exacta.
+- [x] Validar migraciones y deduplicación en copia anonimizada PostgreSQL 17 (4 leads).
+- [ ] Antes de desplegar cambios de esquema, respaldar y restaurar la base objetivo exacta; falta incorporar y ensayar el paso dentro del runbook remoto.
+- [x] Probar backup diario remoto: tarea Windows ejecutada 2026-10-11 02:00; `enlyce-20261011-020005.dump` (62.165 bytes), ETag/MD5 coincidente; restore aislado PostgreSQL 17 con `pg_restore` OK, 24 tablas y ~25 filas vivas. No fue restore de producción.
+- [ ] Definir retención de objetos Supabase y alerta de fallo; hoy solo hay log local y los dumps remotos se acumulan.
 - [x] Regla configurable de reparto (menor carga abierta o turnos rotativos), con actor, motivo, origen y hora en el historial.
 - [x] Cerrar autorización de contactos compartidos para oportunidades, demandas e historial; restringir mutaciones de demanda al asesor del lead.
 - [x] Alertas internas accionables: mostrar tareas pendientes con `DueAt` o `ReminderAt` dentro de ventana y permitir completar/reprogramar. Correo y aviso con navegador cerrado quedan fuera.
@@ -35,7 +38,9 @@
 - [x] Historial cronológico unificado de asignaciones y etapas, con actor, motivo y fecha; los cambios nuevos de etapa se guardan como eventos append-only.
 - [x] Recorrido de integración HTTP contacto → oportunidad → asignación → interacción/tarea/visita → demanda → cierre; prueba estado y vínculos persistidos.
 - [x] Capturar y mostrar ruta, campaña UTM, publicación y servicio de origen de cada oportunidad; ruta/campaña quedan en campos separados de `Fuente`.
-- [ ] Acordar con Operación y configurar umbrales SLA por origen y tipo de operación; validar alertas dentro y fuera del plazo aprobado.
+- [x] Acordar objetivo global inicial de SLA: primer contacto en 45 minutos calendario desde asignación.
+- [x] Verificar en PostgreSQL de Railway la migración `20261010023810_UseLeadSlaResponseMinutes` y regla global activa de 45 minutos mediante transacción de solo lectura (11-oct-2026).
+- [ ] Probar alertas dentro/fuera del plazo y definir excepciones por origen/operación/horario.
 
 ### P2 — integración y automatización
 
@@ -151,6 +156,13 @@ No es una integración con Siigo ni una copia completa de su suite. Enlyce será
 - PostgreSQL 17 efímero en loopback, sin volumen ni datos reales; se eliminaron contenedor y esquema al terminar.
 - `PublicCoordinatePostgresConstraintTests`: 1 aprobada, 0 omitidas. Aplicó migraciones completas y verificó `NULL`, 3 decimales y rechazo de mayor precisión.
 - El gate de staging sigue pendiente: ENLYCE no tiene staging remoto ni proxy configurado. Runbook preparado en `docs/seguridad/runbook-p0-staging.md`.
+
+### Respaldo remoto y restore de ensayo (11 de octubre)
+
+- La tarea diaria programada produjo el dump remoto `enlyce-20261011-020005.dump`; resultado de tarea Windows `0`.
+- Tamaño 62.165 bytes; firma `PGDMP`; MD5 local coincide con ETag remoto.
+- Restauración completa en PostgreSQL 17 temporal sin red, puerto ni volumen persistente: `pg_restore` OK; 24 tablas y ~25 filas vivas. Contenedor y dump temporal eliminados.
+- Pendiente: política de retención/alerta. El éxito del backup no sustituye los gates de staging ni el restore de la base objetivo antes de un despliegue.
 
 ### Migración de historial de etapas en PostgreSQL (9 de octubre)
 

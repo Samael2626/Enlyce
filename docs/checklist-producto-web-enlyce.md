@@ -70,7 +70,10 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Probar localmente en PostgreSQL 17 efímero la migración de precisión: `NULL`/3 decimales válidos y mayor precisión rechazada.
 - [ ] En staging, probar `20261009224818_EnforcePublicCoordinatePrecision`: confirmar historial EF y restricciones PostgreSQL; aceptar `NULL` y 3 decimales, rechazar mayor precisión y conservar datos.
 - [ ] Definir y ejecutar runbook de salida: backup restaurable, migraciones, smoke posterior, rollback verificado y monitoreo de errores.
-- [ ] Configurar secretos fuera del repositorio y backups automatizados con restauración probada.
+- [x] Guardar secreto de backup cifrado con DPAPI fuera del repositorio; tarea diaria de Windows ejecutada con éxito el 11-oct-2026.
+- [x] Descargar dump remoto `enlyce-20261011-020005.dump` (62.165 bytes), comprobar firma/ETag y restaurar en PostgreSQL 17 aislado: `pg_restore` OK, 24 tablas y ~25 filas vivas.
+- [ ] Definir retención remota y alerta de fallo; hoy los objetos Supabase se acumulan y el error solo queda en log local.
+- [x] Verificar en PostgreSQL de Railway, en transacción de solo lectura, migración SLA aplicada y regla global activa de 45 minutos (11-oct-2026).
 - [ ] Revisión jurídica final de política de privacidad y textos de consentimiento.
 - [x] Smoke Chrome local contra API + PostgreSQL: catálogo, ficha, contacto, propietarios y sitemap; sin enviar leads.
 - [x] E2E Playwright de catálogo, ficha, favoritos, contacto y propietarios con API local simulada.
@@ -93,6 +96,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Guardar y mostrar al administrador el historial de transiciones de estado Wompi con fecha; replay idempotente.
 - [x] Modelo multiempresa y suscripciones de venta: fuera del alcance del CRM interno.
 - [x] Definir SLA inicial: primer contacto en 45 minutos calendario; migración actualiza reglas previas y crea regla global si falta.
+- [x] Confirmar en producción historial de migraciones y regla SLA efectiva: global activa, 45 minutos calendario (consulta de solo lectura, 11-oct-2026).
 - [ ] Definir horario laboral y medir alertas durante 30 días; hoy el contador corre 24/7.
 
 ### Prioridad P2 — crecimiento
@@ -127,11 +131,11 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 2. Crear staging y validar secretos, backups restaurables, migraciones y ZAP remoto.
 3. Al cierre: material real, Wompi sandbox y despliegue definitivo.
 
-## Cobertura verificada al 9 de octubre de 2026
+## Cobertura verificada al 11 de octubre de 2026
 
 - `node website/funcional.test.mjs`: 26 pruebas de logica del sitio legacy, todas verdes.
 - `PublicCatalogEndpointTests` y `CrmJourneyE2ETests` son pruebas HTTP con `WebApplicationFactory` + SQLite; no recorren navegador.
 - Playwright con Chrome: 3/3 E2E con API simulada + 1/1 smoke con PostgreSQL real local; el smoke no envía leads. Se intercepta POST de analítica para no agregar `page_view` al repetirlo.
 - `npm run build`, `npm run typecheck` y `npm run lint` pasan con Next.js 16.4.0 y API apagada. Sitemap corre por solicitud; API caída deja fallback de rutas estáticas y error visible en logs.
 - `npm audit --omit=dev`: 0 vulnerabilidades. Auditoría completa conserva 5 altas en `braces`, dependencia de desarrollo de `eslint-config-next` sin corrección publicada; no incluir `npm audit fix --force` porque degradaría Next 16 a 14.
-- Siguen pendientes E2E de pago/Wompi, accesibilidad WCAG AA, JSON-LD, Core Web Vitals, staging y material real autorizado.
+- Siguen pendientes E2E de pago/Wompi, accesibilidad WCAG AA, validación de JSON-LD publicado, Core Web Vitals, staging y material real autorizado.
