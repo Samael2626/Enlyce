@@ -4,7 +4,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$projectUrl = 'https://yxpsnkvnvaxobqfogfte.supabase.co'
+$projectUrl = 'https://yxpsnkvnvaxobqfogtfe.supabase.co'
 $bucket = 'enlyce-backups'
 $root = Join-Path $env:LOCALAPPDATA 'Enlyce\Backups'
 $secretPath = Join-Path $root 'supabase-key.dpapi'
