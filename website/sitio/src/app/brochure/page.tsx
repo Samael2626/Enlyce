@@ -9,11 +9,7 @@ export const metadata: Metadata = {
 export default function BrochurePage() {
   return (
     <div className="brochure-page">
-      <header className="brochure-heading">
-        <p className="section-kicker">Brochure interactivo · 2026</p>
-        <h1>Conoce L&amp;C, hoja por hoja.</h1>
-        <p>Arrastra una esquina, usa las flechas o entra en pantalla completa.</p>
-      </header>
+      <h1 className="sr-only">Brochure institucional de L&amp;C Propiedad Raíz</h1>
       <BrochureBook />
     </div>
   );

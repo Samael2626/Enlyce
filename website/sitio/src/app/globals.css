@@ -750,39 +750,46 @@ h1, h2, h3 {
 
 /* Brochure: libro editorial interactivo inspirado en un flipbook real. */
 .brochure-page {
-  --book-paper: #f7f2e8;
-  --book-ink: #111b3c;
-  --book-gold: #c89b3c;
-  --book-muted: #6f756f;
+  --book-paper: #f5f0e6;
+  --book-ink: #0b1534;
+  --book-gold: #b78a2d;
+  --book-muted: #6b6f72;
   min-height: 100vh;
-  padding: clamp(2rem, 4vw, 3.5rem) 1rem 7rem;
-  background: radial-gradient(circle at 50% 48%, #fff 0, #f2efe8 42%, #e6e2d9 100%);
+  padding: clamp(.75rem, 2vw, 1.5rem) 1rem 5rem;
+  background:
+    linear-gradient(90deg, transparent 0 49.95%, rgb(183 138 45 / 9%) 50%, transparent 50.05%),
+    radial-gradient(circle at 50% 46%, #fff 0, #f2efe8 46%, #e5e0d6 100%);
 }
 
-.brochure-heading,
-.brochure-reader { width: min(100%, 82rem); margin-inline: auto; }
-.brochure-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(17rem, .42fr); gap: .6rem 4rem; align-items: end; }
-.brochure-heading .section-kicker { grid-column: 1 / -1; }
-.brochure-heading h1 { max-width: 42rem; font-size: clamp(2.35rem, 4.2vw, 4.15rem); line-height: .94; }
-.brochure-heading > p:last-child { max-width: 25rem; padding-bottom: .4rem; color: var(--color-muted); line-height: 1.7; }
-
-.brochure-reader { margin-top: 2rem; }
-.brochure-reader:fullscreen { overflow: auto; padding: 2rem; background: #e9e5dc; }
-.brochure-reader-bar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.brochure-reader { width: min(100%, 90rem); margin-inline: auto; outline: none; }
+.brochure-reader:focus-visible { outline: 2px solid var(--book-gold); outline-offset: 4px; }
+.brochure-reader:fullscreen { overflow: auto; padding: 1rem; background: #e9e5dc; }
+.brochure-reader-bar { position: sticky; z-index: 12; top: .75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .25rem; padding: .65rem .75rem; border: 1px solid rgb(11 21 52 / 10%); background: rgb(248 245 238 / 88%); box-shadow: 0 12px 30px rgb(11 21 52 / 8%); backdrop-filter: blur(16px); }
+.brochure-reader-edition { display: flex; min-width: 12rem; align-items: center; gap: .7rem; }
+.brochure-reader-logo { width: 2.75rem; height: 2.75rem; object-fit: contain; }
 .brochure-reader-edition span,
+.brochure-reader-edition small,
 .brochure-reader-edition strong { display: block; }
-.brochure-reader-edition span { color: var(--book-muted); font-size: .62rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
-.brochure-reader-edition strong { margin-top: .25rem; font-family: var(--font-display); font-size: 1.08rem; font-weight: 500; }
-.brochure-reader-actions { display: flex; flex-wrap: wrap; gap: .55rem; }
+.brochure-reader-edition small { color: var(--book-muted); font-size: .56rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.brochure-reader-edition strong { margin-top: .15rem; font-family: var(--font-display); font-size: .95rem; font-weight: 500; }
+.brochure-reader-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .45rem; }
 .brochure-tool,
-.brochure-contact { display: inline-flex; min-height: 2.7rem; align-items: center; padding-inline: .95rem; border: 1px solid var(--color-line); background: rgb(255 255 255 / 54%); color: var(--book-ink); font-size: .68rem; font-weight: 800; letter-spacing: .02em; }
+.brochure-contact { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; padding-inline: .9rem; border: 1px solid var(--color-line); background: rgb(255 255 255 / 58%); color: var(--book-ink); font-size: .65rem; font-weight: 800; letter-spacing: .02em; }
 .brochure-tool:hover { border-color: var(--book-gold); }
 .brochure-contact { border-color: var(--book-ink); background: var(--book-ink); color: white; }
 .brochure-contact:hover { background: #21305d; }
+.brochure-zoom { display: grid; grid-template-columns: 2.75rem 3.6rem 2.75rem; border: 1px solid var(--color-line); background: rgb(255 255 255 / 58%); }
+.brochure-zoom button { min-height: 2.7rem; color: var(--book-ink); font-size: .7rem; font-weight: 800; }
+.brochure-zoom button + button { border-left: 1px solid var(--color-line); }
+.brochure-zoom button:hover:not(:disabled) { background: rgb(183 138 45 / 10%); }
+.brochure-zoom button:disabled { opacity: .35; }
 
-.brochure-stage { position: relative; display: grid; min-height: min(68vw, 47rem); place-items: center; padding-inline: 4.5rem; }
+.brochure-stage { position: relative; display: grid; min-height: min(65vw, 48rem); place-items: center; padding: 1rem 4.5rem; overflow: auto; scrollbar-width: thin; }
 .brochure-stage::after { position: absolute; z-index: 0; right: 12%; bottom: 1%; left: 12%; height: 4rem; border-radius: 50%; background: rgb(20 25 35 / 21%); filter: blur(28px); content: ''; }
-.brochure-book { z-index: 1; }
+.brochure-book-shell { z-index: 1; width: min(100%, 65rem); transform: scale(var(--brochure-zoom, 1)); transform-origin: center; transition: transform 220ms ease; }
+.brochure-book-shell-front { transform: translateX(-25%) scale(var(--brochure-zoom, 1)); }
+.brochure-book-shell-back { transform: translateX(25%) scale(var(--brochure-zoom, 1)); }
+.brochure-book { position: relative; z-index: 1; }
 .brochure-book .stf__parent { margin-inline: auto; }
 .brochure-book .stf__wrapper { filter: drop-shadow(0 22px 30px rgb(15 23 42 / 19%)); }
 
@@ -806,6 +813,7 @@ h1, h2, h3 {
 
 .brochure-cover { justify-content: space-between; padding: clamp(2rem, 4vw, 4rem); background: url('/brochure/casa-contemporanea.jpg') 58% center / cover; color: white; }
 .brochure-cover-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(5 11 31 / 18%), rgb(5 11 31 / 24%) 40%, rgb(5 11 31 / 94%)); }
+.brochure-cover-logo { position: relative; z-index: 1; width: clamp(5rem, 8vw, 7rem); height: auto; object-fit: contain; filter: drop-shadow(0 8px 18px rgb(0 0 0 / 25%)); }
 .brochure-cover-brand { position: relative; z-index: 1; max-width: 28rem; margin-top: auto; padding-bottom: 4rem; }
 .brochure-cover-brand h2 { margin-top: 1rem; font-size: clamp(3rem, 5.6vw, 5.7rem); }
 .brochure-cover-brand p { max-width: 24rem; margin-top: 1.4rem; color: rgb(255 255 255 / 78%); font-size: clamp(.78rem, 1vw, .96rem); line-height: 1.65; }
@@ -862,11 +870,13 @@ h1, h2, h3 {
 .brochure-contact-page > p { max-width: 25rem; margin-top: 1.3rem; color: var(--book-muted); font-size: .78rem; line-height: 1.65; }
 .brochure-page-cta { position: relative; z-index: 1; display: flex; max-width: 19rem; align-items: center; justify-content: space-between; margin-top: 2.3rem; padding: 1rem 0; border-top: 1px solid var(--book-ink); border-bottom: 1px solid var(--book-ink); font-size: .72rem; font-weight: 800; }
 .brochure-page-cta span { color: var(--book-gold); font-size: 1.3rem; }
+.brochure-page-cta-print { display: none; }
 .brochure-contact-lines { position: absolute; right: 2.5rem; bottom: 2.2rem; left: 2.5rem; display: flex; justify-content: space-between; color: var(--book-muted); font-size: .55rem; letter-spacing: .1em; text-transform: uppercase; }
+.brochure-contact-lines a { color: inherit; text-decoration: none; }
 
 .brochure-back-cover { align-items: center; justify-content: center; background: #0c1533; color: white; text-align: center; }
-.brochure-back-cover::before { position: absolute; width: 17rem; height: 17rem; border: 1px solid rgb(200 155 60 / 35%); border-radius: 50%; content: ''; }
-.brochure-back-mark { z-index: 1; color: var(--book-gold); font-family: var(--font-display); font-size: clamp(4rem, 8vw, 7rem); }
+.brochure-back-cover::before { position: absolute; width: 19rem; height: 24rem; border: 1px solid rgb(183 138 45 / 42%); content: ''; transform: translate(1.1rem, -.8rem); }
+.brochure-back-logo { z-index: 1; width: clamp(8rem, 13vw, 11rem); height: auto; object-fit: contain; }
 .brochure-back-cover p { z-index: 1; margin-top: .8rem; font-family: var(--font-display); font-size: 1.35rem; }
 .brochure-back-cover > span { z-index: 1; margin-top: 5rem; color: rgb(255 255 255 / 48%); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase; }
 
@@ -875,27 +885,42 @@ h1, h2, h3 {
 .brochure-turn:disabled { opacity: .22; }
 .brochure-turn-previous { left: 0; }
 .brochure-turn-next { right: 0; }
+.brochure-thumbnails { display: flex; width: min(100%, 50rem); gap: .45rem; margin: .35rem auto 0; padding: .45rem; overflow-x: auto; border-top: 1px solid rgb(11 21 52 / 12%); scrollbar-width: thin; }
+.brochure-thumbnail { position: relative; display: flex; width: 4rem; min-width: 4rem; height: 5.45rem; flex-direction: column; justify-content: space-between; padding: .55rem .45rem; overflow: hidden; border: 1px solid rgb(11 21 52 / 14%); background: var(--book-paper); color: var(--book-ink); text-align: left; transition: border-color 180ms ease, transform 180ms ease; }
+.brochure-thumbnail::after { position: absolute; right: -.75rem; bottom: -.75rem; width: 2.6rem; height: 2.6rem; border: 1px solid rgb(183 138 45 / 44%); content: ''; transform: rotate(35deg); }
+.brochure-thumbnail-photo { background: linear-gradient(150deg, #8898a7, #27344f 62%, #101a38); color: white; }
+.brochure-thumbnail-navy { background: var(--book-ink); color: white; }
+.brochure-thumbnail span { position: relative; z-index: 1; color: var(--book-gold); font-family: var(--font-display); font-size: .78rem; }
+.brochure-thumbnail small { position: relative; z-index: 1; font-size: .5rem; font-weight: 800; line-height: 1.15; }
+.brochure-thumbnail:hover { border-color: var(--book-gold); transform: translateY(-2px); }
+.brochure-thumbnail[aria-current='page'] { border-color: var(--book-gold); box-shadow: inset 0 0 0 1px var(--book-gold); }
 .brochure-status { display: grid; grid-template-columns: auto minmax(8rem, 22rem) auto 1fr; gap: .75rem; align-items: center; max-width: 50rem; margin: 1rem auto 0; color: var(--book-muted); font-size: .62rem; }
 .brochure-status i { height: 1px; overflow: hidden; background: rgb(17 27 60 / 18%); }
 .brochure-status i b { display: block; height: 100%; background: var(--book-gold); transition: width 300ms ease; }
 .brochure-status p { justify-self: end; letter-spacing: .05em; }
 
 @media (max-width: 760px) {
-  .brochure-page { overflow: hidden; }
-  .brochure-heading { min-width: 0; grid-template-columns: minmax(0, 1fr); }
-  .brochure-heading h1 { max-width: 100%; font-size: clamp(2.4rem, 12vw, 3.25rem); overflow-wrap: anywhere; }
-  .brochure-reader-bar { align-items: start; flex-direction: column; }
+  .brochure-page { padding-inline: .45rem; }
+  .brochure-reader-bar { position: relative; top: 0; align-items: stretch; flex-direction: column; }
+  .brochure-reader-edition { min-width: 0; }
+  .brochure-reader-logo { width: 2.35rem; height: 2.35rem; }
   .brochure-reader-actions { display: grid; width: 100%; grid-template-columns: 1fr 1fr; }
+  .brochure-zoom,
+  .brochure-fullscreen { display: none; }
   .brochure-tool,
   .brochure-contact { justify-content: center; text-align: center; }
-  .brochure-contact { grid-column: 1 / -1; }
-  .brochure-stage { min-height: 42rem; padding-inline: 0; overflow: hidden; }
+  .brochure-stage { min-height: 42rem; padding-inline: .25rem; overflow: visible; }
+  .brochure-book-shell { max-width: 100%; }
+  .brochure-book-shell-front,
+  .brochure-book-shell-back { transform: scale(var(--brochure-zoom, 1)); }
   .brochure-book { width: 100% !important; max-width: 100%; }
   .brochure-turn { top: auto; bottom: -3.7rem; transform: none; }
   .brochure-turn:hover:not(:disabled) { transform: scale(1.06); }
   .brochure-turn-previous { left: calc(50% - 3.5rem); }
   .brochure-turn-next { right: calc(50% - 3.5rem); }
-  .brochure-status { margin-top: 4.5rem; grid-template-columns: auto minmax(6rem, 1fr) auto; }
+  .brochure-thumbnails { width: calc(100% + .45rem); margin-top: 4.5rem; margin-left: 0; padding-inline: 0; }
+  .brochure-thumbnail { width: 3.55rem; min-width: 3.55rem; height: 4.85rem; }
+  .brochure-status { margin-top: .75rem; grid-template-columns: auto minmax(6rem, 1fr) auto; }
   .brochure-status p { display: none; }
   .brochure-leaf h2 { font-size: clamp(1.9rem, 8.5vw, 3rem); }
   .brochure-contact-lines { flex-direction: column; gap: .45rem; }
@@ -912,7 +937,10 @@ h1, h2, h3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .brochure-sheet { transition: none; }
+  .brochure-book-shell,
+  .brochure-thumbnail,
+  .brochure-turn,
+  .brochure-status i b { transition: none; }
 }
 
 @page { size: A5 portrait; margin: 0; }
@@ -923,12 +951,14 @@ h1, h2, h3 {
   .brochure-heading,
   .brochure-reader-bar,
   .brochure-turn,
+  .brochure-thumbnails,
   .brochure-status { display: none !important; }
   .brochure-page,
   .brochure-reader { max-width: none; margin: 0; padding: 0; background: white; }
   .brochure-stage { display: block; min-height: 0; padding: 0; }
   .brochure-stage::after { display: none; }
   .brochure-book,
+  .brochure-book-shell,
   .brochure-book .stf__parent,
   .brochure-book .stf__wrapper,
   .brochure-book .stf__block {
@@ -944,6 +974,8 @@ h1, h2, h3 {
     filter: none !important;
     transform: none !important;
   }
+  .brochure-page-cta-screen { display: none !important; }
+  .brochure-page-cta-print { display: flex !important; }
   .brochure-leaf {
     position: relative !important;
     display: flex !important;

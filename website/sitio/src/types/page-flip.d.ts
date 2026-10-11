@@ -24,6 +24,7 @@ declare module "page-flip" {
     constructor(element: HTMLElement, settings: PageFlipSettings);
     loadFromHTML(elements: HTMLElement[]): void;
     on(event: "flip", callback: (event: PageFlipEvent) => void): void;
+    flip(page: number): void;
     flipNext(): void;
     flipPrev(): void;
     destroy(): void;

@@ -130,6 +130,10 @@ const server = createServer(async (request, response) => {
     });
   }
 
+  if (method === "POST" && url.pathname === "/api/public/analytics/events") {
+    return sendJson(response, 202, {});
+  }
+
   if ((method === "POST" && url.pathname === "/api/leads") ||
       (method === "PUT" && url.pathname === "/api/leads/owner-details")) {
     const body = await readJson(request);
