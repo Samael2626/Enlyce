@@ -43,6 +43,23 @@ public sealed class CorsPolicyTests
         Assert.False(await AllowsOrigin(client, "https://demo.trycloudflare.com:8443"));
     }
 
+    [Fact]
+    public async Task DefaultPolicy_AllowsConfiguredProductionOrigin()
+    {
+        const string productionOrigin = "https://lyc-web-production.up.railway.app";
+        using var factory = new TestWebApplicationFactory().WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((_, configuration) =>
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Cors:AllowedOrigins:0"] = productionOrigin
+                })));
+        using var client = factory.CreateClient();
+        Assert.Equal(productionOrigin, factory.Services.GetRequiredService<IConfiguration>()["Cors:AllowedOrigins:0"]);
+
+        Assert.True(await AllowsOrigin(client, productionOrigin));
+        Assert.False(await AllowsOrigin(client, "https://attacker.example"));
+    }
+
     private static async Task<bool> AllowsOrigin(HttpClient client, string origin)
     {
         using var request = new HttpRequestMessage(HttpMethod.Options, "/api/public/inmuebles");

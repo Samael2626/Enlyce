@@ -33,6 +33,7 @@ using Enlyce.Domain.Ports;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure;
 using Enlyce.Infrastructure.Auth;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -161,42 +162,52 @@ var localCorsOrigins = new[]
     "http://localhost:3000",
     "http://127.0.0.1:3000"
 };
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
+builder.Services.AddCors();
+builder.Services.AddOptions<CorsOptions>()
+    .Configure<IConfiguration>((options, configuration) =>
     {
-        // Origenes explicitos: AllowAnyOrigin es incompatible con AllowCredentials
-        policy.WithOrigins(localCorsOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+        var configuredCorsOrigins = configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+        var corsOrigins = localCorsOrigins
+            .Concat(configuredCorsOrigins)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
-        if (builder.Configuration.GetValue<bool>("Cors:AllowTrycloudflareOrigins"))
+        options.AddDefaultPolicy(policy =>
         {
-            policy.SetIsOriginAllowed(origin =>
+            // Origenes explicitos: AllowAnyOrigin es incompatible con AllowCredentials
+            policy.WithOrigins(corsOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+
+            if (configuration.GetValue<bool>("Cors:AllowTrycloudflareOrigins"))
             {
-                if (localCorsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
-                    return true;
+                policy.SetIsOriginAllowed(origin =>
+                {
+                    if (corsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+                        return true;
 
-                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
-                    uri.Scheme != Uri.UriSchemeHttps ||
-                    !uri.IsDefaultPort ||
-                    uri.UserInfo.Length != 0 ||
-                    uri.AbsolutePath != "/" ||
-                    uri.Query.Length != 0 ||
-                    uri.Fragment.Length != 0)
-                    return false;
+                    if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
+                        uri.Scheme != Uri.UriSchemeHttps ||
+                        !uri.IsDefaultPort ||
+                        uri.UserInfo.Length != 0 ||
+                        uri.AbsolutePath != "/" ||
+                        uri.Query.Length != 0 ||
+                        uri.Fragment.Length != 0)
+                        return false;
 
-                const string suffix = ".trycloudflare.com";
-                if (!uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-                    return false;
+                    const string suffix = ".trycloudflare.com";
+                    if (!uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                        return false;
 
-                var subdomain = uri.Host[..^suffix.Length];
-                return subdomain.Length > 0 && !subdomain.Contains('.');
-            });
-        }
+                    var subdomain = uri.Host[..^suffix.Length];
+                    return subdomain.Length > 0 && !subdomain.Contains('.');
+                });
+            }
+        });
     });
-});
 
 // Solo se confia en X-Forwarded-For cuando hay un proxy declarado delante (el
 // tunel de Cloudflare del demo). Sin esa configuracion el header se ignora: de
