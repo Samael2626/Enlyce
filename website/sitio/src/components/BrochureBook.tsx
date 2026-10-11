@@ -22,8 +22,10 @@ const PAGE_COUNT = PAGE_NAVIGATION.length;
 const MIN_ZOOM = 80;
 const MAX_ZOOM = 140;
 const ZOOM_STEP = 10;
+const VALUATION_URL =
+  "/propietarios?servicio=avaluar&utm_source=brochure&utm_medium=interactive&utm_campaign=brochure_2026#solicitud";
 const WHATSAPP_URL =
-  "https://wa.me/573246266362?text=Hola%2C%20quiero%20solicitar%20una%20valoraci%C3%B3n%20con%20L%26C%20Propiedad%20Ra%C3%ADz.";
+  "https://wa.me/573246266362?text=Hola%2C%20vi%20el%20brochure%20institucional%202026%20y%20quiero%20solicitar%20una%20valoraci%C3%B3n%20con%20L%26C%20Propiedad%20Ra%C3%ADz.";
 const subscribeToHydration = () => () => undefined;
 const getClientHydrationSnapshot = () => true;
 const getServerHydrationSnapshot = () => false;
@@ -168,7 +170,7 @@ export function BrochureBook() {
             {isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
           </button>
           <a href="/brochure-lyc.pdf" download className="brochure-tool">Descargar PDF</a>
-          <Link href="/propietarios?servicio=avaluar&utm_campaign=brochure#solicitud" className="brochure-contact">Solicitar valoración</Link>
+          <Link href={VALUATION_URL} className="brochure-contact">Solicitar valoración</Link>
         </div>
       </div>
 
@@ -290,7 +292,7 @@ export function BrochureBook() {
             <span className="brochure-kicker">El siguiente movimiento</span>
             <h2>Conversemos sobre tu propiedad.</h2>
             <p>Cuéntanos si quieres vender, arrendar, comprar o recibir una valoración inicial.</p>
-            <Link href="/propietarios?servicio=avaluar&utm_campaign=brochure#solicitud" className="brochure-page-cta brochure-page-cta-screen">Solicitar valoración <span>↗</span></Link>
+            <Link href={VALUATION_URL} className="brochure-page-cta brochure-page-cta-screen">Solicitar valoración <span>↗</span></Link>
             <a href={WHATSAPP_URL} className="brochure-page-cta brochure-page-cta-print">Escribir por WhatsApp <span>↗</span></a>
             <div className="brochure-contact-lines">
               <span>Cra. 30 # 10C-228 · El Poblado</span>
