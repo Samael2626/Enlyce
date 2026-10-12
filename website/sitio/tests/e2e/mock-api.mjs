@@ -7,7 +7,7 @@ const property = {
   id: "2b76d76d-8ca4-4b34-8ce4-0f6040dc514f",
   slug: "apartamento-laureles",
   publicTitle: "Apartamento amplio en Laureles",
-  propertyType: "Apartment",
+  propertyType: "Apartamento",
   operation: "Sale",
   price: { amount: 420000000, currency: "COP" },
   location: {
