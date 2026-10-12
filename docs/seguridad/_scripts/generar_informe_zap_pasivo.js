@@ -34,6 +34,18 @@ const table = (headers, rows, widths) => new Table({
 });
 const hyperlink = (label, url) => new ExternalHyperlink({ link: url, children: [new TextRun({ text: label, style: "Hyperlink", font: "Aptos", size: 20 })] });
 const link = (label, url) => new Paragraph({ spacing: { after: 100 }, children: [hyperlink(label, url)] });
+// Bloque de comandos (monoespaciado, fondo gris claro). lines: array de strings.
+const code = (lines) => new Paragraph({
+  spacing: { before: 40, after: 120, line: 240 },
+  shading: { type: ShadingType.CLEAR, fill: "F2F4F7" },
+  border: { top: { style: BorderStyle.SINGLE, size: 4, color: colors.line }, bottom: { style: BorderStyle.SINGLE, size: 4, color: colors.line }, left: { style: BorderStyle.SINGLE, size: 10, color: colors.blue }, right: { style: BorderStyle.SINGLE, size: 4, color: colors.line } },
+  children: lines.flatMap((l, i) => {
+    const run = new TextRun({ text: l, font: "Consolas", size: 17, color: l.startsWith("#") ? colors.gray : colors.ink });
+    return i === 0 ? [run] : [new TextRun({ break: 1, text: l, font: "Consolas", size: 17, color: l.startsWith("#") ? colors.gray : colors.ink })];
+  }),
+});
+const step = (text) => new Paragraph({ spacing: { before: 60, after: 50 }, children: [new TextRun({ text, font: "Aptos", size: 20, bold: true, color: colors.blue })] });
+const expect = (text) => new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: "Resultado esperado: ", font: "Aptos", size: 19, bold: true, color: colors.green }), new TextRun({ text, font: "Aptos", size: 19, color: colors.ink })] });
 const figure = (name, width = 640) => {
   const data = fs.readFileSync(path.join(evidence, name));
   const imageWidth = data.readUInt32BE(16);
@@ -243,6 +255,117 @@ children.push(link("CWE-693 Protection Mechanism Failure", "https://cwe.mitre.or
 children.push(link("CWE-319 Cleartext Transmission of Sensitive Information", "https://cwe.mitre.org/data/definitions/319.html"));
 children.push(link("CWE-345 Insufficient Verification of Data Authenticity", "https://cwe.mitre.org/data/definitions/345.html"));
 children.push(p("Fuentes consultadas el 12 de octubre de 2026.", { run: { size: 18, italics: true, color: colors.gray } }));
+
+// ---------- ANEXO A: REPRODUCCION ----------
+children.push(new Paragraph({ children: [new PageBreak()] }));
+children.push(heading("Anexo A. Reproduccion paso a paso"));
+children.push(p("Todos los comandos son de bajo impacto: solo GET (y un OPTIONS para CORS). No modifican estado, no autentican, no envian formularios ni crean registros. Son los mismos que generaron la evidencia de este informe. Reemplaza el valor de User-Agent si tu politica lo exige. En Windows se ejecutan en Git Bash o WSL."));
+children.push(p("Variable comun usada en los ejemplos:"));
+children.push(code([
+  'UA="ENLYCE-AuthorizedSecurityAssessment"',
+  'WEB="https://lyc-web-production.up.railway.app"',
+  'API="https://enlyce-production.up.railway.app"',
+]));
+
+children.push(heading("A.1. Identificacion de servicios", HeadingLevel.HEADING_2));
+children.push(step("Confirmar cual dominio es la API"));
+children.push(code([
+  '# La API responde JSON en /health y /api/public/inmuebles; la web no',
+  'curl -sS -A "$UA" "$API/health"',
+  'curl -sS -A "$UA" "$API/api/public/inmuebles"',
+  'curl -sS -A "$UA" -o /dev/null -w "%{http_code}\\n" "$WEB/health"',
+]));
+children.push(expect("$API/health -> {\"status\":\"healthy\",...} 200; $WEB/health -> 404. enlyce-production es la API."));
+
+children.push(heading("A.2. M-01  CSP con unsafe-inline (web publica)", HeadingLevel.HEADING_2));
+children.push(code([
+  'curl -sS -A "$UA" -D - -o /dev/null "$WEB/" | grep -i "content-security-policy"',
+]));
+children.push(expect("La cabecera incluye script-src 'self' 'unsafe-inline' y style-src 'self' 'unsafe-inline'. Ver Figura 2."));
+
+children.push(heading("A.3. M-02  Subresource Integrity ausente (SPA de la API)", HeadingLevel.HEADING_2));
+children.push(code([
+  'curl -sS -A "$UA" "$API/" | grep -i -E "<link|<script"',
+]));
+children.push(expect("Las etiquetas link/script externas no tienen atributo integrity=. Ver Figura 3."));
+
+children.push(heading("A.4. M-03  CSP de la API sin form-action", HeadingLevel.HEADING_2));
+children.push(code([
+  'curl -sS -A "$UA" -D - -o /dev/null "$API/" | grep -i "content-security-policy"',
+]));
+children.push(expect("CSP = default-src 'none'; frame-ancestors 'none'; base-uri 'none'. No aparece form-action."));
+
+children.push(heading("A.5. L-01  HSTS ausente en la web publica", HeadingLevel.HEADING_2));
+children.push(code([
+  '# La web NO envia HSTS (sin salida); la API SI lo envia',
+  'curl -sS -A "$UA" -D - -o /dev/null "$WEB/robots.txt" | grep -i "strict-transport-security" || echo "HSTS AUSENTE en WEB"',
+  'curl -sS -A "$UA" -D - -o /dev/null "$API/health"      | grep -i "strict-transport-security"',
+]));
+children.push(expect("Primera linea: \"HSTS AUSENTE en WEB\". Segunda: strict-transport-security: max-age=15552000; includeSubDomains. Ver Figura 4."));
+
+children.push(heading("A.6. L-02  Marca de tiempo Unix (verificar falso positivo)", HeadingLevel.HEADING_2));
+children.push(code([
+  '# Buscar la constante 2000000000 en el bundle; confirmar que es logica, no una fecha real',
+  'curl -sS -A "$UA" "$WEB/" | grep -oE "2000000000" | head',
+]));
+children.push(expect("Aparece como constante numerica del JavaScript; no es un timestamp sensible del servidor."));
+
+children.push(heading("A.7. I-01  Punto caliente XSS en parametro operation", HeadingLevel.HEADING_2));
+children.push(code([
+  '# Solo observacion: pedir la pagina con el parametro y revisar como se refleja en atributos HTML',
+  'curl -sS -A "$UA" "$WEB/inmuebles?operation=Venta" -o /dev/null -w "%{http_code}\\n"',
+]));
+children.push(expect("200. Es un punto para revision manual (codificacion de salida), no una XSS confirmada. No inyectar payloads en produccion."));
+
+children.push(heading("A.8. Control de acceso: 401 anonimo (resultado negativo)", HeadingLevel.HEADING_2));
+children.push(code([
+  'for P in /api/auth/me /api/asesores /api/pipeline /api/visitas /api/tareas \\',
+  '         /api/alertas /api/contactos /api/demandas /api/publicaciones \\',
+  '         /api/analytics/funnel /api/configuracion/sla-leads \\',
+  '         /api/opportunities/export.csv /api/billing/pricing; do',
+  '  printf "%-34s " "$P"',
+  '  curl -sS -A "$UA" -o /dev/null -w "%{http_code} / %{size_download}b\\n" "$API$P"',
+  '  sleep 0.5',
+  'done',
+]));
+children.push(expect("Todos responden 401 con 0 bytes (sin fuga de datos ni de errores). Ver Figura 5."));
+
+children.push(heading("A.9. CORS: origen hostil rechazado (resultado negativo)", HeadingLevel.HEADING_2));
+children.push(code([
+  'curl -sS -A "$UA" -X OPTIONS -D - -o /dev/null \\',
+  '  -H "Origin: https://evil.example" \\',
+  '  -H "Access-Control-Request-Method: GET" \\',
+  '  "$API/api/public/inmuebles"',
+]));
+children.push(expect("204 sin cabecera Access-Control-Allow-Origin: la API no refleja origenes arbitrarios. Ver Figura 6."));
+
+children.push(heading("A.10. Reejecutar el escaneo pasivo completo con ZAP", HeadingLevel.HEADING_2));
+children.push(p("Para reproducir el analisis pasivo que consolido el conteo de alertas (modo protected, sin Active Scan):"));
+children.push(code([
+  '# 1) Arrancar ZAP en daemon (ajusta la ruta del jar y una API key propia)',
+  'KEY="una-clave-propia"',
+  'java -jar "zap-2.17.0.jar" -daemon -host 127.0.0.1 -port 8099 \\',
+  '  -config api.key=$KEY',
+  '',
+  '# 2) Modo protected + contexto limitado a los dos origenes',
+  'B="http://127.0.0.1:8099"',
+  'curl -s "$B/JSON/core/action/setMode/?mode=protect&apikey=$KEY"',
+  'curl -s "$B/JSON/context/action/newContext/?contextName=enlyce-scope&apikey=$KEY"',
+  'curl -s "$B/JSON/context/action/includeInContext/?contextName=enlyce-scope&regex=https://lyc-web-production\\.up\\.railway\\.app.*&apikey=$KEY"',
+  'curl -s "$B/JSON/context/action/includeInContext/?contextName=enlyce-scope&regex=https://enlyce-production\\.up\\.railway\\.app.*&apikey=$KEY"',
+  '',
+  '# 3) Spider controlado (1 hilo, ritmo limitado) sobre cada origen',
+  'curl -s "$B/JSON/spider/action/setOptionThreadCount/?Integer=1&apikey=$KEY"',
+  'curl -s "$B/JSON/spider/action/scan/?url=$WEB/&contextName=enlyce-scope&subtreeOnly=true&apikey=$KEY"',
+  'curl -s "$B/JSON/spider/action/scan/?url=$API/&contextName=enlyce-scope&subtreeOnly=true&apikey=$KEY"',
+  '',
+  '# 4) (NO ejecutar Active Scan). Esperar la cola pasiva y leer alertas + reporte',
+  'curl -s "$B/JSON/pscan/view/recordsToScan/?apikey=$KEY"',
+  'curl -s "$B/JSON/alert/view/alertsSummary/?apikey=$KEY"',
+  'curl -s "$B/JSON/reports/action/generate/?template=modern&reportFileName=enlyce-zap-report.html&reportDir=<carpeta>&apikey=$KEY"',
+]));
+children.push(expect("alertsSummary con 0 High. El reporte HTML (enlyce-zap-report.html) reproduce la Figura 1. Las instancias por URL pueden variar levemente segun la cobertura del spider."));
+children.push(p("Nota de seguridad: mantener el alcance en los dos dominios propios, limitar la tasa y detenerse ante errores o lentitud. No ejecutar Active Scan, fuzzing ni fuerza bruta sobre produccion sin autorizacion explicita para ese tipo de prueba.", { run: { italics: true, color: colors.gray, size: 19 } }));
 
 const border = { style: BorderStyle.SINGLE, size: 6, color: colors.blue, space: 4 };
 const header = new Header({ children: [new Paragraph({ border: { bottom: border }, spacing: { after: 100 }, children: [new TextRun({ text: "ENLYCE  /  EVALUACION PASIVA OWASP ZAP", font: "Aptos", size: 16, bold: true, color: colors.blue })] })] });
