@@ -70,6 +70,19 @@ public sealed class SecurityHardeningTests : IClassFixture<TestWebApplicationFac
     }
 
     [Fact]
+    public async Task NonApiResponse_AllowsSpaToLoadOwnScript()
+    {
+        // El documento HTML de la SPA (ruta no-/api) debe permitir su propio bundle;
+        // de lo contrario default-src 'none' bloquea el script y la pagina queda en blanco.
+        var response = await _factory.CreateClient().GetAsync("/");
+
+        var csp = response.Headers.GetValues("Content-Security-Policy").Single();
+        Assert.Contains("script-src 'self'", csp);
+        Assert.Contains("frame-ancestors 'none'", csp);
+        Assert.DoesNotContain("default-src 'none'; frame-ancestors", csp);
+    }
+
+    [Fact]
     public async Task LeadEndpoint_RejectsOversizedBody()
     {
         var body = "{\"nombre\":\"" + new string('A', 40_000) + "\",\"email\":\"large@test.com\",\"autorizacionDatos\":true}";
