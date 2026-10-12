@@ -13,6 +13,15 @@ public sealed class CustomerDemandRepository(EnlyceDbContext context) : ICustome
         await context.CustomerDemands.AsNoTracking().Where(demand => demand.ContactId == contactId && demand.Active)
             .OrderByDescending(demand => demand.UpdatedAt).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<CustomerDemand>> GetActiveAsync(CancellationToken ct = default) =>
+        await context.CustomerDemands.AsNoTracking().Where(demand => demand.Active).ToListAsync(ct);
+
+    public async Task SaveAsync(CustomerDemand demand, CancellationToken ct = default)
+    {
+        context.CustomerDemands.Update(demand);
+        await context.SaveChangesAsync(ct);
+    }
+
     public async Task AddAsync(CustomerDemand demand, CancellationToken ct = default)
     {
         context.CustomerDemands.Add(demand);

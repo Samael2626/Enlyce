@@ -4,15 +4,16 @@ import Link from "next/link";
 import { useState } from "react";
 import { ApiProblemError } from "@/lib/api/client";
 import { trackFunnelEvent } from "@/lib/analytics";
-import { createLead } from "@/lib/api/leads";
+import type { CatalogFilters } from "@/lib/api/catalog";
+import { createSearchAlert } from "@/lib/api/leads";
 
-type Props = { query: string; summary: string; operation?: string };
+type Props = { filters: CatalogFilters; summary: string };
 
 type Status = { kind: "idle" } | { kind: "sending" } | { kind: "done" } | { kind: "error"; message: string };
 
-// La alerta entra al CRM como lead: la ruta guarda los criterios exactos y el
-// asesor los ve al abrir la oportunidad.
-export function SearchAlertForm({ query, summary, operation }: Props) {
+// La alerta queda en el CRM como lead con demanda activa; al publicar un
+// inmueble que encaje, la API avisa por correo al cliente y al asesor.
+export function SearchAlertForm({ filters, summary }: Props) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
@@ -21,14 +22,11 @@ export function SearchAlertForm({ query, summary, operation }: Props) {
     const data = new FormData(event.currentTarget);
     setStatus({ kind: "sending" });
     try {
-      await createLead({
+      await createSearchAlert({
         nombre: String(data.get("nombre") ?? "").trim(),
         email: String(data.get("email") ?? "").trim(),
         telefono: String(data.get("telefono") ?? ""),
-        fuente: "alerta_busqueda",
-        tipoOperacion: operation === "Arriendo" ? "Arriendo" : "Venta",
-        sourceRoute: `/inmuebles${query}`.slice(0, 500),
-      });
+      }, filters);
       trackFunnelEvent("conversion");
       setStatus({ kind: "done" });
     } catch (error) {
@@ -43,7 +41,7 @@ export function SearchAlertForm({ query, summary, operation }: Props) {
     return (
       <div className="search-alert" role="status">
         <strong>Alerta creada.</strong>
-        <p>Un asesor te contactará cuando entre un inmueble que encaje con: {summary}.</p>
+        <p>Te escribiremos al correo cuando publiquemos un inmueble que encaje con: {summary}. Revisa también tu bandeja de spam.</p>
       </div>
     );
   }

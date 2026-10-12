@@ -35,6 +35,7 @@ const nextConfig: NextConfig = {
     }];
   },
   images: {
+    formats: ["image/avif", "image/webp"],
     // Las fotos las sirve Enlyce.Api bajo /media; en produccion sera el CDN.
     remotePatterns: [
       {

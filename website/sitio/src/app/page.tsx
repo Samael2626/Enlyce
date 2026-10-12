@@ -50,7 +50,15 @@ export default async function HomePage() {
       />
       <div>
         <section className="hero-shell">
-          <div className="hero-visual" aria-hidden="true" />
+          <Image
+            src="/medellin-hero.png"
+            alt=""
+            fill
+            priority
+            fetchPriority="high"
+            sizes="100vw"
+            className="hero-visual"
+          />
           <div className="hero-shade" aria-hidden="true" />
           <div className="relative mx-auto grid min-h-[660px] max-w-6xl items-end gap-10 px-4 pb-28 pt-14 lg:grid-cols-[1fr_21rem] lg:pb-32 lg:pt-20">
           <Image
@@ -58,7 +66,7 @@ export default async function HomePage() {
             alt="L&C Propiedad Raíz S.A.S."
             width={1280}
             height={1280}
-            priority
+            sizes="(max-width: 800px) 88px, 184px"
             className="hero-brand-mark"
           />
           <div className="max-w-3xl space-y-6">

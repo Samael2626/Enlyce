@@ -47,7 +47,7 @@ public sealed class CustomerDemand
     }
 
     public static CustomerDemand Create(Guid contactId, Guid? leadId, ModalidadInmueble operation,
-        TipoInmueble? propertyType, string city, string? neighborhood, decimal? minimumPrice,
+        TipoInmueble? propertyType, string? city, string? neighborhood, decimal? minimumPrice,
         decimal? maximumPrice, int? bedrooms, int? bathrooms, int? parkingSpaces, string? notes)
     {
         if (contactId == Guid.Empty || leadId == Guid.Empty)
@@ -56,8 +56,9 @@ public sealed class CustomerDemand
             throw new DomainError("La operacion debe ser Venta o Arriendo.");
         if (propertyType.HasValue && !Enum.IsDefined(propertyType.Value))
             throw new DomainError("El tipo de inmueble no es valido.");
-        if (string.IsNullOrWhiteSpace(city) || city.Trim().Length > 100)
-            throw new DomainError("La ciudad es obligatoria y no puede superar 100 caracteres.");
+        // Ciudad vacia = cualquier municipio: las alertas de la web no siempre la traen.
+        if (city?.Trim().Length > 100)
+            throw new DomainError("La ciudad no puede superar 100 caracteres.");
         if (minimumPrice is < 0 || maximumPrice is < 0 ||
             minimumPrice.HasValue && maximumPrice.HasValue && minimumPrice > maximumPrice)
             throw new DomainError("El rango de presupuesto no es valido.");
@@ -66,7 +67,7 @@ public sealed class CustomerDemand
 
         var now = DateTime.UtcNow;
         return new CustomerDemand(Guid.NewGuid(), contactId, leadId, operation, propertyType,
-            city.Trim(), Normalize(neighborhood, 100), minimumPrice, maximumPrice, bedrooms,
+            city?.Trim() ?? string.Empty, Normalize(neighborhood, 100), minimumPrice, maximumPrice, bedrooms,
             bathrooms, parkingSpaces, Normalize(notes, 2_000), now, now, true);
     }
 
@@ -87,7 +88,7 @@ public sealed class CustomerDemand
             return false;
         if (PropertyType.HasValue && PropertyType != property.Tipo)
             return false;
-        if (!string.Equals(City, property.Direccion.Ciudad, StringComparison.OrdinalIgnoreCase))
+        if (City.Length > 0 && !string.Equals(City, property.Direccion.Ciudad, StringComparison.OrdinalIgnoreCase))
             return false;
         if (Neighborhood is not null && !string.Equals(Neighborhood, property.Direccion.Barrio, StringComparison.OrdinalIgnoreCase))
             return false;
@@ -98,6 +99,15 @@ public sealed class CustomerDemand
         return (!Bedrooms.HasValue || property.Habitaciones >= Bedrooms.Value) &&
                (!Bathrooms.HasValue || property.Banos >= Bathrooms.Value) &&
                (!ParkingSpaces.HasValue || property.Parqueaderos >= ParkingSpaces.Value);
+    }
+
+    // Baja logica: la alerta deja de enviar avisos pero queda auditada.
+    public void Deactivate()
+    {
+        if (!Active)
+            return;
+        Active = false;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     private static string? Normalize(string? value, int maxLength)

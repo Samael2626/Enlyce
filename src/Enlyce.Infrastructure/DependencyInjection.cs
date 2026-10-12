@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IPropertyPublicationAdminReadRepository, PropertyPublicationAdminReadRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.Configure<WompiOptions>(configuration.GetSection(WompiOptions.SectionName));

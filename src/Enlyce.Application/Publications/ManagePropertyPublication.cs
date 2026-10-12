@@ -1,4 +1,5 @@
 using Enlyce.Application.Abstractions;
+using Enlyce.Application.Alerts;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.Errors;
 using Enlyce.Domain.Ports;
@@ -121,9 +122,15 @@ public sealed class ChangePropertyPublicationStatusHandler
     : ICommandHandler<ChangePropertyPublicationStatusCommand, PropertyPublicationMutationResponse>
 {
     private readonly IPropertyPublicationRepository _publications;
+    private readonly IPublicationAlertDispatcher _alerts;
 
-    public ChangePropertyPublicationStatusHandler(IPropertyPublicationRepository publications) =>
+    public ChangePropertyPublicationStatusHandler(
+        IPropertyPublicationRepository publications,
+        IPublicationAlertDispatcher alerts)
+    {
         _publications = publications;
+        _alerts = alerts;
+    }
 
     public async Task<PropertyPublicationMutationResponse> HandleAsync(
         ChangePropertyPublicationStatusCommand command, CancellationToken ct = default)
@@ -140,6 +147,8 @@ public sealed class ChangePropertyPublicationStatusHandler
         }
 
         await _publications.SaveAsync(publication, ct);
+        if (publication.Status == PublicationStatus.Published)
+            await _alerts.DispatchAsync(publication, ct);
         return new(publication.Id, publication.Status.ToString());
     }
 }

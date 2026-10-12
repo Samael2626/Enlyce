@@ -181,7 +181,7 @@ export default async function InmueblePage({ params }: PageProps) {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href={`/contacto?inmueble=${property.slug}`}
-            className="rounded bg-accent px-5 py-2 text-surface hover:bg-accent-strong"
+            className="rounded bg-accent-strong px-5 py-2 text-surface hover:bg-ink"
           >
             Solicitar visita
           </Link>

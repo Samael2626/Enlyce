@@ -126,6 +126,17 @@ const server = createServer(async (request, response) => {
     return sendJson(response, 200, { page, pageSize, total: 1, items });
   }
 
+  if (method === "GET" && url.pathname === "/api/public/inmuebles/apartamento-estadio") {
+    return sendJson(response, 200, {
+      ...detail,
+      id: "c1d1e7a2-0b6f-4b55-9a1c-5d2f0f3b9e11",
+      slug: "apartamento-estadio",
+      publicTitle: "Apartamento cerca al Estadio",
+      price: { amount: 380000000, currency: "COP" },
+      features: { ...detail.features, areaSquareMeters: 110, bedrooms: 3 },
+    });
+  }
+
   if (method === "GET" && url.pathname === "/api/public/inmuebles/apartamento-laureles") {
     return sendJson(response, 200, detail);
   }
@@ -141,6 +152,19 @@ const server = createServer(async (request, response) => {
 
   if (method === "POST" && url.pathname === "/api/public/analytics/events") {
     return sendJson(response, 202, {});
+  }
+
+  if (method === "POST" && url.pathname === "/api/public/alertas") {
+    requests.push({ method, path: url.pathname, body: await readJson(request) });
+    return sendJson(response, 202, { alertId: "5f0c2a8e-2a0a-4c55-9f3e-0b9d0c1e7a11" });
+  }
+
+  if (method === "POST" && /^\/api\/public\/alertas\/[^/]+\/baja$/.test(url.pathname)) {
+    const body = await readJson(request);
+    requests.push({ method, path: url.pathname, body });
+    if (body?.token !== "firma-valida") return sendJson(response, 404, {});
+    response.writeHead(204, { "Access-Control-Allow-Origin": "http://127.0.0.1:3301" });
+    return response.end();
   }
 
   if ((method === "POST" && url.pathname === "/api/leads") ||

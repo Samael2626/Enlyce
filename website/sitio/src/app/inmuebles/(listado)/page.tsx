@@ -24,7 +24,6 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
   const criteria = Object.entries(filters)
     .filter(([key]) => !["page", "pageSize", "sort"].includes(key))
     .map(([key, value]) => filterLabel(key, String(value)));
-  const alertQuery = buildQuery({ ...filters, page: undefined, pageSize: undefined, sort: undefined });
   const hasFilters = Object.keys(filters).some((key) => !["page", "pageSize", "sort"].includes(key));
 
   return (
@@ -86,9 +85,8 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
 
         <div className="catalog-alert">
           <SearchAlertForm
-            query={alertQuery}
+            filters={filters}
             summary={criteria.length > 0 ? criteria.join(", ") : "cualquier inmueble nuevo"}
-            operation={filters.operation}
           />
         </div>
 

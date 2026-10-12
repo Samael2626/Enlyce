@@ -28,7 +28,7 @@ test("ficha: galeria con visor, calculadora, compartir y similares", async ({ pa
   await expect(similar.getByRole("link", { name: /Apartamento amplio en Laureles/ })).toHaveCount(0)
 })
 
-test("alerta de busqueda crea lead con los criterios en la ruta", async ({ page, request }) => {
+test("alerta de busqueda envia los criterios estructurados", async ({ page, request }) => {
   await request.delete(`${apiFixture}/__test/requests`)
   await page.goto("/inmuebles?operation=Arriendo&bedrooms=2")
 
@@ -40,11 +40,22 @@ test("alerta de busqueda crea lead con los criterios en la ruta", async ({ page,
   await expect(page.getByText("Alerta creada.")).toBeVisible()
 
   const captured = await (await request.get(`${apiFixture}/__test/requests`)).json()
-  const lead = captured.find((entry: { path: string }) => entry.path === "/api/leads")
-  expect(lead.body).toMatchObject({
-    fuente: "alerta_busqueda",
-    tipoOperacion: "Arriendo",
+  const alert = captured.find((entry: { path: string }) => entry.path === "/api/public/alertas")
+  expect(alert.body).toMatchObject({
+    nombre: "Ana Prueba",
+    email: "ana@example.com",
     autorizacionDatos: true,
-    sourceRoute: "/inmuebles?operation=Arriendo&bedrooms=2",
+    operation: "Arriendo",
+    bedrooms: 2,
   })
+})
+
+test("baja de alerta exige confirmar y valida la firma", async ({ page }) => {
+  await page.goto("/alertas/baja?id=abc&token=firma-mala")
+  await page.getByRole("button", { name: "Cancelar alerta" }).click()
+  await expect(page.getByText("No pudimos cancelar la alerta")).toBeVisible()
+
+  await page.goto("/alertas/baja?id=abc&token=firma-valida")
+  await page.getByRole("button", { name: "Cancelar alerta" }).click()
+  await expect(page.getByText("No volverás a recibir avisos")).toBeVisible()
 })

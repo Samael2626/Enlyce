@@ -129,8 +129,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
 
         await _emailSender.SendAsync(
             command.Email,
-            "Bienvenido a Enlyce",
-            $"Hola {command.Nombre}, tu oportunidad fue registrada exitosamente.");
+            "Recibimos tu solicitud en L&C Propiedad Raíz",
+            $"Hola {command.Nombre.Trim()}, gracias por escribirnos. Un asesor de L&C te contactará pronto.");
+        await NotifyAdvisorAsync(saved.AsesorAsignadoId, "Nueva oportunidad desde la web", command, publication);
 
         return new CreateLeadResponse(
             saved.Id, saved.Nombre, saved.Email.Value,
@@ -159,6 +160,8 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
                 Interaccion.Registrar(existing.Id, advisorId.Value, "ContactoWeb", resumen));
         }
 
+        await NotifyAdvisorAsync(advisorId, "Un contacto volvió a escribir desde la web", command, publication);
+
         // Sin asesor asignado no hay a quien atribuir la interaccion, pero el
         // contador si debe moverse: es la senal de que la persona insiste.
         existing.IncrementarInteracciones();
@@ -173,6 +176,31 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             saved.PublicationId,
             decoyContinuation.Token,
             EsContactoRepetido: true);
+    }
+
+    // El asesor se entera al instante; sin asesor asignado el lead queda en la
+    // bandeja de distribucion del CRM.
+    private async Task NotifyAdvisorAsync(
+        Guid? advisorId, string subject, CreateLeadCommand command, PropertyPublication? publication)
+    {
+        if (!advisorId.HasValue || await _asesorRepo.ObtenerPorIdAsync(advisorId.Value) is not { } advisor)
+            return;
+
+        var interest = publication is not null
+            ? $"Inmueble: {publication.PublicTitle}"
+            : $"Operación: {command.TipoOperacion}";
+        await _emailSender.SendAsync(
+            advisor.Correo.Value,
+            $"{subject}: {command.Nombre.Trim()}",
+            $"""
+            Nombre: {command.Nombre.Trim()}
+            Correo: {command.Email.Trim()}
+            Teléfono: {command.Telefono?.Trim() ?? "No informado"}
+            Origen: {command.Fuente?.Trim() ?? "Web"}
+            {interest}
+
+            Responde pronto: el primer contacto define la venta. Revisa la oportunidad en ENLYCE.
+            """);
     }
 
     private async Task RegisterConsentAsync(Guid leadId, CreateLeadCommand command)

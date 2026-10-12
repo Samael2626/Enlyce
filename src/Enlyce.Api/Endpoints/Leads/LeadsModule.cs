@@ -92,7 +92,7 @@ public static class LeadsModule
 // un dato que el propio titular puede falsear, y la auditoria de la Ley 1581
 // dejaria de valer. Cuando hay un proxy declarado delante, ForwardedHeaders ya
 // reescribio RemoteIpAddress antes de llegar aqui.
-file static class LeadClientIp
+internal static class LeadClientIp
 {
     public static string? Resolve(HttpContext http)
     {

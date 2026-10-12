@@ -1,5 +1,6 @@
 import type { components } from "./schema";
 import { apiGetOrNull, apiPost, apiPut } from "./client";
+import type { CatalogFilters } from "./catalog";
 
 type Schemas = components["schemas"];
 
@@ -137,4 +138,30 @@ export async function enrichOwnerInquiry(
     "/api/leads/owner-details",
     input,
   );
+}
+
+export type SearchAlertContact = { nombre: string; email: string; telefono?: string };
+
+// Alerta = lead + demanda activa en el CRM; la API avisa al publicar algo que encaje.
+export async function createSearchAlert(contact: SearchAlertContact, filters: CatalogFilters): Promise<{ alertId: string }> {
+  return apiPost("/api/public/alertas", {
+    nombre: contact.nombre,
+    email: contact.email,
+    telefono: contact.telefono?.trim() ? contact.telefono.trim() : null,
+    autorizacionDatos: true,
+    canal: SITE_CHANNEL,
+    operation: filters.operation === "Arriendo" ? "Arriendo" : "Venta",
+    propertyType: filters.propertyType ?? null,
+    municipality: filters.municipality ?? null,
+    neighborhood: filters.neighborhood ?? null,
+    minPrice: filters.minPrice ?? null,
+    maxPrice: filters.maxPrice ?? null,
+    bedrooms: filters.bedrooms ?? null,
+    bathrooms: filters.bathrooms ?? null,
+    parkingSpaces: filters.parkingSpaces ?? null,
+  });
+}
+
+export async function unsubscribeSearchAlert(id: string, token: string): Promise<void> {
+  await apiPost(`/api/public/alertas/${encodeURIComponent(id)}/baja`, { token });
 }

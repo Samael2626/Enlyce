@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useTransition } from "react";
 import { trackFunnelEvent } from "@/lib/analytics";
 import { filterLabel } from "@/lib/filter-labels";
+import { NeighborhoodOptions } from "./NeighborhoodOptions";
 
 const operations = [
   { value: "", label: "Todos" },
@@ -156,7 +157,8 @@ export function CatalogFilters({ total }: { total: number }) {
       <section className="catalog-toolbar" aria-label="Controles del catálogo">
         <form onSubmit={handleLocationSubmit} className="catalog-location-search">
           <SearchIcon />
-          <input key={current("neighborhood")} name="neighborhood" type="search" placeholder="Buscar por barrio o sector…" defaultValue={current("neighborhood")} aria-label="Barrio o sector" />
+          <input key={current("neighborhood")} name="neighborhood" type="search" placeholder="Buscar por barrio o sector…" defaultValue={current("neighborhood")} aria-label="Barrio o sector" list="catalog-neighborhoods" autoComplete="off" />
+          <NeighborhoodOptions id="catalog-neighborhoods" />
           <button type="submit">Buscar</button>
         </form>
 

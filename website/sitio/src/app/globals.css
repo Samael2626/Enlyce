@@ -5,9 +5,9 @@
   --color-bg: #f7f6f2;
   --color-surface: #ffffff;
   --color-accent: #b78a2d;
-  --color-accent-strong: #8a651c;
+  --color-accent-strong: #7a5816;
   --color-ink: #0f1a3d;
-  --color-muted: #667085;
+  --color-muted: #555e6e;
   --color-line: #ded9ca;
   --color-whatsapp: #1d8f5d;
   --color-whatsapp-strong: #157047;
@@ -78,11 +78,12 @@ h1, h2, h3 {
 
 .hero-shell { position: relative; isolation: isolate; overflow: hidden; background: #0f1a3d; }
 .hero-visual, .hero-shade { position: absolute; inset: 0; }
-.hero-visual { background: url('/medellin-hero.png') center 48% / cover no-repeat; }
+.hero-shade { z-index: -1; }
+.hero-visual { z-index: -1; object-fit: cover; object-position: center 48%; }
 .hero-shade { background: linear-gradient(90deg, rgb(6 13 38 / 94%) 0%, rgb(6 13 38 / 62%) 52%, rgb(6 13 38 / 14%) 100%), linear-gradient(0deg, rgb(6 13 38 / 78%) 0%, transparent 55%); }
 .hero-brand-mark { position: absolute; z-index: 0; top: 2rem; left: 1rem; width: clamp(8.5rem, 13vw, 11.5rem); height: auto; object-fit: contain; filter: drop-shadow(0 10px 24px rgb(0 0 0 / 28%)); }
 .hero-shell::after { position: absolute; inset: auto 0 0; height: 5px; background: linear-gradient(90deg, #8a651c, #e3be65 45%, transparent 82%); content: ''; }
-.hero-kicker, .section-kicker { color: #c99d42; font-size: .72rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+.hero-kicker, .section-kicker { color: var(--color-accent-strong); font-size: .72rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
 .hero-actions { display: grid; gap: .7rem; padding: 1.3rem; border: 1px solid rgb(255 255 255 / 20%); background: rgb(8 16 43 / 72%); backdrop-filter: blur(12px); }
 .hero-action { display: flex; min-height: 48px; align-items: center; justify-content: space-between; border-top: 1px solid rgb(255 255 255 / 22%); color: white; font-size: .88rem; font-weight: 700; }
 .hero-action::after { color: #e3be65; content: '→'; }
@@ -1126,3 +1127,23 @@ h1, h2, h3 {
   .search-alert-form { grid-template-columns: 1fr; }
   .search-alert-head button { width: 100%; }
 }
+
+/* Comparador de favoritos. */
+.favorites-compare-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; border: 1px solid rgb(183 138 45 / 40%); background: #fbf8ef; padding: .9rem 1rem; font-size: .85rem; }
+.favorites-compare-bar a, .favorites-compare-bar span { padding: .65rem 1rem; font-weight: 800; }
+.favorites-compare-bar a { background: var(--color-ink); color: white; }
+.favorites-compare-bar span { border: 1px solid var(--color-line); color: var(--color-muted); }
+.compare-scroll { overflow-x: auto; border: 1px solid var(--color-line); border-radius: var(--radius-sheet); background: var(--color-surface); }
+.compare-table { width: 100%; min-width: 40rem; border-collapse: collapse; font-size: .9rem; }
+.compare-table th, .compare-table td { border-bottom: 1px solid var(--color-line); padding: .8rem 1rem; text-align: left; vertical-align: top; }
+.compare-table thead th { width: 30%; }
+.compare-table thead th a { display: block; margin-top: .25rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: 500; }
+.compare-table thead th a:hover { color: var(--color-accent-strong); }
+.compare-table thead small { color: var(--color-accent-strong); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.compare-photo { position: relative; display: block; aspect-ratio: 4 / 3; margin-bottom: .6rem; overflow: hidden; border-radius: 8px; background: var(--color-line); }
+.compare-table tbody th { position: sticky; left: 0; background: var(--color-surface); color: var(--color-muted); font-size: .78rem; font-weight: 700; }
+.compare-table td[data-best="true"] { background: #f3ecd9; font-weight: 800; }
+
+/* Contraste AA: el dorado claro solo sobre fondos oscuros. */
+:is(.hero-shell, .zone-detail-hero, .zones-cta, .about-cta, .owners-hero, .site-footer) :is(.section-kicker, .hero-kicker) { color: #e3be65; }
+.home-opportunity-card-primary > span { color: #e3be65; }

@@ -20,6 +20,27 @@ public sealed class CustomerDemandTests
         Assert.False(demand.Matches(unavailable));
     }
 
+    [Fact]
+    public void Matches_WithoutCity_AcceptsAnyMunicipality()
+    {
+        var demand = CustomerDemand.Create(Guid.NewGuid(), null, ModalidadInmueble.Venta,
+            null, null, null, null, 500_000_000, null, null, null, null);
+
+        Assert.True(demand.Matches(CreateProperty("Envigado", "El Poblado", 400_000_000, EstadoInmueble.Disponible)));
+    }
+
+    [Fact]
+    public void Deactivate_StopsMatching()
+    {
+        var demand = CustomerDemand.Create(Guid.NewGuid(), null, ModalidadInmueble.Venta,
+            null, "Medellín", null, null, null, null, null, null, null);
+
+        demand.Deactivate();
+
+        Assert.False(demand.Active);
+        Assert.False(demand.Matches(CreateProperty("Medellín", "Laureles", 400_000_000, EstadoInmueble.Disponible)));
+    }
+
     private static Inmueble CreateProperty(string city, string neighborhood, decimal price, EstadoInmueble status) =>
         Inmueble.Reconstituir(Guid.NewGuid(), "Apartamento", string.Empty, TipoInmueble.Apartamento,
             ModalidadInmueble.Venta, status, Direccion.Crear("Calle 1", city, neighborhood),

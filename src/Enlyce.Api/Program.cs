@@ -1,3 +1,5 @@
+using Enlyce.Api.Endpoints.Alerts;
+using Enlyce.Application.Abstractions;
 using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -111,6 +113,8 @@ builder.Services.AddAuthorizationBuilder()
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.Configure<PublicSiteOptions>(builder.Configuration.GetSection(PublicSiteOptions.SectionName));
+builder.Services.AddSingleton<IPublicLinks, PublicLinks>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<LoginAttemptGuard>();
@@ -324,6 +328,7 @@ app.MapInteracciones();
 app.MapVisitas();
 app.MapAlertas();
 app.MapPublicCatalog();
+app.MapSearchAlerts();
 if (!app.Configuration.GetValue<bool>("MediaStorage:DisableUploads"))
     app.MapPublicationMedia();
 app.MapPropertyPublications();

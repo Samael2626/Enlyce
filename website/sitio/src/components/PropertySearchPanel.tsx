@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { trackFunnelEvent } from "@/lib/analytics";
+import { NeighborhoodOptions } from "./NeighborhoodOptions";
 
 const operations = [
   { value: "", label: "Venta y arriendo" },
@@ -66,7 +67,8 @@ export function PropertySearchPanel() {
           <span>Ubicación</span>
           <span className="property-search-control">
             <LocationIcon />
-            <input name="neighborhood" type="search" placeholder="Barrio o sector" autoComplete="address-level3" />
+            <input name="neighborhood" type="search" placeholder="Barrio o sector" autoComplete="off" list="home-neighborhoods" />
+            <NeighborhoodOptions id="home-neighborhoods" />
           </span>
         </label>
 

@@ -1,3 +1,4 @@
+using Enlyce.Application.Alerts;
 using Enlyce.Application.Abstractions;
 using Enlyce.Application.Analytics;
 using Enlyce.Application.Billing;
@@ -30,6 +31,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateCheckoutSessionCommand, CreateCheckoutSessionResponse>, CreateCheckoutSessionHandler>();
         services.AddScoped<ProcessPaymentNotificationHandler>();
         services.AddScoped<ICommandHandler<CreateLeadCommand, CreateLeadResponse>, CreateLeadHandler>();
+        services.AddScoped<ICommandHandler<CreateSearchAlertCommand, CreateSearchAlertResponse>, CreateSearchAlertHandler>();
+        services.AddScoped<ICommandHandler<UnsubscribeSearchAlertCommand, bool>, UnsubscribeSearchAlertHandler>();
+        services.AddScoped<IPublicationAlertDispatcher, PublicationAlertDispatcher>();
         services.AddScoped<ICommandHandler<EnrichOwnerInquiryCommand, OwnerInquiryDetailsResponse?>, EnrichOwnerInquiryHandler>();
         services.AddScoped<ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse>, CreateInmuebleHandler>();
         services.AddScoped<ICommandHandler<UploadPublicationPhotoCommand, UploadPublicationPhotoResponse>, UploadPublicationPhotoHandler>();
