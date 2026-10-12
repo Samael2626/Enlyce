@@ -4,6 +4,7 @@ import { CatalogFilters } from "@/components/CatalogFilters";
 import { CatalogExplorer } from "@/components/CatalogExplorer";
 import { PropertyCard } from "@/components/PropertyCard";
 import { buildQuery, getProperties, parseFilters } from "@/lib/api/catalog";
+import { whatsappLink } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Inmuebles en venta y arriendo",
@@ -18,6 +19,7 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
   const filters = parseFilters(params);
   const page = await getProperties(filters);
   const lastPage = Math.max(1, Math.ceil(page.total / Math.max(1, page.pageSize)));
+  const hasFilters = Object.keys(filters).some((key) => !["page", "pageSize", "sort"].includes(key));
 
   return (
     <div className="catalog-page">
@@ -32,9 +34,24 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
 
         {page.items.length === 0 ? (
           <div className="catalog-empty">
-            <p>Ningún inmueble coincide con estos filtros.</p>
-            <span>Prueba ampliando el precio, la zona o el tipo de inmueble.</span>
-            <Link href="/inmuebles">Limpiar la búsqueda</Link>
+            {hasFilters ? (
+              <>
+                <p>Ningún inmueble coincide con estos filtros.</p>
+                <span>Prueba quitando algún filtro o cuéntanos qué buscas y te avisamos.</span>
+              </>
+            ) : (
+              <>
+                <p>Estamos actualizando el inventario.</p>
+                <span>Cuéntanos qué buscas y un asesor te envía opciones que aún no están publicadas.</span>
+              </>
+            )}
+            <div className="catalog-empty-actions">
+              <a href={whatsappLink("Hola, busco un inmueble y no encontré opciones en la web. ¿Me ayudan?")} target="_blank" rel="noreferrer">
+                Escribir por WhatsApp
+              </a>
+              <Link href="/contacto">Dejar mis datos</Link>
+              {hasFilters && <Link href="/inmuebles">Limpiar la búsqueda</Link>}
+            </div>
           </div>
         ) : (
           <CatalogExplorer

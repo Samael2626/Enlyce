@@ -3,7 +3,9 @@ import { DM_Sans, Fraunces } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AnalyticsPageView } from "@/components/AnalyticsPageView";
+import { SiteHeader } from "@/components/SiteHeader";
 import { SocialContactDock } from "@/components/SocialContactDock";
+import { INSTAGRAM_URL, whatsappLink } from "@/lib/contact";
 import "./globals.css";
 
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
@@ -26,20 +28,6 @@ export const metadata: Metadata = {
   },
 };
 
-const navigation = [
-  { href: "/inmuebles", label: "Inmuebles" },
-  { href: "/zonas", label: "Zonas" },
-  { href: "/propietarios", label: "Propietarios" },
-  { href: "/favoritos", label: "Favoritos" },
-];
-
-const aboutNavigation = [
-  { href: "/nosotros", label: "Quiénes somos", description: "Historia, propósito y forma de trabajar" },
-  { href: "/nosotros#servicios", label: "Servicios", description: "Acompañamiento inmobiliario integral" },
-  { href: "/zonas", label: "Zonas", description: "Conocimiento local del Valle de Aburrá" },
-  { href: "/brochure", label: "Brochure", description: "Presentación institucional interactiva y PDF" },
-];
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-CO" className={`${fraunces.variable} ${dmSans.variable}`}>
@@ -52,37 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Saltar al contenido
         </a>
 
-        <header className="site-header">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-3 px-4 py-3">
-            <Link href="/" className="brand-lockup" aria-label="L&C Propiedad Raíz, inicio">
-              <span>
-                <strong>L&amp;C</strong>
-                <small>Propiedad Raíz S.A.S.</small>
-              </span>
-            </Link>
-            <nav aria-label="Principal" className="site-navigation">
-              {navigation.map((item) => (
-                <Link key={item.href} href={item.href} className="site-navigation-link">
-                  {item.label}
-                </Link>
-              ))}
-              <details className="site-navigation-menu">
-                <summary>Nosotros</summary>
-                <div className="site-navigation-dropdown">
-                  {aboutNavigation.map((item) => (
-                    <Link key={item.href} href={item.href}>
-                      <strong>{item.label}</strong>
-                      <span>{item.description}</span>
-                    </Link>
-                  ))}
-                </div>
-              </details>
-              <Link href="/contacto" className="site-navigation-contact">
-                Contacto
-              </Link>
-            </nav>
-          </div>
-        </header>
+        <SiteHeader />
 
         <main id="contenido" className="flex-1">
           {children}
@@ -91,11 +49,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SocialContactDock />
 
         <footer className="site-footer">
-          <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-10 text-sm">
-            <p>L&amp;C Propiedad Raíz S.A.S. — Medellín, Colombia.</p>
-            <Link href="/privacidad" className="hover:text-accent-strong w-fit">
-              Política de tratamiento de datos personales
-            </Link>
+          <div className="site-footer-grid">
+            <div>
+              <strong className="site-footer-brand">L&amp;C</strong>
+              <p>Propiedad Raíz S.A.S. Asesoría inmobiliaria en Medellín y el Valle de Aburrá.</p>
+            </div>
+            <nav aria-label="Explorar">
+              <p>Explorar</p>
+              <Link href="/inmuebles?operation=Venta">Comprar</Link>
+              <Link href="/inmuebles?operation=Arriendo">Arrendar</Link>
+              <Link href="/zonas">Zonas</Link>
+              <Link href="/favoritos">Mis favoritos</Link>
+            </nav>
+            <nav aria-label="Empresa">
+              <p>L&amp;C</p>
+              <Link href="/propietarios">Publicar mi inmueble</Link>
+              <Link href="/nosotros">Quiénes somos</Link>
+              <Link href="/brochure">Brochure</Link>
+              <Link href="/contacto">Contacto</Link>
+            </nav>
+            <div>
+              <p>Hablemos</p>
+              <a href={whatsappLink()} target="_blank" rel="noreferrer">WhatsApp +57 324 626 6362</a>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">Instagram</a>
+            </div>
+          </div>
+          <div className="site-footer-legal">
+            <p>© {new Date().getFullYear()} L&amp;C Propiedad Raíz S.A.S. — Medellín, Colombia.</p>
+            <Link href="/privacidad">Política de tratamiento de datos personales</Link>
           </div>
         </footer>
       </body>

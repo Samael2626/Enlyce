@@ -11,7 +11,7 @@ test("catalogue opens a property and favorites persist across pages", async ({ p
   await page.getByRole("button", { name: "Guardar" }).click()
   await expect(page.getByRole("button", { name: "Guardado" })).toHaveAttribute("aria-pressed", "true")
 
-  await page.getByRole("link", { name: "Favoritos" }).click()
+  await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Favoritos" }).click()
   await expect(page.getByRole("heading", { name: "Tus favoritos" })).toBeVisible()
   await expect(page.getByRole("link", { name: "Apartamento amplio en Laureles" })).toBeVisible()
 })

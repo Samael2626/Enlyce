@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { trackFunnelEvent } from "@/lib/analytics";
 
 const operations = [
@@ -19,15 +20,26 @@ const propertyTypes = [
   { value: "Finca", label: "Finca" },
 ] as const;
 
-const maximumPrices = [
-  { value: "", label: "Sin límite" },
+// Los topes de arriendo y venta viven en escalas distintas: mezclarlos confunde.
+const rentPrices = [
+  { value: "1500000", label: "Hasta $1,5 millones" },
   { value: "3000000", label: "Hasta $3 millones" },
   { value: "5000000", label: "Hasta $5 millones" },
   { value: "10000000", label: "Hasta $10 millones" },
+] as const;
+
+const salePrices = [
+  { value: "300000000", label: "Hasta $300 millones" },
   { value: "500000000", label: "Hasta $500 millones" },
   { value: "1000000000", label: "Hasta $1.000 millones" },
   { value: "2000000000", label: "Hasta $2.000 millones" },
 ] as const;
+
+function priceOptions(operation: string) {
+  if (operation === "Arriendo") return rentPrices;
+  if (operation === "Venta") return salePrices;
+  return [...rentPrices, ...salePrices];
+}
 
 const bedroomOptions = [
   { value: "", label: "Cualquier distribución" },
@@ -38,6 +50,9 @@ const bedroomOptions = [
 ] as const;
 
 export function PropertySearchPanel() {
+  const [operation, setOperation] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+
   return (
     <form
       className="property-search-panel"
@@ -57,7 +72,14 @@ export function PropertySearchPanel() {
 
         <label className="property-search-field">
           <span>Operación</span>
-          <select name="operation" defaultValue="">
+          <select
+            name="operation"
+            value={operation}
+            onChange={(event) => {
+              setOperation(event.target.value);
+              setMaxPrice("");
+            }}
+          >
             {operations.map((option) => <option key={option.label} value={option.value}>{option.label}</option>)}
           </select>
         </label>
@@ -71,8 +93,9 @@ export function PropertySearchPanel() {
 
         <label className="property-search-field">
           <span>Presupuesto máximo</span>
-          <select name="maxPrice" defaultValue="">
-            {maximumPrices.map((option) => <option key={option.label} value={option.value}>{option.label}</option>)}
+          <select name="maxPrice" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)}>
+            <option value="">Sin límite</option>
+            {priceOptions(operation).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         </label>
 

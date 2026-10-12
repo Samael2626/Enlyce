@@ -7,6 +7,7 @@ import { PropertyLocation } from "@/components/PropertyLocation";
 import { getPropertyBySlug } from "@/lib/api/catalog";
 import { formatArea, formatOperation, formatPrice } from "@/lib/format";
 import { serializeJsonLd } from "@/lib/seo/json-ld";
+import { whatsappLink } from "@/lib/contact";
 
 type PageProps = { params: Promise<{ slug: string }> };
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -208,6 +209,23 @@ export default async function InmueblePage({ params }: PageProps) {
           />
         </div>
       </section>
+
+      {/* Barra fija en movil: la accion siempre a un toque, sin volver al final. */}
+      <div className="property-sticky-cta">
+        <div>
+          <strong>{formatPrice(property.price.amount, property.price.currency)}</strong>
+          <span>{property.location.neighborhood}</span>
+        </div>
+        <a
+          href={whatsappLink(`Hola, me interesa "${property.publicTitle}" (${property.slug}). ¿Sigue disponible?`)}
+          target="_blank"
+          rel="noreferrer"
+          className="property-sticky-whatsapp"
+        >
+          WhatsApp
+        </a>
+        <Link href={`/contacto?inmueble=${property.slug}`}>Agendar visita</Link>
+      </div>
     </article>
   );
 }

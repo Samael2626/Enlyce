@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useTransition } from "react";
 import { trackFunnelEvent } from "@/lib/analytics";
+import { filterLabel } from "@/lib/filter-labels";
 
 const operations = [
   { value: "", label: "Todos" },
@@ -172,7 +173,9 @@ export function CatalogFilters({ total }: { total: number }) {
         {activeFilters.length > 0 && (
           <div className="catalog-active-filters" role="group" aria-label="Filtros activos">
             {activeFilters.map(([key, value]) => (
-              <button key={key} type="button" onClick={() => update(key, "")}>{value}<span aria-hidden="true">×</span></button>
+              <button key={key} type="button" aria-label={`Quitar filtro ${filterLabel(key, value)}`} onClick={() => update(key, "")}>
+                {filterLabel(key, value)}<span aria-hidden="true">×</span>
+              </button>
             ))}
           </div>
         )}

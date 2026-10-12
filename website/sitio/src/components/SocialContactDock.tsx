@@ -1,3 +1,5 @@
+import { FACEBOOK_URL, INSTAGRAM_URL, whatsappLink } from "@/lib/contact";
+
 interface SocialLink {
   readonly label: string;
   readonly network: "facebook" | "instagram";
@@ -5,13 +7,8 @@ interface SocialLink {
   readonly icon: React.ReactNode;
 }
 
-const WHATSAPP_NUMBER = "573246266362";
-const WHATSAPP_MESSAGE = "Hola, quiero recibir información sobre los inmuebles de L&C Propiedad Raíz.";
-const INSTAGRAM_URL =
-  process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? "https://instagram.com/lyc_propiedad_raiz_sas";
-
 export function SocialContactDock() {
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+  const whatsappUrl = whatsappLink();
   const socialLinks: SocialLink[] = [
     {
       label: "Instagram",
@@ -21,11 +18,11 @@ export function SocialContactDock() {
     },
   ];
 
-  if (process.env.NEXT_PUBLIC_FACEBOOK_URL) {
+  if (FACEBOOK_URL) {
     socialLinks.unshift({
       label: "Facebook",
       network: "facebook",
-      url: process.env.NEXT_PUBLIC_FACEBOOK_URL,
+      url: FACEBOOK_URL,
       icon: <FacebookIcon />,
     });
   }
