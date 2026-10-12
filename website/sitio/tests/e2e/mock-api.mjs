@@ -8,7 +8,7 @@ const property = {
   slug: "apartamento-laureles",
   publicTitle: "Apartamento amplio en Laureles",
   propertyType: "Apartamento",
-  operation: "Sale",
+  operation: "Venta",
   price: { amount: 420000000, currency: "COP" },
   location: {
     municipality: "Medellín",
@@ -42,7 +42,11 @@ const detail = {
     stratum: 5,
     amenities: ["Balcón", "Ascensor"],
   },
-  photos: [{ url: "/brochure/interior-lujo.jpg", altText: "Sala del apartamento", order: 0, isCover: true }],
+  photos: [
+    { url: "/brochure/interior-lujo.jpg", altText: "Sala del apartamento", order: 0, isCover: true },
+    { url: "/brochure/fachada-cristal.jpg", altText: "Fachada del edificio", order: 1, isCover: false },
+    { url: "/brochure/casa-contemporanea.jpg", altText: "Zona social", order: 2, isCover: false },
+  ],
   advisor: {
     id: "6e4f8517-8e81-467a-b487-1acfe7af7d96",
     displayName: "Asesor de prueba",
@@ -112,6 +116,11 @@ const server = createServer(async (request, response) => {
       ];
       const items = page === 1 ? fixtures.slice(0, pageSize) : [];
       return sendJson(response, 200, { page, pageSize, total: fixtures.length, items });
+    }
+    // Consulta de similares de la ficha: filtra por tipo y devuelve otra publicacion.
+    if (url.searchParams.get("propertyType")) {
+      const similar = { ...property, id: "c1d1e7a2-0b6f-4b55-9a1c-5d2f0f3b9e11", slug: "apartamento-estadio", publicTitle: "Apartamento cerca al Estadio" };
+      return sendJson(response, 200, { page, pageSize, total: 2, items: [property, similar] });
     }
     const items = page === 1 ? [property].slice(0, pageSize) : [];
     return sendJson(response, 200, { page, pageSize, total: 1, items });

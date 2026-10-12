@@ -3,6 +3,8 @@ import Link from "next/link";
 import { CatalogFilters } from "@/components/CatalogFilters";
 import { CatalogExplorer } from "@/components/CatalogExplorer";
 import { PropertyCard } from "@/components/PropertyCard";
+import { SearchAlertForm } from "@/components/SearchAlertForm";
+import { filterLabel } from "@/lib/filter-labels";
 import { buildQuery, getProperties, parseFilters } from "@/lib/api/catalog";
 import { whatsappLink } from "@/lib/contact";
 
@@ -19,6 +21,10 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
   const filters = parseFilters(params);
   const page = await getProperties(filters);
   const lastPage = Math.max(1, Math.ceil(page.total / Math.max(1, page.pageSize)));
+  const criteria = Object.entries(filters)
+    .filter(([key]) => !["page", "pageSize", "sort"].includes(key))
+    .map(([key, value]) => filterLabel(key, String(value)));
+  const alertQuery = buildQuery({ ...filters, page: undefined, pageSize: undefined, sort: undefined });
   const hasFilters = Object.keys(filters).some((key) => !["page", "pageSize", "sort"].includes(key));
 
   return (
@@ -77,6 +83,14 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
             </ul>
           </CatalogExplorer>
         )}
+
+        <div className="catalog-alert">
+          <SearchAlertForm
+            query={alertQuery}
+            summary={criteria.length > 0 ? criteria.join(", ") : "cualquier inmueble nuevo"}
+            operation={filters.operation}
+          />
+        </div>
 
         {lastPage > 1 && (
           <nav aria-label="Paginación" className="catalog-pagination">

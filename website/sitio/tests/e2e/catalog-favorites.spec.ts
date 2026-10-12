@@ -8,8 +8,9 @@ test("catalogue opens a property and favorites persist across pages", async ({ p
 
   await expect(page).toHaveURL(/\/inmuebles\/apartamento-laureles$/, { timeout: 30_000 })
   await expect(page.getByRole("heading", { name: "Apartamento amplio en Laureles" })).toBeVisible()
-  await page.getByRole("button", { name: "Guardar" }).click()
-  await expect(page.getByRole("button", { name: "Guardado" })).toHaveAttribute("aria-pressed", "true")
+  const contact = page.getByRole("region", { name: "¿Quieres verlo?" })
+  await contact.getByRole("button", { name: "Guardar" }).click()
+  await expect(contact.getByRole("button", { name: "Guardado" })).toHaveAttribute("aria-pressed", "true")
 
   await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Favoritos" }).click()
   await expect(page.getByRole("heading", { name: "Tus favoritos" })).toBeVisible()

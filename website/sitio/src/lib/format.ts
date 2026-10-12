@@ -16,7 +16,9 @@ export function formatArea(squareMeters: number): string {
 }
 
 export function formatOperation(operation: string): string {
-  return operation === "Arriendo" ? "En arriendo" : "En venta";
+  if (operation === "Arriendo") return "En arriendo";
+  if (operation === "VentaYArriendo") return "En venta y arriendo";
+  return "En venta";
 }
 
 export function propertyPath(slug: string): string {

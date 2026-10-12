@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CostCalculator } from "@/components/CostCalculator";
 import { FavoriteToggle } from "@/components/FavoriteToggle";
+import { PropertyCard } from "@/components/PropertyCard";
+import { PropertyGallery } from "@/components/PropertyGallery";
+import { ShareButton } from "@/components/ShareButton";
 import { PropertyLocation } from "@/components/PropertyLocation";
-import { getPropertyBySlug } from "@/lib/api/catalog";
+import { getProperties, getPropertyBySlug } from "@/lib/api/catalog";
+import type { PropertyListItem } from "@/lib/api/client";
 import { formatArea, formatOperation, formatPrice } from "@/lib/format";
 import { serializeJsonLd } from "@/lib/seo/json-ld";
 import { whatsappLink } from "@/lib/contact";
@@ -43,7 +47,8 @@ export default async function InmueblePage({ params }: PageProps) {
 
   const photos = [...property.photos].sort((a, b) => a.order - b.order);
   const cover = photos.find((photo) => photo.isCover) ?? photos[0];
-  const rest = photos.filter((photo) => photo !== cover);
+  const gallery = cover ? [cover, ...photos.filter((photo) => photo !== cover)] : [];
+  const similar = await getSimilar(property.slug, property.operation, property.propertyType, property.location.municipality);
   const canonicalUrl = `${siteUrl}/inmuebles/${encodeURIComponent(property.slug)}`;
   const propertyType = property.propertyType === "Apartamento"
     ? "Apartment"
@@ -121,35 +126,7 @@ export default async function InmueblePage({ params }: PageProps) {
         )}
       </header>
 
-      {cover && (
-        <div className="space-y-3">
-          <div className="relative aspect-16/9 overflow-hidden rounded-sheet bg-line">
-            <Image
-              src={cover.url}
-              alt={cover.altText}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 1024px"
-              className="object-cover"
-            />
-          </div>
-          {rest.length > 0 && (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {rest.map((photo) => (
-                <li key={photo.url} className="relative aspect-4/3 overflow-hidden rounded bg-line">
-                  <Image
-                    src={photo.url}
-                    alt={photo.altText}
-                    fill
-                    sizes="(max-width: 640px) 50vw, 33vw"
-                    className="object-cover"
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      <PropertyGallery photos={gallery} />
 
       <section aria-labelledby="caracteristicas" className="space-y-3">
         <h2 id="caracteristicas" className="text-2xl">Características</h2>
@@ -182,6 +159,12 @@ export default async function InmueblePage({ params }: PageProps) {
         <p className="max-w-prose leading-relaxed">{property.publicDescription}</p>
       </section>
 
+      <CostCalculator
+        operation={property.operation}
+        price={property.price.amount}
+        administration={property.administrationFee?.amount}
+      />
+
       <PropertyLocation
         latitude={property.location.approximateLatitude}
         longitude={property.location.approximateLongitude}
@@ -207,8 +190,23 @@ export default async function InmueblePage({ params }: PageProps) {
             title={property.publicTitle}
           className="rounded border border-line px-5 py-2 hover:text-accent-strong"
           />
+          <ShareButton
+            title={property.publicTitle}
+            className="rounded border border-line px-5 py-2 hover:text-accent-strong"
+          />
         </div>
       </section>
+
+      {similar.length > 0 && (
+        <section aria-labelledby="similares" className="space-y-4">
+          <h2 id="similares" className="text-2xl">Inmuebles parecidos</h2>
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {similar.map((item) => (
+              <li key={item.id}><PropertyCard property={item} /></li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Barra fija en movil: la accion siempre a un toque, sin volver al final. */}
       <div className="property-sticky-cta">
@@ -228,4 +226,22 @@ export default async function InmueblePage({ params }: PageProps) {
       </div>
     </article>
   );
+}
+
+// Primero misma operacion, tipo y municipio; si no alcanza, relaja el tipo.
+async function getSimilar(slug: string, operation: string, propertyType: string, municipality: string): Promise<PropertyListItem[]> {
+  try {
+    const strict = await getProperties({ operation, propertyType, municipality, pageSize: 4 });
+    let items = strict.items.filter((item) => item.slug !== slug);
+    if (items.length < 3) {
+      const loose = await getProperties({ operation, pageSize: 6 });
+      const seen = new Set(items.map((item) => item.slug));
+      items = [...items, ...loose.items.filter((item) => item.slug !== slug && !seen.has(item.slug))];
+    }
+    return items.slice(0, 3);
+  } catch (error) {
+    // Los similares son opcionales: la ficha no cae si fallan, pero queda registrado.
+    console.error("No se pudieron cargar inmuebles similares", error);
+    return [];
+  }
 }
