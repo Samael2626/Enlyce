@@ -31,6 +31,16 @@ public class InmuebleRepository : IInmuebleRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<Inmueble>> GetByExternalRefsAsync(IReadOnlyCollection<string> externalRefs)
+    {
+        if (externalRefs.Count == 0)
+            return [];
+
+        return await _context.Inmuebles
+            .Where(i => i.ExternalRef != null && externalRefs.Contains(i.ExternalRef))
+            .ToListAsync();
+    }
+
     public async Task<Inmueble> SaveAsync(Inmueble inmueble)
     {
         var existing = await _context.Inmuebles.FindAsync(inmueble.Id);

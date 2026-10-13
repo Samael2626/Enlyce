@@ -1,3 +1,4 @@
+using Enlyce.Api.Endpoints.Imports;
 using Enlyce.Api.Endpoints.Alerts;
 using Enlyce.Application.Abstractions;
 using System.Net;
@@ -335,6 +336,7 @@ app.MapContacts();
 app.MapTasks();
 app.MapDemands();
 app.MapInmuebles();
+app.MapImports();
 app.MapAuth();
 app.MapPolitica();
 app.MapDatosPersonales();

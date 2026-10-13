@@ -6,6 +6,7 @@ using Enlyce.Application.Commands.Consentimiento;
 using Enlyce.Application.Commands.Lead;
 using Enlyce.Application.Commands.Login;
 using Enlyce.Application.Commands.RegisterAsesor;
+using Enlyce.Application.Imports;
 using Enlyce.Application.Queries.Lead;
 using Enlyce.Application.Queries.Politica;
 using Enlyce.Application.PublicCatalog;
@@ -35,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UnsubscribeSearchAlertCommand, bool>, UnsubscribeSearchAlertHandler>();
         services.AddScoped<IPublicationAlertDispatcher, PublicationAlertDispatcher>();
         services.AddScoped<ICommandHandler<EnrichOwnerInquiryCommand, OwnerInquiryDetailsResponse?>, EnrichOwnerInquiryHandler>();
+        services.AddScoped<ICommandHandler<ImportExternalListingsCommand, ImportExternalListingsResponse>, ImportExternalListingsHandler>();
         services.AddScoped<ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse>, CreateInmuebleHandler>();
         services.AddScoped<ICommandHandler<UploadPublicationPhotoCommand, UploadPublicationPhotoResponse>, UploadPublicationPhotoHandler>();
         services.AddScoped<IQueryHandler<GetLeadByIdQuery, GetLeadByIdResponse?>, GetLeadByIdHandler>();

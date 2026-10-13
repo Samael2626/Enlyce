@@ -396,6 +396,10 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("ExternalRef")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
 
@@ -470,6 +474,10 @@ namespace Enlyce.Infrastructure.Migrations
                         });
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExternalRef")
+                        .IsUnique()
+                        .HasFilter("\"ExternalRef\" IS NOT NULL");
 
                     b.HasIndex("Modalidad");
 

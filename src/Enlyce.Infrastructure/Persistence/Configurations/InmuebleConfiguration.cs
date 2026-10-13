@@ -36,5 +36,9 @@ public class InmuebleConfiguration : IEntityTypeConfiguration<Inmueble>
 
         builder.HasIndex(i => i.Tipo);
         builder.HasIndex(i => i.Modalidad);
+
+        // Unico solo entre importados: los creados en el CRM no tienen referencia.
+        builder.Property(i => i.ExternalRef).HasMaxLength(100);
+        builder.HasIndex(i => i.ExternalRef).IsUnique().HasFilter("\"ExternalRef\" IS NOT NULL");
     }
 }

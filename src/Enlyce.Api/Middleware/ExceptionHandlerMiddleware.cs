@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Enlyce.Application.Billing;
 using Enlyce.Domain.Errors;
+using Enlyce.Domain.Imports;
 
 namespace Enlyce.Api.Middleware;
 
@@ -49,6 +50,7 @@ public class ExceptionHandlerMiddleware
         {
             DomainError e => (HttpStatusCode.BadRequest, e.Message),
             UnauthorizedAccessException e => (HttpStatusCode.Unauthorized, e.Message),
+            ExternalSourceException e => (HttpStatusCode.BadGateway, e.Message),
             PaymentGatewayUnavailableException e => (HttpStatusCode.ServiceUnavailable, e.Message),
             InvalidOperationException e => (HttpStatusCode.Conflict, e.Message),
             _ => (HttpStatusCode.InternalServerError, "Error interno del servidor.")
