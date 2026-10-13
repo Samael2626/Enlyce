@@ -63,3 +63,4 @@ tools/plantuml/*.jar
 
 # Reportes locales de escaneo ofensivo
 security-reports/
+graphify-out/
