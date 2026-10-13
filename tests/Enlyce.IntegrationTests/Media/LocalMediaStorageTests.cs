@@ -20,7 +20,7 @@ public sealed class LocalMediaStorageTests : IDisposable
             PublicBaseUrl = "https://cdn.enlyce.test/",
             VariantWidths = [1600, 800, 400],
             Quality = 80
-        }));
+        }), new ImageVariantProcessor());
 
     private static MemoryStream Png(int width, int height)
     {

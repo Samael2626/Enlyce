@@ -1,29 +1,25 @@
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using Enlyce.Domain.Errors;
 using Enlyce.Domain.Media;
 using Enlyce.Domain.Ports;
 using Microsoft.Extensions.Options;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
 
 namespace Enlyce.Infrastructure.Media;
 
-// Adaptador inicial: escribe variantes WebP en disco y las sirve por static
-// files. Cambiar a S3 u otro proveedor solo implica otra implementacion del
-// puerto; Domain y Application no se enteran.
+// Adaptador local: escribe las variantes WebP en disco y las sirve por static
+// files. El procesado de imagen lo hace ImageVariantProcessor, compartido con
+// el adaptador S3; aqui solo cambia donde se escriben los bytes.
 public sealed partial class LocalMediaStorage : IMediaStorage
 {
     [GeneratedRegex(@"^([0-9a-f]{16})-\d+\.webp$", RegexOptions.IgnoreCase)]
     private static partial Regex VariantFileName();
 
     private readonly MediaStorageOptions _options;
+    private readonly ImageVariantProcessor _processor;
 
-    public LocalMediaStorage(IOptions<MediaStorageOptions> options)
+    public LocalMediaStorage(IOptions<MediaStorageOptions> options, ImageVariantProcessor processor)
     {
         _options = options.Value;
+        _processor = processor;
 
         if (_options.VariantWidths.Length == 0)
             throw new InvalidOperationException("MediaStorage:VariantWidths no puede estar vacio.");
@@ -31,66 +27,25 @@ public sealed partial class LocalMediaStorage : IMediaStorage
 
     public async Task<StoredMedia> StoreAsync(MediaUpload upload, CancellationToken ct = default)
     {
-        // Se materializa en memoria para poder hashear y decodificar sin depender
-        // de que el Stream de origen admita seek.
-        using var buffer = new MemoryStream();
-        await upload.Content.CopyToAsync(buffer, ct);
-        buffer.Position = 0;
-
-        if (buffer.Length != upload.SizeBytes)
-            MediaConstraints.ValidateDescriptor(upload.ContentType, buffer.Length);
-
-        using var image = await LoadAsync(buffer, ct);
-        MediaConstraints.ValidateDimensions(image.Width, image.Height);
-
-        buffer.Position = 0;
-        var fingerprint = Convert.ToHexString(SHA256.HashData(buffer.ToArray()))[..16].ToLowerInvariant();
+        var processed = await _processor.ProcessAsync(upload, _options.VariantWidths, _options.Quality, ct);
 
         var folder = Path.Combine(_options.RootPath, "publicaciones", upload.PublicationId.ToString());
         Directory.CreateDirectory(folder);
 
-        var widths = _options.VariantWidths
-            .Where(width => width > 0)
-            .Distinct()
-            .OrderByDescending(width => width)
-            .ToArray();
-
-        // Sin FileFormat explicito ImageSharp puede salir sin perdida y los
-        // archivos se van a megabytes, que es justo lo que se quiere evitar.
-        var encoder = new WebpEncoder
+        var variants = new List<MediaVariant>(processed.Variants.Count);
+        foreach (var variant in processed.Variants)
         {
-            Quality = _options.Quality,
-            FileFormat = WebpFileFormatType.Lossy
-        };
-        var variants = new List<MediaVariant>(widths.Length);
-
-        foreach (var width in widths)
-        {
-            // Max preserva la relacion de aspecto y nunca agranda la original.
-            var target = Math.Min(width, image.Width);
-            using var variant = image.Clone(context => context.Resize(new ResizeOptions
-            {
-                Size = new Size(target, 0),
-                Mode = ResizeMode.Max
-            }));
-
-            var fileName = $"{fingerprint}-{target}.webp";
+            var fileName = $"{processed.Fingerprint}-{variant.Width}.webp";
             var path = Path.Combine(folder, fileName);
 
             await using (var output = File.Create(path))
-                await variant.SaveAsWebpAsync(output, encoder, ct);
+                await output.WriteAsync(variant.Content, ct);
 
-            variants.Add(new MediaVariant(BuildUrl(upload.PublicationId, fileName), target));
+            variants.Add(new MediaVariant(BuildUrl(upload.PublicationId, fileName), variant.Width));
         }
 
-        var canonical = variants[0];
-        var scale = (double)canonical.Width / image.Width;
-
-        return new StoredMedia(
-            canonical.Url,
-            canonical.Width,
-            (int)Math.Round(image.Height * scale),
-            variants);
+        var canonical = processed.Variants[0];
+        return new StoredMedia(variants[0].Url, canonical.Width, canonical.Height, variants);
     }
 
     public Task RemoveAsync(Guid publicationId, string url, CancellationToken ct = default)
@@ -126,22 +81,6 @@ public sealed partial class LocalMediaStorage : IMediaStorage
         var fileName = Path.GetFileName(uri.IsAbsoluteUri ? uri.LocalPath : url);
         var match = VariantFileName().Match(fileName);
         return match.Success ? match.Groups[1].Value : null;
-    }
-
-    private static async Task<Image> LoadAsync(Stream content, CancellationToken ct)
-    {
-        try
-        {
-            return await Image.LoadAsync(new DecoderOptions { MaxFrames = 1 }, content, ct);
-        }
-        catch (UnknownImageFormatException)
-        {
-            throw new DomainError("El archivo no es una imagen valida.");
-        }
-        catch (InvalidImageContentException)
-        {
-            throw new DomainError("La imagen esta corrupta o no se puede leer.");
-        }
     }
 
     private string BuildUrl(Guid publicationId, string fileName) =>

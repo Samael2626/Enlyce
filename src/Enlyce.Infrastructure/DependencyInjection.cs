@@ -1,3 +1,4 @@
+using Amazon.S3;
 using Enlyce.Application.Auth;
 using Enlyce.Application.Billing;
 using Enlyce.Application.PublicCatalog;
@@ -6,6 +7,7 @@ using Enlyce.Domain.Ports;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Billing;
 using Enlyce.Infrastructure.Email;
+using Enlyce.Infrastructure.Imports;
 using Enlyce.Infrastructure.Media;
 using Enlyce.Infrastructure.Persistence;
 using Enlyce.Infrastructure.Persistence.Repositories;
@@ -46,9 +48,13 @@ public static class DependencyInjection
         services.AddScoped<IWebAnalyticsRepository, WebAnalyticsRepository>();
         services.AddScoped<IPropertyPublicationAdminReadRepository, PropertyPublicationAdminReadRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
-        services.AddSingleton<IMediaStorage, LocalMediaStorage>();
+        services.AddSingleton<ImageVariantProcessor>();
+        AddMediaStorage(services, configuration);
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.Configure<WasiOptions>(configuration.GetSection(WasiOptions.SectionName));
+        services.AddHttpClient<IExternalListingSource, WasiListingSource>(client =>
+            client.Timeout = TimeSpan.FromSeconds(30));
         services.AddScoped<ITokenService, JwtTokenService>();
         services.Configure<WompiOptions>(configuration.GetSection(WompiOptions.SectionName));
         services.AddSingleton<WompiPaymentGateway>();
@@ -56,5 +62,34 @@ public static class DependencyInjection
         services.AddSingleton<IPaymentEventVerifier>(provider => provider.GetRequiredService<WompiPaymentGateway>());
 
         return services;
+    }
+
+    // Elige el adaptador de medios segun MediaStorage:Provider. "s3" registra un
+    // cliente S3-compatible (Cloudflare R2) y el adaptador S3; cualquier otro
+    // valor usa el adaptador local en disco.
+    private static void AddMediaStorage(IServiceCollection services, IConfiguration configuration)
+    {
+        var provider = configuration[$"{MediaStorageOptions.SectionName}:Provider"] ?? "local";
+        if (!string.Equals(provider, "s3", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IMediaStorage, LocalMediaStorage>();
+            return;
+        }
+
+        var s3 = configuration.GetSection($"{MediaStorageOptions.SectionName}:S3").Get<S3StorageOptions>() ?? new S3StorageOptions();
+        if (string.IsNullOrWhiteSpace(s3.ServiceUrl) || string.IsNullOrWhiteSpace(s3.AccessKey) || string.IsNullOrWhiteSpace(s3.SecretKey))
+            throw new InvalidOperationException("Con MediaStorage:Provider=s3 configura ServiceUrl, AccessKey y SecretKey fuera del repositorio.");
+
+        services.AddSingleton<IAmazonS3>(_ =>
+        {
+            var config = new AmazonS3Config
+            {
+                ServiceURL = s3.ServiceUrl,
+                ForcePathStyle = s3.ForcePathStyle,
+                AuthenticationRegion = s3.Region
+            };
+            return new AmazonS3Client(s3.AccessKey, s3.SecretKey, config);
+        });
+        services.AddSingleton<IMediaStorage, S3MediaStorage>();
     }
 }
