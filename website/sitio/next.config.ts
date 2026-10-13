@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const apiUrl = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5019");
 const mapTileUrl = process.env.NEXT_PUBLIC_MAP_TILE_URL?.trim() || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const mapTileOrigin = new URL(mapTileUrl.replace(/\{[^}]+\}/g, "0")).origin;
+// Origen publico de los medios (R2 u otro CDN). Vacio cuando las fotos las
+// sirve la propia API bajo /media (Provider=local).
+const mediaUrl = process.env.NEXT_PUBLIC_MEDIA_URL?.trim();
+const mediaOrigin = mediaUrl ? new URL(mediaUrl).origin : "";
 const isLocalApi = ["localhost", "127.0.0.1", "::1"].includes(apiUrl.hostname);
 const developmentScriptSource = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
 
@@ -15,7 +19,7 @@ const nextConfig: NextConfig = {
       `script-src 'self' 'unsafe-inline'${developmentScriptSource}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      `img-src 'self' data: blob: ${connectSource} ${mapTileOrigin}`,
+      `img-src 'self' data: blob: ${connectSource} ${mapTileOrigin}${mediaOrigin ? " " + mediaOrigin : ""}`,
       `connect-src 'self' ${connectSource}`,
       "object-src 'none'",
       "base-uri 'self'",
@@ -44,6 +48,13 @@ const nextConfig: NextConfig = {
         port: apiUrl.port || undefined,
         pathname: "/media/**",
       },
+      ...(mediaOrigin
+        ? [{
+            protocol: new URL(mediaOrigin).protocol.replace(":", "") as "http" | "https",
+            hostname: new URL(mediaOrigin).hostname,
+            pathname: "/**",
+          } as const]
+        : []),
     ],
     // Next 16 bloquea optimizar imagenes de IPs privadas por riesgo de SSRF.
     // Solo se abre cuando la API es la local de desarrollo; con un host real
