@@ -10,7 +10,7 @@ namespace Enlyce.Infrastructure.Media;
 // Adaptador S3-compatible (Cloudflare R2, AWS S3). Sube las variantes WebP al
 // bucket y construye las URL publicas. El procesado de imagen es el mismo que
 // usa el adaptador local; aqui solo cambia el destino de los bytes.
-public sealed partial class S3MediaStorage : IMediaStorage
+public sealed partial class S3MediaStorage : IMediaStorage, IOrphanMediaStorage
 {
     [GeneratedRegex(@"^([0-9a-f]{16})-\d+\.webp$", RegexOptions.IgnoreCase)]
     private static partial Regex VariantFileName();
@@ -84,6 +84,37 @@ public sealed partial class S3MediaStorage : IMediaStorage
             BucketName = _options.S3.Bucket,
             Objects = listed.S3Objects.Select(o => new KeyVersion { Key = o.Key }).ToList()
         }, ct);
+    }
+
+    public async Task<IReadOnlyList<StoredObjectInfo>> ListObjectsAsync(CancellationToken ct = default)
+    {
+        var result = new List<StoredObjectInfo>();
+        string? token = null;
+        do
+        {
+            var page = await _client.ListObjectsV2Async(new ListObjectsV2Request
+            {
+                BucketName = _options.S3.Bucket,
+                Prefix = string.IsNullOrWhiteSpace(_options.S3.KeyPrefix) ? "publicaciones/" : $"{_options.S3.KeyPrefix.Trim('/')}/publicaciones/",
+                ContinuationToken = token
+            }, ct);
+            result.AddRange((page.S3Objects ?? []).Select(item => new StoredObjectInfo(item.Key, item.Size ?? 0)));
+            token = page.IsTruncated == true ? page.NextContinuationToken : null;
+        } while (token is not null);
+        return result;
+    }
+
+    public async Task DeleteObjectsAsync(IReadOnlyCollection<string> keys, CancellationToken ct = default)
+    {
+        foreach (var batch in keys.Chunk(1000))
+        {
+            if (batch.Length == 0) continue;
+            await _client.DeleteObjectsAsync(new DeleteObjectsRequest
+            {
+                BucketName = _options.S3.Bucket,
+                Objects = batch.Select(key => new KeyVersion { Key = key }).ToList()
+            }, ct);
+        }
     }
 
     private static string? ExtractFingerprint(string url)

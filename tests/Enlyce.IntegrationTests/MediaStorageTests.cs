@@ -1,10 +1,14 @@
 using System.Text;
+using Amazon.S3;
+using Amazon.S3.Model;
 using Enlyce.Domain.Media;
 using Enlyce.Infrastructure;
 using Enlyce.Infrastructure.Media;
 using Enlyce.Domain.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using NSubstitute;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -97,5 +101,38 @@ public class MediaStorageProviderSelectionTests
             ["MediaStorage:S3:Bucket"] = "enlyce-media",
             ["MediaStorage:S3:PublicBaseUrl"] = "https://media.enlyce.test",
         }));
+    }
+}
+
+public sealed class S3OrphanStorageAdapterTests
+{
+    [Fact]
+    public async Task ListsAllConfiguredPublicationObjectsAndDeletesRequestedKeys()
+    {
+        var client = Substitute.For<IAmazonS3>();
+        client.ListObjectsV2Async(Arg.Any<ListObjectsV2Request>(), Arg.Any<CancellationToken>())
+            .Returns(new ListObjectsV2Response
+            {
+                IsTruncated = false,
+                S3Objects = [new S3Object { Key = "prefix/publicaciones/abc.webp", Size = 42 }]
+            });
+        client.DeleteObjectsAsync(Arg.Any<DeleteObjectsRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new DeleteObjectsResponse()));
+        var storage = new S3MediaStorage(client, Options.Create(new MediaStorageOptions
+        {
+            S3 = new S3StorageOptions { Bucket = "test-bucket", PublicBaseUrl = "https://media.example", KeyPrefix = "prefix" }
+        }), new ImageVariantProcessor());
+
+        var listed = await storage.ListObjectsAsync();
+        await storage.DeleteObjectsAsync(["prefix/publicaciones/abc.webp"]);
+
+        Assert.Single(listed);
+        Assert.Equal(42, listed[0].Size);
+        await client.Received(1).ListObjectsV2Async(
+            Arg.Is<ListObjectsV2Request>(request => request.BucketName == "test-bucket" && request.Prefix == "prefix/publicaciones/"),
+            Arg.Any<CancellationToken>());
+        await client.Received(1).DeleteObjectsAsync(
+            Arg.Is<DeleteObjectsRequest>(request => request.BucketName == "test-bucket" && request.Objects.Count == 1 && request.Objects[0].Key == "prefix/publicaciones/abc.webp"),
+            Arg.Any<CancellationToken>());
     }
 }

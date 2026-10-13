@@ -24,6 +24,7 @@ using Enlyce.Api.Endpoints.LeadSla;
 using Enlyce.Api.Endpoints.Pipeline;
 using Enlyce.Api.Endpoints.Politica;
 using Enlyce.Api.Endpoints.PublicationMedia;
+using Enlyce.Api.Endpoints.Media;
 using Enlyce.Api.Endpoints.Publications;
 using Enlyce.Api.Endpoints.PublicCatalog;
 using Enlyce.Api.Endpoints.Visitas;
@@ -120,6 +121,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<LoginAttemptGuard>();
 builder.Services.AddSingleton<Enlyce.Api.Endpoints.Imports.ImportJobRunner>();
+builder.Services.AddSingleton<MediaCleanupJobRunner>();
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(180);
@@ -337,6 +339,7 @@ app.MapContacts();
 app.MapTasks();
 app.MapDemands();
 app.MapInmuebles();
+app.MapMediaCleanup();
 app.MapImports();
 app.MapAuth();
 app.MapPolitica();

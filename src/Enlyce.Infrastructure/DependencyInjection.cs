@@ -4,6 +4,7 @@ using Enlyce.Application.Billing;
 using Enlyce.Application.PublicCatalog;
 using Enlyce.Application.Publications;
 using Enlyce.Domain.Ports;
+using Enlyce.Application.Media;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Billing;
 using Enlyce.Infrastructure.Email;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IPropertyPublicationRepository, PropertyPublicationRepository>();
         services.AddScoped<IInmuebleRepository, InmuebleRepository>();
         services.AddScoped<Enlyce.Application.UseCases.ListInmuebles.IInmuebleListReadRepository, InmuebleListReadRepository>();
+        services.AddScoped<IPropertyPhotoReferenceReadRepository, PropertyPhotoReferenceReadRepository>();
         services.AddScoped<IPropietarioRepository, PropietarioRepository>();
         services.AddScoped<IAsesorRepository, AsesorRepository>();
         services.AddScoped<IConsentimientoRepository, ConsentimientoRepository>();
@@ -93,5 +95,7 @@ public static class DependencyInjection
             return new AmazonS3Client(s3.AccessKey, s3.SecretKey, config);
         });
         services.AddSingleton<IMediaStorage, S3MediaStorage>();
+        services.AddSingleton<IOrphanMediaStorage>(sp => (IOrphanMediaStorage)sp.GetRequiredService<IMediaStorage>());
+        services.AddScoped<ICleanupOrphanMediaHandler, CleanupOrphanMediaHandler>();
     }
 }
