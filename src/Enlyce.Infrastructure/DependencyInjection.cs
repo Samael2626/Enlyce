@@ -51,9 +51,6 @@ public static class DependencyInjection
         AddMediaStorage(services, configuration);
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
-        services.Configure<WasiOptions>(configuration.GetSection(WasiOptions.SectionName));
-        services.AddHttpClient<IExternalListingSource, WasiListingSource>(client =>
-            client.Timeout = TimeSpan.FromSeconds(30));
         services.AddScoped<ITokenService, JwtTokenService>();
         services.Configure<WompiOptions>(configuration.GetSection(WompiOptions.SectionName));
         services.AddSingleton<WompiPaymentGateway>();
