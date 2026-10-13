@@ -119,6 +119,7 @@ builder.Services.AddSingleton<IPublicLinks, PublicLinks>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<LoginAttemptGuard>();
+builder.Services.AddSingleton<Enlyce.Api.Endpoints.Imports.ImportJobRunner>();
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(180);

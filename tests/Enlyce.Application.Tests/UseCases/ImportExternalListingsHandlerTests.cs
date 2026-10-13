@@ -255,6 +255,30 @@ public sealed class ImportExternalListingsHandlerTests
     }
 
     [Fact]
+    public async Task CancelacionAMitadDeFotos_LimpiaLasYaSubidas()
+    {
+        using var cts = new CancellationTokenSource();
+        var downloads = 0;
+        _source.DownloadPhotoAsync(Arg.Any<ExternalPhoto>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                if (++downloads == 3)
+                {
+                    cts.Cancel();
+                    throw new OperationCanceledException(cts.Token);
+                }
+                return new ExternalPhotoContent("f.jpg", "image/jpeg", 3, new MemoryStream([1, 2, 3]));
+            });
+        GivenListings(Listing(photos: 5));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            _handler.HandleAsync(new ImportExternalListingsCommand(false, _admin.Id), cts.Token));
+
+        await _storage.Received(2).RemoveAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.Empty(_savedPublications);
+    }
+
+    [Fact]
     public async Task FalloDelOrigen_SePropagaRuidoso()
     {
         _source.GetListingsAsync(Arg.Any<CancellationToken>())

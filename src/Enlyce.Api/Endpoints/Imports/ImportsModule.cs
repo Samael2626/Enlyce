@@ -3,15 +3,23 @@ using Enlyce.Application.Imports;
 
 namespace Enlyce.Api.Endpoints.Imports;
 
+public sealed record ImportStatusResponse(ImportJobStatus Trabajo, ImportedListingsCounts EnBase);
+
 public static class ImportsModule
 {
     public static void MapImports(this IEndpointRouteBuilder app)
     {
-        // dryRun=true por defecto: escribir en el CRM debe pedirse explicitamente.
+        var group = app.MapGroup("/api/import/wasi")
+            .WithTags("Importaciones")
+            .RequireAuthorization("Administrador");
+
+        // dryRun=true por defecto y sincrono: no baja fotos, responde en segundos.
+        // dryRun=false corre en segundo plano (202) y se sigue con GET /status.
         // publish=true publica en la web las que cumplan las reglas; sin alertas de busqueda.
-        app.MapPost("/api/import/wasi", async (
+        group.MapPost("/", async (
             HttpContext http,
             ICommandHandler<ImportExternalListingsCommand, ImportExternalListingsResponse> handler,
+            ImportJobRunner runner,
             CancellationToken ct,
             bool dryRun = true,
             bool publish = false) =>
@@ -20,13 +28,26 @@ public static class ImportsModule
             if (actorId is null)
                 return Results.Forbid();
 
-            var result = await handler.HandleAsync(new ImportExternalListingsCommand(dryRun, actorId.Value, publish), ct);
-            return Results.Ok(result);
+            if (dryRun)
+                return Results.Ok(await handler.HandleAsync(
+                    new ImportExternalListingsCommand(true, actorId.Value, publish), ct));
+
+            return runner.TryStart(actorId.Value, publish, out var status)
+                ? Results.Accepted("/api/import/wasi/status", status)
+                : Results.Conflict(status);
         })
-        .WithTags("Importaciones")
         .WithName("ImportWasiListings")
-        .RequireAuthorization("Administrador")
         .Produces<ImportExternalListingsResponse>()
+        .Produces<ImportJobStatus>(StatusCodes.Status202Accepted)
+        .Produces<ImportJobStatus>(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status502BadGateway);
+
+        group.MapGet("/status", async (
+            ImportJobRunner runner,
+            IImportedListingsReadRepository imported,
+            CancellationToken ct) =>
+            Results.Ok(new ImportStatusResponse(runner.Status, await imported.CountAsync("wasi", ct))))
+        .WithName("GetWasiImportStatus")
+        .Produces<ImportStatusResponse>();
     }
 }

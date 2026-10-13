@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentOrderRepository, PaymentOrderRepository>();
         services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
         services.AddScoped<IWebAnalyticsRepository, WebAnalyticsRepository>();
+        services.AddScoped<Enlyce.Application.Imports.IImportedListingsReadRepository, ImportedListingsReadRepository>();
         services.AddScoped<IPropertyPublicationAdminReadRepository, PropertyPublicationAdminReadRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
         services.AddSingleton<ImageVariantProcessor>();

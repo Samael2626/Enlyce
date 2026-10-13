@@ -202,46 +202,56 @@ public sealed class ImportExternalListingsHandler
 
         var stored = new List<string>();
         var failures = new List<string>();
-        foreach (var photo in OrderedPhotos(listing))
-        {
-            try
-            {
-                var content = await _source.DownloadPhotoAsync(photo, ct);
-                await using var stream = content.Content;
-                var upload = MediaUpload.Create(
-                    publication.Id, content.FileName, content.ContentType, content.SizeBytes, stream);
-                var media = await _storage.StoreAsync(upload, ct);
-                stored.Add(media.Url);
-                publication.AddPhoto(media.Url, AltText(photo, property), stored.Count - 1, stored.Count == 1);
-            }
-            catch (Exception error) when (error is DomainError or ExternalSourceException)
-            {
-                // Una foto rota o pequena no tumba el inmueble; queda en el reporte.
-                failures.Add($"Foto {photo.Position}: {error.Message}");
-            }
-        }
-
         string? draftReason = null;
-        if (command.Publish)
-        {
-            try
-            {
-                publication.Publish();
-            }
-            catch (DomainError error)
-            {
-                // El dominio decide que es publicable; lo que no cumple queda en borrador.
-                draftReason = error.Message;
-            }
-        }
-
         try
         {
+            foreach (var photo in OrderedPhotos(listing))
+            {
+                string? pending = null;
+                try
+                {
+                    var content = await _source.DownloadPhotoAsync(photo, ct);
+                    await using var stream = content.Content;
+                    var upload = MediaUpload.Create(
+                        publication.Id, content.FileName, content.ContentType, content.SizeBytes, stream);
+                    pending = (await _storage.StoreAsync(upload, ct)).Url;
+                    publication.AddPhoto(pending, AltText(photo, property), stored.Count, stored.Count == 0);
+                    stored.Add(pending);
+                    pending = null;
+                }
+                catch (Exception error) when (error is DomainError or ExternalSourceException)
+                {
+                    // Una foto rota o pequena no tumba el inmueble; queda en el reporte.
+                    failures.Add($"Foto {photo.Position}: {error.Message}");
+                    if (pending is not null)
+                        await _storage.RemoveAsync(publication.Id, pending, CancellationToken.None);
+                }
+                catch when (pending is not null)
+                {
+                    await _storage.RemoveAsync(publication.Id, pending, CancellationToken.None);
+                    throw;
+                }
+            }
+
+            if (command.Publish)
+            {
+                try
+                {
+                    publication.Publish();
+                }
+                catch (DomainError error)
+                {
+                    // El dominio decide que es publicable; lo que no cumple queda en borrador.
+                    draftReason = error.Message;
+                }
+            }
+
             await _publications.SaveAsync(publication, ct);
         }
         catch
         {
-            // Sin publicacion guardada, las variantes en disco quedarian huerfanas.
+            // Sin publicacion guardada (fallo o cancelacion a mitad), las variantes
+            // ya subidas quedarian huerfanas en el almacenamiento.
             foreach (var url in stored)
                 await _storage.RemoveAsync(publication.Id, url, CancellationToken.None);
             throw;
