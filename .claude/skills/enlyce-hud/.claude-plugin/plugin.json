@@ -1,0 +1,1 @@
+{ "name": "enlyce-hud", "version": "0.1.0", "description": "Barra de estado, panel /enlyce y avisos para Enlyce: rama, DB, API y tests", "types": "./types/index.d.ts" }
