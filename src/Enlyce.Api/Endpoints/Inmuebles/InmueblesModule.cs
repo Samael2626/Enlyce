@@ -1,6 +1,7 @@
 using Enlyce.Application.Abstractions;
 using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.GetInmuebleById;
+using Enlyce.Application.UseCases.ListInmuebles;
 using Enlyce.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,6 +13,11 @@ public static class InmueblesModule
     {
         // Inmueble solo referencia al propietario; no tiene asesor responsable.
         var group = app.MapGroup("/api/inmuebles").WithTags("Inmuebles").RequireAuthorization();
+
+        group.MapGet("/", async (int? page, int? pageSize, string? search, string? modalidad, string? estado,
+            IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, CancellationToken ct) =>
+            Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(page ?? 1, pageSize ?? 20, search, modalidad, estado), ct)))
+            .WithName("ListInmuebles");
 
         group.MapGet("/{id:guid}", async (
             Guid id,

@@ -423,6 +423,10 @@ export function useLeadSlaAlerts() {
 }
 
 // Inmuebles
+export function useInmuebles(page: number) {
+  return useQuery({ queryKey: ["inmuebles", "list", page], queryFn: () => api.getInmuebles({ page, pageSize: 20 }) })
+}
+
 export function useInmueble(id: string) {
   return useQuery({
     queryKey: ["inmuebles", id],

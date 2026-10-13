@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerDemandRepository, CustomerDemandRepository>();
         services.AddScoped<IPropertyPublicationRepository, PropertyPublicationRepository>();
         services.AddScoped<IInmuebleRepository, InmuebleRepository>();
+        services.AddScoped<Enlyce.Application.UseCases.ListInmuebles.IInmuebleListReadRepository, InmuebleListReadRepository>();
         services.AddScoped<IPropietarioRepository, PropietarioRepository>();
         services.AddScoped<IAsesorRepository, AsesorRepository>();
         services.AddScoped<IConsentimientoRepository, ConsentimientoRepository>();

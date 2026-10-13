@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useCreateInmueble } from "@/hooks/useApi"
+import { useCreateInmueble, useInmuebles } from "@/hooks/useApi"
 import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE } from "@/lib/constants"
 import {
   Home,
@@ -10,6 +10,8 @@ import {
 
 export function InmueblesPage() {
   const [showForm, setShowForm] = useState(false)
+  const [page, setPage] = useState(1)
+  const inventory = useInmuebles(page)
   const createInmueble = useCreateInmueble()
 
   const [form, setForm] = useState({
@@ -271,14 +273,21 @@ export function InmueblesPage() {
         </div>
       )}
 
-      {/* Empty state */}
-      <div className="crm-panel border-t-4 border-t-accent py-16 text-center">
-        <Home className="mx-auto mb-4 h-10 w-10 text-accent" />
-        <h3 className="font-display text-2xl">Primer inmueble</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Registra tu primer inmueble para comenzar
-        </p>
-      </div>
+      {inventory.isLoading ? <div className="crm-panel p-8 text-center text-muted-foreground">Cargando inmuebles…</div> : inventory.isError ? <div role="alert" className="crm-panel p-8 text-center text-destructive">No se pudo cargar el inventario.</div> : inventory.data?.total === 0 ? (
+        <div className="crm-panel border-t-4 border-t-accent py-16 text-center">
+          <Home className="mx-auto mb-4 h-10 w-10 text-accent" />
+          <h3 className="font-display text-2xl">Primer inmueble</h3>
+          <p className="text-sm text-muted-foreground mt-1">Registra tu primer inmueble para comenzar</p>
+        </div>
+      ) : (
+        <div className="crm-panel overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead><tr className="border-b text-muted-foreground"><th className="p-4">Nombre</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th></tr></thead>
+            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4 font-medium">{item.nombre}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td></tr>)}</tbody>
+          </table>
+          <div className="flex items-center justify-between p-4"><span className="text-sm text-muted-foreground">{inventory.data?.total} inmuebles</span><div className="flex gap-2"><button className="crm-button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button><button className="crm-button" disabled={page * (inventory.data?.pageSize ?? 20) >= (inventory.data?.total ?? 0)} onClick={() => setPage(page + 1)}>Siguiente</button></div></div>
+        </div>
+      )}
     </div>
   )
 }

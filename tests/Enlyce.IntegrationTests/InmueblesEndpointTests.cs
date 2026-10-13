@@ -90,6 +90,38 @@ public class InmueblesEndpointTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task ListInmuebles_PaginatesAndFilters()
+    {
+        foreach (var name in new[] { "Inventario filtro casa 1", "Inventario filtro casa 2", "Inventario filtro apto" })
+        {
+            var type = name.EndsWith("apto") ? TipoInmueble.Apartamento : TipoInmueble.Casa;
+            await _client.PostAsJsonAsync("/api/inmuebles", new CreateInmuebleRequest(name, null, type,
+                ModalidadInmueble.Venta, "Calle 10", "Bogota", null, 100_000_000m, "COP", 50, 2, 1, 0, _propietarioId));
+        }
+
+        var page = await _client.GetFromJsonAsync<Enlyce.Application.UseCases.ListInmuebles.ListInmueblesResponse>("/api/inmuebles?page=1&pageSize=2");
+        var filtered = await _client.GetFromJsonAsync<Enlyce.Application.UseCases.ListInmuebles.ListInmueblesResponse>("/api/inmuebles?page=1&pageSize=10&search=Inventario%20filtro%20casa");
+
+        Assert.NotNull(page);
+        Assert.Equal(2, page!.Items.Count);
+        Assert.Equal(2, page.PageSize);
+        Assert.True(page.Total >= 3);
+        Assert.NotNull(filtered);
+        Assert.Equal(2, filtered!.Total);
+        Assert.All(filtered.Items, item => Assert.Contains("casa", item.Nombre, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ListInmuebles_NoMatches_ReturnsEmptyStateData()
+    {
+        var result = await _client.GetFromJsonAsync<Enlyce.Application.UseCases.ListInmuebles.ListInmueblesResponse>("/api/inmuebles?search=no-existe-en-inventario-xyz");
+
+        Assert.NotNull(result);
+        Assert.Empty(result!.Items);
+        Assert.Equal(0, result.Total);
+    }
+
+    [Fact]
     public async Task FullFlow_CreateGetInmueble()
     {
         // 1. Create

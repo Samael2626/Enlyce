@@ -324,6 +324,12 @@ class ApiClient {
     })
   }
 
+  async getInmuebles(filters: { page?: number; pageSize?: number; search?: string; modalidad?: string; estado?: string } = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "") params.set(key, String(value)) })
+    return this.request<{ items: { id: string; nombre: string; tipo: string; modalidad: string; estado: string; tienePublicacion: boolean }[]; page: number; pageSize: number; total: number }>(`/api/inmuebles?${params}`)
+  }
+
   async getInmuebleById(id: string) {
     return this.request<any>(`/api/inmuebles/${id}`)
   }
