@@ -1,7 +1,20 @@
 namespace Enlyce.Api.Middleware;
 
-public sealed class SecurityHeadersMiddleware(RequestDelegate next, IWebHostEnvironment environment)
+public sealed class SecurityHeadersMiddleware(RequestDelegate next, IWebHostEnvironment environment, IConfiguration configuration)
 {
+    // Origen publico de los medios (R2) para permitirlo en img-src cuando se sirve
+    // desde object storage; con Provider=local las fotos son del mismo origen.
+    private readonly string _mediaImgSrc = BuildMediaImgSrc(configuration);
+
+    private static string BuildMediaImgSrc(IConfiguration configuration)
+    {
+        if (!string.Equals(configuration["MediaStorage:Provider"], "s3", StringComparison.OrdinalIgnoreCase))
+            return string.Empty;
+
+        var baseUrl = configuration["MediaStorage:S3:PublicBaseUrl"]?.TrimEnd('/');
+        return string.IsNullOrWhiteSpace(baseUrl) ? string.Empty : " " + baseUrl;
+    }
+
     public Task InvokeAsync(HttpContext context)
     {
         context.Response.OnStarting(() =>
@@ -25,7 +38,7 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next, IWebHostEnvi
                       "script-src 'self'; " +
                       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
                       "font-src 'self' https://fonts.gstatic.com; " +
-                      "img-src 'self' data: blob:; " +
+                      "img-src 'self' data: blob:" + _mediaImgSrc + "; " +
                       "connect-src 'self'; " +
                       "base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
             }
