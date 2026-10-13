@@ -64,5 +64,15 @@ public sealed class Asesor
         return BCrypt.Net.BCrypt.Verify(password, PasswordHash);
     }
 
+    public void CambiarPasswordHash(string nuevoPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(nuevoPasswordHash))
+            throw new DomainError("El password hash es obligatorio.");
+
+        PasswordHash = nuevoPasswordHash;
+        // Rotar la contrasena invalida las sesiones emitidas con la anterior.
+        SessionVersion++;
+    }
+
     public void RevocarSesiones() => SessionVersion++;
 }

@@ -274,6 +274,23 @@ if (seedPublicCatalog || bootstrapAdministrator || app.Configuration.GetValue<bo
         await db.SaveChangesAsync();
     }
 
+    // Reset de contrasena de administracion controlado por entorno (operacion puntual).
+    // Desactivado por defecto; se habilita con Auth:ResetAdmin:Enabled y se revierte tras usarlo.
+    if (app.Configuration.GetValue<bool>("Auth:ResetAdmin:Enabled"))
+    {
+        var resetEmail = app.Configuration["Auth:ResetAdmin:Email"];
+        var resetPassword = app.Configuration["Auth:ResetAdmin:Password"];
+        if (string.IsNullOrWhiteSpace(resetEmail) || string.IsNullOrWhiteSpace(resetPassword) || resetPassword.Length < 8)
+            throw new InvalidOperationException("Configura el correo y una contrasena de reset de al menos 8 caracteres.");
+
+        var asesor = await db.Asesores.SingleOrDefaultAsync(a => a.Correo.Value == resetEmail);
+        if (asesor is not null)
+        {
+            asesor.CambiarPasswordHash(BCrypt.Net.BCrypt.HashPassword(resetPassword));
+            await db.SaveChangesAsync();
+        }
+    }
+
     if (seedPublicCatalog)
     {
         var mediaStorage = scope.ServiceProvider.GetRequiredService<IMediaStorage>();
