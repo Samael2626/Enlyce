@@ -2,11 +2,13 @@ import { useState } from "react"
 import { useCreateInmueble, useInmuebles, usePropertyDemandCounts } from "@/hooks/useApi"
 import { PropertyDemandsPanel } from "@/components/PropertyDemandsPanel"
 import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE } from "@/lib/constants"
+import { api } from "@/api/client"
 import {
   Home,
   Plus,
   X,
   Loader2,
+  Mail,
 } from "lucide-react"
 
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
@@ -15,6 +17,8 @@ export function InmueblesPage() {
   const [showForm, setShowForm] = useState(false)
   const [page, setPage] = useState(1)
   const [crossProperty, setCrossProperty] = useState<{ id: string; name: string } | null>(null)
+  const [emailingInventory, setEmailingInventory] = useState(false)
+  const [inventoryExportMessage, setInventoryExportMessage] = useState("")
   const inventory = useInmuebles(page)
   const demandCounts = usePropertyDemandCounts(inventory.data?.items.map((item) => item.id) ?? [])
   const createInmueble = useCreateInmueble()
@@ -87,14 +91,34 @@ export function InmueblesPage() {
             Catálogo de propiedades
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="crm-button"
-        >
-          <Plus className="h-4 w-4" />
-          Nuevo Inmueble
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={emailingInventory}
+            onClick={async () => {
+              setEmailingInventory(true)
+              setInventoryExportMessage("")
+              try {
+                const result = await api.emailPropertiesXlsx()
+                setInventoryExportMessage(`Se enviaron ${result.count} inmuebles al correo de tu cuenta.`)
+              } catch (error) {
+                setInventoryExportMessage(error instanceof Error ? error.message : "No se pudo enviar el archivo.")
+              } finally {
+                setEmailingInventory(false)
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded border border-border px-3 py-2 text-sm font-semibold text-foreground disabled:opacity-50"
+          >
+            <Mail className="h-4 w-4" />
+            {emailingInventory ? "Enviando…" : "Enviar inventario a mi correo"}
+          </button>
+          <button onClick={() => setShowForm(true)} className="crm-button">
+            <Plus className="h-4 w-4" />
+            Nuevo Inmueble
+          </button>
+        </div>
       </div>
+      {inventoryExportMessage && <p role="status" className="text-sm text-muted-foreground">{inventoryExportMessage}</p>}
 
       {/* Form modal */}
       {showForm && (

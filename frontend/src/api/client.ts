@@ -487,6 +487,10 @@ class ApiClient {
     return this.request<{ items: { id: string; nombre: string; tipo: string; modalidad: string; estado: string; tienePublicacion: boolean }[]; page: number; pageSize: number; total: number }>(`/api/inmuebles?${params}`)
   }
 
+  async emailPropertiesXlsx() {
+    return this.request<{ sent: boolean; count: number }>("/api/inmuebles/exportar-correo", { method: "POST" })
+  }
+
   async getInmuebleById(id: string) {
     return this.request<any>(`/api/inmuebles/${id}`)
   }

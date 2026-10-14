@@ -1,7 +1,9 @@
 using System.Globalization;
+using System.IO.Compression;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
+using System.Xml;
 using Enlyce.Api.Endpoints;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.Ports;
@@ -10,8 +12,45 @@ namespace Enlyce.Api.Endpoints.CsvExport;
 
 public static class CsvExportModule
 {
+    private const string SpreadsheetNamespace = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
     public static void MapCsvExport(this IEndpointRouteBuilder app)
     {
+        app.MapPost("/api/inmuebles/exportar-correo", async Task<IResult> (
+            HttpContext http,
+            IInmuebleRepository properties,
+            IEmailAttachmentSender email,
+            CancellationToken ct) =>
+        {
+            var recipient = http.User.FindFirst(ClaimTypes.Email)?.Value;
+            if (!MailAddress.TryCreate(recipient, out var recipientAddress))
+                return Results.BadRequest(new { error = "La cuenta no tiene correo asociado." });
+
+            var rows = await properties.GetAllAsync();
+            if (rows.Count == 0)
+                return Results.BadRequest(new { error = "No hay inmuebles para exportar." });
+            if (rows.Count > 50_000)
+                return Results.Problem("La exportacion supera el limite de 50.000 inmuebles.",
+                    statusCode: StatusCodes.Status413PayloadTooLarge);
+
+            var content = BuildPropertiesXlsx(rows);
+            if (content.Length > 20_000_000)
+                return Results.Problem("El archivo supera el limite de 20 MB para envio por correo.",
+                    statusCode: StatusCodes.Status413PayloadTooLarge);
+
+            var fileName = $"inmuebles-enlyce-{DateTime.UtcNow:yyyyMMdd}.xlsx";
+            var sent = await email.SendAttachmentAsync(recipientAddress.Address, "Inventario de inmuebles Enlyce",
+                $"Archivo Excel con {rows.Count} inmuebles activos visibles para tu cuenta.", fileName,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", content, ct);
+            return sent
+                ? Results.Ok(new { sent = true, count = rows.Count })
+                : Results.Problem("No se pudo enviar el archivo. Revisa la configuracion del correo.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+        })
+        .RequireAuthorization()
+        .RequireRateLimiting("client-export-email")
+        .WithName("EmailPropertiesXlsxExport");
+
         app.MapGet("/api/contactos/export.csv", async Task<IResult> (
             string? q,
             DateOnly? from,
@@ -134,6 +173,126 @@ public static class CsvExportModule
     {
         csv.AppendJoin(',', values.Select(value => $"\"{EscapeFormula(value).Replace("\"", "\"\"")}\""));
         csv.Append("\r\n");
+    }
+
+    private static byte[] BuildPropertiesXlsx(IReadOnlyCollection<Inmueble> properties)
+    {
+        var rows = new List<object?[]>
+        {
+            new object?[] { "id", "nombre", "descripcion", "tipo", "modalidad", "estado", "direccion", "barrio", "ciudad",
+                "departamento", "pais", "precio", "moneda", "metros_cuadrados", "habitaciones", "banos",
+                "parqueaderos", "creado", "referencia_externa", "caracteristicas_internas", "caracteristicas_externas" }
+        };
+        rows.AddRange(properties.Select(property => new object?[]
+        {
+            property.Id.ToString(), property.Nombre, property.Descripcion, property.Tipo.ToString(),
+            property.Modalidad.ToString(), property.Estado.ToString(), property.Direccion.Calle,
+            property.Direccion.Barrio ?? string.Empty, property.Direccion.Ciudad,
+            property.Direccion.Departamento ?? string.Empty, property.Direccion.Pais,
+            property.Precio.Monto, property.Precio.Moneda, property.MetrosCuadrados, property.Habitaciones,
+            property.Banos, property.Parqueaderos, property.FechaCreacion.ToString("O", CultureInfo.InvariantCulture),
+            property.ExternalRef ?? string.Empty, string.Join(", ", property.InternalFeatures),
+            string.Join(", ", property.ExternalFeatures)
+        }));
+
+        using var stream = new MemoryStream();
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            WriteZipEntry(archive, "[Content_Types].xml", """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>
+                """);
+            WriteZipEntry(archive, "_rels/.rels", """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>
+                """);
+            WriteZipEntry(archive, "xl/workbook.xml", """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Inmuebles" sheetId="1" r:id="rId1"/></sheets></workbook>
+                """);
+            WriteZipEntry(archive, "xl/_rels/workbook.xml.rels", """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>
+                """);
+
+            using var sheetStream = new MemoryStream();
+            using (var writer = XmlWriter.Create(sheetStream, new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = false }))
+            {
+                writer.WriteStartDocument(true);
+                writer.WriteStartElement("worksheet", SpreadsheetNamespace);
+                writer.WriteStartElement("sheetData", SpreadsheetNamespace);
+                for (var rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+                {
+                    writer.WriteStartElement("row", SpreadsheetNamespace);
+                    writer.WriteAttributeString("r", (rowIndex + 1).ToString(CultureInfo.InvariantCulture));
+                    for (var columnIndex = 0; columnIndex < rows[rowIndex].Length; columnIndex++)
+                    {
+                        var value = rows[rowIndex][columnIndex];
+                        if (value is null) continue;
+                        writer.WriteStartElement("c", SpreadsheetNamespace);
+                        writer.WriteAttributeString("r", $"{ColumnName(columnIndex + 1)}{rowIndex + 1}");
+                        if (value is string text)
+                        {
+                            writer.WriteAttributeString("t", "inlineStr");
+                            writer.WriteStartElement("is", SpreadsheetNamespace);
+                            writer.WriteStartElement("t", SpreadsheetNamespace);
+                            writer.WriteAttributeString("xml", "space", "http://www.w3.org/XML/1998/namespace", "preserve");
+                            writer.WriteString(SanitizeExcelText(text));
+                            writer.WriteEndElement();
+                            writer.WriteEndElement();
+                        }
+                        else
+                        {
+                            writer.WriteAttributeString("t", "n");
+                            writer.WriteElementString("v", SpreadsheetNamespace, Convert.ToString(value, CultureInfo.InvariantCulture)!);
+                        }
+                        writer.WriteEndElement();
+                    }
+                    writer.WriteEndElement();
+                }
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+            }
+            sheetStream.Position = 0;
+            var sheetEntry = archive.CreateEntry("xl/worksheets/sheet1.xml", CompressionLevel.Fastest);
+            using var entryStream = sheetEntry.Open();
+            sheetStream.CopyTo(entryStream);
+        }
+        return stream.ToArray();
+    }
+
+    private static void WriteZipEntry(ZipArchive archive, string path, string content)
+    {
+        var entry = archive.CreateEntry(path, CompressionLevel.Fastest);
+        using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
+        writer.Write(content.Trim());
+    }
+
+    private static string ColumnName(int column)
+    {
+        var name = string.Empty;
+        while (column > 0)
+        {
+            column--;
+            name = (char)('A' + column % 26) + name;
+            column /= 26;
+        }
+        return name;
+    }
+
+    private static string SanitizeExcelText(string value)
+    {
+        var sanitized = new StringBuilder(Math.Min(value.Length, 32_767));
+        foreach (var rune in value.EnumerateRunes())
+        {
+            var codePoint = rune.Value;
+            if (codePoint is 0x9 or 0xA or 0xD || codePoint is >= 0x20 and <= 0xD7FF ||
+                codePoint is >= 0xE000 and <= 0xFFFD || codePoint is >= 0x10000 and <= 0x10FFFF)
+                sanitized.Append(rune.ToString());
+            if (sanitized.Length >= 32_767)
+                break;
+        }
+        return sanitized.ToString();
     }
 
     private static string EscapeFormula(string value)
