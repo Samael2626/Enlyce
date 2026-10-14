@@ -215,6 +215,7 @@ Ruta: `/administrador/cruces/propiedades-clientes`.
 - Tabla de coincidencias: nombre, necesidad del cliente y acciones.
 - La interfaz cruza inmuebles con demanda de clientes. No se ven criterios, puntaje, filtros ni automatizacion en el inventario; revisar visualmente antes de definir la regla de matching.
 - No se conservaron nombres ni datos de clientes.
+- Evidencia: JSON de inventario `wasi-ui-...-1791954274748` (local del usuario, fuera del repo). Sin formularios ni acciones capturadas; las acciones de fila no tienen etiqueta legible. Orden, puntaje y reglas siguen **sin comprobar**.
 
 ## Pendiente de explorar
 
@@ -229,6 +230,22 @@ La navegacion y estructura principal ya estan inventariadas. Falta inspeccion vi
 - Flujos de Sitio web, Configuracion y Mi Cuenta.
 - Permisos, consentimiento y calculo de comision en inventario de aliados.
 - Criterios y puntaje de los dos cruces cliente-inmueble.
+
+## Comparacion con Enlyce (14 de octubre de 2026)
+
+| Funcion Wasi | Enlyce | Evidencia | Valor | Esfuerzo |
+|---|---|---|---|---|
+| Cruce clientes - inmuebles | Cubierta | `GET /api/demandas/{id}/coincidencias`, ficha de contacto | Alto | - |
+| Cruce inmuebles - clientes (conteo "Clientes posibles" + detalle) | Cubierta desde 14-oct (sin conteo en la lista) | `GET /api/inmuebles/{id}/demandas`, boton "Clientes posibles" en Inmuebles | Alto: al captar un inmueble se sabe a quien ofrecerlo | Bajo, sin esquema |
+| Inmuebles vinculados al cliente | Cubierta | `DemandPropertyLink` con estados | Alto | - |
+| Importar inmuebles | Parcial | Importacion Wasi en segundo plano (`WasiListingSource`); no hay carga de archivo generica | Medio | Medio |
+| Importar clientes | Faltante | Wasi muestra acceso "Importar clientes"; formato no observado | Medio: migracion inicial | Medio; exige consentimiento Ley 1581 por fila |
+| Exportar | Parcial | Enlyce exporta CSV de oportunidades/contactos; en Wasi no se encontro control de exportacion | Medio | - |
+| Red inmobiliaria / alianzas | Faltante | Formularios con nombre y ubicacion; tabla de aliados con comision y "Publicar en mi Pagina Web" | Incierto: depende de acuerdos entre inmobiliarias | Alto: multiempresa, permisos, comision |
+
+Decision: primera entrega = cruce inverso. Las demas brechas tienen menor impacto o exigen evidencia y decisiones (formato de importacion, modelo multiempresa) que aun no existen.
+
+Pendiente del cruce inverso: conteo de clientes posibles por fila del listado (evitar N consultas: requiere consulta agregada), y registrar cambios de estado del vinculo en el historial unificado.
 
 ## Comparacion inicial con Enlyce
 

@@ -180,6 +180,10 @@ class ApiClient {
     return this.request<import("@/lib/types").DemandPropertyMatch[]>(`/api/demandas/${demandId}/coincidencias`)
   }
 
+  async getPropertyDemandMatches(propertyId: string) {
+    return this.request<import("@/lib/types").PropertyDemandMatch[]>(`/api/inmuebles/${propertyId}/demandas`)
+  }
+
   async linkDemandProperty(demandId: string, propertyId: string) {
     return this.request(`/api/demandas/${demandId}/inmuebles/${propertyId}`, { method: "POST" })
   }

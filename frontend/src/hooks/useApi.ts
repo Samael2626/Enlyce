@@ -327,11 +327,25 @@ export function useDemandMatches(demandId: string) {
   })
 }
 
+export function usePropertyDemandMatches(propertyId: string) {
+  return useQuery({
+    queryKey: ["property-demands", propertyId],
+    queryFn: () => api.getPropertyDemandMatches(propertyId),
+    enabled: !!propertyId,
+  })
+}
+
+// El seguimiento es el mismo en ambos sentidos: refrescar las dos vistas
+function invalidateDemandLinks(queryClient: ReturnType<typeof useQueryClient>, demandId: string, propertyId: string) {
+  queryClient.invalidateQueries({ queryKey: ["demand-matches", demandId] })
+  queryClient.invalidateQueries({ queryKey: ["property-demands", propertyId] })
+}
+
 export function useLinkDemandProperty() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ demandId, propertyId }: { demandId: string; propertyId: string }) => api.linkDemandProperty(demandId, propertyId),
-    onSuccess: (_result, variables) => queryClient.invalidateQueries({ queryKey: ["demand-matches", variables.demandId] }),
+    onSuccess: (_result, variables) => invalidateDemandLinks(queryClient, variables.demandId, variables.propertyId),
   })
 }
 
@@ -339,7 +353,7 @@ export function useSetDemandPropertyStatus() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ demandId, propertyId, status }: { demandId: string; propertyId: string; status: string }) => api.setDemandPropertyStatus(demandId, propertyId, status),
-    onSuccess: (_result, variables) => queryClient.invalidateQueries({ queryKey: ["demand-matches", variables.demandId] }),
+    onSuccess: (_result, variables) => invalidateDemandLinks(queryClient, variables.demandId, variables.propertyId),
   })
 }
 

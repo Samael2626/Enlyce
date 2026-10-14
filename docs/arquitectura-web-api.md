@@ -45,6 +45,13 @@ Fuente UML editable: [`uml/arquitectura-web-api.puml`](uml/arquitectura-web-api.
 
 La respuesta también contiene el token para conservar el contrato de la API, pero el CRM no lo guarda ni lo usa. Zustand solo mantiene en memoria el usuario de la sesión; la autenticación depende de la cookie HttpOnly y se revalida con `GET /api/auth/me`. El cierre de sesión llama `POST /api/auth/logout` antes de limpiar el estado local.
 
+### Cruce demandas e inmuebles (2026-10-14)
+
+- Demanda a inmuebles: `GET /api/demandas/{id}/coincidencias`. Inmueble a demandas: `GET /api/inmuebles/{id}/demandas`.
+- Ambos sentidos usan la unica regla `CustomerDemand.Matches(Inmueble)` del dominio; no hay segunda implementacion.
+- El cruce inverso filtra demandas por alcance: administracion ve todas; el asesor solo las ligadas a sus oportunidades (o, sin oportunidad, a contactos que atiende). Omite contactos inactivos.
+- El seguimiento (`DemandPropertyLink`: sugerido, compartido, visitado, descartado) se guarda con los mismos endpoints `POST /api/demandas/{id}/inmuebles/{propertyId}` y `PUT .../estado`, desde la ficha de contacto o desde Inmuebles > Clientes posibles. Sin cambio de esquema.
+
 ### Desfases CRM/API cerrados el 2026-09-24
 
 - Pipeline alineado con `/api/pipeline/{id}/mover-etapa` y `/api/pipeline/{id}/asignar`.

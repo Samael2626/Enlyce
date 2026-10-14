@@ -32,6 +32,9 @@ public sealed class CustomerDemandRepository(EnlyceDbContext context) : ICustome
         await context.DemandPropertyLinks.AsNoTracking().Where(link => link.DemandId == demandId)
             .OrderByDescending(link => link.UpdatedAt).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<DemandPropertyLink>> GetDemandLinksAsync(Guid propertyId, CancellationToken ct = default) =>
+        await context.DemandPropertyLinks.AsNoTracking().Where(link => link.PropertyId == propertyId).ToListAsync(ct);
+
     public Task<DemandPropertyLink?> GetPropertyLinkAsync(Guid demandId, Guid propertyId, CancellationToken ct = default) =>
         context.DemandPropertyLinks.SingleOrDefaultAsync(link => link.DemandId == demandId && link.PropertyId == propertyId, ct);
 

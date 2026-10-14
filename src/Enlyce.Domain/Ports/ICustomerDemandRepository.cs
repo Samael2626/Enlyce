@@ -10,6 +10,7 @@ public interface ICustomerDemandRepository
     Task AddAsync(CustomerDemand demand, CancellationToken ct = default);
     Task SaveAsync(CustomerDemand demand, CancellationToken ct = default);
     Task<IReadOnlyList<DemandPropertyLink>> GetPropertyLinksAsync(Guid demandId, CancellationToken ct = default);
+    Task<IReadOnlyList<DemandPropertyLink>> GetDemandLinksAsync(Guid propertyId, CancellationToken ct = default);
     Task<DemandPropertyLink?> GetPropertyLinkAsync(Guid demandId, Guid propertyId, CancellationToken ct = default);
     Task AddPropertyLinkAsync(DemandPropertyLink link, CancellationToken ct = default);
     Task SavePropertyLinkAsync(DemandPropertyLink link, CancellationToken ct = default);

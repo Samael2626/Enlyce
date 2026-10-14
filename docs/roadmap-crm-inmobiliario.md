@@ -17,6 +17,15 @@
 - [x] Métricas de primera respuesta por asesor, origen y rango inclusivo; solo cuentan oportunidades con respuesta registrada.
 - [x] Pruebas de dominio, aplicación y rutas nuevas; compilación de API y frontend.
 
+## Entrega del 14 de octubre de 2026
+
+- [x] Cruce inverso inmueble → demandas (`GET /api/inmuebles/{id}/demandas`) con la misma regla de dominio que demanda → inmuebles; aislamiento por asesor; seguimiento compartido en ambos sentidos. Sin migración.
+- [x] Inventario Wasi comparado con Enlyce (cubierta/parcial/faltante) en `docs/ingenieria-inversa-wasi.md`.
+- Verificación: Domain 234, Application 77, Integration 268 (+1 omitida); frontend `npm run build`. Producción no tocada.
+- [ ] Conteo de clientes posibles en el listado de inmuebles (consulta agregada).
+- [ ] Llevar cambios de estado de `DemandPropertyLink` al historial unificado; hoy solo guarda el estado y la fecha más reciente.
+- [ ] Importación de clientes (requiere evidencia del formato Wasi y consentimiento Ley 1581 por fila) y red de aliados quedan después.
+
 ## Trabajo pendiente, en orden
 
 ### P0 — cerrar el flujo comercial

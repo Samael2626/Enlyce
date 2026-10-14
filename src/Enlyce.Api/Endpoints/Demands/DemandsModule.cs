@@ -108,6 +108,49 @@ public static class DemandsModule
         })
         .WithName("FindDemandPropertyMatches");
 
+        // Cruce inverso: misma regla CustomerDemand.Matches, filtrada al alcance del asesor
+        app.MapGet("/api/inmuebles/{propertyId:guid}/demandas", async Task<IResult> (
+            Guid propertyId,
+            HttpContext http,
+            ICustomerDemandRepository demands,
+            IInmuebleRepository properties,
+            IContactRepository contacts,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            var property = await properties.GetByIdAsync(propertyId);
+            if (property is null)
+                return Results.NotFound();
+
+            var candidates = (await demands.GetActiveAsync(ct)).Where(demand => demand.Matches(property));
+            if (!http.User.IsInRole("Administrador"))
+            {
+                var advisorId = EndpointAccess.AdvisorId(http.User);
+                var advisorLeads = advisorId.HasValue ? await leads.GetByAsesorIdAsync(advisorId.Value) : [];
+                var leadIds = advisorLeads.Select(lead => lead.Id).ToHashSet();
+                var contactIds = advisorLeads.Where(lead => lead.ContactId.HasValue)
+                    .Select(lead => lead.ContactId!.Value).ToHashSet();
+                candidates = candidates.Where(demand => demand.LeadId.HasValue
+                    ? leadIds.Contains(demand.LeadId.Value)
+                    : contactIds.Contains(demand.ContactId));
+            }
+            var matched = candidates.OrderByDescending(demand => demand.UpdatedAt).ToArray();
+            if (matched.Length == 0)
+                return Results.Ok(Array.Empty<PropertyDemandMatchDto>());
+
+            var owners = (await contacts.GetByIdsAsync(matched.Select(demand => demand.ContactId).Distinct().ToArray(), ct))
+                .Where(contact => contact.Active)
+                .ToDictionary(contact => contact.Id);
+            var linked = (await demands.GetDemandLinksAsync(propertyId, ct)).ToDictionary(link => link.DemandId);
+            return Results.Ok(matched
+                .Where(demand => owners.ContainsKey(demand.ContactId))
+                .Select(demand => new PropertyDemandMatchDto(ToDto(demand), owners[demand.ContactId].Name,
+                    linked.TryGetValue(demand.Id, out var link) ? link.Status.ToString() : null)));
+        })
+        .RequireAuthorization()
+        .WithTags("Demandas inmobiliarias")
+        .WithName("FindPropertyDemandMatches");
+
         group.MapPost("/{id:guid}/inmuebles/{propertyId:guid}", async Task<IResult> (
             Guid id,
             Guid propertyId,
@@ -192,5 +235,7 @@ public sealed record CustomerDemandDto(Guid Id, Guid ContactId, Guid? LeadId, st
 public sealed record DemandPropertyMatchDto(Guid PropertyId, string Name, string PropertyType,
     string Operation, string City, string? Neighborhood, decimal Price, string Currency,
     int Bedrooms, int Bathrooms, int ParkingSpaces, string? RelationshipStatus);
+public sealed record PropertyDemandMatchDto(CustomerDemandDto Demand, string ContactName,
+    string? RelationshipStatus);
 public sealed record DemandPropertyLinkDto(Guid DemandId, Guid PropertyId, string Status,
     DateTime LinkedAt, DateTime UpdatedAt);

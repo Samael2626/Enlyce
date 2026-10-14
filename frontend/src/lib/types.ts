@@ -227,6 +227,12 @@ export interface DemandPropertyMatch {
   relationshipStatus?: string
 }
 
+export interface PropertyDemandMatch {
+  demand: CustomerDemand
+  contactName: string
+  relationshipStatus?: string
+}
+
 export interface CreateCustomerDemandInput {
   contactId: string
   leadId?: string
