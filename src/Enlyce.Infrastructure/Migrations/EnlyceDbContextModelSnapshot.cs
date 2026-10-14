@@ -293,6 +293,11 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasDefaultValueSql("ARRAY[]::text[]")
                         .HasColumnType("text[]");
 
+                    b.Property<string[]>("CustomerLabels")
+                        .IsRequired()
+                        .HasDefaultValueSql("ARRAY[]::text[]")
+                        .HasColumnType("text[]");
+
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 

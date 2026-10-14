@@ -39,7 +39,7 @@ public static class ContactsModule
                     ownerAdvisorId, false, request.CustomerType, request.CustomerStatus, request.Address,
                     request.Country, request.Department, request.City, landline, request.DateOfBirth,
                     request.IdentificationNumber, request.ReferredBy, request.AcquisitionMedium, request.AdditionalData,
-                    request.CustomerFunnel, request.CustomerTypes);
+                    request.CustomerFunnel, request.CustomerTypes, request.CustomerLabels);
                 await contacts.AddAsync(contact, ct);
                 return Results.Created($"/api/contactos/{contact.Id}", ToSummary(contact));
             }
@@ -193,7 +193,7 @@ public static class ContactsModule
                 contact.Update(request.Name, request.Surname, phone, request.CustomerType,
                     request.CustomerStatus, request.Address, request.Country, request.Department, request.City,
                     landline, request.DateOfBirth, request.IdentificationNumber, request.ReferredBy,
-                    request.AcquisitionMedium, request.AdditionalData, request.CustomerFunnel, request.CustomerTypes);
+                    request.AcquisitionMedium, request.AdditionalData, request.CustomerFunnel, request.CustomerTypes, request.CustomerLabels);
             }
             catch (DomainError error)
             {
@@ -288,20 +288,23 @@ public static class ContactsModule
     private static ContactSummaryDto ToSummary(Contact contact) => new(
         contact.Id, contact.Name, contact.Email, contact.Phone?.Value, contact.CreatedAt, contact.UpdatedAt,
         contact.Surname, contact.CanReceiveAutomatedEmail, contact.CustomerType, contact.CustomerStatus,
-        contact.Address, contact.Country, contact.Department, contact.City, contact.CustomerFunnel, contact.CustomerTypes);
+        contact.Address, contact.Country, contact.Department, contact.City, contact.CustomerFunnel, contact.CustomerTypes,
+        contact.CustomerLabels);
 }
 
 public sealed record UpdateContactRequest(string Name, string? Phone, string? Surname = null,
     string? CustomerType = null, string CustomerStatus = "Nuevo", string? Address = null,
     string? Country = null, string? Department = null, string? City = null, string? Landline = null,
     DateOnly? DateOfBirth = null, string? IdentificationNumber = null, string? ReferredBy = null,
-    string? AcquisitionMedium = null, string? AdditionalData = null, string CustomerFunnel = "Clientes", string[]? CustomerTypes = null);
+    string? AcquisitionMedium = null, string? AdditionalData = null, string CustomerFunnel = "Clientes", string[]? CustomerTypes = null,
+    string[]? CustomerLabels = null);
 public sealed record CreateContactRequest(string Name, string? Surname = null, string? Email = null,
     string? Phone = null, string? Landline = null, string? CustomerType = null,
     string CustomerStatus = "Nuevo", string? Address = null, string? Country = null,
     string? Department = null, string? City = null, DateOnly? DateOfBirth = null,
     string? IdentificationNumber = null, string? ReferredBy = null, string? AcquisitionMedium = null,
-    string? AdditionalData = null, Guid? AdvisorId = null, string CustomerFunnel = "Clientes", string[]? CustomerTypes = null);
+    string? AdditionalData = null, Guid? AdvisorId = null, string CustomerFunnel = "Clientes", string[]? CustomerTypes = null,
+    string[]? CustomerLabels = null);
 public sealed record AssignContactRequest(Guid? AdvisorId);
 public sealed record UpdateContactEmailPermissionRequest(bool Allowed, string Source, string? EvidenceReference);
 public sealed record ContactEmailPermissionEventDto(bool Allowed, string Source, string? EvidenceReference,
@@ -309,7 +312,7 @@ public sealed record ContactEmailPermissionEventDto(bool Allowed, string Source,
 public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, string? Phone, DateTime CreatedAt,
     DateTime UpdatedAt, string? Surname, bool CanReceiveAutomatedEmail, string? CustomerType,
     string CustomerStatus, string? Address, string Country, string? Department, string? City, string CustomerFunnel,
-    string[] CustomerTypes);
+    string[] CustomerTypes, string[] CustomerLabels);
 public sealed record ContactListResponse(int Total, IReadOnlyList<ContactSummaryDto> Items);
 public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities,
     IReadOnlyList<ContactTaskDto> Tasks, string? Landline, DateOnly? DateOfBirth, string? IdentificationNumber,

@@ -10,7 +10,7 @@ export function ContactsPage() {
   const [includeInitialDemand, setIncludeInitialDemand] = useState(false)
   const [initialDemandError, setInitialDemandError] = useState("")
   const [newContact, setNewContact] = useState({ name: "", surname: "", email: "", phone: "", landline: "",
-    customerTypes: [] as string[], address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
+    customerTypes: [] as string[], customerLabels: [] as string[], address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
     identificationNumber: "", referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "",
     customerFunnel: "Clientes" })
   const pageSize = 20
@@ -76,6 +76,7 @@ export function ContactsPage() {
   const [name, setName] = useState("")
   const [surname, setSurname] = useState("")
   const [customerTypes, setCustomerTypes] = useState<string[]>([])
+  const [customerLabels, setCustomerLabels] = useState<string[]>([])
   const [customerStatus, setCustomerStatus] = useState("Nuevo")
   const [customerFunnel, setCustomerFunnel] = useState("Clientes")
   const [address, setAddress] = useState("")
@@ -183,6 +184,7 @@ export function ContactsPage() {
     setName(contact?.name ?? "")
     setSurname(contact?.surname ?? "")
     setCustomerTypes(contact?.customerTypes?.length ? contact.customerTypes : contact?.customerType ? [contact.customerType] : [])
+    setCustomerLabels(contact?.customerLabels ?? [])
     setCustomerStatus(contact?.customerStatus ?? "Nuevo")
     setCustomerFunnel(contact?.customerFunnel ?? "Clientes")
     setAddress(contact?.address ?? "")
@@ -270,7 +272,7 @@ export function ContactsPage() {
               return
             }
           }
-            setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerTypes: [],
+            setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerTypes: [], customerLabels: [],
               address: "", country: "Colombia", department: "", city: "", dateOfBirth: "", identificationNumber: "",
               referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "", customerFunnel: "Clientes" })
             setShowCreateContact(false)
@@ -284,12 +286,16 @@ export function ContactsPage() {
           ["name", "Nombre", true], ["surname", "Apellidos"], ["email", "Correo electrónico"],
           ["phone", "Teléfono móvil"], ["landline", "Teléfono fijo"], ["dateOfBirth", "Fecha de nacimiento", false, "date"],
           ["identificationNumber", "N.º de identificación"], ["customerTypes", "Tipos de cliente (separa con coma)"],
+          ["customerLabels", "Etiquetas (separa con coma)"],
           ["referredBy", "Referido por"], ["acquisitionMedium", "Medio de captación"], ["country", "País"],
           ["department", "Departamento"], ["city", "Ciudad"], ["address", "Dirección"],
         ] as const).map(([key, label, required, type]) => <label key={key} className="text-xs text-muted-foreground">{label}
           {key === "customerTypes" ? <input type="text" placeholder="Comprador, Propietario" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             value={newContact.customerTypes.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
               customerTypes: event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean) }))} /> :
+          key === "customerLabels" ? <input type="text" placeholder="VIP, Seguimiento" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+            value={newContact.customerLabels.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
+              customerLabels: event.target.value.split(",").map((label) => label.trim()).filter(Boolean) }))} /> :
           <input type={type ?? "text"} required={required} maxLength={key === "address" ? 500 : 200}
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             value={newContact[key]} onChange={(event) => setNewContact((value) => ({ ...value, [key]: event.target.value }))} />}
@@ -607,6 +613,7 @@ export function ContactsPage() {
                   <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email || "Sin email"}</span>
                   {item.phone && <span className="mt-1 block text-xs text-muted-foreground">{item.phone}</span>}
                   {(item.customerTypes?.length ?? 0) > 0 && <span className="mt-1 block truncate text-xs text-muted-foreground">{item.customerTypes.join(", ")}</span>}
+                  {(item.customerLabels?.length ?? 0) > 0 && <span className="mt-1 block truncate text-xs text-accent">{item.customerLabels.join(", ")}</span>}
                 </button>
               </div>
             ))}
@@ -642,7 +649,7 @@ export function ContactsPage() {
                     onSubmit={(event) => {
                       event.preventDefault()
                       updateContact.mutate({ id: contact.id, name, surname: surname || undefined,
-                        phone: phone || undefined, customerTypes, customerStatus, customerFunnel,
+                        phone: phone || undefined, customerTypes, customerLabels, customerStatus, customerFunnel,
                         address: address || undefined, country, department: department || undefined, city: city || undefined,
                         landline: landline || undefined, dateOfBirth: dateOfBirth || undefined,
                         identificationNumber: identificationNumber || undefined, referredBy: referredBy || undefined,
@@ -658,6 +665,10 @@ export function ContactsPage() {
                     <label className="text-xs text-muted-foreground">Tipos de cliente (separa con coma)
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerTypes.join(", ")}
                         onChange={(event) => setCustomerTypes(event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean))} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Etiquetas (separa con coma)
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerLabels.join(", ")}
+                        onChange={(event) => setCustomerLabels(event.target.value.split(",").map((label) => label.trim()).filter(Boolean))} />
                     </label>
                     <label className="text-xs text-muted-foreground">Estado
                       <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerStatus} onChange={(event) => setCustomerStatus(event.target.value)}>

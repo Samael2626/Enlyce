@@ -217,12 +217,12 @@ export function useSetContactEmailPermission() {
 export function useUpdateContact() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, name, surname, phone, customerType, customerTypes, customerStatus, customerFunnel, address, country, department, city,
+    mutationFn: ({ id, name, surname, phone, customerType, customerTypes, customerLabels, customerStatus, customerFunnel, address, country, department, city,
       landline, dateOfBirth, identificationNumber, referredBy, acquisitionMedium, additionalData }: {
-      id: string; name: string; surname?: string; phone?: string; customerType?: string; customerTypes?: string[]; customerStatus?: string; customerFunnel?: string;
+      id: string; name: string; surname?: string; phone?: string; customerType?: string; customerTypes?: string[]; customerLabels?: string[]; customerStatus?: string; customerFunnel?: string;
       address?: string; country?: string; department?: string; city?: string; landline?: string; dateOfBirth?: string;
       identificationNumber?: string; referredBy?: string; acquisitionMedium?: string; additionalData?: string
-    }) => api.updateContact(id, { name, surname, phone, customerType, customerTypes, customerStatus, customerFunnel, address, country, department,
+    }) => api.updateContact(id, { name, surname, phone, customerType, customerTypes, customerLabels, customerStatus, customerFunnel, address, country, department,
       city, landline, dateOfBirth, identificationNumber, referredBy, acquisitionMedium, additionalData }),
     onSuccess: (_contact, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })

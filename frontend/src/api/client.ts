@@ -150,7 +150,7 @@ class ApiClient {
 
   // Contactos
   async createContact(data: { name: string; surname?: string; email?: string; phone?: string; landline?: string;
-    customerType?: string; customerTypes?: string[]; customerStatus?: string; customerFunnel?: string; address?: string; country?: string; department?: string;
+    customerType?: string; customerTypes?: string[]; customerLabels?: string[]; customerStatus?: string; customerFunnel?: string; address?: string; country?: string; department?: string;
     city?: string; dateOfBirth?: string; identificationNumber?: string; referredBy?: string;
     acquisitionMedium?: string; additionalData?: string; advisorId?: string }) {
     return this.request<import("@/lib/types").ContactSummary>("/api/contactos", {
@@ -183,7 +183,7 @@ class ApiClient {
     )
   }
 
-  async updateContact(id: string, data: { name: string; surname?: string; phone?: string; customerType?: string; customerTypes?: string[];
+  async updateContact(id: string, data: { name: string; surname?: string; phone?: string; customerType?: string; customerTypes?: string[]; customerLabels?: string[];
     customerStatus?: string; customerFunnel?: string; address?: string; country?: string; department?: string; city?: string;
     landline?: string; dateOfBirth?: string; identificationNumber?: string; referredBy?: string;
     acquisitionMedium?: string; additionalData?: string }) {

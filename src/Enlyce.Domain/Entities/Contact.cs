@@ -14,6 +14,7 @@ public sealed class Contact
     public string? Surname { get; private set; }
     public string? CustomerType { get; private set; }
     public string[] CustomerTypes { get; private set; } = [];
+    public string[] CustomerLabels { get; private set; } = [];
     public string CustomerStatus { get; private set; } = "Nuevo";
     public string CustomerFunnel { get; private set; } = "Clientes";
     public string? Email { get; private set; }
@@ -42,13 +43,14 @@ public sealed class Contact
         DateTime createdAt, DateTime updatedAt, bool active, Telefono? landline = null,
         DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
         string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes",
-        string[]? customerTypes = null)
+        string[]? customerTypes = null, string[]? customerLabels = null)
     {
         Id = id;
         Name = name;
         Surname = surname;
         CustomerType = customerType;
         CustomerTypes = customerTypes ?? (customerType is null ? [] : [customerType]);
+        CustomerLabels = customerLabels ?? [];
         CustomerStatus = customerStatus;
         CustomerFunnel = customerFunnel;
         Email = email;
@@ -88,7 +90,7 @@ public sealed class Contact
         string? department = null, string? city = null, Telefono? landline = null,
         DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
         string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes",
-        string[]? customerTypes = null)
+        string[]? customerTypes = null, string[]? customerLabels = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -101,6 +103,7 @@ public sealed class Contact
 
         var now = DateTime.UtcNow;
         var normalizedTypes = NormalizeCustomerTypes(customerTypes, customerType);
+        var normalizedLabels = NormalizeCustomerLabels(customerLabels);
         customerType = normalizedTypes.FirstOrDefault();
         ValidateStatus(customerStatus);
         customerFunnel = ValidateFunnel(customerFunnel);
@@ -110,7 +113,7 @@ public sealed class Contact
             canReceiveAutomatedEmail, CleanOptional(customerType), customerStatus, CleanOptional(address),
             Normalize(country, "Colombia", 100)!, CleanOptional(department), CleanOptional(city), now, now, true,
             landline, dateOfBirth, Normalize(identificationNumber, null, 50), Normalize(referredBy, null, 200),
-            Normalize(acquisitionMedium, null, 200), Normalize(additionalData, null, 4000), customerFunnel, normalizedTypes);
+            Normalize(acquisitionMedium, null, 200), Normalize(additionalData, null, 4000), customerFunnel, normalizedTypes, normalizedLabels);
     }
 
     public static Contact Reconstitute(Guid id, string name, string? email, Telefono? phone,
@@ -118,10 +121,11 @@ public sealed class Contact
         bool canReceiveAutomatedEmail = false, string? surname = null, string? customerType = null,
         string customerStatus = "Nuevo", string? address = null, string country = "Colombia",
         string? department = null, string? city = null, string customerFunnel = "Clientes",
-        string[]? customerTypes = null) =>
+        string[]? customerTypes = null, string[]? customerLabels = null) =>
         new(id, name, surname, email, phone, ownerAdvisorId, canReceiveAutomatedEmail, customerType,
             customerStatus, address, country, department, city, createdAt, updatedAt, active,
-            customerFunnel: customerFunnel, customerTypes: NormalizeCustomerTypes(customerTypes, customerType));
+            customerFunnel: customerFunnel, customerTypes: NormalizeCustomerTypes(customerTypes, customerType),
+            customerLabels: NormalizeCustomerLabels(customerLabels));
 
     public void AssignTo(Guid? advisorId)
     {
@@ -133,7 +137,7 @@ public sealed class Contact
         string customerStatus, string? address, string? country, string? department, string? city,
         Telefono? landline = null, DateOnly? dateOfBirth = null, string? identificationNumber = null,
         string? referredBy = null, string? acquisitionMedium = null, string? additionalData = null,
-        string customerFunnel = "Clientes", string[]? customerTypes = null)
+        string customerFunnel = "Clientes", string[]? customerTypes = null, string[]? customerLabels = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -142,6 +146,7 @@ public sealed class Contact
         if (surname?.Trim().Length > 200)
             throw new DomainError("El apellido no puede superar 200 caracteres.");
         var normalizedTypes = NormalizeCustomerTypes(customerTypes, customerType);
+        var normalizedLabels = customerLabels is null ? CustomerLabels : NormalizeCustomerLabels(customerLabels);
         customerType = normalizedTypes.FirstOrDefault();
         ValidateStatus(customerStatus);
         customerFunnel = ValidateFunnel(customerFunnel);
@@ -151,6 +156,7 @@ public sealed class Contact
         Name = name.Trim();
         Surname = CleanOptional(surname);
         CustomerTypes = normalizedTypes;
+        CustomerLabels = normalizedLabels;
         CustomerType = customerType;
         CustomerStatus = customerStatus;
         CustomerFunnel = customerFunnel;
@@ -193,6 +199,15 @@ public sealed class Contact
         if (types.Length > 10 || types.Any(value => value.Length > 30))
             throw new DomainError("Cada cliente admite hasta 10 tipos de máximo 30 caracteres.");
         return types;
+    }
+
+    private static string[] NormalizeCustomerLabels(string[]? values)
+    {
+        var labels = (values ?? []).Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (labels.Length > 20 || labels.Any(value => value.Length > 50))
+            throw new DomainError("Cada cliente admite hasta 20 etiquetas de máximo 50 caracteres.");
+        return labels;
     }
 
     private static void ValidateStatus(string value)

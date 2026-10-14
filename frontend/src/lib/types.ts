@@ -68,6 +68,7 @@ export interface ContactSummary {
   canReceiveAutomatedEmail: boolean
   customerType: string | null
   customerTypes: string[]
+  customerLabels: string[]
   customerStatus: string
   customerFunnel: string
   address: string | null
