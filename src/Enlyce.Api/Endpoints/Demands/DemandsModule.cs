@@ -74,7 +74,7 @@ public static class DemandsModule
             var demand = CustomerDemand.Create(request.ContactId, request.LeadId, operation,
                 propertyType, request.City, request.Neighborhood, request.MinimumPrice,
                 request.MaximumPrice, request.Bedrooms, request.Bathrooms, request.ParkingSpaces,
-                request.Notes);
+                request.Notes, request.Currency ?? "COP", request.MinimumArea, request.MaximumArea);
             await demands.AddAsync(demand, ct);
             return Results.Created($"/api/demandas/{demand.Id}", ToDto(demand));
         })
@@ -251,7 +251,8 @@ public static class DemandsModule
     private static CustomerDemandDto ToDto(CustomerDemand demand) => new(
         demand.Id, demand.ContactId, demand.LeadId, demand.Operation.ToString(),
         demand.PropertyType?.ToString(), demand.City, demand.Neighborhood,
-        demand.MinimumPrice, demand.MaximumPrice, demand.Bedrooms, demand.Bathrooms,
+        demand.MinimumPrice, demand.MaximumPrice, demand.Currency, demand.MinimumArea, demand.MaximumArea,
+        demand.Bedrooms, demand.Bathrooms,
         demand.ParkingSpaces, demand.Notes, demand.CreatedAt, demand.UpdatedAt);
 
     private static DemandPropertyLinkDto ToLinkDto(DemandPropertyLink link) =>
@@ -264,11 +265,13 @@ public static class DemandsModule
 public sealed record ListDemandsRequest(Guid ContactId);
 public sealed record CreateDemandRequest(Guid ContactId, Guid? LeadId, string Operation,
     string? PropertyType, string City, string? Neighborhood, decimal? MinimumPrice,
-    decimal? MaximumPrice, int? Bedrooms, int? Bathrooms, int? ParkingSpaces, string? Notes);
+    decimal? MaximumPrice, int? Bedrooms, int? Bathrooms, int? ParkingSpaces, string? Notes,
+    string? Currency = null, decimal? MinimumArea = null, decimal? MaximumArea = null);
 public sealed record SetDemandPropertyStatusRequest(string Status);
 public sealed record CustomerDemandDto(Guid Id, Guid ContactId, Guid? LeadId, string Operation,
     string? PropertyType, string City, string? Neighborhood, decimal? MinimumPrice,
-    decimal? MaximumPrice, int? Bedrooms, int? Bathrooms, int? ParkingSpaces,
+    decimal? MaximumPrice, string Currency, decimal? MinimumArea, decimal? MaximumArea,
+    int? Bedrooms, int? Bathrooms, int? ParkingSpaces,
     string? Notes, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record DemandPropertyMatchDto(Guid PropertyId, string Name, string PropertyType,
     string Operation, string City, string? Neighborhood, decimal Price, string Currency,

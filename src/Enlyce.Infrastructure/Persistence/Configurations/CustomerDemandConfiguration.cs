@@ -17,6 +17,9 @@ public sealed class CustomerDemandConfiguration : IEntityTypeConfiguration<Custo
         builder.Property(demand => demand.Neighborhood).HasMaxLength(100);
         builder.Property(demand => demand.MinimumPrice).HasPrecision(18, 2);
         builder.Property(demand => demand.MaximumPrice).HasPrecision(18, 2);
+        builder.Property(demand => demand.Currency).HasMaxLength(3).HasDefaultValue("COP").IsRequired();
+        builder.Property(demand => demand.MinimumArea).HasPrecision(10, 2);
+        builder.Property(demand => demand.MaximumArea).HasPrecision(10, 2);
         builder.Property(demand => demand.Notes).HasMaxLength(2_000);
         builder.Property(demand => demand.CreatedAt).IsRequired();
         builder.Property(demand => demand.UpdatedAt).IsRequired();

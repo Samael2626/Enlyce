@@ -13,6 +13,9 @@ public sealed class CustomerDemand
     public string? Neighborhood { get; private set; }
     public decimal? MinimumPrice { get; private set; }
     public decimal? MaximumPrice { get; private set; }
+    public string Currency { get; private set; } = "COP";
+    public decimal? MinimumArea { get; private set; }
+    public decimal? MaximumArea { get; private set; }
     public int? Bedrooms { get; private set; }
     public int? Bathrooms { get; private set; }
     public int? ParkingSpaces { get; private set; }
@@ -25,7 +28,8 @@ public sealed class CustomerDemand
 
     private CustomerDemand(Guid id, Guid contactId, Guid? leadId, ModalidadInmueble operation,
         TipoInmueble? propertyType, string city, string? neighborhood, decimal? minimumPrice,
-        decimal? maximumPrice, int? bedrooms, int? bathrooms, int? parkingSpaces,
+        decimal? maximumPrice, string currency, decimal? minimumArea, decimal? maximumArea,
+        int? bedrooms, int? bathrooms, int? parkingSpaces,
         string? notes, DateTime createdAt, DateTime updatedAt, bool active)
     {
         Id = id;
@@ -37,6 +41,9 @@ public sealed class CustomerDemand
         Neighborhood = neighborhood;
         MinimumPrice = minimumPrice;
         MaximumPrice = maximumPrice;
+        Currency = currency;
+        MinimumArea = minimumArea;
+        MaximumArea = maximumArea;
         Bedrooms = bedrooms;
         Bathrooms = bathrooms;
         ParkingSpaces = parkingSpaces;
@@ -48,7 +55,8 @@ public sealed class CustomerDemand
 
     public static CustomerDemand Create(Guid contactId, Guid? leadId, ModalidadInmueble operation,
         TipoInmueble? propertyType, string? city, string? neighborhood, decimal? minimumPrice,
-        decimal? maximumPrice, int? bedrooms, int? bathrooms, int? parkingSpaces, string? notes)
+        decimal? maximumPrice, int? bedrooms, int? bathrooms, int? parkingSpaces, string? notes,
+        string currency = "COP", decimal? minimumArea = null, decimal? maximumArea = null)
     {
         if (contactId == Guid.Empty || leadId == Guid.Empty)
             throw new DomainError("El contacto o la oportunidad no son validos.");
@@ -62,12 +70,19 @@ public sealed class CustomerDemand
         if (minimumPrice is < 0 || maximumPrice is < 0 ||
             minimumPrice.HasValue && maximumPrice.HasValue && minimumPrice > maximumPrice)
             throw new DomainError("El rango de presupuesto no es valido.");
+        if (minimumArea is < 0 || maximumArea is < 0 ||
+            minimumArea.HasValue && maximumArea.HasValue && minimumArea > maximumArea)
+            throw new DomainError("El rango de area no es valido.");
+        if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != 3 ||
+            currency.Trim().Any(character => !char.IsAsciiLetter(character)))
+            throw new DomainError("La moneda debe ser un codigo de tres letras.");
         if (bedrooms is < 0 || bathrooms is < 0 || parkingSpaces is < 0)
             throw new DomainError("Las caracteristicas del inmueble no pueden ser negativas.");
 
         var now = DateTime.UtcNow;
         return new CustomerDemand(Guid.NewGuid(), contactId, leadId, operation, propertyType,
-            city?.Trim() ?? string.Empty, Normalize(neighborhood, 100), minimumPrice, maximumPrice, bedrooms,
+            city?.Trim() ?? string.Empty, Normalize(neighborhood, 100), minimumPrice, maximumPrice,
+            currency.Trim().ToUpperInvariant(), minimumArea, maximumArea, bedrooms,
             bathrooms, parkingSpaces, Normalize(notes, 2_000), now, now, true);
     }
 
@@ -75,9 +90,10 @@ public sealed class CustomerDemand
         ModalidadInmueble operation, TipoInmueble? propertyType, string city,
         string? neighborhood, decimal? minimumPrice, decimal? maximumPrice, int? bedrooms,
         int? bathrooms, int? parkingSpaces, string? notes, DateTime createdAt,
-        DateTime updatedAt, bool active) =>
+        DateTime updatedAt, bool active, string currency = "COP", decimal? minimumArea = null,
+        decimal? maximumArea = null) =>
         new(id, contactId, leadId, operation, propertyType, city, neighborhood,
-            minimumPrice, maximumPrice, bedrooms, bathrooms, parkingSpaces, notes,
+            minimumPrice, maximumPrice, currency, minimumArea, maximumArea, bedrooms, bathrooms, parkingSpaces, notes,
             createdAt, updatedAt, active);
 
     public bool Matches(Inmueble property)
@@ -95,6 +111,12 @@ public sealed class CustomerDemand
         if (MinimumPrice.HasValue && property.Precio.Monto < MinimumPrice.Value)
             return false;
         if (MaximumPrice.HasValue && property.Precio.Monto > MaximumPrice.Value)
+            return false;
+        if (!string.Equals(Currency, property.Precio.Moneda, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (MinimumArea.HasValue && property.MetrosCuadrados < MinimumArea.Value)
+            return false;
+        if (MaximumArea.HasValue && property.MetrosCuadrados > MaximumArea.Value)
             return false;
         return (!Bedrooms.HasValue || property.Habitaciones >= Bedrooms.Value) &&
                (!Bathrooms.HasValue || property.Banos >= Bathrooms.Value) &&

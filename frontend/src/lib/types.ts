@@ -212,6 +212,9 @@ export interface CustomerDemand {
   neighborhood?: string
   minimumPrice?: number
   maximumPrice?: number
+  currency: string
+  minimumArea?: number
+  maximumArea?: number
   bedrooms?: number
   bathrooms?: number
   parkingSpaces?: number
@@ -250,6 +253,9 @@ export interface CreateCustomerDemandInput {
   neighborhood?: string
   minimumPrice?: number
   maximumPrice?: number
+  currency?: string
+  minimumArea?: number
+  maximumArea?: number
   bedrooms?: number
   bathrooms?: number
   parkingSpaces?: number

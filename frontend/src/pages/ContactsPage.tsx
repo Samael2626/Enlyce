@@ -67,7 +67,14 @@ export function ContactsPage() {
   const [demandCity, setDemandCity] = useState("")
   const [demandNeighborhood, setDemandNeighborhood] = useState("")
   const [demandMaxPrice, setDemandMaxPrice] = useState("")
+  const [demandMinPrice, setDemandMinPrice] = useState("")
+  const [demandCurrency, setDemandCurrency] = useState("COP")
+  const [demandMinArea, setDemandMinArea] = useState("")
+  const [demandMaxArea, setDemandMaxArea] = useState("")
   const [demandBedrooms, setDemandBedrooms] = useState("")
+  const [demandBathrooms, setDemandBathrooms] = useState("")
+  const [demandParkingSpaces, setDemandParkingSpaces] = useState("")
+  const [demandNotes, setDemandNotes] = useState("")
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importColumns, setImportColumns] = useState<string[]>([])
   const [nameColumn, setNameColumn] = useState("")
@@ -564,8 +571,15 @@ export function ContactsPage() {
                           propertyType: demandType || undefined,
                           city: demandCity,
                           neighborhood: demandNeighborhood || undefined,
+                          minimumPrice: demandMinPrice ? Number(demandMinPrice) : undefined,
                           maximumPrice: demandMaxPrice ? Number(demandMaxPrice) : undefined,
+                          currency: demandCurrency,
+                          minimumArea: demandMinArea ? Number(demandMinArea) : undefined,
+                          maximumArea: demandMaxArea ? Number(demandMaxArea) : undefined,
                           bedrooms: demandBedrooms ? Number(demandBedrooms) : undefined,
+                          bathrooms: demandBathrooms ? Number(demandBathrooms) : undefined,
+                          parkingSpaces: demandParkingSpaces ? Number(demandParkingSpaces) : undefined,
+                          notes: demandNotes || undefined,
                         }, { onSuccess: (demand) => { setSelectedDemandId(demand.id); setDemandCity(""); setDemandNeighborhood("") } })
                       }}
                     >
@@ -581,11 +595,32 @@ export function ContactsPage() {
                       <label className="text-xs text-muted-foreground">Barrio
                         <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandNeighborhood} onChange={(event) => setDemandNeighborhood(event.target.value)} maxLength={100} />
                       </label>
+                      <label className="text-xs text-muted-foreground">Presupuesto mínimo
+                        <input type="number" min="0" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandMinPrice} onChange={(event) => setDemandMinPrice(event.target.value)} />
+                      </label>
                       <label className="text-xs text-muted-foreground">Presupuesto máximo
                         <input type="number" min="0" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandMaxPrice} onChange={(event) => setDemandMaxPrice(event.target.value)} />
                       </label>
+                      <label className="text-xs text-muted-foreground">Moneda (código ISO)
+                        <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm uppercase text-foreground" value={demandCurrency} onChange={(event) => setDemandCurrency(event.target.value.toUpperCase())} minLength={3} maxLength={3} pattern="[A-Z]{3}" required />
+                      </label>
+                      <label className="text-xs text-muted-foreground">Área mínima (m²)
+                        <input type="number" min="0" step="0.01" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandMinArea} onChange={(event) => setDemandMinArea(event.target.value)} />
+                      </label>
+                      <label className="text-xs text-muted-foreground">Área máxima (m²)
+                        <input type="number" min="0" step="0.01" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandMaxArea} onChange={(event) => setDemandMaxArea(event.target.value)} />
+                      </label>
                       <label className="text-xs text-muted-foreground">Habitaciones mínimas
                         <input type="number" min="0" max="50" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandBedrooms} onChange={(event) => setDemandBedrooms(event.target.value)} />
+                      </label>
+                      <label className="text-xs text-muted-foreground">Baños mínimos
+                        <input type="number" min="0" max="50" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandBathrooms} onChange={(event) => setDemandBathrooms(event.target.value)} />
+                      </label>
+                      <label className="text-xs text-muted-foreground">Garajes mínimos
+                        <input type="number" min="0" max="50" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandParkingSpaces} onChange={(event) => setDemandParkingSpaces(event.target.value)} />
+                      </label>
+                      <label className="text-xs text-muted-foreground sm:col-span-2 xl:col-span-6">Detalles adicionales de la propiedad
+                        <textarea className="mt-1 block min-h-20 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandNotes} onChange={(event) => setDemandNotes(event.target.value)} maxLength={2000} />
                       </label>
                       <div className="sm:col-span-2 xl:col-span-6">
                         <button disabled={createDemand.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createDemand.isPending ? "Guardando…" : "Guardar búsqueda"}</button>
@@ -599,7 +634,7 @@ export function ContactsPage() {
                       {demandsQuery.data?.map((demand) => (
                         <button key={demand.id} type="button" onClick={() => setSelectedDemandId(demand.id)} aria-pressed={selectedDemandId === demand.id} className={`block w-full rounded-md border border-border p-3 text-left hover:bg-muted ${selectedDemandId === demand.id ? "bg-muted" : ""}`}>
                           <span className="block text-sm font-semibold text-foreground">{demand.operation} · {demand.propertyType ?? "Cualquier inmueble"}</span>
-                          <span className="mt-1 block text-xs text-muted-foreground">{demand.city}{demand.neighborhood ? ` · ${demand.neighborhood}` : ""}{demand.maximumPrice ? ` · Hasta $${demand.maximumPrice.toLocaleString("es-CO")}` : ""}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">{demand.city}{demand.neighborhood ? ` · ${demand.neighborhood}` : ""}{demand.minimumPrice || demand.maximumPrice ? ` · ${demand.currency} ${demand.minimumPrice?.toLocaleString("es-CO") ?? "0"}–${demand.maximumPrice?.toLocaleString("es-CO") ?? "sin máximo"}` : ""}{demand.minimumArea || demand.maximumArea ? ` · ${demand.minimumArea ?? 0}–${demand.maximumArea ?? "sin máximo"} m²` : ""}</span>
                         </button>
                       ))}
                       {demandsQuery.data?.length === 0 && <p className="text-sm text-muted-foreground">Todavía no hay una búsqueda guardada.</p>}
