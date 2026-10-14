@@ -150,9 +150,8 @@ public static class CsvExportModule
             return new(null, 0, Results.BadRequest(new { error = "El rango de fechas no es valido." }));
         if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
             return new(null, 0, Results.Forbid());
-        if (!string.IsNullOrWhiteSpace(customerType) &&
-            customerType is not ("Comprador" or "Arrendatario" or "Propietario" or "Arrendador"))
-            return new(null, 0, Results.BadRequest(new { error = "El tipo de cliente no es valido." }));
+        if (!string.IsNullOrWhiteSpace(customerType) && customerType.Trim().Length > 30)
+            return new(null, 0, Results.BadRequest(new { error = "El tipo de cliente no puede superar 30 caracteres." }));
         if (!string.IsNullOrWhiteSpace(customerStatus) &&
             customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
             return new(null, 0, Results.BadRequest(new { error = "El estado del cliente no es valido." }));
