@@ -18,4 +18,6 @@ public record CreateInmuebleCommand(
     int Parqueaderos,
     Guid PropietarioId,
     string Pais = "Colombia",
-    string? Departamento = null);
+    string? Departamento = null,
+    string[]? CaracteristicasInternas = null,
+    string[]? CaracteristicasExternas = null);

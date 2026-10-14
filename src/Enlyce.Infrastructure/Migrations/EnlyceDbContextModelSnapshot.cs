@@ -438,6 +438,12 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string[]>("InternalFeatures")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
+
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
@@ -475,6 +481,12 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<string>("Department")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string[]>("ExternalFeatures")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
 
                     b.Property<Guid?>("LeadId")
                         .HasColumnType("uuid");
@@ -560,6 +572,12 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string[]>("InternalFeatures")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
+
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
@@ -575,6 +593,12 @@ namespace Enlyce.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string[]>("ExternalFeatures")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
 
                     b.Property<string>("ExternalRef")
                         .HasMaxLength(100)

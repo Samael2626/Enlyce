@@ -9,6 +9,8 @@ import {
   Loader2,
 } from "lucide-react"
 
+const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
+
 export function InmueblesPage() {
   const [showForm, setShowForm] = useState(false)
   const [page, setPage] = useState(1)
@@ -32,6 +34,8 @@ export function InmueblesPage() {
     banos: "",
     parqueaderos: "",
     propietarioId: "",
+    caracteristicasInternas: "",
+    caracteristicasExternas: "",
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,6 +48,8 @@ export function InmueblesPage() {
         habitaciones: parseInt(form.habitaciones) || 0,
         banos: parseInt(form.banos) || 0,
         parqueaderos: parseInt(form.parqueaderos) || 0,
+        caracteristicasInternas: splitFeatures(form.caracteristicasInternas),
+        caracteristicasExternas: splitFeatures(form.caracteristicasExternas),
       },
       {
         onSuccess: () => {
@@ -63,6 +69,8 @@ export function InmueblesPage() {
             banos: "",
             parqueaderos: "",
             propietarioId: "",
+            caracteristicasInternas: "",
+            caracteristicasExternas: "",
           })
         },
       }
@@ -250,6 +258,12 @@ export function InmueblesPage() {
                     className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
                   />
                 </div>
+                <label className="text-sm font-medium">Características internas (separa con coma)
+                  <input value={form.caracteristicasInternas} onChange={(e) => setForm({ ...form, caracteristicasInternas: e.target.value })} className="mt-1 w-full rounded-md border bg-background px-3 py-2" placeholder="Balcón, cocina integral" />
+                </label>
+                <label className="text-sm font-medium">Características externas (separa con coma)
+                  <input value={form.caracteristicasExternas} onChange={(e) => setForm({ ...form, caracteristicasExternas: e.target.value })} className="mt-1 w-full rounded-md border bg-background px-3 py-2" placeholder="Piscina, portería" />
+                </label>
               </div>
 
               <div className="flex justify-end gap-2 pt-4 border-t">

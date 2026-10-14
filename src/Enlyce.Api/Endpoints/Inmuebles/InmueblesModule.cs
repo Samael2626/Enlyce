@@ -39,7 +39,8 @@ public static class InmueblesModule
                 request.Modalidad, request.Calle, request.Ciudad,
                 request.Barrio, request.Precio, request.Moneda,
                 request.MetrosCuadrados, request.Habitaciones,
-                request.Banos, request.Parqueaderos, request.PropietarioId, request.Pais, request.Departamento);
+                request.Banos, request.Parqueaderos, request.PropietarioId, request.Pais, request.Departamento,
+                request.CaracteristicasInternas, request.CaracteristicasExternas);
 
             var result = await handler.HandleAsync(command);
             return Results.Created($"/api/inmuebles/{result.Id}", result);
@@ -66,4 +67,6 @@ public record CreateInmuebleRequest(
     int Parqueaderos,
     Guid PropietarioId,
     string Pais = "Colombia",
-    string? Departamento = null);
+    string? Departamento = null,
+    string[]? CaracteristicasInternas = null,
+    string[]? CaracteristicasExternas = null);

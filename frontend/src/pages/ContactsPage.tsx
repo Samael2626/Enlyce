@@ -4,6 +4,8 @@ import { api } from "@/api/client"
 import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useUpdateCustomerDemand, useDeleteCustomerDemand, useCustomerDemands, useDemandMatches, useCustomerDemandCross, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
+const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
+
 export function ContactsPage() {
   const createContact = useCreateContact()
   const [showCreateContact, setShowCreateContact] = useState(false)
@@ -111,6 +113,8 @@ export function ContactsPage() {
   const [demandBedrooms, setDemandBedrooms] = useState("")
   const [demandBathrooms, setDemandBathrooms] = useState("")
   const [demandParkingSpaces, setDemandParkingSpaces] = useState("")
+  const [demandInternalFeatures, setDemandInternalFeatures] = useState("")
+  const [demandExternalFeatures, setDemandExternalFeatures] = useState("")
   const [demandNotes, setDemandNotes] = useState("")
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importColumns, setImportColumns] = useState<string[]>([])
@@ -235,7 +239,7 @@ export function ContactsPage() {
             setDemandOperation("Venta"); setDemandType(""); setDemandCity(""); setDemandCountry("Colombia")
             setDemandDepartment(""); setDemandNeighborhood(""); setDemandMinPrice(""); setDemandMaxPrice("")
             setDemandCurrency("COP"); setDemandMinArea(""); setDemandMaxArea(""); setDemandBedrooms("")
-            setDemandBathrooms(""); setDemandParkingSpaces(""); setDemandNotes("")
+            setDemandBathrooms(""); setDemandParkingSpaces(""); setDemandInternalFeatures(""); setDemandExternalFeatures(""); setDemandNotes("")
           }
           setShowCreateContact((value) => !value)
         }}>
@@ -264,7 +268,8 @@ export function ContactsPage() {
                 maximumArea: demandMaxArea ? Number(demandMaxArea) : undefined,
                 bedrooms: demandBedrooms ? Number(demandBedrooms) : undefined,
                 bathrooms: demandBathrooms ? Number(demandBathrooms) : undefined,
-                parkingSpaces: demandParkingSpaces ? Number(demandParkingSpaces) : undefined, notes: demandNotes || undefined,
+                parkingSpaces: demandParkingSpaces ? Number(demandParkingSpaces) : undefined,
+                internalFeatures: splitFeatures(demandInternalFeatures), externalFeatures: splitFeatures(demandExternalFeatures), notes: demandNotes || undefined,
               })
             } catch (error) {
               setInitialDemandError(`Cliente creado; la demanda falló: ${error instanceof Error ? error.message : "error desconocido"}. La ficha quedó abierta para completar la demanda sin duplicar el cliente.`)
@@ -319,6 +324,8 @@ export function ContactsPage() {
           <label className="text-xs text-muted-foreground">Tipo de inmueble<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandType} onChange={(event) => setDemandType(event.target.value)}><option value="">Cualquiera</option><option value="Apartamento">Apartamento</option><option value="Casa">Casa</option><option value="Local">Local</option><option value="Oficina">Oficina</option><option value="Lote">Lote</option><option value="Bodega">Bodega</option><option value="Finca">Finca</option></select></label>
           {([["city", "Ciudad", demandCity, setDemandCity], ["country", "País", demandCountry, setDemandCountry], ["department", "Departamento", demandDepartment, setDemandDepartment], ["neighborhood", "Barrio", demandNeighborhood, setDemandNeighborhood]] as const).map(([key, label, value, setValue]) => <label key={key} className="text-xs text-muted-foreground">{label}<input required={key === "city" || key === "country"} maxLength={100} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={value} onChange={(event) => setValue(event.target.value)} /></label>)}
           {([["minPrice", "Presupuesto mínimo", demandMinPrice, setDemandMinPrice], ["maxPrice", "Presupuesto máximo", demandMaxPrice, setDemandMaxPrice], ["minArea", "Área mínima", demandMinArea, setDemandMinArea], ["maxArea", "Área máxima", demandMaxArea, setDemandMaxArea], ["bedrooms", "Habitaciones mínimas", demandBedrooms, setDemandBedrooms], ["bathrooms", "Baños mínimos", demandBathrooms, setDemandBathrooms], ["parking", "Garajes mínimos", demandParkingSpaces, setDemandParkingSpaces]] as const).map(([key, label, value, setValue]) => <label key={key} className="text-xs text-muted-foreground">{label}<input type="number" min="0" step={key.includes("Area") || key.includes("Price") ? "0.01" : "1"} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={value} onChange={(event) => setValue(event.target.value)} /></label>)}
+          <label className="text-xs text-muted-foreground">Características internas (separa con coma)<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandInternalFeatures} onChange={(event) => setDemandInternalFeatures(event.target.value)} /></label>
+          <label className="text-xs text-muted-foreground">Características externas (separa con coma)<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandExternalFeatures} onChange={(event) => setDemandExternalFeatures(event.target.value)} /></label>
           <label className="text-xs text-muted-foreground">Moneda<input required pattern="[A-Z]{3}" minLength={3} maxLength={3} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm uppercase text-foreground" value={demandCurrency} onChange={(event) => setDemandCurrency(event.target.value.toUpperCase())} /></label>
           <label className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">Detalles de la propiedad<textarea maxLength={2000} rows={3} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandNotes} onChange={(event) => setDemandNotes(event.target.value)} /></label>
         </div>}
@@ -846,6 +853,8 @@ export function ContactsPage() {
                           bedrooms: demandBedrooms ? Number(demandBedrooms) : undefined,
                           bathrooms: demandBathrooms ? Number(demandBathrooms) : undefined,
                           parkingSpaces: demandParkingSpaces ? Number(demandParkingSpaces) : undefined,
+                          internalFeatures: splitFeatures(demandInternalFeatures),
+                          externalFeatures: splitFeatures(demandExternalFeatures),
                           notes: demandNotes || undefined,
                         }
                         if (editingDemandId) {
@@ -905,6 +914,12 @@ export function ContactsPage() {
                       <label className="text-xs text-muted-foreground sm:col-span-2 xl:col-span-6">Detalles adicionales de la propiedad
                         <textarea className="mt-1 block min-h-20 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandNotes} onChange={(event) => setDemandNotes(event.target.value)} maxLength={2000} />
                       </label>
+                      <label className="text-xs text-muted-foreground sm:col-span-2 xl:col-span-3">Características internas (separa con coma)
+                        <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandInternalFeatures} onChange={(event) => setDemandInternalFeatures(event.target.value)} placeholder="Balcón, cocina integral" />
+                      </label>
+                      <label className="text-xs text-muted-foreground sm:col-span-2 xl:col-span-3">Características externas (separa con coma)
+                        <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandExternalFeatures} onChange={(event) => setDemandExternalFeatures(event.target.value)} placeholder="Piscina, portería" />
+                      </label>
                       <div className="sm:col-span-2 xl:col-span-6">
                         <button disabled={createDemand.isPending || updateDemand.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createDemand.isPending || updateDemand.isPending ? "Guardando…" : editingDemandId ? "Guardar cambios de búsqueda" : "Guardar búsqueda"}</button>
                         {editingDemandId && <button type="button" className="ml-2 rounded-md border border-border px-4 py-2 text-sm text-foreground" onClick={() => setEditingDemandId("")}>Cancelar edición</button>}
@@ -930,6 +945,7 @@ export function ContactsPage() {
                               setDemandCurrency(demand.currency); setDemandMinArea(demand.minimumArea?.toString() ?? "");
                               setDemandMaxArea(demand.maximumArea?.toString() ?? ""); setDemandBedrooms(demand.bedrooms?.toString() ?? "");
                               setDemandBathrooms(demand.bathrooms?.toString() ?? ""); setDemandParkingSpaces(demand.parkingSpaces?.toString() ?? "");
+                              setDemandInternalFeatures(demand.internalFeatures.join(", ")); setDemandExternalFeatures(demand.externalFeatures.join(", "));
                               setDemandNotes(demand.notes ?? "")
                             }}>Modificar demanda</button>
                             <button type="button" disabled={deleteDemand.isPending} className="rounded border border-destructive/40 px-2 py-1 text-xs font-semibold text-destructive disabled:opacity-40" onClick={() => {

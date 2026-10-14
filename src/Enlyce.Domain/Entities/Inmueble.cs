@@ -52,6 +52,8 @@ public sealed class Inmueble
     public bool Activo { get; private set; }
     // Clave del sistema de origen (ej. "wasi:10472500:venta"); null si se creo en el CRM.
     public string? ExternalRef { get; private set; }
+    public string[] InternalFeatures { get; private set; } = [];
+    public string[] ExternalFeatures { get; private set; } = [];
 
     // EF Core constructor
     private Inmueble() { }
@@ -60,7 +62,8 @@ public sealed class Inmueble
         ModalidadInmueble modalidad, EstadoInmueble estado, Direccion direccion,
         Dinero precio, int metrosCuadrados, int habitaciones, int banos,
         int parqueaderos, int fotosCount, Guid propietarioId,
-        DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo)
+        DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
+        string[]? internalFeatures = null, string[]? externalFeatures = null)
     {
         Id = id;
         Nombre = nombre;
@@ -79,12 +82,14 @@ public sealed class Inmueble
         FechaCreacion = fechaCreacion;
         FechaVentaArriendo = fechaVentaArriendo;
         Activo = activo;
+        InternalFeatures = NormalizeFeatures(internalFeatures);
+        ExternalFeatures = NormalizeFeatures(externalFeatures);
     }
 
     public static Inmueble Crear(string nombre, string descripcion, TipoInmueble tipo,
         ModalidadInmueble modalidad, Direccion direccion, Dinero precio,
         int metrosCuadrados, int habitaciones, int banos, int parqueaderos,
-        Guid propietarioId)
+        Guid propietarioId, string[]? internalFeatures = null, string[]? externalFeatures = null)
     {
         ValidarDatos(nombre, precio, metrosCuadrados);
 
@@ -105,7 +110,9 @@ public sealed class Inmueble
             propietarioId,
             DateTime.UtcNow,
             null,
-            true);
+            true,
+            internalFeatures,
+            externalFeatures);
     }
 
     public static Inmueble Reconstituir(Guid id, string nombre, string descripcion,
@@ -113,11 +120,13 @@ public sealed class Inmueble
         Direccion direccion, Dinero precio, int metrosCuadrados, int habitaciones,
         int banos, int parqueaderos, int fotosCount, Guid propietarioId,
         DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
-        string? externalRef = null)
+        string? externalRef = null, string[]? internalFeatures = null,
+        string[]? externalFeatures = null)
     {
         return new Inmueble(id, nombre, descripcion, tipo, modalidad, estado,
             direccion, precio, metrosCuadrados, habitaciones, banos, parqueaderos,
-            fotosCount, propietarioId, fechaCreacion, fechaVentaArriendo, activo)
+            fotosCount, propietarioId, fechaCreacion, fechaVentaArriendo, activo,
+            internalFeatures, externalFeatures)
         {
             ExternalRef = externalRef
         };
@@ -168,6 +177,15 @@ public sealed class Inmueble
 
         if (metrosCuadrados <= 0)
             throw new DomainError("Los metros cuadrados deben ser mayores a 0.");
+    }
+
+    private static string[] NormalizeFeatures(string[]? values)
+    {
+        var normalized = (values ?? []).Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (normalized.Length > 30 || normalized.Any(value => value.Length > 50))
+            throw new DomainError("Se permiten hasta 30 caracteristicas de 50 caracteres cada una.");
+        return normalized;
     }
 
     public void MarcarVendido()

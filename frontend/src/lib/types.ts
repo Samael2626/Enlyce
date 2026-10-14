@@ -229,6 +229,8 @@ export interface CustomerDemand {
   bedrooms?: number
   bathrooms?: number
   parkingSpaces?: number
+  internalFeatures: string[]
+  externalFeatures: string[]
   notes?: string
   createdAt: string
   updatedAt: string
@@ -274,6 +276,8 @@ export interface CreateCustomerDemandInput {
   bedrooms?: number
   bathrooms?: number
   parkingSpaces?: number
+  internalFeatures?: string[]
+  externalFeatures?: string[]
   notes?: string
 }
 
@@ -473,6 +477,8 @@ export interface CreateInmuebleRequest {
   banos: number
   parqueaderos: number
   propietarioId: string
+  caracteristicasInternas?: string[]
+  caracteristicasExternas?: string[]
 }
 
 export interface GetInmuebleByIdResponse {

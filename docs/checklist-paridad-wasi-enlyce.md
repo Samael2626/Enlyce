@@ -99,6 +99,13 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - La importación registra como fuente la columna «Recibe correo» y como actor quien confirma. La fecha es la de registro en Enlyce; la fecha original del permiso no se reconstruye. Contactos previos a la migración no reciben eventos inventados.
 - Migraciones preparadas, no aplicadas. Contactos existentes quedan con `CanReceiveAutomatedEmail=false`; verificar evidencia real antes de habilitar envíos.
 
+## Caracteristicas de inmuebles y demandas
+
+- Las capturas de Wasi muestran selectores multiples separados para caracteristicas internas y externas en el alta de inmuebles y en el registro de demanda. El JSON de interfaz confirma `select-multiple` en ambos campos; no trae el catalogo de opciones ni reglas de seleccion.
+- Enlyce guarda ambas listas en inmuebles y demandas, permite capturarlas en los formularios y exige que todas las caracteristicas solicitadas existan en el inmueble para considerarlo compatible. La comparacion ignora mayusculas/minusculas; acepta texto libre separado por coma mientras falte el catalogo real de Wasi.
+- Migracion `20261014162300_AddDemandAndPropertyFeatures` preparada, no aplicada. Agrega cuatro columnas `text[]` con arreglo vacio para filas existentes. No desplegar antes de probar respaldo/restauracion de la base objetivo.
+- Falta conseguir evidencia sin datos personales del catalogo Wasi de caracteristicas internas/externas y confirmar si cada caracteristica es requisito excluyente o preferencia. El criterio actual de cruce es provisional de Enlyce, no una regla verificada de Wasi.
+
 ## Fuentes oficiales Wasi
 
 - [Importar y exportar clientes](https://ayuda.wasi.co/es/article/como-importar-exportar-clientes): formatos, mapeo de columnas, nombre requerido y exportación por grupo al correo.

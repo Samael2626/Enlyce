@@ -28,7 +28,8 @@ public class CreateInmuebleHandler : ICommandHandler<CreateInmuebleCommand, Crea
             command.Nombre, command.Descripcion ?? string.Empty,
             command.Tipo, command.Modalidad, direccion, precio,
             command.MetrosCuadrados, command.Habitaciones,
-            command.Banos, command.Parqueaderos, command.PropietarioId);
+            command.Banos, command.Parqueaderos, command.PropietarioId,
+            command.CaracteristicasInternas, command.CaracteristicasExternas);
 
         var saved = await _inmuebleRepo.SaveAsync(inmueble);
 

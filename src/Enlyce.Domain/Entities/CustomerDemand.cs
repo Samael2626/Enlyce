@@ -21,6 +21,8 @@ public sealed class CustomerDemand
     public int? Bedrooms { get; private set; }
     public int? Bathrooms { get; private set; }
     public int? ParkingSpaces { get; private set; }
+    public string[] InternalFeatures { get; private set; } = [];
+    public string[] ExternalFeatures { get; private set; } = [];
     public string? Notes { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -32,7 +34,8 @@ public sealed class CustomerDemand
         TipoInmueble? propertyType, string city, string country, string? department,
         string? neighborhood, decimal? minimumPrice,
         decimal? maximumPrice, string currency, decimal? minimumArea, decimal? maximumArea,
-        int? bedrooms, int? bathrooms, int? parkingSpaces,
+        int? bedrooms, int? bathrooms, int? parkingSpaces, string[]? internalFeatures,
+        string[]? externalFeatures,
         string? notes, DateTime createdAt, DateTime updatedAt, bool active)
     {
         Id = id;
@@ -52,6 +55,8 @@ public sealed class CustomerDemand
         Bedrooms = bedrooms;
         Bathrooms = bathrooms;
         ParkingSpaces = parkingSpaces;
+        InternalFeatures = internalFeatures ?? [];
+        ExternalFeatures = externalFeatures ?? [];
         Notes = notes;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
@@ -62,7 +67,8 @@ public sealed class CustomerDemand
         TipoInmueble? propertyType, string? city, string? neighborhood, decimal? minimumPrice,
         decimal? maximumPrice, int? bedrooms, int? bathrooms, int? parkingSpaces, string? notes,
         string currency = "COP", decimal? minimumArea = null, decimal? maximumArea = null,
-        string country = "Colombia", string? department = null)
+        string country = "Colombia", string? department = null,
+        string[]? internalFeatures = null, string[]? externalFeatures = null)
     {
         if (contactId == Guid.Empty || leadId == Guid.Empty)
             throw new DomainError("El contacto o la oportunidad no son validos.");
@@ -92,7 +98,8 @@ public sealed class CustomerDemand
             city?.Trim() ?? string.Empty, country.Trim(), Normalize(department, 100),
             Normalize(neighborhood, 100), minimumPrice, maximumPrice,
             currency.Trim().ToUpperInvariant(), minimumArea, maximumArea, bedrooms,
-            bathrooms, parkingSpaces, Normalize(notes, 2_000), now, now, true);
+            bathrooms, parkingSpaces, NormalizeFeatures(internalFeatures), NormalizeFeatures(externalFeatures),
+            Normalize(notes, 2_000), now, now, true);
     }
 
     public static CustomerDemand Reconstitute(Guid id, Guid contactId, Guid? leadId,
@@ -100,9 +107,11 @@ public sealed class CustomerDemand
         string? neighborhood, decimal? minimumPrice, decimal? maximumPrice, int? bedrooms,
         int? bathrooms, int? parkingSpaces, string? notes, DateTime createdAt,
         DateTime updatedAt, bool active, string currency = "COP", decimal? minimumArea = null,
-        decimal? maximumArea = null, string country = "Colombia", string? department = null) =>
+        decimal? maximumArea = null, string country = "Colombia", string? department = null,
+        string[]? internalFeatures = null, string[]? externalFeatures = null) =>
         new(id, contactId, leadId, operation, propertyType, city, country, department, neighborhood,
-            minimumPrice, maximumPrice, currency, minimumArea, maximumArea, bedrooms, bathrooms, parkingSpaces, notes,
+            minimumPrice, maximumPrice, currency, minimumArea, maximumArea, bedrooms, bathrooms, parkingSpaces,
+            internalFeatures, externalFeatures, notes,
             createdAt, updatedAt, active);
 
     public bool Matches(Inmueble property)
@@ -120,6 +129,9 @@ public sealed class CustomerDemand
         if (Department is not null && !string.Equals(Department, property.Direccion.Departamento, StringComparison.OrdinalIgnoreCase))
             return false;
         if (Neighborhood is not null && !string.Equals(Neighborhood, property.Direccion.Barrio, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (!ContainsAll(property.InternalFeatures, InternalFeatures) ||
+            !ContainsAll(property.ExternalFeatures, ExternalFeatures))
             return false;
         if (MinimumPrice.HasValue && property.Precio.Monto < MinimumPrice.Value)
             return false;
@@ -140,11 +152,12 @@ public sealed class CustomerDemand
         string? neighborhood, decimal? minimumPrice, decimal? maximumPrice, int? bedrooms,
         int? bathrooms, int? parkingSpaces, string? notes, string currency = "COP",
         decimal? minimumArea = null, decimal? maximumArea = null, string country = "Colombia",
-        string? department = null)
+        string? department = null, string[]? internalFeatures = null,
+        string[]? externalFeatures = null)
     {
         var validated = Create(ContactId, LeadId, operation, propertyType, city, neighborhood,
             minimumPrice, maximumPrice, bedrooms, bathrooms, parkingSpaces, notes, currency,
-            minimumArea, maximumArea, country, department);
+            minimumArea, maximumArea, country, department, internalFeatures, externalFeatures);
         Operation = validated.Operation;
         PropertyType = validated.PropertyType;
         City = validated.City;
@@ -159,6 +172,8 @@ public sealed class CustomerDemand
         Bedrooms = validated.Bedrooms;
         Bathrooms = validated.Bathrooms;
         ParkingSpaces = validated.ParkingSpaces;
+        InternalFeatures = validated.InternalFeatures;
+        ExternalFeatures = validated.ExternalFeatures;
         Notes = validated.Notes;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -181,6 +196,18 @@ public sealed class CustomerDemand
             throw new DomainError($"El texto no puede superar {maxLength} caracteres.");
         return normalized;
     }
+
+    private static string[] NormalizeFeatures(string[]? values)
+    {
+        var normalized = (values ?? []).Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (normalized.Length > 30 || normalized.Any(value => value.Length > 50))
+            throw new DomainError("Se permiten hasta 30 caracteristicas de 50 caracteres cada una.");
+        return normalized;
+    }
+
+    private static bool ContainsAll(string[] available, string[] requested) =>
+        requested.All(feature => available.Contains(feature, StringComparer.OrdinalIgnoreCase));
 }
 
 public enum DemandPropertyStatus { Suggested, Shared, Visited, Discarded }

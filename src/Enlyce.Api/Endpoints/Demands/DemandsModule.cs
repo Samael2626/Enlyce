@@ -153,7 +153,7 @@ public static class DemandsModule
                 propertyType, request.City, request.Neighborhood, request.MinimumPrice,
                 request.MaximumPrice, request.Bedrooms, request.Bathrooms, request.ParkingSpaces,
                 request.Notes, request.Currency ?? "COP", request.MinimumArea, request.MaximumArea,
-                request.Country ?? "Colombia", request.Department);
+                request.Country ?? "Colombia", request.Department, request.InternalFeatures, request.ExternalFeatures);
             await demands.AddAsync(demand, ct);
             return Results.Created($"/api/demandas/{demand.Id}", ToDto(demand));
         })
@@ -188,7 +188,8 @@ public static class DemandsModule
                 demand.Update(operation, propertyType, request.City, request.Neighborhood,
                     request.MinimumPrice, request.MaximumPrice, request.Bedrooms, request.Bathrooms,
                     request.ParkingSpaces, request.Notes, request.Currency ?? "COP", request.MinimumArea,
-                    request.MaximumArea, request.Country ?? "Colombia", request.Department);
+                    request.MaximumArea, request.Country ?? "Colombia", request.Department,
+                    request.InternalFeatures, request.ExternalFeatures);
             }
             catch (DomainError error)
             {
@@ -392,7 +393,8 @@ public static class DemandsModule
         demand.PropertyType?.ToString(), demand.City, demand.Country, demand.Department, demand.Neighborhood,
         demand.MinimumPrice, demand.MaximumPrice, demand.Currency, demand.MinimumArea, demand.MaximumArea,
         demand.Bedrooms, demand.Bathrooms,
-        demand.ParkingSpaces, demand.Notes, demand.CreatedAt, demand.UpdatedAt);
+        demand.ParkingSpaces, demand.InternalFeatures, demand.ExternalFeatures, demand.Notes,
+        demand.CreatedAt, demand.UpdatedAt);
 
     private static DemandPropertyLinkDto ToLinkDto(DemandPropertyLink link) =>
         new(link.DemandId, link.PropertyId, link.Status.ToString(), link.LinkedAt, link.UpdatedAt);
@@ -406,17 +408,20 @@ public sealed record CreateDemandRequest(Guid ContactId, Guid? LeadId, string Op
     string? PropertyType, string City, string? Neighborhood, decimal? MinimumPrice,
     decimal? MaximumPrice, int? Bedrooms, int? Bathrooms, int? ParkingSpaces, string? Notes,
     string? Currency = null, decimal? MinimumArea = null, decimal? MaximumArea = null,
-    string? Country = null, string? Department = null);
+    string? Country = null, string? Department = null,
+    string[]? InternalFeatures = null, string[]? ExternalFeatures = null);
 public sealed record UpdateDemandRequest(string Operation, string? PropertyType, string? City,
     string? Neighborhood, decimal? MinimumPrice, decimal? MaximumPrice, int? Bedrooms,
     int? Bathrooms, int? ParkingSpaces, string? Notes, string? Currency = null,
     decimal? MinimumArea = null, decimal? MaximumArea = null, string? Country = null,
-    string? Department = null);
+    string? Department = null, string[]? InternalFeatures = null,
+    string[]? ExternalFeatures = null);
 public sealed record SetDemandPropertyStatusRequest(string Status);
 public sealed record CustomerDemandDto(Guid Id, Guid ContactId, Guid? LeadId, string Operation,
     string? PropertyType, string City, string Country, string? Department, string? Neighborhood, decimal? MinimumPrice,
     decimal? MaximumPrice, string Currency, decimal? MinimumArea, decimal? MaximumArea,
-    int? Bedrooms, int? Bathrooms, int? ParkingSpaces,
+    int? Bedrooms, int? Bathrooms, int? ParkingSpaces, string[] InternalFeatures,
+    string[] ExternalFeatures,
     string? Notes, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record CustomerDemandCrossItemDto(CustomerDemandDto Demand, string ContactName,
     string? ContactSurname, string? CustomerType, string CustomerStatus, string CustomerFunnel, DateTime ContactCreatedAt,
