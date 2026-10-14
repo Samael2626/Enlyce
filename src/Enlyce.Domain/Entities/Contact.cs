@@ -6,8 +6,6 @@ namespace Enlyce.Domain.Entities;
 
 public sealed class Contact
 {
-    private static readonly HashSet<string> CustomerTypes = new(StringComparer.OrdinalIgnoreCase)
-        { "Comprador", "Arrendatario", "Propietario", "Arrendador" };
     private static readonly HashSet<string> CustomerStatuses = new(StringComparer.OrdinalIgnoreCase)
         { "Nuevo", "EnProceso", "Convertido", "Recuperado", "Perdido" };
 
@@ -15,6 +13,7 @@ public sealed class Contact
     public string Name { get; private set; } = string.Empty;
     public string? Surname { get; private set; }
     public string? CustomerType { get; private set; }
+    public string[] CustomerTypes { get; private set; } = [];
     public string CustomerStatus { get; private set; } = "Nuevo";
     public string CustomerFunnel { get; private set; } = "Clientes";
     public string? Email { get; private set; }
@@ -42,12 +41,14 @@ public sealed class Contact
         string? address, string country, string? department, string? city,
         DateTime createdAt, DateTime updatedAt, bool active, Telefono? landline = null,
         DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
-        string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes")
+        string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes",
+        string[]? customerTypes = null)
     {
         Id = id;
         Name = name;
         Surname = surname;
         CustomerType = customerType;
+        CustomerTypes = customerTypes ?? (customerType is null ? [] : [customerType]);
         CustomerStatus = customerStatus;
         CustomerFunnel = customerFunnel;
         Email = email;
@@ -86,7 +87,8 @@ public sealed class Contact
         string customerStatus = "Nuevo", string? address = null, string? country = null,
         string? department = null, string? city = null, Telefono? landline = null,
         DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
-        string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes")
+        string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes",
+        string[]? customerTypes = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -98,7 +100,8 @@ public sealed class Contact
             email = EmailAddress.Create(email).Value;
 
         var now = DateTime.UtcNow;
-        ValidateType(customerType);
+        var normalizedTypes = NormalizeCustomerTypes(customerTypes, customerType);
+        customerType = normalizedTypes.FirstOrDefault();
         ValidateStatus(customerStatus);
         customerFunnel = ValidateFunnel(customerFunnel);
         if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
@@ -107,17 +110,18 @@ public sealed class Contact
             canReceiveAutomatedEmail, CleanOptional(customerType), customerStatus, CleanOptional(address),
             Normalize(country, "Colombia", 100)!, CleanOptional(department), CleanOptional(city), now, now, true,
             landline, dateOfBirth, Normalize(identificationNumber, null, 50), Normalize(referredBy, null, 200),
-            Normalize(acquisitionMedium, null, 200), Normalize(additionalData, null, 4000), customerFunnel);
+            Normalize(acquisitionMedium, null, 200), Normalize(additionalData, null, 4000), customerFunnel, normalizedTypes);
     }
 
     public static Contact Reconstitute(Guid id, string name, string? email, Telefono? phone,
         DateTime createdAt, DateTime updatedAt, bool active, Guid? ownerAdvisorId = null,
         bool canReceiveAutomatedEmail = false, string? surname = null, string? customerType = null,
         string customerStatus = "Nuevo", string? address = null, string country = "Colombia",
-        string? department = null, string? city = null, string customerFunnel = "Clientes") =>
+        string? department = null, string? city = null, string customerFunnel = "Clientes",
+        string[]? customerTypes = null) =>
         new(id, name, surname, email, phone, ownerAdvisorId, canReceiveAutomatedEmail, customerType,
             customerStatus, address, country, department, city, createdAt, updatedAt, active,
-            customerFunnel: customerFunnel);
+            customerFunnel: customerFunnel, customerTypes: NormalizeCustomerTypes(customerTypes, customerType));
 
     public void AssignTo(Guid? advisorId)
     {
@@ -129,7 +133,7 @@ public sealed class Contact
         string customerStatus, string? address, string? country, string? department, string? city,
         Telefono? landline = null, DateOnly? dateOfBirth = null, string? identificationNumber = null,
         string? referredBy = null, string? acquisitionMedium = null, string? additionalData = null,
-        string customerFunnel = "Clientes")
+        string customerFunnel = "Clientes", string[]? customerTypes = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -137,7 +141,8 @@ public sealed class Contact
             throw new DomainError("El nombre no puede superar 200 caracteres.");
         if (surname?.Trim().Length > 200)
             throw new DomainError("El apellido no puede superar 200 caracteres.");
-        ValidateType(customerType);
+        var normalizedTypes = NormalizeCustomerTypes(customerTypes, customerType);
+        customerType = normalizedTypes.FirstOrDefault();
         ValidateStatus(customerStatus);
         customerFunnel = ValidateFunnel(customerFunnel);
         if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
@@ -145,7 +150,8 @@ public sealed class Contact
 
         Name = name.Trim();
         Surname = CleanOptional(surname);
-        CustomerType = CleanOptional(customerType);
+        CustomerTypes = normalizedTypes;
+        CustomerType = customerType;
         CustomerStatus = customerStatus;
         CustomerFunnel = customerFunnel;
         Phone = phone;
@@ -179,10 +185,14 @@ public sealed class Contact
         return normalized;
     }
 
-    private static void ValidateType(string? value)
+    private static string[] NormalizeCustomerTypes(string[]? values, string? fallback)
     {
-        if (value is not null && !CustomerTypes.Contains(value))
-            throw new DomainError("El tipo de cliente no es valido.");
+        var source = values is { Length: > 0 } ? values : fallback is null ? [] : [fallback];
+        var types = source.Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (types.Length > 10 || types.Any(value => value.Length > 30))
+            throw new DomainError("Cada cliente admite hasta 10 tipos de máximo 30 caracteres.");
+        return types;
     }
 
     private static void ValidateStatus(string value)

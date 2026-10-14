@@ -60,9 +60,8 @@ public static class DemandsModule
             if ((contactFrom.HasValue && contactTo.HasValue && contactFrom > contactTo) ||
                 (demandFrom.HasValue && demandTo.HasValue && demandFrom > demandTo))
                 return Results.BadRequest(new { error = "El rango de fechas no es valido." });
-            if (!string.IsNullOrWhiteSpace(customerType) &&
-                customerType is not ("Comprador" or "Arrendatario" or "Propietario" or "Arrendador"))
-                return Results.BadRequest(new { error = "El tipo de cliente no es valido." });
+            if (customerType?.Length > 30)
+                return Results.BadRequest(new { error = "El tipo de cliente no puede superar 30 caracteres." });
             if (!string.IsNullOrWhiteSpace(customerStatus) &&
                 customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
                 return Results.BadRequest(new { error = "El estado del cliente no es valido." });
@@ -95,7 +94,7 @@ public static class DemandsModule
             var demandEnd = demandTo?.ToDateTime(TimeOnly.MaxValue);
             var filtered = scoped.Where(demand => contactLookup.TryGetValue(demand.ContactId, out var contact) &&
                     (string.IsNullOrWhiteSpace(q) || $"{contact.Name} {contact.Surname}".Contains(q.Trim(), StringComparison.OrdinalIgnoreCase)) &&
-                    (string.IsNullOrWhiteSpace(customerType) || contact.CustomerType == customerType) &&
+                    (string.IsNullOrWhiteSpace(customerType) || contact.CustomerTypes.Contains(customerType) || contact.CustomerType == customerType) &&
                     (string.IsNullOrWhiteSpace(customerStatus) || contact.CustomerStatus == customerStatus) &&
                     (string.IsNullOrWhiteSpace(customerFunnel) || contact.CustomerFunnel == customerFunnel.Trim()) &&
                     (!contactStart.HasValue || contact.CreatedAt >= contactStart.Value) &&

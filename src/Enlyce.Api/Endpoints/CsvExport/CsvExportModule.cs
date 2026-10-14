@@ -197,7 +197,7 @@ public static class CsvExportModule
         AppendRow(csv, ["nombre", "apellidos", "correo", "telefono", "tipo_cliente", "estado", "embudo", "creado"]);
         foreach (var contact in allContacts)
             AppendRow(csv, [contact.Name, contact.Surname ?? string.Empty, contact.Email ?? string.Empty,
-                contact.Phone?.Value ?? string.Empty, contact.CustomerType ?? string.Empty,
+                contact.Phone?.Value ?? string.Empty, string.Join(", ", contact.CustomerTypes),
                 contact.CustomerStatus, contact.CustomerFunnel,
                 contact.CreatedAt.ToString("O", CultureInfo.InvariantCulture)]);
         var content = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();

@@ -117,7 +117,8 @@ public static class ClientImportModule
                 var phone = phoneIndex < 0 ? null : Cell(row, phoneIndex);
                 var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
                     ParseConsent(Cell(row, canReceiveEmailIndex));
-                var customerType = customerTypeIndex < 0 ? null : Cell(row, customerTypeIndex);
+                var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
+                var customerType = customerTypes.FirstOrDefault();
                 var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";
                 customerType = NormalizeCustomerType(customerType);
                 customerStatus = NormalizeCustomerStatus(customerStatus);
@@ -128,7 +129,7 @@ public static class ClientImportModule
                 var email = TryEmail(emailText);
                 var parsedPhone = TryPhone(phone);
                 var error = ValidateRow(name, surname, emailText, email, phone, parsedPhone,
-                    customerType, customerStatus, address, country, department, city);
+                    customerTypes, customerStatus, address, country, department, city);
                 var duplicate = error is null && email is not null &&
                     (existing.Contains(email.Value) || !seenInFile.Add(email.Value));
                 if (duplicate)
@@ -278,7 +279,8 @@ public static class ClientImportModule
             var phoneText = phoneIndex < 0 ? null : Cell(row, phoneIndex);
             var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
                 ParseConsent(Cell(row, canReceiveEmailIndex));
-            var customerType = customerTypeIndex < 0 ? null : Cell(row, customerTypeIndex);
+            var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
+            var customerType = customerTypes.FirstOrDefault();
             var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";
             customerType = NormalizeCustomerType(customerType);
             customerStatus = NormalizeCustomerStatus(customerStatus);
@@ -289,7 +291,7 @@ public static class ClientImportModule
             var email = TryEmail(emailText);
             var phone = TryPhone(phoneText);
             var error = ValidateRow(name, surname, emailText, email, phoneText, phone,
-                customerType, customerStatus, address, country, department, city);
+                customerTypes, customerStatus, address, country, department, city);
             var duplicate = email is not null && (existing.Contains(email.Value) || !seen.Add(email.Value));
 
             if (error is not null)
@@ -298,7 +300,8 @@ public static class ClientImportModule
                 duplicates++;
             else
                 newContacts.Add(Contact.CreateImported(name!, surname, email?.Value, phone, ownerAdvisorId,
-                    canReceiveAutomatedEmail, customerType, customerStatus, address, country, department, city));
+                    canReceiveAutomatedEmail, customerType, customerStatus, address, country, department, city,
+                    customerTypes: customerTypes));
 
             if (error is not null || duplicate)
                 errorRows.Add(new ClientImportErrorRow(index + 2,
@@ -467,6 +470,9 @@ public static class ClientImportModule
         _ => value.Trim()
     };
 
+    private static string[] ParseCustomerTypes(string? value) => value?.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+        .Select(NormalizeCustomerType).Where(type => type is not null).Select(type => type!).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? [];
+
     private static string NormalizeCustomerStatus(string value) => value.Trim().ToLowerInvariant() switch
     {
         "en proceso" or "enproceso" => "EnProceso",
@@ -477,7 +483,7 @@ public static class ClientImportModule
     };
 
     private static string? ValidateRow(string? name, string? surname, string? emailText, Email? email,
-        string? phoneText, Telefono? phone, string? customerType, string customerStatus,
+        string? phoneText, Telefono? phone, string[] customerTypes, string customerStatus,
         string? address, string country, string? department, string? city)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -490,8 +496,8 @@ public static class ClientImportModule
             return "El email no tiene formato valido.";
         if (phoneText is not null && phone is null)
             return "El telefono no tiene formato valido.";
-        if (customerType is not null && customerType is not ("Comprador" or "Arrendatario" or "Propietario" or "Arrendador"))
-            return "El tipo de cliente no es valido.";
+        if (customerTypes.Length > 10 || customerTypes.Any(type => type.Length > 30))
+            return "Cada cliente admite hasta 10 tipos de máximo 30 caracteres.";
         if (customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
             return "El estado del cliente no es valido.";
         if (address?.Length > 500 || country.Length > 100 || department?.Length > 100 || city?.Length > 100)

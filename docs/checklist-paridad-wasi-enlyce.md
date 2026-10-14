@@ -51,6 +51,12 @@
 | Chat interno | [ ] | Enlyce muestra placeholder; Wasi muestra chat y contactos de red. |
 | Plan y facturación | [~] | Enlyce tiene checkout y estado de pago; comparar gestión de plan, factura y cuenta frente a Wasi. |
 
+### Avance verificado — 2026-10-14
+
+La fila «Alta, lista y ficha de clientes» y el punto 2 del orden de trabajo quedaron parcialmente desactualizados: Enlyce ya admite varios tipos por cliente y tipos personalizados en alta, edición e importación; el filtro del directorio y el cruce buscan tipos personalizados. Se almacenan hasta 10 valores de 30 caracteres, separados por coma o punto y coma al importar.
+
+Sigue faltando un catálogo administrable para gestionar tipos, etiquetas, embudos/etapas y medios de captación. La migración `20261014170000_AddMultipleCustomerTypes` está preparada y copia el tipo legado a la nueva columna; no se ha aplicado. No desplegar hasta validar migraciones pendientes y el procedimiento de respaldo/restauración de la base objetivo.
+
 ## Orden de trabajo acordado
 
 1. **Importar clientes (parcial):** CSV/XLS/XLSX, API de vista previa/confirmación, contactos independientes, asignación privada, campos mapeables, CSV de filas omitidas y reintentos idempotentes por usuario/clave/hash de contenido y mapeo. La guía oficial solo confirma nombre obligatorio, apellidos/email/teléfono mapeables y columnas ignorables; obligatoriedad de email/teléfono y reglas de duplicados faltan por verificar. Enlyce deduplica por email dentro del alcance visible. Consentimiento de datos y permiso de correo no se mezclan. La bitácora registra fuente/actor/fecha de registro; la fecha original del consentimiento no se conoce si el archivo no la trae. La guía no documenta importación de demandas; no inventar ese requisito. Exportación ahora permite correo propio con CSV filtrado; faltan grupos equivalentes e historial de envíos.

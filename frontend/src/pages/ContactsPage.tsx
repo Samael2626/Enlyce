@@ -10,7 +10,7 @@ export function ContactsPage() {
   const [includeInitialDemand, setIncludeInitialDemand] = useState(false)
   const [initialDemandError, setInitialDemandError] = useState("")
   const [newContact, setNewContact] = useState({ name: "", surname: "", email: "", phone: "", landline: "",
-    customerType: "", address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
+    customerTypes: [] as string[], address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
     identificationNumber: "", referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "",
     customerFunnel: "Clientes" })
   const pageSize = 20
@@ -75,7 +75,7 @@ export function ContactsPage() {
   const setPropertyStatus = useSetDemandPropertyStatus()
   const [name, setName] = useState("")
   const [surname, setSurname] = useState("")
-  const [customerType, setCustomerType] = useState("")
+  const [customerTypes, setCustomerTypes] = useState<string[]>([])
   const [customerStatus, setCustomerStatus] = useState("Nuevo")
   const [customerFunnel, setCustomerFunnel] = useState("Clientes")
   const [address, setAddress] = useState("")
@@ -182,7 +182,7 @@ export function ContactsPage() {
   useEffect(() => {
     setName(contact?.name ?? "")
     setSurname(contact?.surname ?? "")
-    setCustomerType(contact?.customerType ?? "")
+    setCustomerTypes(contact?.customerTypes?.length ? contact.customerTypes : contact?.customerType ? [contact.customerType] : [])
     setCustomerStatus(contact?.customerStatus ?? "Nuevo")
     setCustomerFunnel(contact?.customerFunnel ?? "Clientes")
     setAddress(contact?.address ?? "")
@@ -270,7 +270,7 @@ export function ContactsPage() {
               return
             }
           }
-            setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerType: "",
+            setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerTypes: [],
               address: "", country: "Colombia", department: "", city: "", dateOfBirth: "", identificationNumber: "",
               referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "", customerFunnel: "Clientes" })
             setShowCreateContact(false)
@@ -283,13 +283,13 @@ export function ContactsPage() {
         {([
           ["name", "Nombre", true], ["surname", "Apellidos"], ["email", "Correo electrónico"],
           ["phone", "Teléfono móvil"], ["landline", "Teléfono fijo"], ["dateOfBirth", "Fecha de nacimiento", false, "date"],
-          ["identificationNumber", "N.º de identificación"], ["customerType", "Tipo de cliente"],
+          ["identificationNumber", "N.º de identificación"], ["customerTypes", "Tipos de cliente (separa con coma)"],
           ["referredBy", "Referido por"], ["acquisitionMedium", "Medio de captación"], ["country", "País"],
           ["department", "Departamento"], ["city", "Ciudad"], ["address", "Dirección"],
         ] as const).map(([key, label, required, type]) => <label key={key} className="text-xs text-muted-foreground">{label}
-          {key === "customerType" ? <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.customerType} onChange={(event) => setNewContact((value) => ({ ...value, customerType: event.target.value }))}>
-            <option value="">Sin clasificar</option><option value="Comprador">Comprador</option><option value="Arrendatario">Arrendatario</option><option value="Propietario">Propietario</option><option value="Arrendador">Arrendador</option>
-          </select> :
+          {key === "customerTypes" ? <input type="text" placeholder="Comprador, Propietario" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+            value={newContact.customerTypes.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
+              customerTypes: event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean) }))} /> :
           <input type={type ?? "text"} required={required} maxLength={key === "address" ? 500 : 200}
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             value={newContact[key]} onChange={(event) => setNewContact((value) => ({ ...value, [key]: event.target.value }))} />}
@@ -332,7 +332,7 @@ export function ContactsPage() {
         </div>
         <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(event) => { event.preventDefault(); setCrossPage(1); setCrossSearched(true) }}>
           <label className="text-xs text-muted-foreground">Nombre del cliente<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.q} onChange={(event) => setCrossFilters((value) => ({ ...value, q: event.target.value }))} /></label>
-          <label className="text-xs text-muted-foreground">Tipo de cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerType} onChange={(event) => setCrossFilters((value) => ({ ...value, customerType: event.target.value }))}><option value="">Todos</option><option value="Comprador">Comprador</option><option value="Arrendatario">Arrendatario</option><option value="Propietario">Propietario</option><option value="Arrendador">Arrendador</option></select></label>
+          <label className="text-xs text-muted-foreground">Tipo de cliente<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder="Cualquiera o personalizado" value={crossFilters.customerType} onChange={(event) => setCrossFilters((value) => ({ ...value, customerType: event.target.value }))} /></label>
           <label className="text-xs text-muted-foreground">Estado del cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerStatus} onChange={(event) => setCrossFilters((value) => ({ ...value, customerStatus: event.target.value }))}><option value="">Todos</option><option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option></select></label>
           <label className="text-xs text-muted-foreground">Embudo<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerFunnel} onChange={(event) => setCrossFilters((value) => ({ ...value, customerFunnel: event.target.value }))}><option value="">Todos</option><option value="Clientes">Clientes</option></select></label>
           {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Usuario encargado<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.advisorId} onChange={(event) => setCrossFilters((value) => ({ ...value, advisorId: event.target.value }))}><option value="">Todos</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>}
@@ -530,13 +530,7 @@ export function ContactsPage() {
               </label>
             </div>
             <label className="block text-xs text-muted-foreground">Tipo de cliente
-              <select value={customerTypeFilter} onChange={(event) => { setCustomerTypeFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
-                <option value="">Todos</option>
-                <option value="Comprador">Comprador</option>
-                <option value="Arrendatario">Arrendatario</option>
-                <option value="Propietario">Propietario</option>
-                <option value="Arrendador">Arrendador</option>
-              </select>
+              <input value={customerTypeFilter} onChange={(event) => { setCustomerTypeFilter(event.target.value); setPage(1) }} placeholder="Cualquiera o personalizado" className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
             </label>
             <label className="block text-xs text-muted-foreground">Estado del cliente
               <select value={customerStatusFilter} onChange={(event) => { setCustomerStatusFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
@@ -612,6 +606,7 @@ export function ContactsPage() {
                   <span className="block font-semibold text-foreground">{[item.name, item.surname].filter(Boolean).join(" ")}</span>
                   <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email || "Sin email"}</span>
                   {item.phone && <span className="mt-1 block text-xs text-muted-foreground">{item.phone}</span>}
+                  {(item.customerTypes?.length ?? 0) > 0 && <span className="mt-1 block truncate text-xs text-muted-foreground">{item.customerTypes.join(", ")}</span>}
                 </button>
               </div>
             ))}
@@ -647,7 +642,7 @@ export function ContactsPage() {
                     onSubmit={(event) => {
                       event.preventDefault()
                       updateContact.mutate({ id: contact.id, name, surname: surname || undefined,
-                        phone: phone || undefined, customerType: customerType || undefined, customerStatus, customerFunnel,
+                        phone: phone || undefined, customerTypes, customerStatus, customerFunnel,
                         address: address || undefined, country, department: department || undefined, city: city || undefined,
                         landline: landline || undefined, dateOfBirth: dateOfBirth || undefined,
                         identificationNumber: identificationNumber || undefined, referredBy: referredBy || undefined,
@@ -660,10 +655,9 @@ export function ContactsPage() {
                     <label className="text-xs text-muted-foreground">Apellidos
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={surname} onChange={(event) => setSurname(event.target.value)} maxLength={200} />
                     </label>
-                    <label className="text-xs text-muted-foreground">Tipo de cliente
-                      <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerType} onChange={(event) => setCustomerType(event.target.value)}>
-                        <option value="">Sin clasificar</option><option value="Comprador">Comprador</option><option value="Arrendatario">Arrendatario</option><option value="Propietario">Propietario</option><option value="Arrendador">Arrendador</option>
-                      </select>
+                    <label className="text-xs text-muted-foreground">Tipos de cliente (separa con coma)
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerTypes.join(", ")}
+                        onChange={(event) => setCustomerTypes(event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean))} />
                     </label>
                     <label className="text-xs text-muted-foreground">Estado
                       <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerStatus} onChange={(event) => setCustomerStatus(event.target.value)}>

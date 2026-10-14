@@ -120,7 +120,7 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         if (createdThrough.HasValue)
             contacts = contacts.Where(contact => contact.CreatedAt <= createdThrough.Value);
         if (!string.IsNullOrWhiteSpace(customerType))
-            contacts = contacts.Where(contact => contact.CustomerType == customerType);
+            contacts = contacts.Where(contact => contact.CustomerTypes.Contains(customerType) || contact.CustomerType == customerType);
         if (!string.IsNullOrWhiteSpace(customerStatus))
             contacts = contacts.Where(contact => contact.CustomerStatus == customerStatus);
         if (!string.IsNullOrWhiteSpace(customerFunnel))

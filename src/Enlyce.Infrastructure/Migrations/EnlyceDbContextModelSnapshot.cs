@@ -288,6 +288,11 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string[]>("CustomerTypes")
+                        .IsRequired()
+                        .HasDefaultValueSql("ARRAY[]::text[]")
+                        .HasColumnType("text[]");
+
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 
