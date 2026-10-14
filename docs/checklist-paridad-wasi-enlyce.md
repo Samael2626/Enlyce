@@ -28,7 +28,7 @@
 | Lista, ficha y edición de inmuebles | [~] | Enlyce lista/crea inmuebles. Faltan edición completa y paridad de filtros; Wasi añade mapa/lista, papelera, selección masiva, orden, búsqueda y búsqueda avanzada. |
 | Importación de inmuebles | [~] | Importación desde API Wasi en segundo plano existe. Wasi también importa XLS/XLSX/CSV y otras fuentes; falta cubrir formatos aplicables. |
 | Exportación de inmuebles | [?] | Wasi muestra acceso de importar/exportar; el flujo de exportación no quedó observado. |
-| Importación de clientes | [~] | CSV/XLS/XLSX con nombre/apellidos/email/teléfono/tipo/estado/dirección/país/departamento/ciudad y permiso «Recibe correo» mapeable por separado. El email es opcional y no único; duplicados se informan dentro del alcance visible, sin revelar contactos ajenos. Asignación privada y permiso de correo apagado si no hay valor afirmativo; admin puede corregir preferencia. Falta guardar fuente/fecha/evidencia de consentimiento, datos privados y campos adicionales de demanda, reporte de errores, reintentos y pruebas. |
+| Importación de clientes | [~] | CSV/XLS/XLSX con campos personales y de clasificación/ubicación mapeables; email opcional y no único. Detecta duplicados dentro del alcance visible; asigna contactos y registra procedencia/actor/fecha de registro para permisos afirmativos. Confirmación permite descargar CSV de filas omitidas con número y motivo, sin datos personales. Faltan datos privados y campos adicionales de demanda, reintentos idempotentes y pruebas. |
 | Exportación de clientes | [~] | Enlyce exporta contactos/CRM en CSV. Wasi permite elegir grupo y envía el archivo al correo; falta paridad. |
 | Inmuebles de aliados | [ ] | Wasi lista inmuebles compartidos y permite republicación; Enlyce carece de red multiempresa. |
 | Alianzas, propietarios aliados y grupos | [ ] | Faltan modelo multiempresa, permisos, invitaciones, solicitudes recibidas/aceptadas, acuerdos y grupos. |
@@ -53,7 +53,7 @@
 
 ## Orden de trabajo acordado
 
-1. **Importar clientes (parcial):** CSV/XLS/XLSX, API de vista previa/confirmación, contactos independientes, asignación privada y mapeo de nombre, apellidos, email, teléfono, tipo/estado, ubicación y Recibe correo. Email opcional y repetible; consentimiento de datos y permiso de correo no se mezclan. Falta evidencia fechada/fuente de consentimiento, demanda completa, errores descargables, reintentos y pruebas. No crear oportunidades ficticias.
+1. **Importar clientes (parcial):** CSV/XLS/XLSX, API de vista previa/confirmación, contactos independientes, asignación privada, campos mapeables y CSV descargable de filas omitidas. Email opcional y repetible; consentimiento de datos y permiso de correo no se mezclan. La bitácora registra fuente/actor/fecha de registro; la fecha original del consentimiento no se conoce si el archivo no la trae. Faltan demanda completa, reintentos seguros y pruebas. No crear oportunidades ficticias.
 2. **Directorio y ficha de cliente (en curso):** tipo/estado Wasi, apellidos, ubicación y dirección editables; mantener demandas, inmuebles enlazados e historial CRM. Completar filtros/alcance Wasi, datos privados, eventos y permisos.
 3. **Cerrar ciclo de importación/exportación:** resultados por fila, errores descargables, reintentos seguros y exportación con filtros/alcances equivalentes.
 4. **Completar paridad de inmuebles:** validar campos/formulario y determinar si hace falta importación por archivo además de la integración Wasi existente.

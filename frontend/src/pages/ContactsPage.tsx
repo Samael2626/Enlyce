@@ -269,7 +269,20 @@ export function ContactsPage() {
             }
           }}>{importing ? "Importando…" : `Importar ${importPreview.validRows - importPreview.duplicateRows} clientes`}</button>
         </div>}
-        {importResult && <p role="status" className="mt-3 text-sm text-emerald-700">Importados: {importResult.importedRows} · con errores: {importResult.invalidRows} · duplicados: {importResult.duplicateRows}</p>}
+        {importResult && <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+          <p role="status" className="text-emerald-700">Importados: {importResult.importedRows} · con errores: {importResult.invalidRows} · duplicados: {importResult.duplicateRows}</p>
+          {importResult.errors.length > 0 && <button type="button" className="rounded-md border border-border px-3 py-1 text-foreground"
+            onClick={() => {
+              const quote = (value: string) => `"${value.replaceAll('"', '""')}"`
+              const csv = ["fila,error", ...importResult.errors.map((item) => `${item.rowNumber},${quote(item.error)}`)].join("\r\n")
+              const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }))
+              const anchor = document.createElement("a")
+              anchor.href = url
+              anchor.download = "errores-importacion-clientes.csv"
+              anchor.click()
+              URL.revokeObjectURL(url)
+            }}>Descargar errores CSV ({importResult.errors.length})</button>}
+        </div>}
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">

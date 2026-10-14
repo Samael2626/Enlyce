@@ -124,6 +124,7 @@ class ApiClient {
       duplicateRows: number
       rows: Array<{ rowNumber: number; name: string | null; surname: string | null; email: string | null;
         phone: string | null; canReceiveAutomatedEmail: boolean; error: string | null; duplicate: boolean }>
+      errors: Array<{ rowNumber: number; error: string }>
     }>("/api/import/clientes/confirmar", { method: "POST", body })
   }
 

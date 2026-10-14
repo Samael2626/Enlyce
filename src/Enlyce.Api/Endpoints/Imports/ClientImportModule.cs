@@ -240,6 +240,7 @@ public static class ClientImportModule
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var newContacts = new List<Contact>();
         var resultRows = new List<ClientImportPreviewRow>(Math.Min(MaxPreviewRows, table.Rows.Count));
+        var errorRows = new List<ClientImportErrorRow>();
         var invalid = 0;
         var duplicates = 0;
 
@@ -276,6 +277,10 @@ public static class ClientImportModule
                 newContacts.Add(Contact.CreateImported(name!, surname, email?.Value, phone, ownerAdvisorId,
                     canReceiveAutomatedEmail, customerType, customerStatus, address, country, department, city));
 
+            if (error is not null || duplicate)
+                errorRows.Add(new ClientImportErrorRow(index + 2,
+                    error ?? "Email duplicado en contactos visibles o en el archivo."));
+
             if (resultRows.Count < MaxPreviewRows)
                 resultRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phoneText,
                     canReceiveAutomatedEmail,
@@ -296,7 +301,7 @@ public static class ClientImportModule
         }
 
         return Results.Ok(new ClientImportConfirmationResponse(
-            table.Rows.Count, newContacts.Count, invalid, duplicates, resultRows));
+            table.Rows.Count, newContacts.Count, invalid, duplicates, resultRows, errorRows));
     }
 
     private static bool ValidateMapping(
@@ -468,4 +473,5 @@ public static class ClientImportModule
 
 public sealed record ClientImportConfirmationResponse(
     int TotalRows, int ImportedRows, int InvalidRows, int DuplicateRows,
-    IReadOnlyList<ClientImportPreviewRow> Rows);
+    IReadOnlyList<ClientImportPreviewRow> Rows, IReadOnlyList<ClientImportErrorRow> Errors);
+public sealed record ClientImportErrorRow(int RowNumber, string Error);
