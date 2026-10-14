@@ -13,6 +13,42 @@ public static class ContactsModule
     {
         var group = app.MapGroup("/api/contactos").WithTags("Contactos").RequireAuthorization();
 
+        group.MapPost("/", async Task<IResult> (
+            [FromBody] CreateContactRequest request,
+            HttpContext http,
+            IContactRepository contacts,
+            IAsesorRepository advisors,
+            CancellationToken ct) =>
+        {
+            var ownerAdvisorId = EndpointAccess.AdvisorId(http.User);
+            if (http.User.IsInRole("Administrador"))
+            {
+                ownerAdvisorId = request.AdvisorId;
+                if (ownerAdvisorId.HasValue &&
+                    await advisors.ObtenerPorIdAsync(ownerAdvisorId.Value) is not { Activo: true, Rol: "Asesor" })
+                    return Results.BadRequest(new { error = "El asesor asignado no es valido." });
+            }
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return Results.BadRequest(new { error = "El nombre es obligatorio." });
+
+            try
+            {
+                var phone = string.IsNullOrWhiteSpace(request.Phone) ? null : Telefono.Create(request.Phone);
+                var landline = string.IsNullOrWhiteSpace(request.Landline) ? null : Telefono.Create(request.Landline);
+                var contact = Contact.CreateImported(request.Name, request.Surname, request.Email, phone,
+                    ownerAdvisorId, false, request.CustomerType, request.CustomerStatus, request.Address,
+                    request.Country, request.Department, request.City, landline, request.DateOfBirth,
+                    request.IdentificationNumber, request.ReferredBy, request.AcquisitionMedium, request.AdditionalData);
+                await contacts.AddAsync(contact, ct);
+                return Results.Created($"/api/contactos/{contact.Id}", ToSummary(contact));
+            }
+            catch (DomainError error)
+            {
+                return Results.BadRequest(new { error = error.Message });
+            }
+        })
+        .WithName("CreateContact");
+
         group.MapGet("/", async Task<IResult> (
             string? q,
             DateOnly? from,
@@ -256,6 +292,12 @@ public sealed record UpdateContactRequest(string Name, string? Phone, string? Su
     string? Country = null, string? Department = null, string? City = null, string? Landline = null,
     DateOnly? DateOfBirth = null, string? IdentificationNumber = null, string? ReferredBy = null,
     string? AcquisitionMedium = null, string? AdditionalData = null);
+public sealed record CreateContactRequest(string Name, string? Surname = null, string? Email = null,
+    string? Phone = null, string? Landline = null, string? CustomerType = null,
+    string CustomerStatus = "Nuevo", string? Address = null, string? Country = null,
+    string? Department = null, string? City = null, DateOnly? DateOfBirth = null,
+    string? IdentificationNumber = null, string? ReferredBy = null, string? AcquisitionMedium = null,
+    string? AdditionalData = null, Guid? AdvisorId = null);
 public sealed record AssignContactRequest(Guid? AdvisorId);
 public sealed record UpdateContactEmailPermissionRequest(bool Allowed, string Source, string? EvidenceReference);
 public sealed record ContactEmailPermissionEventDto(bool Allowed, string Source, string? EvidenceReference,

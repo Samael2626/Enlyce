@@ -13,6 +13,7 @@ public interface IContactRepository
         CancellationToken ct = default);
     Task<IReadOnlyList<Guid>> GetIdsByOwnerAdvisorAsync(Guid advisorId, CancellationToken ct = default);
     Task AssignContactAsync(Contact contact, Guid? advisorId, CancellationToken ct = default);
+    Task AddAsync(Contact contact, CancellationToken ct = default);
     Task<ContactImportBatch?> GetImportBatchAsync(string actorId, Guid requestId, CancellationToken ct = default);
     Task AddImportedAsync(IReadOnlyCollection<Contact> contacts, ContactImportBatch batch, CancellationToken ct = default);
     Task SetEmailPermissionAsync(Contact contact, ContactEmailPermissionEvent permissionEvent, CancellationToken ct = default);

@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
 import { api } from "@/api/client"
-import { useContact, useContacts, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
+import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 export function ContactsPage() {
+  const createContact = useCreateContact()
+  const [showCreateContact, setShowCreateContact] = useState(false)
+  const [newContact, setNewContact] = useState({ name: "", surname: "", email: "", phone: "", landline: "",
+    customerType: "", address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
+    identificationNumber: "", referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "" })
   const pageSize = 20
   const [selectedId, setSelectedId] = useState("")
   const [search, setSearch] = useState("")
@@ -202,7 +207,49 @@ export function ContactsPage() {
         <p className="crm-eyebrow">Relación comercial</p>
         <h1 className="mt-2 font-display text-3xl text-foreground">Contactos</h1>
         <p className="mt-2 text-sm text-muted-foreground">Personas, oportunidades y actividad en un solo expediente.</p>
+        <button type="button" className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => setShowCreateContact((value) => !value)}>
+          {showCreateContact ? "Cerrar alta" : "Nuevo cliente"}
+        </button>
       </header>
+
+      {showCreateContact && <form className="crm-panel grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3" onSubmit={(event) => {
+        event.preventDefault()
+        createContact.mutate({ ...newContact, advisorId: newContact.advisorId || undefined, customerStatus: "Nuevo" }, {
+          onSuccess: () => {
+            setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerType: "",
+              address: "", country: "Colombia", department: "", city: "", dateOfBirth: "", identificationNumber: "",
+              referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "" })
+            setShowCreateContact(false)
+          },
+        })
+      }}>
+        <h2 className="font-display text-xl text-foreground sm:col-span-2 lg:col-span-3">Nuevo cliente</h2>
+        {([
+          ["name", "Nombre", true], ["surname", "Apellidos"], ["email", "Correo electrónico"],
+          ["phone", "Teléfono móvil"], ["landline", "Teléfono fijo"], ["dateOfBirth", "Fecha de nacimiento", false, "date"],
+          ["identificationNumber", "N.º de identificación"], ["customerType", "Tipo de cliente"],
+          ["referredBy", "Referido por"], ["acquisitionMedium", "Medio de captación"], ["country", "País"],
+          ["department", "Departamento"], ["city", "Ciudad"], ["address", "Dirección"],
+        ] as const).map(([key, label, required, type]) => <label key={key} className="text-xs text-muted-foreground">{label}
+          {key === "customerType" ? <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.customerType} onChange={(event) => setNewContact((value) => ({ ...value, customerType: event.target.value }))}>
+            <option value="">Sin clasificar</option><option value="Comprador">Comprador</option><option value="Arrendatario">Arrendatario</option><option value="Propietario">Propietario</option><option value="Arrendador">Arrendador</option>
+          </select> :
+          <input type={type ?? "text"} required={required} maxLength={key === "address" ? 500 : 200}
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+            value={newContact[key]} onChange={(event) => setNewContact((value) => ({ ...value, [key]: event.target.value }))} />}
+        </label>)}
+        {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asesor encargado
+          <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.advisorId} onChange={(event) => setNewContact((value) => ({ ...value, advisorId: event.target.value }))}>
+            <option value="">Sin asignar</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
+          </select>
+        </label>}
+        <label className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">Datos adicionales / observaciones
+          <textarea maxLength={4000} rows={3} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.additionalData} onChange={(event) => setNewContact((value) => ({ ...value, additionalData: event.target.value }))} />
+        </label>
+        {createContact.isError && <p role="alert" className="text-sm text-destructive sm:col-span-3">{createContact.error.message}</p>}
+        <div className="flex gap-2 sm:col-span-3"><button disabled={createContact.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createContact.isPending ? "Guardando…" : "Guardar cliente"}</button>
+          <button type="button" className="rounded-md border border-border px-4 py-2 text-sm text-foreground" onClick={() => setShowCreateContact(false)}>Cancelar</button></div>
+      </form>}
 
       <section className="crm-panel p-5">
         <h2 className="font-display text-xl text-foreground">Importar clientes</h2>

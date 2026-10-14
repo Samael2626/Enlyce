@@ -189,6 +189,14 @@ export function useContacts(filters: Parameters<typeof api.getContacts>[0] = {})
   })
 }
 
+export function useCreateContact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.createContact,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+  })
+}
+
 export function useContact(id: string) {
   return useQuery({
     queryKey: ["contacts", id],

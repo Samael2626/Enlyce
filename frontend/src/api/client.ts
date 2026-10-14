@@ -149,6 +149,15 @@ class ApiClient {
   }
 
   // Contactos
+  async createContact(data: { name: string; surname?: string; email?: string; phone?: string; landline?: string;
+    customerType?: string; customerStatus?: string; address?: string; country?: string; department?: string;
+    city?: string; dateOfBirth?: string; identificationNumber?: string; referredBy?: string;
+    acquisitionMedium?: string; additionalData?: string; advisorId?: string }) {
+    return this.request<import("@/lib/types").ContactSummary>("/api/contactos", {
+      method: "POST", body: JSON.stringify(data),
+    })
+  }
+
   async getContacts(filters: { q?: string; from?: string; to?: string; customerType?: string;
     customerStatus?: string; advisorId?: string; page?: number; pageSize?: number } = {}) {
     const query = new URLSearchParams()

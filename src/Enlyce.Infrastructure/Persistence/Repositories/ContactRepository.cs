@@ -48,6 +48,12 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         await context.SaveChangesAsync(ct);
     }
 
+    public async Task AddAsync(Contact contact, CancellationToken ct = default)
+    {
+        await context.Contacts.AddAsync(contact, ct);
+        await context.SaveChangesAsync(ct);
+    }
+
     public Task<ContactImportBatch?> GetImportBatchAsync(string actorId, Guid requestId, CancellationToken ct = default) =>
         context.ContactImportBatches.AsNoTracking()
             .SingleOrDefaultAsync(batch => batch.ActorId == actorId && batch.RequestId == requestId, ct);

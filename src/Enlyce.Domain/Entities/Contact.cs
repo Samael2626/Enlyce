@@ -82,7 +82,9 @@ public sealed class Contact
     public static Contact CreateImported(string name, string? surname, string? email, Telefono? phone,
         Guid? ownerAdvisorId, bool canReceiveAutomatedEmail, string? customerType = null,
         string customerStatus = "Nuevo", string? address = null, string? country = null,
-        string? department = null, string? city = null)
+        string? department = null, string? city = null, Telefono? landline = null,
+        DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
+        string? acquisitionMedium = null, string? additionalData = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -96,9 +98,13 @@ public sealed class Contact
         var now = DateTime.UtcNow;
         ValidateType(customerType);
         ValidateStatus(customerStatus);
+        if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+            throw new DomainError("La fecha de nacimiento no puede estar en el futuro.");
         return new Contact(Guid.NewGuid(), name.Trim(), CleanOptional(surname), email, phone, ownerAdvisorId,
             canReceiveAutomatedEmail, CleanOptional(customerType), customerStatus, CleanOptional(address),
-            Normalize(country, "Colombia", 100), CleanOptional(department), CleanOptional(city), now, now, true);
+            Normalize(country, "Colombia", 100)!, CleanOptional(department), CleanOptional(city), now, now, true,
+            landline, dateOfBirth, Normalize(identificationNumber, null, 50), Normalize(referredBy, null, 200),
+            Normalize(acquisitionMedium, null, 200), Normalize(additionalData, null, 4000));
     }
 
     public static Contact Reconstitute(Guid id, string name, string? email, Telefono? phone,
