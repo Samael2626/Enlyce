@@ -389,7 +389,7 @@ function LeadCard({
     registrarInteraccion.mutate(
       {
         leadId: lead.id,
-        asesorId: user.email,
+        asesorId: user.id,
         tipo: tipoInteraccion,
         resumen,
       },

@@ -7,10 +7,12 @@ export function useLogin() {
   const setUser = useAuthStore((s) => s.setUser)
 
   return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      api.login(email, password),
-    onSuccess: (data, variables) => {
-      setUser({ nombre: data.nombre, rol: data.rol, email: variables.email })
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      await api.login(email, password)
+      return api.getMe()
+    },
+    onSuccess: (data) => {
+      setUser({ id: data.id, nombre: data.nombre, rol: data.rol, email: data.email })
     },
   })
 }
@@ -24,7 +26,7 @@ export function useMe() {
     queryFn: async () => {
       try {
         const data = await api.getMe()
-        setUser({ nombre: data.nombre, rol: data.rol, email: data.email })
+        setUser({ id: data.id, nombre: data.nombre, rol: data.rol, email: data.email })
         return data
       } catch (error) {
         logout()
