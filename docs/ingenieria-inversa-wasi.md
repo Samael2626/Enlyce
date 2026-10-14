@@ -74,6 +74,8 @@ La ruta `/usuario/clientes` muestra una tabla con nombre, contacto, informacion,
 
 Ruta: `/usuario/clientes/exportar`. Se muestra el acceso **Importar clientes**; el inventario no detecta controles de exportacion en esta pantalla. Falta abrir la accion para identificar el flujo de importacion y localizar la exportacion.
 
+La guia oficial de Wasi documenta XLS/XLSX/CSV y el mapeo de nombre (obligatorio), apellidos, email y telefono; permite ignorar otras columnas. La captura de L&C confirma los formatos, pero no muestra el mapeo ni la vista de resultados. No hay evidencia de que la importacion de Wasi incluya las demandas del formulario manual. Exportacion permite elegir un grupo y envia el archivo al correo registrado.
+
 ### Directorio de clientes
 
 Ruta: `/usuario/clientes/directorio`. Tabla de seguimiento con fecha de contacto, referido, comentario e inmueble. Los registros personales que aparecieron en el primer inventario fueron excluidos.
@@ -239,11 +241,11 @@ La navegacion y estructura principal ya estan inventariadas. Falta inspeccion vi
 | Cruce inmuebles - clientes (conteo "Clientes posibles" + detalle) | Cubierta desde 14-oct, con conteo por fila | `GET /api/inmuebles/{id}/demandas`, boton "Clientes posibles" en Inmuebles | Alto: al captar un inmueble se sabe a quien ofrecerlo | Bajo, sin esquema |
 | Inmuebles vinculados al cliente | Cubierta | `DemandPropertyLink` con estados | Alto | - |
 | Importar inmuebles | Parcial | Enlyce importa desde API Wasi en segundo plano (`WasiListingSource`); Wasi tambien documenta API/XML/XLS/XLSX/CSV | Medio | Medio |
-| Importar clientes | Faltante | Wasi documenta XLS/XLSX/CSV, mapeo/omision de columnas y Nombre obligatorio; Enlyce no tiene importador | Alto: migracion inicial | Medio; conservar consentimiento desconocido si no hay evidencia y bloquear comunicaciones automatizadas |
+| Importar clientes | Parcial | Enlyce ya importa XLS/XLSX/CSV, mapea campos, previsualiza, valida y confirma contactos independientes; la guia Wasi documenta Nombre obligatorio, apellidos, email y telefono. La captura L&C solo confirma formatos. | Alto: migracion inicial | Medio; consentimiento de email separado y nunca inferido |
 | Exportar | Parcial | Enlyce exporta CSV de oportunidades/contactos; en Wasi no se encontro control de exportacion | Medio | - |
 | Red inmobiliaria / alianzas | Faltante | Formularios con nombre y ubicacion; tabla de aliados con comision y "Publicar en mi Pagina Web" | Incierto: depende de acuerdos entre inmobiliarias | Alto: multiempresa, permisos, comision |
 
-Decision: primera entrega acordada = importar clientes. La ayuda oficial confirma formatos y mapeo; falta validar el flujo visual completo de Wasi y concretar el archivo de L&C. Despues siguen ficha/directorio, ciclo de importacion/exportacion, paridad de inmuebles y red multiempresa.
+Decision: primera entrega acordada = importar clientes. Enlyce cubre la carga y confirmacion basica; siguen pendientes campos de la ficha manual que hoy no existen, exportacion por grupo/email y observacion visual del flujo completo. La guia de Wasi no documenta importar demandas, asi que no se exige al importador sin nueva evidencia. Despues siguen ficha/directorio, ciclo de importacion/exportacion, paridad de inmuebles y red multiempresa.
 
 Pendiente del cruce inverso: registrar cambios de estado del vinculo en el historial unificado.
 
