@@ -10,6 +10,67 @@ public static class CsvExportModule
 {
     public static void MapCsvExport(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/api/contactos/export.csv", async Task<IResult> (
+            string? q,
+            DateOnly? from,
+            DateOnly? to,
+            string? customerType,
+            string? customerStatus,
+            Guid? advisorId,
+            HttpContext http,
+            IContactRepository contacts,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            if (from.HasValue && to.HasValue && from > to)
+                return Results.BadRequest(new { error = "El rango de fechas no es valido." });
+            if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
+                return Results.Forbid();
+
+            IReadOnlyCollection<Guid>? allowedIds = null;
+            if (!http.User.IsInRole("Administrador"))
+            {
+                var currentAdvisorId = EndpointAccess.AdvisorId(http.User);
+                if (!currentAdvisorId.HasValue)
+                    return Results.Forbid();
+                allowedIds = await GetAdvisorContactIdsAsync(currentAdvisorId.Value, contacts, leads);
+            }
+            if (advisorId.HasValue)
+            {
+                var advisorContactIds = await GetAdvisorContactIdsAsync(advisorId.Value, contacts, leads);
+                allowedIds = allowedIds is null ? advisorContactIds : advisorContactIds.Intersect(allowedIds).ToArray();
+            }
+
+            var allContacts = new List<Contact>();
+            const int batchSize = 1000;
+            const int maxRows = 50000;
+            var skip = 0;
+            int total;
+            do
+            {
+                var result = await contacts.SearchAsync(q, from?.ToDateTime(TimeOnly.MinValue),
+                    to?.ToDateTime(TimeOnly.MaxValue), allowedIds, skip, batchSize, ct, customerType, customerStatus);
+                total = result.Total;
+                if (total > maxRows)
+                    return Results.Problem("La exportacion supera el limite de 50.000 clientes.", statusCode: StatusCodes.Status413PayloadTooLarge);
+                allContacts.AddRange(result.Items);
+                skip += result.Items.Count;
+            } while (skip < total && skip > 0);
+
+            var csv = new StringBuilder();
+            AppendRow(csv, ["nombre", "apellidos", "correo", "telefono", "tipo_cliente", "estado", "creado"]);
+            foreach (var contact in allContacts)
+                AppendRow(csv, [contact.Name, contact.Surname ?? string.Empty, contact.Email ?? string.Empty,
+                    contact.Phone?.Value ?? string.Empty, contact.CustomerType ?? string.Empty,
+                    contact.CustomerStatus, contact.CreatedAt.ToString("O", CultureInfo.InvariantCulture)]);
+
+            var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+            return Results.File(bytes, "text/csv; charset=utf-8", "clientes-enlyce.csv");
+        })
+        .RequireAuthorization()
+        .WithName("ExportContactsCsv")
+        .Produces(StatusCodes.Status200OK, contentType: "text/csv");
+
         app.MapGet("/api/opportunities/export.csv", async Task<IResult> (
             DateOnly from,
             DateOnly to,
@@ -76,5 +137,14 @@ public static class CsvExportModule
     {
         var first = value.TrimStart(' ', '\t', '\r', '\n', '\u0000');
         return first.Length > 0 && first[0] is '=' or '+' or '-' or '@' ? $"'{value}" : value;
+    }
+
+    private static async Task<IReadOnlyCollection<Guid>> GetAdvisorContactIdsAsync(
+        Guid advisorId, IContactRepository contacts, ILeadRepository leads)
+    {
+        var contactIds = (await contacts.GetIdsByOwnerAdvisorAsync(advisorId)).ToHashSet();
+        var assignedLeads = await leads.GetByAsesorIdAsync(advisorId);
+        contactIds.UnionWith(assignedLeads.Where(lead => lead.ContactId.HasValue).Select(lead => lead.ContactId!.Value));
+        return contactIds;
     }
 }

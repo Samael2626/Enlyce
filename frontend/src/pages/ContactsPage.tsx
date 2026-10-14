@@ -20,6 +20,8 @@ export function ContactsPage() {
   const [advisorFilter, setAdvisorFilter] = useState("")
   const [page, setPage] = useState(1)
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
+  const [exportingContacts, setExportingContacts] = useState(false)
+  const [exportContactsError, setExportContactsError] = useState("")
   const contactsQuery = useContacts({ q: search, from: createdFrom, to: createdTo,
     customerType: customerTypeFilter, customerStatus: customerStatusFilter,
     advisorId: advisorFilter || undefined, page, pageSize })
@@ -456,7 +458,22 @@ export function ContactsPage() {
               <button type="button" disabled={!selectedContactIds.length} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1.5 font-semibold text-foreground disabled:opacity-40" onClick={() => exportContactsCsv(contacts.filter((item) => selectedContactIds.includes(item.id)))}>
                 <Download className="h-3.5 w-3.5" /> Exportar ({selectedContactIds.length})
               </button>
+              <button type="button" disabled={exportingContacts} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1.5 font-semibold text-foreground disabled:opacity-40" onClick={async () => {
+                setExportingContacts(true); setExportContactsError("")
+                try {
+                  const blob = await api.downloadContactsCsv({ q: search, from: createdFrom, to: createdTo,
+                    customerType: customerTypeFilter, customerStatus: customerStatusFilter, advisorId: advisorFilter })
+                  const url = URL.createObjectURL(blob)
+                  const link = document.createElement("a"); link.href = url; link.download = "clientes-enlyce.csv"; link.click()
+                  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+                } catch (error) {
+                  setExportContactsError(error instanceof Error ? error.message : "No se pudo exportar.")
+                } finally { setExportingContacts(false) }
+              }}>
+                <Download className="h-3.5 w-3.5" /> {exportingContacts ? "Exportando…" : "Exportar resultados filtrados"}
+              </button>
             </div>
+            {exportContactsError && <p role="alert" className="text-xs text-destructive">{exportContactsError}</p>}
           </div>
           <div className="max-h-[70vh] overflow-y-auto">
             {contactsQuery.isPending && <p className="p-5 text-sm text-muted-foreground">Cargando contactos…</p>}

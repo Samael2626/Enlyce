@@ -335,6 +335,20 @@ class ApiClient {
     return response.blob()
   }
 
+  async downloadContactsCsv(filters: { q?: string; from?: string; to?: string; customerType?: string;
+    customerStatus?: string; advisorId?: string }): Promise<Blob> {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) query.set(key, value)
+    })
+    const response = await fetch(`${this.baseUrl}/api/contactos/export.csv?${query}`, { credentials: "include" })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({})) as { error?: string; detail?: string }
+      throw new Error(error.error ?? error.detail ?? `Error ${response.status}`)
+    }
+    return response.blob()
+  }
+
   async moveLeadInPipeline(leadId: string, nuevaEtapa: string, reason = "Cambio desde pipeline") {
     return this.request<void>(`/api/pipeline/${leadId}/mover-etapa`, {
       method: "PUT",
