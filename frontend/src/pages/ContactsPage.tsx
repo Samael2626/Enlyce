@@ -146,6 +146,7 @@ export function ContactsPage() {
   const crossResult = crossQuery.data
   const [ownerAdvisorId, setOwnerAdvisorId] = useState("")
   const [importRequestId, setImportRequestId] = useState("")
+  const [importRequestStorageKey, setImportRequestStorageKey] = useState("")
   const [importRequestIdReady, setImportRequestIdReady] = useState(false)
   const updateImportMapping = (setter: (value: string) => void, value: string) => {
     setter(value)
@@ -156,6 +157,7 @@ export function ContactsPage() {
   useEffect(() => {
     if (!importFile) {
       setImportRequestId("")
+      setImportRequestStorageKey("")
       setImportRequestIdReady(true)
       return
     }
@@ -182,6 +184,7 @@ export function ContactsPage() {
       }
       if (!cancelled) {
         setImportRequestId(requestId)
+        setImportRequestStorageKey(storageKey)
         setImportRequestIdReady(true)
       }
     }).catch(() => {
@@ -573,6 +576,11 @@ export function ContactsPage() {
                 customerLabelsColumn === "" ? undefined : Number(customerLabelsColumn),
                 customerFunnelColumn === "" ? undefined : Number(customerFunnelColumn))
               setImportResult(result)
+              const nextRequestId = crypto.randomUUID()
+              if (importRequestStorageKey) {
+                try { sessionStorage.setItem(importRequestStorageKey, nextRequestId) } catch { /* Reintento solo durante esta sesión. */ }
+              }
+              setImportRequestId(nextRequestId)
               await contactsQuery.refetch()
             } catch (error) {
               setImportError(error instanceof Error ? error.message : "No se pudo importar el archivo.")
