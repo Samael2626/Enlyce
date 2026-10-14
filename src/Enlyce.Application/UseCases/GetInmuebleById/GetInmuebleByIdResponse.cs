@@ -8,6 +8,8 @@ public record GetInmuebleByIdResponse(
     string Modalidad,
     string Estado,
     string Direccion,
+    string Pais,
+    string? Departamento,
     decimal Precio,
     string Moneda,
     int MetrosCuadrados,

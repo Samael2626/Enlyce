@@ -16,4 +16,6 @@ public record CreateInmuebleCommand(
     int Habitaciones,
     int Banos,
     int Parqueaderos,
-    Guid PropietarioId);
+    Guid PropietarioId,
+    string Pais = "Colombia",
+    string? Departamento = null);

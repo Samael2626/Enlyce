@@ -65,6 +65,8 @@ export function ContactsPage() {
   const [demandOperation, setDemandOperation] = useState("Venta")
   const [demandType, setDemandType] = useState("")
   const [demandCity, setDemandCity] = useState("")
+  const [demandCountry, setDemandCountry] = useState("Colombia")
+  const [demandDepartment, setDemandDepartment] = useState("")
   const [demandNeighborhood, setDemandNeighborhood] = useState("")
   const [demandMaxPrice, setDemandMaxPrice] = useState("")
   const [demandMinPrice, setDemandMinPrice] = useState("")
@@ -570,6 +572,8 @@ export function ContactsPage() {
                           operation: demandOperation,
                           propertyType: demandType || undefined,
                           city: demandCity,
+                          country: demandCountry,
+                          department: demandDepartment || undefined,
                           neighborhood: demandNeighborhood || undefined,
                           minimumPrice: demandMinPrice ? Number(demandMinPrice) : undefined,
                           maximumPrice: demandMaxPrice ? Number(demandMaxPrice) : undefined,
@@ -591,6 +595,12 @@ export function ContactsPage() {
                       </label>
                       <label className="text-xs text-muted-foreground">Ciudad
                         <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandCity} onChange={(event) => setDemandCity(event.target.value)} maxLength={100} required />
+                      </label>
+                      <label className="text-xs text-muted-foreground">País
+                        <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandCountry} onChange={(event) => setDemandCountry(event.target.value)} maxLength={100} required />
+                      </label>
+                      <label className="text-xs text-muted-foreground">Departamento
+                        <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandDepartment} onChange={(event) => setDemandDepartment(event.target.value)} maxLength={100} />
                       </label>
                       <label className="text-xs text-muted-foreground">Barrio
                         <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandNeighborhood} onChange={(event) => setDemandNeighborhood(event.target.value)} maxLength={100} />
@@ -634,7 +644,7 @@ export function ContactsPage() {
                       {demandsQuery.data?.map((demand) => (
                         <button key={demand.id} type="button" onClick={() => setSelectedDemandId(demand.id)} aria-pressed={selectedDemandId === demand.id} className={`block w-full rounded-md border border-border p-3 text-left hover:bg-muted ${selectedDemandId === demand.id ? "bg-muted" : ""}`}>
                           <span className="block text-sm font-semibold text-foreground">{demand.operation} · {demand.propertyType ?? "Cualquier inmueble"}</span>
-                          <span className="mt-1 block text-xs text-muted-foreground">{demand.city}{demand.neighborhood ? ` · ${demand.neighborhood}` : ""}{demand.minimumPrice || demand.maximumPrice ? ` · ${demand.currency} ${demand.minimumPrice?.toLocaleString("es-CO") ?? "0"}–${demand.maximumPrice?.toLocaleString("es-CO") ?? "sin máximo"}` : ""}{demand.minimumArea || demand.maximumArea ? ` · ${demand.minimumArea ?? 0}–${demand.maximumArea ?? "sin máximo"} m²` : ""}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">{demand.city}{demand.department ? `, ${demand.department}` : ""}, {demand.country}{demand.neighborhood ? ` · ${demand.neighborhood}` : ""}{demand.minimumPrice || demand.maximumPrice ? ` · ${demand.currency} ${demand.minimumPrice?.toLocaleString("es-CO") ?? "0"}–${demand.maximumPrice?.toLocaleString("es-CO") ?? "sin máximo"}` : ""}{demand.minimumArea || demand.maximumArea ? ` · ${demand.minimumArea ?? 0}–${demand.maximumArea ?? "sin máximo"} m²` : ""}</span>
                         </button>
                       ))}
                       {demandsQuery.data?.length === 0 && <p className="text-sm text-muted-foreground">Todavía no hay una búsqueda guardada.</p>}
@@ -646,7 +656,7 @@ export function ContactsPage() {
                         <article key={match.propertyId} className="mt-2 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3">
                           <div>
                             <p className="font-semibold text-foreground">{match.name}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{match.propertyType} · {match.city}{match.neighborhood ? `, ${match.neighborhood}` : ""} · {match.bedrooms} hab. · {match.currency} {match.price.toLocaleString("es-CO")}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{match.propertyType} · {match.city}{match.department ? `, ${match.department}` : ""}, {match.country}{match.neighborhood ? ` · ${match.neighborhood}` : ""} · {match.bedrooms} hab. · {match.currency} {match.price.toLocaleString("es-CO")}</p>
                           </div>
                           {match.relationshipStatus ? (
                             <select aria-label={`Estado de ${match.name}`} value={match.relationshipStatus} onChange={(event) => setPropertyStatus.mutate({ demandId: selectedDemandId, propertyId: match.propertyId, status: event.target.value })} className="rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground">

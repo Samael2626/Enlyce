@@ -21,7 +21,7 @@ public class CreateInmuebleHandler : ICommandHandler<CreateInmuebleCommand, Crea
         var propietario = await _propietarioRepo.GetByIdAsync(command.PropietarioId)
             ?? throw new InvalidOperationException($"Propietario {command.PropietarioId} no encontrado.");
 
-        var direccion = Direccion.Crear(command.Calle, command.Ciudad, command.Barrio);
+        var direccion = Direccion.Crear(command.Calle, command.Ciudad, command.Barrio, command.Pais, command.Departamento);
         var precio = Dinero.Crear(command.Precio, command.Moneda);
 
         var inmueble = Inmueble.Crear(

@@ -14,6 +14,8 @@ public sealed class CustomerDemandConfiguration : IEntityTypeConfiguration<Custo
         builder.Property(demand => demand.Operation).HasConversion<string>().HasMaxLength(20).IsRequired();
         builder.Property(demand => demand.PropertyType).HasConversion<string>().HasMaxLength(20);
         builder.Property(demand => demand.City).HasMaxLength(100).IsRequired();
+        builder.Property(demand => demand.Country).HasMaxLength(100).HasDefaultValue("Colombia").IsRequired();
+        builder.Property(demand => demand.Department).HasMaxLength(100);
         builder.Property(demand => demand.Neighborhood).HasMaxLength(100);
         builder.Property(demand => demand.MinimumPrice).HasPrecision(18, 2);
         builder.Property(demand => demand.MaximumPrice).HasPrecision(18, 2);

@@ -23,6 +23,8 @@ public class InmuebleConfiguration : IEntityTypeConfiguration<Inmueble>
             db.Property(d => d.Calle).HasColumnName("Calle").HasMaxLength(300).IsRequired();
             db.Property(d => d.Ciudad).HasColumnName("Ciudad").HasMaxLength(100).IsRequired();
             db.Property(d => d.Barrio).HasColumnName("Barrio").HasMaxLength(100);
+            db.Property(d => d.Pais).HasColumnName("Pais").HasMaxLength(100).HasDefaultValue("Colombia").IsRequired();
+            db.Property(d => d.Departamento).HasColumnName("Departamento").HasMaxLength(100);
         });
 
         builder.ComplexProperty(i => i.Precio, pb =>

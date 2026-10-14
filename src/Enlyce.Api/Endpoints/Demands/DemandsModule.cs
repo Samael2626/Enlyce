@@ -74,7 +74,8 @@ public static class DemandsModule
             var demand = CustomerDemand.Create(request.ContactId, request.LeadId, operation,
                 propertyType, request.City, request.Neighborhood, request.MinimumPrice,
                 request.MaximumPrice, request.Bedrooms, request.Bathrooms, request.ParkingSpaces,
-                request.Notes, request.Currency ?? "COP", request.MinimumArea, request.MaximumArea);
+                request.Notes, request.Currency ?? "COP", request.MinimumArea, request.MaximumArea,
+                request.Country ?? "Colombia", request.Department);
             await demands.AddAsync(demand, ct);
             return Results.Created($"/api/demandas/{demand.Id}", ToDto(demand));
         })
@@ -101,7 +102,8 @@ public static class DemandsModule
                 .Where(demand.Matches)
                 .Select(property => new DemandPropertyMatchDto(
                     property.Id, property.Nombre, property.Tipo.ToString(), property.Modalidad.ToString(),
-                    property.Direccion.Ciudad, property.Direccion.Barrio, property.Precio.Monto,
+                    property.Direccion.Ciudad, property.Direccion.Pais, property.Direccion.Departamento,
+                    property.Direccion.Barrio, property.Precio.Monto,
                     property.Precio.Moneda, property.Habitaciones, property.Banos, property.Parqueaderos,
                     linked.TryGetValue(property.Id, out var link) ? link.Status.ToString() : null))
                 .ToArray();
@@ -250,7 +252,7 @@ public static class DemandsModule
 
     private static CustomerDemandDto ToDto(CustomerDemand demand) => new(
         demand.Id, demand.ContactId, demand.LeadId, demand.Operation.ToString(),
-        demand.PropertyType?.ToString(), demand.City, demand.Neighborhood,
+        demand.PropertyType?.ToString(), demand.City, demand.Country, demand.Department, demand.Neighborhood,
         demand.MinimumPrice, demand.MaximumPrice, demand.Currency, demand.MinimumArea, demand.MaximumArea,
         demand.Bedrooms, demand.Bathrooms,
         demand.ParkingSpaces, demand.Notes, demand.CreatedAt, demand.UpdatedAt);
@@ -266,15 +268,17 @@ public sealed record ListDemandsRequest(Guid ContactId);
 public sealed record CreateDemandRequest(Guid ContactId, Guid? LeadId, string Operation,
     string? PropertyType, string City, string? Neighborhood, decimal? MinimumPrice,
     decimal? MaximumPrice, int? Bedrooms, int? Bathrooms, int? ParkingSpaces, string? Notes,
-    string? Currency = null, decimal? MinimumArea = null, decimal? MaximumArea = null);
+    string? Currency = null, decimal? MinimumArea = null, decimal? MaximumArea = null,
+    string? Country = null, string? Department = null);
 public sealed record SetDemandPropertyStatusRequest(string Status);
 public sealed record CustomerDemandDto(Guid Id, Guid ContactId, Guid? LeadId, string Operation,
-    string? PropertyType, string City, string? Neighborhood, decimal? MinimumPrice,
+    string? PropertyType, string City, string Country, string? Department, string? Neighborhood, decimal? MinimumPrice,
     decimal? MaximumPrice, string Currency, decimal? MinimumArea, decimal? MaximumArea,
     int? Bedrooms, int? Bathrooms, int? ParkingSpaces,
     string? Notes, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record DemandPropertyMatchDto(Guid PropertyId, string Name, string PropertyType,
-    string Operation, string City, string? Neighborhood, decimal Price, string Currency,
+    string Operation, string City, string Country, string? Department, string? Neighborhood,
+    decimal Price, string Currency,
     int Bedrooms, int Bathrooms, int ParkingSpaces, string? RelationshipStatus);
 public sealed record PropertyDemandMatchDto(CustomerDemandDto Demand, string ContactName,
     string? RelationshipStatus);

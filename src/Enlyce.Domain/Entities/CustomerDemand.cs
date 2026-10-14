@@ -10,6 +10,8 @@ public sealed class CustomerDemand
     public ModalidadInmueble Operation { get; private set; }
     public TipoInmueble? PropertyType { get; private set; }
     public string City { get; private set; } = string.Empty;
+    public string Country { get; private set; } = "Colombia";
+    public string? Department { get; private set; }
     public string? Neighborhood { get; private set; }
     public decimal? MinimumPrice { get; private set; }
     public decimal? MaximumPrice { get; private set; }
@@ -27,7 +29,8 @@ public sealed class CustomerDemand
     private CustomerDemand() { }
 
     private CustomerDemand(Guid id, Guid contactId, Guid? leadId, ModalidadInmueble operation,
-        TipoInmueble? propertyType, string city, string? neighborhood, decimal? minimumPrice,
+        TipoInmueble? propertyType, string city, string country, string? department,
+        string? neighborhood, decimal? minimumPrice,
         decimal? maximumPrice, string currency, decimal? minimumArea, decimal? maximumArea,
         int? bedrooms, int? bathrooms, int? parkingSpaces,
         string? notes, DateTime createdAt, DateTime updatedAt, bool active)
@@ -38,6 +41,8 @@ public sealed class CustomerDemand
         Operation = operation;
         PropertyType = propertyType;
         City = city;
+        Country = country;
+        Department = department;
         Neighborhood = neighborhood;
         MinimumPrice = minimumPrice;
         MaximumPrice = maximumPrice;
@@ -56,7 +61,8 @@ public sealed class CustomerDemand
     public static CustomerDemand Create(Guid contactId, Guid? leadId, ModalidadInmueble operation,
         TipoInmueble? propertyType, string? city, string? neighborhood, decimal? minimumPrice,
         decimal? maximumPrice, int? bedrooms, int? bathrooms, int? parkingSpaces, string? notes,
-        string currency = "COP", decimal? minimumArea = null, decimal? maximumArea = null)
+        string currency = "COP", decimal? minimumArea = null, decimal? maximumArea = null,
+        string country = "Colombia", string? department = null)
     {
         if (contactId == Guid.Empty || leadId == Guid.Empty)
             throw new DomainError("El contacto o la oportunidad no son validos.");
@@ -67,6 +73,8 @@ public sealed class CustomerDemand
         // Ciudad vacia = cualquier municipio: las alertas de la web no siempre la traen.
         if (city?.Trim().Length > 100)
             throw new DomainError("La ciudad no puede superar 100 caracteres.");
+        if (string.IsNullOrWhiteSpace(country) || country.Trim().Length > 100 || department?.Trim().Length > 100)
+            throw new DomainError("El pais o departamento no es valido.");
         if (minimumPrice is < 0 || maximumPrice is < 0 ||
             minimumPrice.HasValue && maximumPrice.HasValue && minimumPrice > maximumPrice)
             throw new DomainError("El rango de presupuesto no es valido.");
@@ -81,7 +89,8 @@ public sealed class CustomerDemand
 
         var now = DateTime.UtcNow;
         return new CustomerDemand(Guid.NewGuid(), contactId, leadId, operation, propertyType,
-            city?.Trim() ?? string.Empty, Normalize(neighborhood, 100), minimumPrice, maximumPrice,
+            city?.Trim() ?? string.Empty, country.Trim(), Normalize(department, 100),
+            Normalize(neighborhood, 100), minimumPrice, maximumPrice,
             currency.Trim().ToUpperInvariant(), minimumArea, maximumArea, bedrooms,
             bathrooms, parkingSpaces, Normalize(notes, 2_000), now, now, true);
     }
@@ -91,8 +100,8 @@ public sealed class CustomerDemand
         string? neighborhood, decimal? minimumPrice, decimal? maximumPrice, int? bedrooms,
         int? bathrooms, int? parkingSpaces, string? notes, DateTime createdAt,
         DateTime updatedAt, bool active, string currency = "COP", decimal? minimumArea = null,
-        decimal? maximumArea = null) =>
-        new(id, contactId, leadId, operation, propertyType, city, neighborhood,
+        decimal? maximumArea = null, string country = "Colombia", string? department = null) =>
+        new(id, contactId, leadId, operation, propertyType, city, country, department, neighborhood,
             minimumPrice, maximumPrice, currency, minimumArea, maximumArea, bedrooms, bathrooms, parkingSpaces, notes,
             createdAt, updatedAt, active);
 
@@ -105,6 +114,10 @@ public sealed class CustomerDemand
         if (PropertyType.HasValue && PropertyType != property.Tipo)
             return false;
         if (City.Length > 0 && !string.Equals(City, property.Direccion.Ciudad, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (!string.Equals(Country, property.Direccion.Pais, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (Department is not null && !string.Equals(Department, property.Direccion.Departamento, StringComparison.OrdinalIgnoreCase))
             return false;
         if (Neighborhood is not null && !string.Equals(Neighborhood, property.Direccion.Barrio, StringComparison.OrdinalIgnoreCase))
             return false;

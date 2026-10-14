@@ -411,6 +411,13 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<Guid>("ContactId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("Colombia");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -420,6 +427,10 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")
                         .HasDefaultValue("COP");
+
+                    b.Property<string>("Department")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid?>("LeadId")
                         .HasColumnType("uuid");
@@ -581,6 +592,19 @@ namespace Enlyce.Infrastructure.Migrations
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)")
                                 .HasColumnName("Ciudad");
+
+                            b1.Property<string>("Departamento")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("Departamento");
+
+                            b1.Property<string>("Pais")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasDefaultValue("Colombia")
+                                .HasColumnName("Pais");
                         });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Precio", "Enlyce.Domain.Entities.Inmueble.Precio#Dinero", b1 =>

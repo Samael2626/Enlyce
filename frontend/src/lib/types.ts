@@ -209,6 +209,8 @@ export interface CustomerDemand {
   operation: string
   propertyType?: string
   city: string
+  country: string
+  department?: string
   neighborhood?: string
   minimumPrice?: number
   maximumPrice?: number
@@ -229,6 +231,8 @@ export interface DemandPropertyMatch {
   propertyType: string
   operation: string
   city: string
+  country: string
+  department?: string
   neighborhood?: string
   price: number
   currency: string
@@ -250,6 +254,8 @@ export interface CreateCustomerDemandInput {
   operation: string
   propertyType?: string
   city: string
+  country?: string
+  department?: string
   neighborhood?: string
   minimumPrice?: number
   maximumPrice?: number
@@ -430,6 +436,8 @@ export interface CreateInmuebleRequest {
   modalidad: string
   calle: string
   ciudad: string
+  pais?: string
+  departamento?: string
   barrio?: string
   precio: number
   moneda: string
@@ -448,6 +456,8 @@ export interface GetInmuebleByIdResponse {
   modalidad: string
   estado: string
   direccion: string
+  pais: string
+  departamento?: string | null
   precio: number
   moneda: string
   metrosCuadrados: number
