@@ -93,10 +93,10 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 ## Ajuste importador (14 oct 2026)
 
-- Ahora mapea nombre, apellidos, email, teléfono y «Recibe correo» por separado. Solo valores afirmativos explícitos activan correos automáticos; el permiso de tratamiento de datos no se infiere.
+- Ahora mapea nombre, apellidos, email, teléfono y «Recibe correo» por separado. La columna se conserva para revisión, pero importar un valor afirmativo no habilita correos automáticos: falta evidencia verificable del permiso.
 - El correo puede repetirse en varios contactos, igual que en Wasi. La vista previa detecta repeticiones, pero no expone emails ajenos al alcance del asesor.
 - Administrador puede conceder o revocar el permiso desde la ficha; conceder exige una referencia de evidencia. El historial registra estado, fuente, actor y fecha de registro, en tabla append-only consultable solo por administradores.
-- La importación registra como fuente la columna «Recibe correo» y como actor quien confirma. La fecha es la de registro en Enlyce; la fecha original del permiso no se reconstruye. Contactos previos a la migración no reciben eventos inventados.
+- La importación no crea eventos de permiso a partir de «Recibe correo». Cuando un administrador concede permiso desde la ficha, la bitácora registra fuente, referencia de evidencia, actor y fecha de registro. La fecha original no se reconstruye; contactos previos a la migración no reciben eventos inventados.
 - Migraciones preparadas, no aplicadas. Contactos existentes quedan con `CanReceiveAutomatedEmail=false`; verificar evidencia real antes de habilitar envíos.
 
 ## Caracteristicas de inmuebles y demandas
