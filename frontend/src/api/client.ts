@@ -149,7 +149,8 @@ class ApiClient {
   }
 
   // Contactos
-  async getContacts(filters: { q?: string; from?: string; to?: string; page?: number; pageSize?: number } = {}) {
+  async getContacts(filters: { q?: string; from?: string; to?: string; customerType?: string;
+    customerStatus?: string; advisorId?: string; page?: number; pageSize?: number } = {}) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== "") query.set(key, String(value))

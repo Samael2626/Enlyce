@@ -25,7 +25,9 @@ public interface IContactRepository
         IReadOnlyCollection<Guid>? allowedContactIds,
         int skip,
         int take,
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        string? customerType = null,
+        string? customerStatus = null);
     Task<IReadOnlyList<Contact>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default);
     Task<Contact> CreateOrGetAsync(Contact contact, CancellationToken ct = default);
     Task SaveAsync(Contact contact, CancellationToken ct = default);

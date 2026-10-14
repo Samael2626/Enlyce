@@ -17,6 +17,9 @@ public static class ContactsModule
             string? q,
             DateOnly? from,
             DateOnly? to,
+            string? customerType,
+            string? customerStatus,
+            Guid? advisorId,
             int? page,
             int? pageSize,
             HttpContext http,
@@ -28,6 +31,12 @@ public static class ContactsModule
             var currentPageSize = pageSize ?? 20;
             if (currentPage < 1 || currentPageSize is < 1 or > 100 || (from.HasValue && to.HasValue && from.Value > to.Value))
                 return Results.BadRequest(new { error = "El rango o la paginacion no son validos." });
+            if (!string.IsNullOrWhiteSpace(customerType) && customerType is not ("Comprador" or "Arrendatario" or "Propietario" or "Arrendador"))
+                return Results.BadRequest(new { error = "El tipo de cliente no es valido." });
+            if (!string.IsNullOrWhiteSpace(customerStatus) && customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
+                return Results.BadRequest(new { error = "El estado del cliente no es valido." });
+            if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
+                return Results.Forbid();
 
             var skip = ((long)currentPage - 1) * currentPageSize;
             if (skip > int.MaxValue)
@@ -35,11 +44,23 @@ public static class ContactsModule
 
             var createdFrom = from?.ToDateTime(TimeOnly.MinValue);
             var createdThrough = to?.ToDateTime(TimeOnly.MaxValue);
-            var allowedContactIds = http.User.IsInRole("Administrador")
+            IReadOnlyCollection<Guid>? allowedContactIds = http.User.IsInRole("Administrador")
                 ? null
                 : await GetAdvisorContactIdsAsync(http, leads, contacts, ct);
+            if (advisorId.HasValue)
+            {
+                var assignedContactIds = (await contacts.GetIdsByOwnerAdvisorAsync(advisorId.Value, ct)).ToHashSet();
+                var assignedLeads = await leads.GetByAsesorIdAsync(advisorId.Value);
+                assignedContactIds.UnionWith(assignedLeads
+                    .Where(lead => lead.ContactId.HasValue)
+                    .Select(lead => lead.ContactId!.Value));
+                allowedContactIds = allowedContactIds is null
+                    ? assignedContactIds
+                    : assignedContactIds.Intersect(allowedContactIds).ToHashSet();
+            }
             var result = await contacts.SearchAsync(
-                q, createdFrom, createdThrough, allowedContactIds, (int)skip, currentPageSize, ct);
+                q, createdFrom, createdThrough, allowedContactIds, (int)skip, currentPageSize, ct,
+                customerType, customerStatus);
             return Results.Ok(new ContactListResponse(
                 result.Total,
                 result.Items.Select(ToSummary).ToArray()));

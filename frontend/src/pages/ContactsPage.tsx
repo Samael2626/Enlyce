@@ -10,9 +10,14 @@ export function ContactsPage() {
   const [search, setSearch] = useState("")
   const [createdFrom, setCreatedFrom] = useState("")
   const [createdTo, setCreatedTo] = useState("")
+  const [customerTypeFilter, setCustomerTypeFilter] = useState("")
+  const [customerStatusFilter, setCustomerStatusFilter] = useState("")
+  const [advisorFilter, setAdvisorFilter] = useState("")
   const [page, setPage] = useState(1)
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
-  const contactsQuery = useContacts({ q: search, from: createdFrom, to: createdTo, page, pageSize })
+  const contactsQuery = useContacts({ q: search, from: createdFrom, to: createdTo,
+    customerType: customerTypeFilter, customerStatus: customerStatusFilter,
+    advisorId: advisorFilter || undefined, page, pageSize })
   const contacts = contactsQuery.data?.items ?? []
   const totalContacts = contactsQuery.data?.total ?? 0
   const pageCount = Math.max(1, Math.ceil(totalContacts / pageSize))
@@ -22,7 +27,8 @@ export function ContactsPage() {
       setSelectedId(contacts[0]?.id ?? "")
   }, [contacts, selectedId])
 
-  useEffect(() => setSelectedContactIds([]), [search, createdFrom, createdTo, page])
+  useEffect(() => setSelectedContactIds([]), [search, createdFrom, createdTo,
+    customerTypeFilter, customerStatusFilter, advisorFilter, page])
 
   const detailQuery = useContact(selectedId)
   const contact = detailQuery.data?.contact
@@ -355,6 +361,31 @@ export function ContactsPage() {
                 <input type="date" value={createdTo} min={createdFrom || undefined} onChange={(event) => { setCreatedTo(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
               </label>
             </div>
+            <label className="block text-xs text-muted-foreground">Tipo de cliente
+              <select value={customerTypeFilter} onChange={(event) => { setCustomerTypeFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
+                <option value="">Todos</option>
+                <option value="Comprador">Comprador</option>
+                <option value="Arrendatario">Arrendatario</option>
+                <option value="Propietario">Propietario</option>
+                <option value="Arrendador">Arrendador</option>
+              </select>
+            </label>
+            <label className="block text-xs text-muted-foreground">Estado del cliente
+              <select value={customerStatusFilter} onChange={(event) => { setCustomerStatusFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
+                <option value="">Todos</option>
+                <option value="Nuevo">Nuevo</option>
+                <option value="EnProceso">En proceso</option>
+                <option value="Convertido">Convertido</option>
+                <option value="Recuperado">Recuperado</option>
+                <option value="Perdido">Perdido</option>
+              </select>
+            </label>
+            {user?.rol === "Administrador" && <label className="block text-xs text-muted-foreground">Usuario encargado
+              <select value={advisorFilter} onChange={(event) => { setAdvisorFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
+                <option value="">Todos</option>
+                {advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
+              </select>
+            </label>}
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={contacts.length > 0 && contacts.every((item) => selectedContactIds.includes(item.id))} onChange={(event) => setSelectedContactIds(event.target.checked ? contacts.map((item) => item.id) : [])} />

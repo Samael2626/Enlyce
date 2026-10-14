@@ -92,7 +92,9 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         IReadOnlyCollection<Guid>? allowedContactIds,
         int skip,
         int take,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        string? customerType = null,
+        string? customerStatus = null)
     {
         var contacts = context.Contacts.AsNoTracking().Where(contact => contact.Active);
         if (!string.IsNullOrWhiteSpace(query))
@@ -110,6 +112,10 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
             contacts = contacts.Where(contact => contact.CreatedAt >= createdFrom.Value);
         if (createdThrough.HasValue)
             contacts = contacts.Where(contact => contact.CreatedAt <= createdThrough.Value);
+        if (!string.IsNullOrWhiteSpace(customerType))
+            contacts = contacts.Where(contact => contact.CustomerType == customerType);
+        if (!string.IsNullOrWhiteSpace(customerStatus))
+            contacts = contacts.Where(contact => contact.CustomerStatus == customerStatus);
         if (allowedContactIds is not null)
         {
             if (allowedContactIds.Count == 0)
