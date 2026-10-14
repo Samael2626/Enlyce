@@ -168,6 +168,7 @@ public static class ClientImportModule
         [Microsoft.AspNetCore.Mvc.FromForm] int? departmentColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] int? cityColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] Guid? advisorId,
+        [Microsoft.AspNetCore.Mvc.FromForm] Guid importRequestId,
         HttpContext http,
         IClientImportTableReader reader,
         IContactRepository contacts,
@@ -177,6 +178,8 @@ public static class ClientImportModule
     {
         if (archivo.Length is <= 0 or > MaxFileBytes)
             return Results.BadRequest(new { error = "El archivo debe pesar entre 1 byte y 10 MB." });
+        if (importRequestId == Guid.Empty)
+            return Results.BadRequest(new { error = "Falta la clave de reintento de importacion." });
 
         var actorAdvisorId = EndpointAccess.AdvisorId(http.User);
         if (!http.User.IsInRole("Administrador") && actorAdvisorId is null)
@@ -185,6 +188,10 @@ public static class ClientImportModule
         if (ownerAdvisorId.HasValue &&
             await advisors.ObtenerPorIdAsync(ownerAdvisorId.Value) is not { Activo: true, Rol: "Asesor" })
             return Results.BadRequest(new { error = "El asesor asignado no es valido." });
+        var actorId = http.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? http.User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrWhiteSpace(actorId))
+            return Results.Forbid();
 
         ClientImportTable table;
         await using (var stream = archivo.OpenReadStream())
@@ -219,6 +226,24 @@ public static class ClientImportModule
         };
         if (!ValidateMapping(mapping, table.Columns, out var mappingError))
             return Results.BadRequest(new { error = mappingError, sourceColumns = table.Columns });
+
+        string fileHash;
+        await using (var hashStream = archivo.OpenReadStream())
+            fileHash = Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(hashStream, ct));
+        var payloadDescriptor = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            FileHash = fileHash,
+            Mapping = mapping.OrderBy(item => item.Key).ToDictionary(item => item.Key, item => item.Value),
+            OwnerAdvisorId = ownerAdvisorId
+        });
+        var payloadHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(payloadDescriptor)));
+        if (await contacts.GetImportBatchAsync(actorId, importRequestId, ct) is { } previousBatch)
+        {
+            if (!string.Equals(previousBatch.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase))
+                return Results.Conflict(new { error = "La clave de reintento ya se uso con otro archivo o mapeo. Inicia una importacion nueva." });
+            return Results.Ok(ToResponse(previousBatch));
+        }
 
         var nameIndex = nameColumn!.Value;
         var surnameIndex = surnameColumn ?? -1;
@@ -289,20 +314,26 @@ public static class ClientImportModule
 
         try
         {
-            var actorId = http.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                ?? http.User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
-            if (string.IsNullOrWhiteSpace(actorId))
-                return Results.Forbid();
-            await contacts.AddImportedAsync(newContacts, actorId, ct);
+            var response = new ClientImportConfirmationResponse(
+                table.Rows.Count, newContacts.Count, invalid, duplicates, resultRows, errorRows);
+            var batch = ContactImportBatch.Create(importRequestId, actorId, payloadHash,
+                response.TotalRows, response.ImportedRows, response.InvalidRows, response.DuplicateRows,
+                System.Text.Json.JsonSerializer.Serialize(response.Errors));
+            await contacts.AddImportedAsync(newContacts, batch, ct);
+            return Results.Ok(response);
         }
         catch (DbUpdateException)
         {
+            if (await contacts.GetImportBatchAsync(actorId, importRequestId, ct) is { } winningBatch &&
+                string.Equals(winningBatch.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase))
+                return Results.Ok(ToResponse(winningBatch));
             return Results.Conflict(new { error = "No se pudo completar la importacion. Revisa el archivo y vuelve a previsualizar." });
         }
-
-        return Results.Ok(new ClientImportConfirmationResponse(
-            table.Rows.Count, newContacts.Count, invalid, duplicates, resultRows, errorRows));
     }
+
+    private static ClientImportConfirmationResponse ToResponse(ContactImportBatch batch) => new(
+        batch.TotalRows, batch.ImportedRows, batch.InvalidRows, batch.DuplicateRows, [],
+        System.Text.Json.JsonSerializer.Deserialize<IReadOnlyList<ClientImportErrorRow>>(batch.ErrorsJson) ?? []);
 
     private static bool ValidateMapping(
         IReadOnlyDictionary<string, string?> mapping,

@@ -48,15 +48,19 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         await context.SaveChangesAsync(ct);
     }
 
-    public async Task AddImportedAsync(IReadOnlyCollection<Contact> contacts, string actorId, CancellationToken ct = default)
+    public Task<ContactImportBatch?> GetImportBatchAsync(string actorId, Guid requestId, CancellationToken ct = default) =>
+        context.ContactImportBatches.AsNoTracking()
+            .SingleOrDefaultAsync(batch => batch.ActorId == actorId && batch.RequestId == requestId, ct);
+
+    public async Task AddImportedAsync(IReadOnlyCollection<Contact> contacts, ContactImportBatch batch, CancellationToken ct = default)
     {
-        if (contacts.Count == 0)
-            return;
-        await context.Contacts.AddRangeAsync(contacts, ct);
+        if (contacts.Count > 0)
+            await context.Contacts.AddRangeAsync(contacts, ct);
         var events = contacts.Where(contact => contact.CanReceiveAutomatedEmail)
             .Select(contact => ContactEmailPermissionEvent.Create(contact.Id, true, "Importacion",
-                "Columna Recibe correo del archivo importado", actorId));
+                "Columna Recibe correo del archivo importado", batch.ActorId));
         await context.ContactEmailPermissionEvents.AddRangeAsync(events, ct);
+        await context.ContactImportBatches.AddAsync(batch, ct);
         await context.SaveChangesAsync(ct);
     }
 

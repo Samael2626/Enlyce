@@ -351,6 +351,44 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("ContactEmailPermissionEvents", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.ContactImportBatch", b =>
+                {
+                    b.Property<string>("ActorId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DuplicateRows")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("ImportedRows")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InvalidRows")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("TotalRows")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ActorId", "RequestId");
+
+                    b.ToTable("ContactImportBatches", (string)null);
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>
                 {
                     b.Property<Guid>("Id")

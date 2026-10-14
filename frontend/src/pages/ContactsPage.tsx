@@ -87,6 +87,47 @@ export function ContactsPage() {
   const [importing, setImporting] = useState(false)
   const [advisors, setAdvisors] = useState<Array<{ id: string; name: string }>>([])
   const [ownerAdvisorId, setOwnerAdvisorId] = useState("")
+  const [importRequestId, setImportRequestId] = useState("")
+  const [importRequestIdReady, setImportRequestIdReady] = useState(false)
+
+  useEffect(() => {
+    if (!importFile) {
+      setImportRequestId("")
+      setImportRequestIdReady(true)
+      return
+    }
+
+    let cancelled = false
+    setImportRequestIdReady(false)
+    void importFile.arrayBuffer().then(async (fileBytes) => {
+      const fileDigest = await crypto.subtle.digest("SHA-256", fileBytes)
+      const fileHash = Array.from(new Uint8Array(fileDigest), (byte) => byte.toString(16).padStart(2, "0")).join("")
+      const fingerprint = JSON.stringify([user?.email ?? "", fileHash, nameColumn, surnameColumn, emailColumn,
+        phoneColumn, canReceiveEmailColumn, customerTypeColumn, customerStatusColumn, addressColumn, countryColumn,
+        departmentColumn, cityColumn, ownerAdvisorId])
+      const fingerprintDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(fingerprint))
+      const storageKey = `enlyce:client-import:${Array.from(new Uint8Array(fingerprintDigest),
+        (byte) => byte.toString(16).padStart(2, "0")).join("")}`
+      let requestId: string
+      try {
+        requestId = sessionStorage.getItem(storageKey) ?? crypto.randomUUID()
+        sessionStorage.setItem(storageKey, requestId)
+      } catch {
+        requestId = crypto.randomUUID()
+      }
+      if (!cancelled) {
+        setImportRequestId(requestId)
+        setImportRequestIdReady(true)
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setImportError("No se pudo preparar la clave segura del reintento. Vuelve a seleccionar el archivo.")
+        setImportRequestIdReady(false)
+      }
+    })
+    return () => { cancelled = true }
+  }, [importFile, user?.email, nameColumn, surnameColumn, emailColumn, phoneColumn, canReceiveEmailColumn,
+    customerTypeColumn, customerStatusColumn, addressColumn, countryColumn, departmentColumn, cityColumn, ownerAdvisorId])
 
   useEffect(() => {
     if (user?.rol === "Administrador")
@@ -243,7 +284,7 @@ export function ContactsPage() {
             {importPreview.rows.map((row) => <tr key={row.rowNumber} className="border-b border-border"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.name || "—"}</td><td className="p-2">{row.surname || "—"}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.phone || "—"}</td><td className="p-2">{row.canReceiveAutomatedEmail ? "Sí" : "No"}</td><td className="p-2">{row.error || (row.duplicate ? "Email ya existe" : "Listo")}</td></tr>)}
           </tbody></table></div>
           {importPreview.totalRows > importPreview.rows.length && <p className="text-xs text-muted-foreground">Se muestran las primeras {importPreview.rows.length} filas.</p>}
-          <button type="button" disabled={importing || importPreview.validRows === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" onClick={async () => {
+          <button type="button" disabled={importing || !importRequestIdReady || importPreview.validRows === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" onClick={async () => {
             if (!importFile) return
             setImporting(true)
             setImportError("")
@@ -259,7 +300,7 @@ export function ContactsPage() {
                 addressColumn === "" ? undefined : Number(addressColumn),
                 countryColumn === "" ? undefined : Number(countryColumn),
                 departmentColumn === "" ? undefined : Number(departmentColumn),
-                cityColumn === "" ? undefined : Number(cityColumn))
+                cityColumn === "" ? undefined : Number(cityColumn), importRequestId)
               setImportResult(result)
               await contactsQuery.refetch()
             } catch (error) {

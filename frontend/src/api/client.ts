@@ -102,10 +102,11 @@ class ApiClient {
   async confirmClientImport(file: File, nameColumn: number, surnameColumn?: number, emailColumn?: number,
     phoneColumn?: number, canReceiveEmailColumn?: number, advisorId?: string, customerTypeColumn?: number,
     customerStatusColumn?: number, addressColumn?: number, countryColumn?: number,
-    departmentColumn?: number, cityColumn?: number) {
+    departmentColumn?: number, cityColumn?: number, importRequestId?: string) {
     const body = new FormData()
     body.set("archivo", file)
     body.set("nameColumn", String(nameColumn))
+    if (importRequestId) body.set("importRequestId", importRequestId)
     if (surnameColumn !== undefined) body.set("surnameColumn", String(surnameColumn))
     if (emailColumn !== undefined) body.set("emailColumn", String(emailColumn))
     if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
