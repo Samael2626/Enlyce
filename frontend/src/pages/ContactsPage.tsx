@@ -124,11 +124,19 @@ export function ContactsPage() {
   const [phoneColumn, setPhoneColumn] = useState("")
   const [canReceiveEmailColumn, setCanReceiveEmailColumn] = useState("")
   const [customerTypeColumn, setCustomerTypeColumn] = useState("")
+  const [customerLabelsColumn, setCustomerLabelsColumn] = useState("")
+  const [customerFunnelColumn, setCustomerFunnelColumn] = useState("")
   const [customerStatusColumn, setCustomerStatusColumn] = useState("")
   const [addressColumn, setAddressColumn] = useState("")
   const [countryColumn, setCountryColumn] = useState("")
   const [departmentColumn, setDepartmentColumn] = useState("")
   const [cityColumn, setCityColumn] = useState("")
+  const [landlineColumn, setLandlineColumn] = useState("")
+  const [dateOfBirthColumn, setDateOfBirthColumn] = useState("")
+  const [identificationNumberColumn, setIdentificationNumberColumn] = useState("")
+  const [referredByColumn, setReferredByColumn] = useState("")
+  const [acquisitionMediumColumn, setAcquisitionMediumColumn] = useState("")
+  const [additionalDataColumn, setAdditionalDataColumn] = useState("")
   const [importPreview, setImportPreview] = useState<Awaited<ReturnType<typeof api.previewClientImport>> | null>(null)
   const [importResult, setImportResult] = useState<Awaited<ReturnType<typeof api.confirmClientImport>> | null>(null)
   const [importError, setImportError] = useState("")
@@ -154,7 +162,9 @@ export function ContactsPage() {
       const fileHash = Array.from(new Uint8Array(fileDigest), (byte) => byte.toString(16).padStart(2, "0")).join("")
       const fingerprint = JSON.stringify([user?.email ?? "", fileHash, nameColumn, surnameColumn, emailColumn,
         phoneColumn, canReceiveEmailColumn, customerTypeColumn, customerStatusColumn, addressColumn, countryColumn,
-        departmentColumn, cityColumn, ownerAdvisorId])
+        departmentColumn, cityColumn, landlineColumn, dateOfBirthColumn, identificationNumberColumn,
+        referredByColumn, acquisitionMediumColumn, additionalDataColumn, customerLabelsColumn,
+        customerFunnelColumn, ownerAdvisorId])
       const fingerprintDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(fingerprint))
       const storageKey = `enlyce:client-import:${Array.from(new Uint8Array(fingerprintDigest),
         (byte) => byte.toString(16).padStart(2, "0")).join("")}`
@@ -177,7 +187,9 @@ export function ContactsPage() {
     })
     return () => { cancelled = true }
   }, [importFile, user?.email, nameColumn, surnameColumn, emailColumn, phoneColumn, canReceiveEmailColumn,
-    customerTypeColumn, customerStatusColumn, addressColumn, countryColumn, departmentColumn, cityColumn, ownerAdvisorId])
+    customerTypeColumn, customerLabelsColumn, customerFunnelColumn, customerStatusColumn, addressColumn,
+    countryColumn, departmentColumn, cityColumn, landlineColumn, dateOfBirthColumn,
+    identificationNumberColumn, referredByColumn, acquisitionMediumColumn, additionalDataColumn, ownerAdvisorId])
 
   useEffect(() => {
     if (user?.rol === "Administrador")
@@ -395,32 +407,64 @@ export function ContactsPage() {
               countryColumn === "" ? undefined : Number(countryColumn),
               departmentColumn === "" ? undefined : Number(departmentColumn),
               cityColumn === "" ? undefined : Number(cityColumn),
+              landlineColumn === "" ? undefined : Number(landlineColumn),
+              dateOfBirthColumn === "" ? undefined : Number(dateOfBirthColumn),
+              identificationNumberColumn === "" ? undefined : Number(identificationNumberColumn),
+              referredByColumn === "" ? undefined : Number(referredByColumn),
+              acquisitionMediumColumn === "" ? undefined : Number(acquisitionMediumColumn),
+              additionalDataColumn === "" ? undefined : Number(additionalDataColumn),
+              customerLabelsColumn === "" ? undefined : Number(customerLabelsColumn),
+              customerFunnelColumn === "" ? undefined : Number(customerFunnelColumn),
             )
             setImportColumns(preview.sourceColumns)
             setImportPreview(importColumns.length ? preview : null)
             if (!importColumns.length) {
-              const findColumn = (terms: string[]) => preview.sourceColumns.findIndex((column) => terms.some((term) => column.toLocaleLowerCase().includes(term)))
+              const normalizeHeader = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+              const findColumn = (terms: string[]) => {
+                const aliases = terms.map(normalizeHeader)
+                const exact = preview.sourceColumns.findIndex((column) => aliases.includes(normalizeHeader(column)))
+                return exact >= 0 ? exact : preview.sourceColumns.findIndex((column) => {
+                  const header = normalizeHeader(column)
+                  return aliases.some((term) => term.length >= 5 && term !== "telefono" && header.includes(term))
+                })
+              }
               setNameColumn(String(Math.max(0, findColumn(["nombre", "name", "cliente"])) ))
               const surnameIndex = findColumn(["apellido", "surname", "last name"])
               const emailIndex = findColumn(["email", "correo"])
-              const phoneIndex = findColumn(["tel", "celular", "phone"])
+              const phoneIndex = findColumn(["telefono movil", "telefono", "celular", "phone", "mobile"])
               const consentIndex = findColumn(["recibe correo", "email consent", "email permission"])
               const typeIndex = findColumn(["tipo de cliente", "tipo cliente", "customer type"])
+              const labelsIndex = findColumn(["etiqueta", "labels", "tags"])
+              const funnelIndex = findColumn(["embudo", "funnel"])
               const statusIndex = findColumn(["estado del cliente", "estado cliente", "customer status"])
               const addressIndex = findColumn(["direccion", "dirección", "address"])
               const countryIndex = findColumn(["pais", "país", "country"])
               const departmentIndex = findColumn(["departamento", "department"])
               const cityIndex = findColumn(["ciudad", "city"])
+              const landlineIndex = findColumn(["telefono fijo", "teléfono fijo", "landline"])
+              const dateOfBirthIndex = findColumn(["fecha de nacimiento", "nacimiento", "birth"])
+              const identificationIndex = findColumn(["identificacion", "identificación", "documento", "identification"])
+              const referredByIndex = findColumn(["referido por", "referred by"])
+              const acquisitionIndex = findColumn(["medio de captacion", "medio de captación", "acquisition"])
+              const additionalDataIndex = findColumn(["datos adicionales", "additional data"])
               setSurnameColumn(surnameIndex < 0 ? "" : String(surnameIndex))
               setEmailColumn(emailIndex < 0 ? "" : String(emailIndex))
               setPhoneColumn(phoneIndex < 0 ? "" : String(phoneIndex))
               setCanReceiveEmailColumn(consentIndex < 0 ? "" : String(consentIndex))
               setCustomerTypeColumn(typeIndex < 0 ? "" : String(typeIndex))
+              setCustomerLabelsColumn(labelsIndex < 0 ? "" : String(labelsIndex))
+              setCustomerFunnelColumn(funnelIndex < 0 ? "" : String(funnelIndex))
               setCustomerStatusColumn(statusIndex < 0 ? "" : String(statusIndex))
               setAddressColumn(addressIndex < 0 ? "" : String(addressIndex))
               setCountryColumn(countryIndex < 0 ? "" : String(countryIndex))
               setDepartmentColumn(departmentIndex < 0 ? "" : String(departmentIndex))
               setCityColumn(cityIndex < 0 ? "" : String(cityIndex))
+              setLandlineColumn(landlineIndex < 0 ? "" : String(landlineIndex))
+              setDateOfBirthColumn(dateOfBirthIndex < 0 ? "" : String(dateOfBirthIndex))
+              setIdentificationNumberColumn(identificationIndex < 0 ? "" : String(identificationIndex))
+              setReferredByColumn(referredByIndex < 0 ? "" : String(referredByIndex))
+              setAcquisitionMediumColumn(acquisitionIndex < 0 ? "" : String(acquisitionIndex))
+              setAdditionalDataColumn(additionalDataIndex < 0 ? "" : String(additionalDataIndex))
               setImportPreview(null)
             }
           } catch (error) {
@@ -441,11 +485,19 @@ export function ContactsPage() {
               setPhoneColumn("")
               setCanReceiveEmailColumn("")
               setCustomerTypeColumn("")
+              setCustomerLabelsColumn("")
+              setCustomerFunnelColumn("")
               setCustomerStatusColumn("")
               setAddressColumn("")
               setCountryColumn("")
               setDepartmentColumn("")
               setCityColumn("")
+              setLandlineColumn("")
+              setDateOfBirthColumn("")
+              setIdentificationNumberColumn("")
+              setReferredByColumn("")
+              setAcquisitionMediumColumn("")
+              setAdditionalDataColumn("")
               setImportError("")
             }} />
           </label>
@@ -456,11 +508,19 @@ export function ContactsPage() {
             <ImportColumnSelect label="Teléfono" value={phoneColumn} columns={importColumns} onChange={setPhoneColumn} optional />
             <ImportColumnSelect label="Recibe correo" value={canReceiveEmailColumn} columns={importColumns} onChange={setCanReceiveEmailColumn} optional />
             <ImportColumnSelect label="Tipo de cliente" value={customerTypeColumn} columns={importColumns} onChange={setCustomerTypeColumn} optional />
+            <ImportColumnSelect label="Etiquetas" value={customerLabelsColumn} columns={importColumns} onChange={setCustomerLabelsColumn} optional />
+            <ImportColumnSelect label="Embudo" value={customerFunnelColumn} columns={importColumns} onChange={setCustomerFunnelColumn} optional />
             <ImportColumnSelect label="Estado del cliente" value={customerStatusColumn} columns={importColumns} onChange={setCustomerStatusColumn} optional />
             <ImportColumnSelect label="Dirección" value={addressColumn} columns={importColumns} onChange={setAddressColumn} optional />
             <ImportColumnSelect label="País" value={countryColumn} columns={importColumns} onChange={setCountryColumn} optional />
             <ImportColumnSelect label="Departamento" value={departmentColumn} columns={importColumns} onChange={setDepartmentColumn} optional />
             <ImportColumnSelect label="Ciudad" value={cityColumn} columns={importColumns} onChange={setCityColumn} optional />
+            <ImportColumnSelect label="Teléfono fijo" value={landlineColumn} columns={importColumns} onChange={setLandlineColumn} optional />
+            <ImportColumnSelect label="Fecha de nacimiento" value={dateOfBirthColumn} columns={importColumns} onChange={setDateOfBirthColumn} optional />
+            <ImportColumnSelect label="Identificación" value={identificationNumberColumn} columns={importColumns} onChange={setIdentificationNumberColumn} optional />
+            <ImportColumnSelect label="Referido por" value={referredByColumn} columns={importColumns} onChange={setReferredByColumn} optional />
+            <ImportColumnSelect label="Medio de captación" value={acquisitionMediumColumn} columns={importColumns} onChange={setAcquisitionMediumColumn} optional />
+            <ImportColumnSelect label="Datos adicionales" value={additionalDataColumn} columns={importColumns} onChange={setAdditionalDataColumn} optional />
             <p className="text-xs text-muted-foreground">Solo un valor afirmativo en esta columna activa correos automáticos. La autorización de datos se registra por separado.</p>
             {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asignar a
               <select className="mt-1 block min-w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={ownerAdvisorId} onChange={(event) => setOwnerAdvisorId(event.target.value)}>
@@ -496,7 +556,15 @@ export function ContactsPage() {
                 addressColumn === "" ? undefined : Number(addressColumn),
                 countryColumn === "" ? undefined : Number(countryColumn),
                 departmentColumn === "" ? undefined : Number(departmentColumn),
-                cityColumn === "" ? undefined : Number(cityColumn), importRequestId)
+                cityColumn === "" ? undefined : Number(cityColumn), importRequestId,
+                landlineColumn === "" ? undefined : Number(landlineColumn),
+                dateOfBirthColumn === "" ? undefined : Number(dateOfBirthColumn),
+                identificationNumberColumn === "" ? undefined : Number(identificationNumberColumn),
+                referredByColumn === "" ? undefined : Number(referredByColumn),
+                acquisitionMediumColumn === "" ? undefined : Number(acquisitionMediumColumn),
+                additionalDataColumn === "" ? undefined : Number(additionalDataColumn),
+                customerLabelsColumn === "" ? undefined : Number(customerLabelsColumn),
+                customerFunnelColumn === "" ? undefined : Number(customerFunnelColumn))
               setImportResult(result)
               await contactsQuery.refetch()
             } catch (error) {

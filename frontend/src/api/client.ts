@@ -74,7 +74,9 @@ class ApiClient {
   async previewClientImport(file: File, nameColumn?: number, surnameColumn?: number, emailColumn?: number,
     phoneColumn?: number, canReceiveEmailColumn?: number, customerTypeColumn?: number,
     customerStatusColumn?: number, addressColumn?: number, countryColumn?: number,
-    departmentColumn?: number, cityColumn?: number) {
+    departmentColumn?: number, cityColumn?: number, landlineColumn?: number, dateOfBirthColumn?: number,
+    identificationNumberColumn?: number, referredByColumn?: number, acquisitionMediumColumn?: number,
+    additionalDataColumn?: number, customerLabelsColumn?: number, customerFunnelColumn?: number) {
     const body = new FormData()
     body.set("archivo", file)
     if (nameColumn !== undefined) body.set("nameColumn", String(nameColumn))
@@ -88,6 +90,14 @@ class ApiClient {
     if (countryColumn !== undefined) body.set("countryColumn", String(countryColumn))
     if (departmentColumn !== undefined) body.set("departmentColumn", String(departmentColumn))
     if (cityColumn !== undefined) body.set("cityColumn", String(cityColumn))
+    if (landlineColumn !== undefined) body.set("landlineColumn", String(landlineColumn))
+    if (dateOfBirthColumn !== undefined) body.set("dateOfBirthColumn", String(dateOfBirthColumn))
+    if (identificationNumberColumn !== undefined) body.set("identificationNumberColumn", String(identificationNumberColumn))
+    if (referredByColumn !== undefined) body.set("referredByColumn", String(referredByColumn))
+    if (acquisitionMediumColumn !== undefined) body.set("acquisitionMediumColumn", String(acquisitionMediumColumn))
+    if (additionalDataColumn !== undefined) body.set("additionalDataColumn", String(additionalDataColumn))
+    if (customerLabelsColumn !== undefined) body.set("customerLabelsColumn", String(customerLabelsColumn))
+    if (customerFunnelColumn !== undefined) body.set("customerFunnelColumn", String(customerFunnelColumn))
     return this.request<{
       totalRows: number
       validRows: number
@@ -102,7 +112,10 @@ class ApiClient {
   async confirmClientImport(file: File, nameColumn: number, surnameColumn?: number, emailColumn?: number,
     phoneColumn?: number, canReceiveEmailColumn?: number, advisorId?: string, customerTypeColumn?: number,
     customerStatusColumn?: number, addressColumn?: number, countryColumn?: number,
-    departmentColumn?: number, cityColumn?: number, importRequestId?: string) {
+    departmentColumn?: number, cityColumn?: number, importRequestId?: string, landlineColumn?: number,
+    dateOfBirthColumn?: number, identificationNumberColumn?: number, referredByColumn?: number,
+    acquisitionMediumColumn?: number, additionalDataColumn?: number, customerLabelsColumn?: number,
+    customerFunnelColumn?: number) {
     const body = new FormData()
     body.set("archivo", file)
     body.set("nameColumn", String(nameColumn))
@@ -118,6 +131,14 @@ class ApiClient {
     if (countryColumn !== undefined) body.set("countryColumn", String(countryColumn))
     if (departmentColumn !== undefined) body.set("departmentColumn", String(departmentColumn))
     if (cityColumn !== undefined) body.set("cityColumn", String(cityColumn))
+    if (landlineColumn !== undefined) body.set("landlineColumn", String(landlineColumn))
+    if (dateOfBirthColumn !== undefined) body.set("dateOfBirthColumn", String(dateOfBirthColumn))
+    if (identificationNumberColumn !== undefined) body.set("identificationNumberColumn", String(identificationNumberColumn))
+    if (referredByColumn !== undefined) body.set("referredByColumn", String(referredByColumn))
+    if (acquisitionMediumColumn !== undefined) body.set("acquisitionMediumColumn", String(acquisitionMediumColumn))
+    if (additionalDataColumn !== undefined) body.set("additionalDataColumn", String(additionalDataColumn))
+    if (customerLabelsColumn !== undefined) body.set("customerLabelsColumn", String(customerLabelsColumn))
+    if (customerFunnelColumn !== undefined) body.set("customerFunnelColumn", String(customerFunnelColumn))
     return this.request<{
       totalRows: number
       importedRows: number

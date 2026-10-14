@@ -30,6 +30,14 @@ public static class ClientImportModule
             [Microsoft.AspNetCore.Mvc.FromForm] int? countryColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? departmentColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? cityColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? landlineColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? dateOfBirthColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? identificationNumberColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? referredByColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? acquisitionMediumColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? additionalDataColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? customerLabelsColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? customerFunnelColumn,
             HttpContext http,
             IClientImportTableReader reader,
             IContactRepository contacts,
@@ -70,7 +78,15 @@ public static class ClientImportModule
                 [ClientImportFields.Address] = addressColumn?.ToString(),
                 [ClientImportFields.Country] = countryColumn?.ToString(),
                 [ClientImportFields.Department] = departmentColumn?.ToString(),
-                [ClientImportFields.City] = cityColumn?.ToString()
+                [ClientImportFields.City] = cityColumn?.ToString(),
+                [ClientImportFields.Landline] = landlineColumn?.ToString(),
+                [ClientImportFields.DateOfBirth] = dateOfBirthColumn?.ToString(),
+                [ClientImportFields.IdentificationNumber] = identificationNumberColumn?.ToString(),
+                [ClientImportFields.ReferredBy] = referredByColumn?.ToString(),
+                [ClientImportFields.AcquisitionMedium] = acquisitionMediumColumn?.ToString(),
+                [ClientImportFields.AdditionalData] = additionalDataColumn?.ToString(),
+                [ClientImportFields.CustomerLabels] = customerLabelsColumn?.ToString(),
+                [ClientImportFields.CustomerFunnel] = customerFunnelColumn?.ToString()
             };
             if (!nameColumn.HasValue)
                 return Results.Ok(new ClientImportPreviewResponse(
@@ -90,6 +106,14 @@ public static class ClientImportModule
             var countryIndex = countryColumn ?? -1;
             var departmentIndex = departmentColumn ?? -1;
             var cityIndex = cityColumn ?? -1;
+            var landlineIndex = landlineColumn ?? -1;
+            var dateOfBirthIndex = dateOfBirthColumn ?? -1;
+            var identificationNumberIndex = identificationNumberColumn ?? -1;
+            var referredByIndex = referredByColumn ?? -1;
+            var acquisitionMediumIndex = acquisitionMediumColumn ?? -1;
+            var additionalDataIndex = additionalDataColumn ?? -1;
+            var customerLabelsIndex = customerLabelsColumn ?? -1;
+            var customerFunnelIndex = customerFunnelColumn ?? -1;
             var candidateEmails = table.Rows
                 .Select(row => emailIndex < 0 ? null : Cell(row, emailIndex))
                 .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -115,6 +139,14 @@ public static class ClientImportModule
                 var surname = Cell(row, surnameIndex);
                 var emailText = emailIndex < 0 ? null : Cell(row, emailIndex);
                 var phone = phoneIndex < 0 ? null : Cell(row, phoneIndex);
+                var landline = landlineIndex < 0 ? null : Cell(row, landlineIndex);
+                var dateOfBirth = dateOfBirthIndex < 0 ? null : Cell(row, dateOfBirthIndex);
+                var identificationNumber = identificationNumberIndex < 0 ? null : Cell(row, identificationNumberIndex);
+                var referredBy = referredByIndex < 0 ? null : Cell(row, referredByIndex);
+                var acquisitionMedium = acquisitionMediumIndex < 0 ? null : Cell(row, acquisitionMediumIndex);
+                var additionalData = additionalDataIndex < 0 ? null : Cell(row, additionalDataIndex);
+                var labels = customerLabelsIndex < 0 ? [] : ParseCustomerLabels(Cell(row, customerLabelsIndex));
+                var funnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex) ?? "Clientes";
                 var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
                     ParseConsent(Cell(row, canReceiveEmailIndex));
                 var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
@@ -129,7 +161,9 @@ public static class ClientImportModule
                 var email = TryEmail(emailText);
                 var parsedPhone = TryPhone(phone);
                 var error = ValidateRow(name, surname, emailText, email, phone, parsedPhone,
-                    customerTypes, customerStatus, address, country, department, city);
+                    customerTypes, customerStatus, address, country, department, city,
+                    landline, TryPhone(landline), dateOfBirth, TryDateOfBirth(dateOfBirth),
+                    identificationNumber, referredBy, acquisitionMedium, additionalData, labels, funnel);
                 var duplicate = error is null && email is not null &&
                     (existing.Contains(email.Value) || !seenInFile.Add(email.Value));
                 if (duplicate)
@@ -168,6 +202,14 @@ public static class ClientImportModule
         [Microsoft.AspNetCore.Mvc.FromForm] int? countryColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] int? departmentColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] int? cityColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? landlineColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? dateOfBirthColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? identificationNumberColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? referredByColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? acquisitionMediumColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? additionalDataColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? customerLabelsColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? customerFunnelColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] Guid? advisorId,
         [Microsoft.AspNetCore.Mvc.FromForm] Guid importRequestId,
         HttpContext http,
@@ -223,7 +265,15 @@ public static class ClientImportModule
             [ClientImportFields.Address] = addressColumn?.ToString(),
             [ClientImportFields.Country] = countryColumn?.ToString(),
             [ClientImportFields.Department] = departmentColumn?.ToString(),
-            [ClientImportFields.City] = cityColumn?.ToString()
+            [ClientImportFields.City] = cityColumn?.ToString(),
+            [ClientImportFields.Landline] = landlineColumn?.ToString(),
+            [ClientImportFields.DateOfBirth] = dateOfBirthColumn?.ToString(),
+            [ClientImportFields.IdentificationNumber] = identificationNumberColumn?.ToString(),
+            [ClientImportFields.ReferredBy] = referredByColumn?.ToString(),
+            [ClientImportFields.AcquisitionMedium] = acquisitionMediumColumn?.ToString(),
+            [ClientImportFields.AdditionalData] = additionalDataColumn?.ToString(),
+            [ClientImportFields.CustomerLabels] = customerLabelsColumn?.ToString(),
+            [ClientImportFields.CustomerFunnel] = customerFunnelColumn?.ToString()
         };
         if (!ValidateMapping(mapping, table.Columns, out var mappingError))
             return Results.BadRequest(new { error = mappingError, sourceColumns = table.Columns });
@@ -257,6 +307,14 @@ public static class ClientImportModule
         var countryIndex = countryColumn ?? -1;
         var departmentIndex = departmentColumn ?? -1;
         var cityIndex = cityColumn ?? -1;
+        var landlineIndex = landlineColumn ?? -1;
+        var dateOfBirthIndex = dateOfBirthColumn ?? -1;
+        var identificationNumberIndex = identificationNumberColumn ?? -1;
+        var referredByIndex = referredByColumn ?? -1;
+        var acquisitionMediumIndex = acquisitionMediumColumn ?? -1;
+        var additionalDataIndex = additionalDataColumn ?? -1;
+        var customerLabelsIndex = customerLabelsColumn ?? -1;
+        var customerFunnelIndex = customerFunnelColumn ?? -1;
         var candidateEmails = table.Rows.Select(row => emailIndex < 0 ? null : TryEmail(Cell(row, emailIndex)))
             .Where(email => email is not null).Select(email => email!.Value)
             .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -277,6 +335,14 @@ public static class ClientImportModule
             var surname = Cell(row, surnameIndex);
             var emailText = emailIndex < 0 ? null : Cell(row, emailIndex);
             var phoneText = phoneIndex < 0 ? null : Cell(row, phoneIndex);
+            var landlineText = landlineIndex < 0 ? null : Cell(row, landlineIndex);
+            var dateOfBirthText = dateOfBirthIndex < 0 ? null : Cell(row, dateOfBirthIndex);
+            var identificationNumber = identificationNumberIndex < 0 ? null : Cell(row, identificationNumberIndex);
+            var referredBy = referredByIndex < 0 ? null : Cell(row, referredByIndex);
+            var acquisitionMedium = acquisitionMediumIndex < 0 ? null : Cell(row, acquisitionMediumIndex);
+            var additionalData = additionalDataIndex < 0 ? null : Cell(row, additionalDataIndex);
+            var customerLabels = customerLabelsIndex < 0 ? [] : ParseCustomerLabels(Cell(row, customerLabelsIndex));
+            var customerFunnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex) ?? "Clientes";
             var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
                 ParseConsent(Cell(row, canReceiveEmailIndex));
             var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
@@ -290,9 +356,14 @@ public static class ClientImportModule
             var city = cityIndex < 0 ? null : Cell(row, cityIndex);
             var email = TryEmail(emailText);
             var phone = TryPhone(phoneText);
+            var landline = TryPhone(landlineText);
+            var dateOfBirth = TryDateOfBirth(dateOfBirthText);
             var error = ValidateRow(name, surname, emailText, email, phoneText, phone,
-                customerTypes, customerStatus, address, country, department, city);
-            var duplicate = email is not null && (existing.Contains(email.Value) || !seen.Add(email.Value));
+                customerTypes, customerStatus, address, country, department, city,
+                landlineText, landline, dateOfBirthText, dateOfBirth, identificationNumber,
+                referredBy, acquisitionMedium, additionalData, customerLabels, customerFunnel);
+            var duplicate = error is null && email is not null &&
+                (existing.Contains(email.Value) || !seen.Add(email.Value));
 
             if (error is not null)
                 invalid++;
@@ -301,7 +372,8 @@ public static class ClientImportModule
             else
                 newContacts.Add(Contact.CreateImported(name!, surname, email?.Value, phone, ownerAdvisorId,
                     canReceiveAutomatedEmail, customerType, customerStatus, address, country, department, city,
-                    customerTypes: customerTypes));
+                    landline, dateOfBirth, identificationNumber, referredBy, acquisitionMedium,
+                    additionalData, customerFunnel, customerTypes, customerLabels));
 
             if (error is not null || duplicate)
                 errorRows.Add(new ClientImportErrorRow(index + 2,
@@ -358,6 +430,14 @@ public static class ClientImportModule
         var countryIndex = -1;
         var departmentIndex = -1;
         var cityIndex = -1;
+        var landlineIndex = -1;
+        var dateOfBirthIndex = -1;
+        var identificationNumberIndex = -1;
+        var referredByIndex = -1;
+        var acquisitionMediumIndex = -1;
+        var additionalDataIndex = -1;
+        var customerLabelsIndex = -1;
+        var customerFunnelIndex = -1;
         if (mapping[ClientImportFields.Email] is { } emailText &&
             (!int.TryParse(emailText, out emailIndex) || emailIndex < 0 || emailIndex >= columns.Count))
         {
@@ -399,7 +479,15 @@ public static class ClientImportModule
             (ClientImportFields.Address, "direccion", index => addressIndex = index),
             (ClientImportFields.Country, "pais", index => countryIndex = index),
             (ClientImportFields.Department, "departamento", index => departmentIndex = index),
-            (ClientImportFields.City, "ciudad", index => cityIndex = index)
+            (ClientImportFields.City, "ciudad", index => cityIndex = index),
+            (ClientImportFields.Landline, "telefono fijo", index => landlineIndex = index),
+            (ClientImportFields.DateOfBirth, "fecha de nacimiento", index => dateOfBirthIndex = index),
+            (ClientImportFields.IdentificationNumber, "identificacion", index => identificationNumberIndex = index),
+            (ClientImportFields.ReferredBy, "referido por", index => referredByIndex = index),
+            (ClientImportFields.AcquisitionMedium, "medio de captacion", index => acquisitionMediumIndex = index),
+            (ClientImportFields.AdditionalData, "datos adicionales", index => additionalDataIndex = index),
+            (ClientImportFields.CustomerLabels, "etiquetas", index => customerLabelsIndex = index),
+            (ClientImportFields.CustomerFunnel, "embudo", index => customerFunnelIndex = index)
         };
         foreach (var (key, label, set) in optionalFields)
         {
@@ -414,7 +502,9 @@ public static class ClientImportModule
         }
 
         var assigned = new[] { nameIndex, emailIndex, phoneIndex, surnameIndex, consentIndex,
-                customerTypeIndex, statusIndex, addressIndex, countryIndex, departmentIndex, cityIndex }
+                customerTypeIndex, statusIndex, addressIndex, countryIndex, departmentIndex, cityIndex,
+                landlineIndex, dateOfBirthIndex, identificationNumberIndex, referredByIndex,
+                acquisitionMediumIndex, additionalDataIndex, customerLabelsIndex, customerFunnelIndex }
             .Where(index => index >= 0).ToArray();
         if (assigned.Distinct().Count() != assigned.Length)
         {
@@ -457,6 +547,16 @@ public static class ClientImportModule
         }
     }
 
+    private static DateOnly? TryDateOfBirth(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+        string[] formats = ["yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy"];
+        return DateOnly.TryParseExact(value.Trim(), formats,
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out var date) ? date : null;
+    }
+
     private static bool ParseConsent(string? value) => value?.Trim().ToLowerInvariant() is
         "si" or "sí" or "yes" or "true" or "1" or "x" or "acepta";
 
@@ -473,6 +573,9 @@ public static class ClientImportModule
     private static string[] ParseCustomerTypes(string? value) => value?.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .Select(NormalizeCustomerType).Where(type => type is not null).Select(type => type!).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? [];
 
+    private static string[] ParseCustomerLabels(string? value) => value?.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+        .Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? [];
+
     private static string NormalizeCustomerStatus(string value) => value.Trim().ToLowerInvariant() switch
     {
         "en proceso" or "enproceso" => "EnProceso",
@@ -484,7 +587,10 @@ public static class ClientImportModule
 
     private static string? ValidateRow(string? name, string? surname, string? emailText, Email? email,
         string? phoneText, Telefono? phone, string[] customerTypes, string customerStatus,
-        string? address, string country, string? department, string? city)
+        string? address, string country, string? department, string? city,
+        string? landlineText, Telefono? landline, string? dateOfBirthText, DateOnly? dateOfBirth,
+        string? identificationNumber, string? referredBy, string? acquisitionMedium,
+        string? additionalData, string[] customerLabels, string customerFunnel)
     {
         if (string.IsNullOrWhiteSpace(name))
             return "Falta el nombre.";
@@ -496,12 +602,24 @@ public static class ClientImportModule
             return "El email no tiene formato valido.";
         if (phoneText is not null && phone is null)
             return "El telefono no tiene formato valido.";
+        if (landlineText is not null && landline is null)
+            return "El telefono fijo no tiene formato valido.";
+        if (dateOfBirthText is not null && dateOfBirth is null)
+            return "La fecha de nacimiento debe usar AAAA-MM-DD o DD/MM/AAAA.";
+        if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+            return "La fecha de nacimiento no puede estar en el futuro.";
         if (customerTypes.Length > 10 || customerTypes.Any(type => type.Length > 30))
             return "Cada cliente admite hasta 10 tipos de máximo 30 caracteres.";
         if (customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
             return "El estado del cliente no es valido.";
+        if (customerLabels.Length > 20 || customerLabels.Any(label => label.Length > 50))
+            return "Cada cliente admite hasta 20 etiquetas de maximo 50 caracteres.";
+        if (string.IsNullOrWhiteSpace(customerFunnel) || customerFunnel.Length > 100)
+            return "El embudo debe tener entre 1 y 100 caracteres.";
         if (address?.Length > 500 || country.Length > 100 || department?.Length > 100 || city?.Length > 100)
             return "Uno de los campos de ubicacion supera la longitud permitida.";
+        if (identificationNumber?.Length > 50 || referredBy?.Length > 200 || acquisitionMedium?.Length > 200 || additionalData?.Length > 4_000)
+            return "Uno de los campos del cliente supera la longitud permitida.";
         return null;
     }
 }

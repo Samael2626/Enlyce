@@ -43,4 +43,12 @@ public static class ClientImportFields
     public const string Country = "country";
     public const string Department = "department";
     public const string City = "city";
+    public const string Landline = "landline";
+    public const string DateOfBirth = "dateOfBirth";
+    public const string IdentificationNumber = "identificationNumber";
+    public const string ReferredBy = "referredBy";
+    public const string AcquisitionMedium = "acquisitionMedium";
+    public const string AdditionalData = "additionalData";
+    public const string CustomerLabels = "customerLabels";
+    public const string CustomerFunnel = "customerFunnel";
 }
