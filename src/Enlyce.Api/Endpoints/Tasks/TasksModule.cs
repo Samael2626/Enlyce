@@ -18,6 +18,7 @@ public static class TasksModule
             HttpContext http,
             ICommercialTaskRepository tasks,
             ILeadRepository leads,
+            IContactRepository contacts,
             CancellationToken ct) =>
         {
             if (!ValidRange(request.From, request.To))
@@ -36,10 +37,16 @@ public static class TasksModule
             if (!http.User.IsInRole("Administrador") && advisorId is null)
                 return Results.Forbid();
 
-            if (request.ContactId.HasValue && advisorId.HasValue &&
-                !(await leads.GetByContactIdAsync(request.ContactId.Value, ct))
-                    .Any(lead => lead.AsesorAsignadoId == advisorId))
-                return Results.Forbid();
+            if (request.ContactId.HasValue && advisorId.HasValue)
+            {
+                var contact = await contacts.GetByIdAsync(request.ContactId.Value, ct);
+                if (contact is null)
+                    return Results.NotFound();
+                if (contact.OwnerAdvisorId != advisorId &&
+                    !(await leads.GetByContactIdAsync(request.ContactId.Value, ct))
+                        .Any(lead => lead.AsesorAsignadoId == advisorId))
+                    return Results.Forbid();
+            }
 
             var result = await tasks.SearchAsync(advisorId, request.Query,
                 request.Status is null ? null : Enum.Parse<CommercialTaskStatus>(request.Status, true),
@@ -99,10 +106,12 @@ public static class TasksModule
                 await advisors.ObtenerPorIdAsync(advisorId.Value) is not { Activo: true, Rol: "Asesor" })
                 return Results.BadRequest(new { error = "El asesor asignado no es valido." });
 
-            if (await contacts.GetByIdAsync(request.ContactId, ct) is null)
+            var contact = await contacts.GetByIdAsync(request.ContactId, ct);
+            if (contact is null)
                 return Results.NotFound();
-
-            if (!http.User.IsInRole("Administrador") && !relatedLeads.Any(lead => lead.AsesorAsignadoId == actorId))
+            if (!http.User.IsInRole("Administrador") &&
+                contact.OwnerAdvisorId != actorId &&
+                !relatedLeads.Any(lead => lead.AsesorAsignadoId == actorId))
                 return Results.Forbid();
 
             if (request.LeadId.HasValue)

@@ -36,7 +36,7 @@ public static class ContactsModule
             var createdThrough = to?.ToDateTime(TimeOnly.MaxValue);
             var allowedContactIds = http.User.IsInRole("Administrador")
                 ? null
-                : await GetAdvisorContactIdsAsync(http, leads);
+                : await GetAdvisorContactIdsAsync(http, leads, contacts, ct);
             var result = await contacts.SearchAsync(
                 q, createdFrom, createdThrough, allowedContactIds, (int)skip, currentPageSize, ct);
             return Results.Ok(new ContactListResponse(
@@ -68,7 +68,7 @@ public static class ContactsModule
                     return Results.Forbid();
 
                 opportunities = opportunities.Where(lead => lead.AsesorAsignadoId == advisorId).ToArray();
-                if (opportunities.Count == 0)
+                if (contact.OwnerAdvisorId != advisorId && opportunities.Count == 0)
                     return Results.Forbid();
             }
 
@@ -119,7 +119,8 @@ public static class ContactsModule
             {
                 var advisorId = EndpointAccess.AdvisorId(http.User);
                 var assigned = advisorId is not null &&
-                    (await leads.GetByContactIdAsync(id, ct)).Any(lead => lead.AsesorAsignadoId == advisorId);
+                    (contact.OwnerAdvisorId == advisorId ||
+                     (await leads.GetByContactIdAsync(id, ct)).Any(lead => lead.AsesorAsignadoId == advisorId));
                 if (!assigned)
                     return Results.Forbid();
             }
@@ -130,29 +131,42 @@ public static class ContactsModule
             return Results.Ok(ToSummary(contact));
         })
         .WithName("UpdateContact");
+
+        group.MapPut("/{id:guid}/asignacion", async Task<IResult> (
+            Guid id,
+            AssignContactRequest request,
+            IContactRepository contacts,
+            IAsesorRepository advisors,
+            CancellationToken ct) =>
+        {
+            var contact = await contacts.GetByIdAsync(id, ct);
+            if (contact is null)
+                return Results.NotFound();
+            if (request.AdvisorId.HasValue &&
+                await advisors.ObtenerPorIdAsync(request.AdvisorId.Value) is not { Activo: true, Rol: "Asesor" })
+                return Results.BadRequest(new { error = "El asesor asignado no es valido." });
+
+            await contacts.AssignContactAsync(contact, request.AdvisorId, ct);
+            return Results.Ok(new { contact.Id, contact.OwnerAdvisorId });
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("AssignContact");
     }
 
     private static async Task<IReadOnlyCollection<Guid>> GetAdvisorContactIdsAsync(
         HttpContext http,
-        ILeadRepository leads)
-    {
-        var advisorId = EndpointAccess.AdvisorId(http.User);
-        if (advisorId is null)
-            return [];
-
-        var leadItems = await leads.GetByAsesorIdAsync(advisorId.Value);
-        return leadItems.Where(lead => lead.ContactId.HasValue)
-            .Select(lead => lead.ContactId!.Value)
-            .Distinct()
-            .ToArray();
-    }
+        ILeadRepository leads,
+        IContactRepository contacts,
+        CancellationToken ct) =>
+        await EndpointAccess.VisibleContactIdsAsync(http.User, leads, contacts, ct) ?? [];
 
     private static ContactSummaryDto ToSummary(Contact contact) => new(
         contact.Id, contact.Name, contact.Email, contact.Phone?.Value, contact.CreatedAt, contact.UpdatedAt);
 }
 
 public sealed record UpdateContactRequest(string Name, string? Phone);
-public sealed record ContactSummaryDto(Guid Id, string Name, string Email, string? Phone, DateTime CreatedAt, DateTime UpdatedAt);
+public sealed record AssignContactRequest(Guid? AdvisorId);
+public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, string? Phone, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record ContactListResponse(int Total, IReadOnlyList<ContactSummaryDto> Items);
 public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities, IReadOnlyList<ContactTaskDto> Tasks);
 public sealed record ContactTaskDto(Guid Id, Guid? LeadId, Guid AdvisorId, string Type, string Title,

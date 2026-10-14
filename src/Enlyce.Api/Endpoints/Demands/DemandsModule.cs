@@ -21,7 +21,7 @@ public static class DemandsModule
         {
             if (request.ContactId == Guid.Empty || await contacts.GetByIdAsync(request.ContactId, ct) is null)
                 return Results.NotFound();
-            if (!await EndpointAccess.CanAccessContactAsync(http.User, request.ContactId, leads))
+            if (!await EndpointAccess.CanAccessContactAsync(http.User, request.ContactId, leads, contacts))
                 return Results.Forbid();
             var contactDemands = await demands.GetByContactIdAsync(request.ContactId, ct);
             if (!http.User.IsInRole("Administrador"))
@@ -48,7 +48,7 @@ public static class DemandsModule
         {
             if (await contacts.GetByIdAsync(request.ContactId, ct) is null)
                 return Results.NotFound();
-            if (!await EndpointAccess.CanAccessContactAsync(http.User, request.ContactId, leads))
+            if (!await EndpointAccess.CanAccessContactAsync(http.User, request.ContactId, leads, contacts))
                 return Results.Forbid();
 
             if (!TryParse(request.Operation, out ModalidadInmueble operation) ||
@@ -85,13 +85,14 @@ public static class DemandsModule
             HttpContext http,
             ICustomerDemandRepository demands,
             IInmuebleRepository properties,
+            IContactRepository contacts,
             ILeadRepository leads,
             CancellationToken ct) =>
         {
             var demand = await demands.GetByIdAsync(id, ct);
             if (demand is null)
                 return Results.NotFound();
-            if (!await CanAccessDemandAsync(http, demand, leads))
+            if (!await CanAccessDemandAsync(http, demand, leads, contacts))
                 return Results.Forbid();
 
             var linked = (await demands.GetPropertyLinksAsync(id, ct))
@@ -122,7 +123,7 @@ public static class DemandsModule
             if (property is null)
                 return Results.NotFound();
 
-            var matched = (await ScopedActiveDemandsAsync(http, demands, leads, ct))
+            var matched = (await ScopedActiveDemandsAsync(http, demands, leads, contacts, ct))
                 .Where(demand => demand.Matches(property))
                 .OrderByDescending(demand => demand.UpdatedAt).ToArray();
             if (matched.Length == 0)
@@ -153,7 +154,7 @@ public static class DemandsModule
         {
             if (ids.Length > 100)
                 return Results.BadRequest(new { error = "Maximo 100 inmuebles por consulta." });
-            var scoped = await ScopedActiveDemandsAsync(http, demands, leads, ct);
+            var scoped = await ScopedActiveDemandsAsync(http, demands, leads, contacts, ct);
             var activeContacts = scoped.Count == 0 ? [] : (await contacts.GetByIdsAsync(
                     scoped.Select(demand => demand.ContactId).Distinct().ToArray(), ct))
                 .Where(contact => contact.Active).Select(contact => contact.Id).ToHashSet();
@@ -172,13 +173,14 @@ public static class DemandsModule
             HttpContext http,
             ICustomerDemandRepository demands,
             IInmuebleRepository properties,
+            IContactRepository contacts,
             ILeadRepository leads,
             CancellationToken ct) =>
         {
             var demand = await demands.GetByIdAsync(id, ct);
             if (demand is null)
                 return Results.NotFound();
-            if (!await CanAccessDemandAsync(http, demand, leads))
+            if (!await CanAccessDemandAsync(http, demand, leads, contacts))
                 return Results.Forbid();
             var property = await properties.GetByIdAsync(propertyId);
             if (property is null || !demand.Matches(property))
@@ -199,13 +201,14 @@ public static class DemandsModule
             [FromBody] SetDemandPropertyStatusRequest request,
             HttpContext http,
             ICustomerDemandRepository demands,
+            IContactRepository contacts,
             ILeadRepository leads,
             CancellationToken ct) =>
         {
             var demand = await demands.GetByIdAsync(id, ct);
             if (demand is null)
                 return Results.NotFound();
-            if (!await CanAccessDemandAsync(http, demand, leads))
+            if (!await CanAccessDemandAsync(http, demand, leads, contacts))
                 return Results.Forbid();
             if (!TryParse(request.Status, out DemandPropertyStatus status))
                 return Results.BadRequest(new { error = "El estado no es valido." });
@@ -221,7 +224,8 @@ public static class DemandsModule
 
     // Demandas activas visibles: administracion todas; asesor las de sus oportunidades o contactos
     private static async Task<IReadOnlyList<CustomerDemand>> ScopedActiveDemandsAsync(
-        HttpContext http, ICustomerDemandRepository demands, ILeadRepository leads, CancellationToken ct)
+        HttpContext http, ICustomerDemandRepository demands, ILeadRepository leads,
+        IContactRepository contacts, CancellationToken ct)
     {
         var active = await demands.GetActiveAsync(ct);
         if (http.User.IsInRole("Administrador"))
@@ -231,16 +235,18 @@ public static class DemandsModule
         var leadIds = advisorLeads.Select(lead => lead.Id).ToHashSet();
         var contactIds = advisorLeads.Where(lead => lead.ContactId.HasValue)
             .Select(lead => lead.ContactId!.Value).ToHashSet();
+        if (advisorId.HasValue)
+            contactIds.UnionWith(await contacts.GetIdsByOwnerAdvisorAsync(advisorId.Value, ct));
         return active.Where(demand => demand.LeadId.HasValue
             ? leadIds.Contains(demand.LeadId.Value)
             : contactIds.Contains(demand.ContactId)).ToArray();
     }
 
     private static async Task<bool> CanAccessDemandAsync(
-        HttpContext http, CustomerDemand demand, ILeadRepository leads) =>
+        HttpContext http, CustomerDemand demand, ILeadRepository leads, IContactRepository contacts) =>
         demand.LeadId.HasValue
             ? await EndpointAccess.CanAccessLeadAsync(http.User, demand.LeadId.Value, leads)
-            : await EndpointAccess.CanAccessContactAsync(http.User, demand.ContactId, leads);
+            : await EndpointAccess.CanAccessContactAsync(http.User, demand.ContactId, leads, contacts);
 
     private static CustomerDemandDto ToDto(CustomerDemand demand) => new(
         demand.Id, demand.ContactId, demand.LeadId, demand.Operation.ToString(),

@@ -341,6 +341,7 @@ app.MapDemands();
 app.MapInmuebles();
 app.MapMediaCleanup();
 app.MapImports();
+app.MapClientImport();
 app.MapAuth();
 app.MapPolitica();
 app.MapDatosPersonales();

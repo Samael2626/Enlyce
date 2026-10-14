@@ -246,11 +246,13 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("CanReceiveAutomatedEmail")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
 
@@ -258,6 +260,9 @@ namespace Enlyce.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("OwnerAdvisorId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -274,7 +279,10 @@ namespace Enlyce.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Email\" IS NOT NULL");
+
+                    b.HasIndex("OwnerAdvisorId");
 
                     b.ToTable("Contacts", (string)null);
                 });
@@ -1243,6 +1251,14 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasForeignKey("LeadId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Contact", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerAdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>

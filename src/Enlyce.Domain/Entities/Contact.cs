@@ -1,5 +1,6 @@
 using Enlyce.Domain.Errors;
 using Enlyce.Domain.ValueObjects;
+using EmailAddress = Enlyce.Domain.ValueObjects.Email;
 
 namespace Enlyce.Domain.Entities;
 
@@ -7,7 +8,9 @@ public sealed class Contact
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
-    public string Email { get; private set; } = string.Empty;
+    public string? Email { get; private set; }
+    public Guid? OwnerAdvisorId { get; private set; }
+    public bool CanReceiveAutomatedEmail { get; private set; }
     public Telefono? Phone { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -15,12 +18,16 @@ public sealed class Contact
 
     private Contact() { }
 
-    private Contact(Guid id, string name, string email, Telefono? phone, DateTime createdAt, DateTime updatedAt, bool active)
+    private Contact(Guid id, string name, string? email, Telefono? phone, Guid? ownerAdvisorId,
+        bool canReceiveAutomatedEmail,
+        DateTime createdAt, DateTime updatedAt, bool active)
     {
         Id = id;
         Name = name;
         Email = email;
         Phone = phone;
+        OwnerAdvisorId = ownerAdvisorId;
+        CanReceiveAutomatedEmail = canReceiveAutomatedEmail;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         Active = active;
@@ -34,11 +41,32 @@ public sealed class Contact
             throw new DomainError("El nombre no puede superar 200 caracteres.");
 
         var now = DateTime.UtcNow;
-        return new Contact(Guid.NewGuid(), name.Trim(), email.Value, phone, now, now, true);
+        return new Contact(Guid.NewGuid(), name.Trim(), email.Value, phone, null, false, now, now, true);
     }
 
-    public static Contact Reconstitute(Guid id, string name, string email, Telefono? phone, DateTime createdAt, DateTime updatedAt, bool active) =>
-        new(id, name, email, phone, createdAt, updatedAt, active);
+    public static Contact CreateImported(string name, string? email, Telefono? phone, Guid? ownerAdvisorId)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DomainError("El nombre del contacto no puede ser vacio.");
+        if (name.Trim().Length > 200)
+            throw new DomainError("El nombre no puede superar 200 caracteres.");
+        if (email is { Length: > 0 })
+            email = EmailAddress.Create(email).Value;
+
+        var now = DateTime.UtcNow;
+        return new Contact(Guid.NewGuid(), name.Trim(), email, phone, ownerAdvisorId, false, now, now, true);
+    }
+
+    public static Contact Reconstitute(Guid id, string name, string? email, Telefono? phone,
+        DateTime createdAt, DateTime updatedAt, bool active, Guid? ownerAdvisorId = null,
+        bool canReceiveAutomatedEmail = false) =>
+        new(id, name, email, phone, ownerAdvisorId, canReceiveAutomatedEmail, createdAt, updatedAt, active);
+
+    public void AssignTo(Guid? advisorId)
+    {
+        OwnerAdvisorId = advisorId;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     public void Update(string name, Telefono? phone)
     {

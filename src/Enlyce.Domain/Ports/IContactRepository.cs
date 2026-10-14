@@ -7,6 +7,13 @@ public interface IContactRepository
 {
     Task<Contact?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<Contact?> GetByEmailAsync(Email email, CancellationToken ct = default);
+    Task<IReadOnlySet<string>> GetExistingEmailsAsync(
+        IReadOnlyCollection<string> emails,
+        IReadOnlyCollection<Guid>? allowedContactIds = null,
+        CancellationToken ct = default);
+    Task<IReadOnlyList<Guid>> GetIdsByOwnerAdvisorAsync(Guid advisorId, CancellationToken ct = default);
+    Task AssignContactAsync(Contact contact, Guid? advisorId, CancellationToken ct = default);
+    Task AddImportedAsync(IReadOnlyCollection<Contact> contacts, CancellationToken ct = default);
     Task<IReadOnlyList<Contact>> GetAllAsync(CancellationToken ct = default);
     Task<ContactSearchPage> SearchAsync(
         string? query,

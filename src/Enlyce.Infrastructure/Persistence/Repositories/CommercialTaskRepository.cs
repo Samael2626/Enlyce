@@ -49,7 +49,8 @@ public sealed class CommercialTaskRepository(EnlyceDbContext context) : ICommerc
             var search = queryText.Trim().ToLower();
             query = query.Where(task => task.Title.ToLower().Contains(search) ||
                 context.Contacts.Any(contact => contact.Id == task.ContactId &&
-                    (contact.Name.ToLower().Contains(search) || contact.Email.ToLower().Contains(search))));
+                    (contact.Name.ToLower().Contains(search) ||
+                     (contact.Email != null && contact.Email.ToLower().Contains(search)))));
         }
 
         var total = await query.CountAsync(ct);

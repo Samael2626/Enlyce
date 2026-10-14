@@ -17,12 +17,12 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
+    const headers = new Headers(options.headers)
+    if (!(options.body instanceof FormData) && !headers.has("Content-Type"))
+      headers.set("Content-Type", "application/json")
     const response = await fetch(url, {
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers,
       ...options,
     })
 
@@ -69,6 +69,38 @@ class ApiClient {
 
   async logout() {
     return this.request<void>("/api/auth/logout", { method: "POST" })
+  }
+
+  async previewClientImport(file: File, nameColumn?: number, emailColumn?: number, phoneColumn?: number) {
+    const body = new FormData()
+    body.set("archivo", file)
+    if (nameColumn !== undefined) body.set("nameColumn", String(nameColumn))
+    if (emailColumn !== undefined) body.set("emailColumn", String(emailColumn))
+    if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
+    return this.request<{
+      totalRows: number
+      validRows: number
+      invalidRows: number
+      duplicateRows: number
+      sourceColumns: string[]
+      rows: Array<{ rowNumber: number; name: string | null; email: string | null; phone: string | null; error: string | null; duplicate: boolean }>
+    }>("/api/import/clientes/previsualizar", { method: "POST", body })
+  }
+
+  async confirmClientImport(file: File, nameColumn: number, emailColumn?: number, phoneColumn?: number, advisorId?: string) {
+    const body = new FormData()
+    body.set("archivo", file)
+    body.set("nameColumn", String(nameColumn))
+    if (emailColumn !== undefined) body.set("emailColumn", String(emailColumn))
+    if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
+    if (advisorId) body.set("advisorId", advisorId)
+    return this.request<{
+      totalRows: number
+      importedRows: number
+      invalidRows: number
+      duplicateRows: number
+      rows: Array<{ rowNumber: number; name: string | null; email: string | null; phone: string | null; error: string | null; duplicate: boolean }>
+    }>("/api/import/clientes/confirmar", { method: "POST", body })
   }
 
   // Leads

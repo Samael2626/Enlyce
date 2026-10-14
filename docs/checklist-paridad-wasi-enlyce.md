@@ -28,7 +28,7 @@
 | Lista, ficha y edición de inmuebles | [~] | Enlyce lista/crea inmuebles. Faltan edición completa y paridad de filtros; Wasi añade mapa/lista, papelera, selección masiva, orden, búsqueda y búsqueda avanzada. |
 | Importación de inmuebles | [~] | Importación desde API Wasi en segundo plano existe. Wasi también importa XLS/XLSX/CSV y otras fuentes; falta cubrir formatos aplicables. |
 | Exportación de inmuebles | [?] | Wasi muestra acceso de importar/exportar; el flujo de exportación no quedó observado. |
-| Importación de clientes | [ ] | Sin módulo en Enlyce. Wasi acepta XLS/XLSX/CSV, permite mapear o ignorar columnas y exige Nombre. |
+| Importación de clientes | [~] | Carga CSV/XLS/XLSX, mapeo, vista previa y confirmación implementados para nombre/email/teléfono; email es opcional, duplicados visibles al usuario se detectan por email y el contacto queda asignado al asesor o solo admins. La detección no consulta contactos de otros asesores; un conflicto global responde sin identificar filas. Wasi separa autorización de datos y permiso de recibir correo: el permiso automático queda apagado para importados y existentes tras migrar hasta registrar evidencia específica. Faltan apellidos, campos de ficha/demanda Wasi, gestión de consentimiento, errores descargables y pruebas. |
 | Exportación de clientes | [~] | Enlyce exporta contactos/CRM en CSV. Wasi permite elegir grupo y envía el archivo al correo; falta paridad. |
 | Inmuebles de aliados | [ ] | Wasi lista inmuebles compartidos y permite republicación; Enlyce carece de red multiempresa. |
 | Alianzas, propietarios aliados y grupos | [ ] | Faltan modelo multiempresa, permisos, invitaciones, solicitudes recibidas/aceptadas, acuerdos y grupos. |
@@ -53,7 +53,7 @@
 
 ## Orden de trabajo acordado
 
-1. **Importar clientes:** construir carga XLS/XLSX/CSV con mapeo/omisión de columnas, nombre obligatorio y resultado por fila; crear cliente independiente; duplicados seguros; consentimiento desconocido sin evidencia y bloqueo de comunicaciones automáticas. La ayuda lista nombre, apellidos, email y teléfono; la pantalla L&C aún no muestra el mapeo ni vista previa.
+1. **Importar clientes (en curso):** flujo CSV/XLS/XLSX en `ContactsPage`, API `POST /api/import/clientes/previsualizar` y `/confirmar`, contactos independientes, email opcional, mapeo de campos no usados como omisión, resultado por fila (muestra de 100), duplicados por email dentro del alcance visible, asignación privada y bloqueo de alertas automáticas sin consentimiento. Los duplicados globales ocultos no se enumeran: provocan conflicto genérico al guardar. Falta importar apellidos y los campos Wasi restantes, exportar errores/reintentos y cubrir permisos, fallos y duplicados con pruebas. No crear oportunidades ficticias.
 2. **Directorio y ficha de cliente:** campos, ubicación, demandas, inmuebles vinculados, embudo y permisos por asesor; migrar sin crear oportunidades ficticias.
 3. **Cerrar ciclo de importación/exportación:** resultados por fila, errores descargables, reintentos seguros y exportación con filtros/alcances equivalentes.
 4. **Completar paridad de inmuebles:** validar campos/formulario y determinar si hace falta importación por archivo además de la integración Wasi existente.

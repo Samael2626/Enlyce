@@ -12,6 +12,7 @@ using Enlyce.Infrastructure.Imports;
 using Enlyce.Infrastructure.Media;
 using Enlyce.Infrastructure.Persistence;
 using Enlyce.Infrastructure.Persistence.Repositories;
+using Enlyce.Application.Imports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
         services.AddScoped<IWebAnalyticsRepository, WebAnalyticsRepository>();
         services.AddScoped<Enlyce.Application.Imports.IImportedListingsReadRepository, ImportedListingsReadRepository>();
+        services.AddSingleton<IClientImportTableReader, ClientImportTableReader>();
         services.AddScoped<IPropertyPublicationAdminReadRepository, PropertyPublicationAdminReadRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
         services.AddSingleton<ImageVariantProcessor>();

@@ -33,7 +33,7 @@ public sealed class PublicationAlertDispatcher(
             if (await demands.GetPropertyLinkAsync(demand.Id, property.Id, ct) is not null)
                 continue;
             var contact = await contacts.GetByIdAsync(demand.ContactId, ct);
-            if (contact is null)
+            if (contact is null || !contact.CanReceiveAutomatedEmail || string.IsNullOrWhiteSpace(contact.Email))
                 continue;
 
             await demands.AddPropertyLinkAsync(DemandPropertyLink.Create(demand.Id, property.Id), ct);

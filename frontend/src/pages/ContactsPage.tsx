@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
+import { api } from "@/api/client"
 import { useContact, useContacts, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
@@ -54,6 +55,22 @@ export function ContactsPage() {
   const [demandNeighborhood, setDemandNeighborhood] = useState("")
   const [demandMaxPrice, setDemandMaxPrice] = useState("")
   const [demandBedrooms, setDemandBedrooms] = useState("")
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importColumns, setImportColumns] = useState<string[]>([])
+  const [nameColumn, setNameColumn] = useState("")
+  const [emailColumn, setEmailColumn] = useState("")
+  const [phoneColumn, setPhoneColumn] = useState("")
+  const [importPreview, setImportPreview] = useState<Awaited<ReturnType<typeof api.previewClientImport>> | null>(null)
+  const [importResult, setImportResult] = useState<Awaited<ReturnType<typeof api.confirmClientImport>> | null>(null)
+  const [importError, setImportError] = useState("")
+  const [importing, setImporting] = useState(false)
+  const [advisors, setAdvisors] = useState<Array<{ id: string; name: string }>>([])
+  const [ownerAdvisorId, setOwnerAdvisorId] = useState("")
+
+  useEffect(() => {
+    if (user?.rol === "Administrador")
+      void api.getAdvisors().then(setAdvisors).catch(() => setAdvisors([]))
+  }, [user?.rol])
 
   useEffect(() => {
     setName(contact?.name ?? "")
@@ -90,6 +107,90 @@ export function ContactsPage() {
         <h1 className="mt-2 font-display text-3xl text-foreground">Contactos</h1>
         <p className="mt-2 text-sm text-muted-foreground">Personas, oportunidades y actividad en un solo expediente.</p>
       </header>
+
+      <section className="crm-panel p-5">
+        <h2 className="font-display text-xl text-foreground">Importar clientes</h2>
+        <p className="mt-1 text-sm text-muted-foreground">CSV, XLS o XLSX. Hasta 10 MB. La vista previa valida nombre, email y teléfono antes de guardar.</p>
+        <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={async (event) => {
+          event.preventDefault()
+          if (!importFile) return
+          setImporting(true)
+          setImportError("")
+          try {
+            const preview = await api.previewClientImport(
+              importFile,
+              importColumns.length ? Number(nameColumn) : undefined,
+              emailColumn === "" ? undefined : Number(emailColumn),
+              phoneColumn === "" ? undefined : Number(phoneColumn),
+            )
+            setImportColumns(preview.sourceColumns)
+            setImportPreview(importColumns.length ? preview : null)
+            if (!importColumns.length) {
+              const findColumn = (terms: string[]) => preview.sourceColumns.findIndex((column) => terms.some((term) => column.toLocaleLowerCase().includes(term)))
+              setNameColumn(String(Math.max(0, findColumn(["nombre", "name", "cliente"])) ))
+              const emailIndex = findColumn(["email", "correo"])
+              const phoneIndex = findColumn(["tel", "celular", "phone"])
+              setEmailColumn(emailIndex < 0 ? "" : String(emailIndex))
+              setPhoneColumn(phoneIndex < 0 ? "" : String(phoneIndex))
+              setImportPreview(null)
+            }
+          } catch (error) {
+            setImportError(error instanceof Error ? error.message : "No se pudo leer el archivo.")
+          } finally {
+            setImporting(false)
+          }
+        }}>
+          <label className="text-xs text-muted-foreground">Archivo
+            <input className="mt-1 block text-sm text-foreground" type="file" accept=".csv,.xls,.xlsx" required onChange={(event) => {
+              setImportFile(event.target.files?.[0] ?? null)
+              setImportColumns([])
+              setImportPreview(null)
+              setImportResult(null)
+              setNameColumn("")
+              setEmailColumn("")
+              setPhoneColumn("")
+              setImportError("")
+            }} />
+          </label>
+          {importColumns.length > 0 && <>
+            <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={setNameColumn} />
+            <ImportColumnSelect label="Email" value={emailColumn} columns={importColumns} onChange={setEmailColumn} optional />
+            <ImportColumnSelect label="Teléfono" value={phoneColumn} columns={importColumns} onChange={setPhoneColumn} optional />
+            {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asignar a
+              <select className="mt-1 block min-w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={ownerAdvisorId} onChange={(event) => setOwnerAdvisorId(event.target.value)}>
+                <option value="">Solo administradores</option>
+                {advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
+              </select>
+            </label>}
+          </>}
+          <button disabled={!importFile || importing} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            {importing ? "Revisando…" : importColumns.length ? "Actualizar vista previa" : "Leer columnas"}
+          </button>
+        </form>
+        {importError && <p role="alert" className="mt-3 text-sm text-destructive">{importError}</p>}
+        {importPreview && <div className="mt-4 space-y-3">
+          <p className="text-sm text-foreground">{importPreview.totalRows} filas · {importPreview.validRows} válidas · {importPreview.invalidRows} con errores · {importPreview.duplicateRows} duplicadas</p>
+          <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted-foreground"><th className="p-2">Fila</th><th className="p-2">Nombre</th><th className="p-2">Email</th><th className="p-2">Teléfono</th><th className="p-2">Resultado</th></tr></thead><tbody>
+            {importPreview.rows.map((row) => <tr key={row.rowNumber} className="border-b border-border"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.name || "—"}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.phone || "—"}</td><td className="p-2">{row.error || (row.duplicate ? "Email ya existe" : "Listo")}</td></tr>)}
+          </tbody></table></div>
+          {importPreview.totalRows > importPreview.rows.length && <p className="text-xs text-muted-foreground">Se muestran las primeras {importPreview.rows.length} filas.</p>}
+          <button type="button" disabled={importing || importPreview.validRows === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" onClick={async () => {
+            if (!importFile) return
+            setImporting(true)
+            setImportError("")
+            try {
+              const result = await api.confirmClientImport(importFile, Number(nameColumn), emailColumn === "" ? undefined : Number(emailColumn), phoneColumn === "" ? undefined : Number(phoneColumn), ownerAdvisorId || undefined)
+              setImportResult(result)
+              await contactsQuery.refetch()
+            } catch (error) {
+              setImportError(error instanceof Error ? error.message : "No se pudo importar el archivo.")
+            } finally {
+              setImporting(false)
+            }
+          }}>{importing ? "Importando…" : `Importar ${importPreview.validRows - importPreview.duplicateRows} clientes`}</button>
+        </div>}
+        {importResult && <p role="status" className="mt-3 text-sm text-emerald-700">Importados: {importResult.importedRows} · con errores: {importResult.invalidRows} · duplicados: {importResult.duplicateRows}</p>}
+      </section>
 
       <div className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
         <section className="crm-panel overflow-hidden">
@@ -132,7 +233,7 @@ export function ContactsPage() {
                 <input aria-label={`Seleccionar ${item.name}`} type="checkbox" checked={selectedContactIds.includes(item.id)} onChange={(event) => setSelectedContactIds((ids) => event.target.checked ? [...ids, item.id] : ids.filter((id) => id !== item.id))} />
                 <button type="button" onClick={() => setSelectedId(item.id)} aria-pressed={selectedId === item.id} className="min-w-0 flex-1 text-left">
                   <span className="block font-semibold text-foreground">{item.name}</span>
-                  <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email}</span>
+                  <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email || "Sin email"}</span>
                   {item.phone && <span className="mt-1 block text-xs text-muted-foreground">{item.phone}</span>}
                 </button>
               </div>
@@ -160,7 +261,7 @@ export function ContactsPage() {
                     <div>
                       <p className="crm-eyebrow">Ficha de contacto</p>
                       <h2 className="mt-1 font-display text-2xl text-foreground">{contact.name}</h2>
-                      <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-4 w-4" />{contact.email}</p>
+                      {contact.email && <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-4 w-4" />{contact.email}</p>}
                       <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><Phone className="h-4 w-4" />{contact.phone || "Sin teléfono"}</p>
                     </div>
                   </div>
@@ -378,19 +479,30 @@ export function ContactsPage() {
   )
 }
 
+function ImportColumnSelect({ label, value, columns, onChange, optional = false }: {
+  label: string; value: string; columns: string[]; onChange: (value: string) => void; optional?: boolean
+}) {
+  return <label className="text-xs text-muted-foreground">{label}
+    <select className="mt-1 block min-w-40 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={value} onChange={(event) => onChange(event.target.value)}>
+      {optional && <option value="">No asignar</option>}
+      {columns.map((column, index) => <option key={`${index}:${column}`} value={index}>{column || `Columna ${index + 1}`}</option>)}
+    </select>
+  </label>
+}
+
 function toLocalDateTimeInput(date: Date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
   return local.toISOString().slice(0, 16)
 }
 
-function exportContactsCsv(contacts: { name: string; email: string; phone?: string; createdAt: string }[]) {
+function exportContactsCsv(contacts: { name: string; email: string | null; phone?: string; createdAt: string }[]) {
   const encode = (value: string) => {
     const formulaSafe = /^[\s\u0000]*[=+@-]/.test(value) ? `'${value}` : value
     return `"${formulaSafe.replaceAll('"', '""')}"`
   }
   const rows = [
     ["nombre", "correo", "telefono", "creado"],
-    ...contacts.map((item) => [item.name, item.email, item.phone ?? "", item.createdAt]),
+    ...contacts.map((item) => [item.name, item.email ?? "", item.phone ?? "", item.createdAt]),
   ].map((row) => row.map(encode).join(",")).join("\r\n")
   const url = URL.createObjectURL(new Blob(["\uFEFF", rows], { type: "text/csv;charset=utf-8" }))
   const link = document.createElement("a")
