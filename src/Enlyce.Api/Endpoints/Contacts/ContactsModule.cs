@@ -69,8 +69,8 @@ public static class ContactsModule
             var currentPageSize = pageSize ?? 20;
             if (currentPage < 1 || currentPageSize is < 1 or > 100 || (from.HasValue && to.HasValue && from.Value > to.Value))
                 return Results.BadRequest(new { error = "El rango o la paginacion no son validos." });
-            if (!string.IsNullOrWhiteSpace(customerType) && customerType is not ("Comprador" or "Arrendatario" or "Propietario" or "Arrendador"))
-                return Results.BadRequest(new { error = "El tipo de cliente no es valido." });
+            if (customerType?.Length > 30)
+                return Results.BadRequest(new { error = "El tipo de cliente no puede superar 30 caracteres." });
             if (!string.IsNullOrWhiteSpace(customerStatus) && customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
                 return Results.BadRequest(new { error = "El estado del cliente no es valido." });
             if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
