@@ -184,6 +184,11 @@ class ApiClient {
     return this.request<import("@/lib/types").PropertyDemandMatch[]>(`/api/inmuebles/${propertyId}/demandas`)
   }
 
+  async getPropertyDemandCounts(propertyIds: string[]) {
+    const query = new URLSearchParams(propertyIds.map((id) => ["ids", id]))
+    return this.request<Record<string, number>>(`/api/inmuebles/clientes-posibles?${query.toString()}`)
+  }
+
   async linkDemandProperty(demandId: string, propertyId: string) {
     return this.request(`/api/demandas/${demandId}/inmuebles/${propertyId}`, { method: "POST" })
   }

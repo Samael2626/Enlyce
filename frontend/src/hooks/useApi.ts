@@ -335,6 +335,14 @@ export function usePropertyDemandMatches(propertyId: string) {
   })
 }
 
+export function usePropertyDemandCounts(propertyIds: string[]) {
+  return useQuery({
+    queryKey: ["property-demand-counts", propertyIds],
+    queryFn: () => api.getPropertyDemandCounts(propertyIds),
+    enabled: propertyIds.length > 0,
+  })
+}
+
 // El seguimiento es el mismo en ambos sentidos: refrescar las dos vistas
 function invalidateDemandLinks(queryClient: ReturnType<typeof useQueryClient>, demandId: string, propertyId: string) {
   queryClient.invalidateQueries({ queryKey: ["demand-matches", demandId] })

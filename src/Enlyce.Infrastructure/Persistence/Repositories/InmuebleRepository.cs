@@ -31,6 +31,9 @@ public class InmuebleRepository : IInmuebleRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<Inmueble>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default) =>
+        ids.Count == 0 ? [] : await _context.Inmuebles.AsNoTracking().Where(i => ids.Contains(i.Id)).ToListAsync(ct);
+
     public async Task<IReadOnlyList<Inmueble>> GetByExternalRefsAsync(IReadOnlyCollection<string> externalRefs)
     {
         if (externalRefs.Count == 0)

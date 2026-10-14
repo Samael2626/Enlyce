@@ -122,19 +122,9 @@ public static class DemandsModule
             if (property is null)
                 return Results.NotFound();
 
-            var candidates = (await demands.GetActiveAsync(ct)).Where(demand => demand.Matches(property));
-            if (!http.User.IsInRole("Administrador"))
-            {
-                var advisorId = EndpointAccess.AdvisorId(http.User);
-                var advisorLeads = advisorId.HasValue ? await leads.GetByAsesorIdAsync(advisorId.Value) : [];
-                var leadIds = advisorLeads.Select(lead => lead.Id).ToHashSet();
-                var contactIds = advisorLeads.Where(lead => lead.ContactId.HasValue)
-                    .Select(lead => lead.ContactId!.Value).ToHashSet();
-                candidates = candidates.Where(demand => demand.LeadId.HasValue
-                    ? leadIds.Contains(demand.LeadId.Value)
-                    : contactIds.Contains(demand.ContactId));
-            }
-            var matched = candidates.OrderByDescending(demand => demand.UpdatedAt).ToArray();
+            var matched = (await ScopedActiveDemandsAsync(http, demands, leads, ct))
+                .Where(demand => demand.Matches(property))
+                .OrderByDescending(demand => demand.UpdatedAt).ToArray();
             if (matched.Length == 0)
                 return Results.Ok(Array.Empty<PropertyDemandMatchDto>());
 
@@ -150,6 +140,31 @@ public static class DemandsModule
         .RequireAuthorization()
         .WithTags("Demandas inmobiliarias")
         .WithName("FindPropertyDemandMatches");
+
+        // Conteo "clientes posibles" para la pagina visible del listado: una sola lectura de demandas
+        app.MapGet("/api/inmuebles/clientes-posibles", async Task<IResult> (
+            [FromQuery] Guid[] ids,
+            HttpContext http,
+            ICustomerDemandRepository demands,
+            IInmuebleRepository properties,
+            IContactRepository contacts,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            if (ids.Length > 100)
+                return Results.BadRequest(new { error = "Maximo 100 inmuebles por consulta." });
+            var scoped = await ScopedActiveDemandsAsync(http, demands, leads, ct);
+            var activeContacts = scoped.Count == 0 ? [] : (await contacts.GetByIdsAsync(
+                    scoped.Select(demand => demand.ContactId).Distinct().ToArray(), ct))
+                .Where(contact => contact.Active).Select(contact => contact.Id).ToHashSet();
+            scoped = scoped.Where(demand => activeContacts.Contains(demand.ContactId)).ToArray();
+            var counts = (await properties.GetByIdsAsync(ids.Distinct().ToArray(), ct))
+                .ToDictionary(property => property.Id, property => scoped.Count(demand => demand.Matches(property)));
+            return Results.Ok(counts);
+        })
+        .RequireAuthorization()
+        .WithTags("Demandas inmobiliarias")
+        .WithName("CountPropertyDemandMatches");
 
         group.MapPost("/{id:guid}/inmuebles/{propertyId:guid}", async Task<IResult> (
             Guid id,
@@ -202,6 +217,23 @@ public static class DemandsModule
             return Results.Ok(ToLinkDto(link));
         })
         .WithName("SetDemandPropertyStatus");
+    }
+
+    // Demandas activas visibles: administracion todas; asesor las de sus oportunidades o contactos
+    private static async Task<IReadOnlyList<CustomerDemand>> ScopedActiveDemandsAsync(
+        HttpContext http, ICustomerDemandRepository demands, ILeadRepository leads, CancellationToken ct)
+    {
+        var active = await demands.GetActiveAsync(ct);
+        if (http.User.IsInRole("Administrador"))
+            return active;
+        var advisorId = EndpointAccess.AdvisorId(http.User);
+        var advisorLeads = advisorId.HasValue ? await leads.GetByAsesorIdAsync(advisorId.Value) : [];
+        var leadIds = advisorLeads.Select(lead => lead.Id).ToHashSet();
+        var contactIds = advisorLeads.Where(lead => lead.ContactId.HasValue)
+            .Select(lead => lead.ContactId!.Value).ToHashSet();
+        return active.Where(demand => demand.LeadId.HasValue
+            ? leadIds.Contains(demand.LeadId.Value)
+            : contactIds.Contains(demand.ContactId)).ToArray();
     }
 
     private static async Task<bool> CanAccessDemandAsync(

@@ -236,7 +236,7 @@ La navegacion y estructura principal ya estan inventariadas. Falta inspeccion vi
 | Funcion Wasi | Enlyce | Evidencia | Valor | Esfuerzo |
 |---|---|---|---|---|
 | Cruce clientes - inmuebles | Cubierta | `GET /api/demandas/{id}/coincidencias`, ficha de contacto | Alto | - |
-| Cruce inmuebles - clientes (conteo "Clientes posibles" + detalle) | Cubierta desde 14-oct (sin conteo en la lista) | `GET /api/inmuebles/{id}/demandas`, boton "Clientes posibles" en Inmuebles | Alto: al captar un inmueble se sabe a quien ofrecerlo | Bajo, sin esquema |
+| Cruce inmuebles - clientes (conteo "Clientes posibles" + detalle) | Cubierta desde 14-oct, con conteo por fila | `GET /api/inmuebles/{id}/demandas`, boton "Clientes posibles" en Inmuebles | Alto: al captar un inmueble se sabe a quien ofrecerlo | Bajo, sin esquema |
 | Inmuebles vinculados al cliente | Cubierta | `DemandPropertyLink` con estados | Alto | - |
 | Importar inmuebles | Parcial | Importacion Wasi en segundo plano (`WasiListingSource`); no hay carga de archivo generica | Medio | Medio |
 | Importar clientes | Faltante | Wasi muestra acceso "Importar clientes"; formato no observado | Medio: migracion inicial | Medio; exige consentimiento Ley 1581 por fila |
@@ -245,7 +245,7 @@ La navegacion y estructura principal ya estan inventariadas. Falta inspeccion vi
 
 Decision: primera entrega = cruce inverso. Las demas brechas tienen menor impacto o exigen evidencia y decisiones (formato de importacion, modelo multiempresa) que aun no existen.
 
-Pendiente del cruce inverso: conteo de clientes posibles por fila del listado (evitar N consultas: requiere consulta agregada), y registrar cambios de estado del vinculo en el historial unificado.
+Pendiente del cruce inverso: registrar cambios de estado del vinculo en el historial unificado.
 
 ## Comparacion inicial con Enlyce
 

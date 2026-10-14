@@ -98,6 +98,37 @@ public sealed class PropertyDemandMatchTests(TestWebApplicationFactory factory)
     }
 
     [Fact]
+    public async Task ListCountsMatchDetailAndRespectAdvisorScope()
+    {
+        var (clientA, advisorA) = factory.CreateAuthenticatedClient("Asesor");
+        var (clientB, advisorB) = factory.CreateAuthenticatedClient("Asesor");
+        using (clientA)
+        using (clientB)
+        {
+            var city = $"Ciudad-{Guid.NewGuid():N}";
+            var property = CreateProperty(city, 400_000_000);
+            var unmatched = CreateProperty($"Vacia-{Guid.NewGuid():N}", 400_000_000);
+            var (contactA, leadA) = SeedContact(advisorA.Id);
+            var (contactB, leadB) = SeedContact(advisorB.Id);
+            Seed(property, Demand(contactA.Id, leadA.Id, city, null, null),
+                Demand(contactA.Id, leadA.Id, city, 300_000_000, null),
+                Demand(contactB.Id, leadB.Id, city, null, null));
+            Seed(unmatched);
+
+            var url = $"/api/inmuebles/clientes-posibles?ids={property.Id}&ids={unmatched.Id}&ids={Guid.NewGuid()}";
+            var countsA = await clientA.GetFromJsonAsync<Dictionary<Guid, int>>(url);
+            var countsB = await clientB.GetFromJsonAsync<Dictionary<Guid, int>>(url);
+            var detailA = await clientA.GetFromJsonAsync<MatchDto[]>($"/api/inmuebles/{property.Id}/demandas");
+
+            Assert.Equal(2, countsA![property.Id]);
+            Assert.Equal(detailA!.Length, countsA[property.Id]);
+            Assert.Equal(0, countsA[unmatched.Id]);
+            Assert.Equal(2, countsA.Count);
+            Assert.Equal(1, countsB![property.Id]);
+        }
+    }
+
+    [Fact]
     public async Task FollowUpFromPropertySideIsPersistedAndVisibleInBothDirections()
     {
         var (client, advisor) = factory.CreateAuthenticatedClient("Asesor");

@@ -50,6 +50,7 @@ La respuesta también contiene el token para conservar el contrato de la API, pe
 - Demanda a inmuebles: `GET /api/demandas/{id}/coincidencias`. Inmueble a demandas: `GET /api/inmuebles/{id}/demandas`.
 - Ambos sentidos usan la unica regla `CustomerDemand.Matches(Inmueble)` del dominio; no hay segunda implementacion.
 - El cruce inverso filtra demandas por alcance: administracion ve todas; el asesor solo las ligadas a sus oportunidades (o, sin oportunidad, a contactos que atiende). Omite contactos inactivos.
+- `GET /api/inmuebles/clientes-posibles?ids=...` devuelve el conteo por inmueble de la pagina visible con el mismo alcance.
 - El seguimiento (`DemandPropertyLink`: sugerido, compartido, visitado, descartado) se guarda con los mismos endpoints `POST /api/demandas/{id}/inmuebles/{propertyId}` y `PUT .../estado`, desde la ficha de contacto o desde Inmuebles > Clientes posibles. Sin cambio de esquema.
 
 ### Desfases CRM/API cerrados el 2026-09-24

@@ -21,9 +21,9 @@
 
 - [x] Cruce inverso inmueble → demandas (`GET /api/inmuebles/{id}/demandas`) con la misma regla de dominio que demanda → inmuebles; aislamiento por asesor; seguimiento compartido en ambos sentidos. Sin migración.
 - [x] Inventario Wasi comparado con Enlyce (cubierta/parcial/faltante) en `docs/ingenieria-inversa-wasi.md`.
-- Verificación: Domain 234, Application 77, Integration 268 (+1 omitida); frontend `npm run build`. Producción no tocada.
-- [ ] Conteo de clientes posibles en el listado de inmuebles (consulta agregada).
-- [ ] Llevar cambios de estado de `DemandPropertyLink` al historial unificado; hoy solo guarda el estado y la fecha más reciente.
+- Verificación: Domain 234, Application 77, Integration 269 (+1 omitida); frontend `npm run build`. Producción no tocada.
+- [x] Conteo de clientes posibles en el listado (`GET /api/inmuebles/clientes-posibles?ids=`, máx. 100; dos lecturas de demandas/contactos y una de inmuebles, mismo alcance por asesor).
+- [ ] Llevar cambios de estado de `DemandPropertyLink` al historial unificado; hoy solo guarda el estado y la fecha más reciente. Requiere migración (tabla append-only de eventos con actor); propuesta pendiente de aprobación.
 - [ ] Importación de clientes (requiere evidencia del formato Wasi y consentimiento Ley 1581 por fila) y red de aliados quedan después.
 
 ## Trabajo pendiente, en orden
