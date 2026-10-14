@@ -38,7 +38,8 @@ public static class ContactsModule
                 var contact = Contact.CreateImported(request.Name, request.Surname, request.Email, phone,
                     ownerAdvisorId, false, request.CustomerType, request.CustomerStatus, request.Address,
                     request.Country, request.Department, request.City, landline, request.DateOfBirth,
-                    request.IdentificationNumber, request.ReferredBy, request.AcquisitionMedium, request.AdditionalData);
+                    request.IdentificationNumber, request.ReferredBy, request.AcquisitionMedium, request.AdditionalData,
+                    request.CustomerFunnel);
                 await contacts.AddAsync(contact, ct);
                 return Results.Created($"/api/contactos/{contact.Id}", ToSummary(contact));
             }
@@ -55,6 +56,7 @@ public static class ContactsModule
             DateOnly? to,
             string? customerType,
             string? customerStatus,
+            string? customerFunnel,
             Guid? advisorId,
             int? page,
             int? pageSize,
@@ -71,6 +73,8 @@ public static class ContactsModule
                 return Results.BadRequest(new { error = "El tipo de cliente no es valido." });
             if (!string.IsNullOrWhiteSpace(customerStatus) && customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
                 return Results.BadRequest(new { error = "El estado del cliente no es valido." });
+            if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
+                return Results.BadRequest(new { error = "El embudo del cliente no puede superar 100 caracteres." });
             if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
                 return Results.Forbid();
 
@@ -96,7 +100,7 @@ public static class ContactsModule
             }
             var result = await contacts.SearchAsync(
                 q, createdFrom, createdThrough, allowedContactIds, (int)skip, currentPageSize, ct,
-                customerType, customerStatus);
+                customerType, customerStatus, customerFunnel?.Trim());
             return Results.Ok(new ContactListResponse(
                 result.Total,
                 result.Items.Select(ToSummary).ToArray()));
@@ -189,7 +193,7 @@ public static class ContactsModule
                 contact.Update(request.Name, request.Surname, phone, request.CustomerType,
                     request.CustomerStatus, request.Address, request.Country, request.Department, request.City,
                     landline, request.DateOfBirth, request.IdentificationNumber, request.ReferredBy,
-                    request.AcquisitionMedium, request.AdditionalData);
+                    request.AcquisitionMedium, request.AdditionalData, request.CustomerFunnel);
             }
             catch (DomainError error)
             {
@@ -284,27 +288,27 @@ public static class ContactsModule
     private static ContactSummaryDto ToSummary(Contact contact) => new(
         contact.Id, contact.Name, contact.Email, contact.Phone?.Value, contact.CreatedAt, contact.UpdatedAt,
         contact.Surname, contact.CanReceiveAutomatedEmail, contact.CustomerType, contact.CustomerStatus,
-        contact.Address, contact.Country, contact.Department, contact.City);
+        contact.Address, contact.Country, contact.Department, contact.City, contact.CustomerFunnel);
 }
 
 public sealed record UpdateContactRequest(string Name, string? Phone, string? Surname = null,
     string? CustomerType = null, string CustomerStatus = "Nuevo", string? Address = null,
     string? Country = null, string? Department = null, string? City = null, string? Landline = null,
     DateOnly? DateOfBirth = null, string? IdentificationNumber = null, string? ReferredBy = null,
-    string? AcquisitionMedium = null, string? AdditionalData = null);
+    string? AcquisitionMedium = null, string? AdditionalData = null, string CustomerFunnel = "Clientes");
 public sealed record CreateContactRequest(string Name, string? Surname = null, string? Email = null,
     string? Phone = null, string? Landline = null, string? CustomerType = null,
     string CustomerStatus = "Nuevo", string? Address = null, string? Country = null,
     string? Department = null, string? City = null, DateOnly? DateOfBirth = null,
     string? IdentificationNumber = null, string? ReferredBy = null, string? AcquisitionMedium = null,
-    string? AdditionalData = null, Guid? AdvisorId = null);
+    string? AdditionalData = null, Guid? AdvisorId = null, string CustomerFunnel = "Clientes");
 public sealed record AssignContactRequest(Guid? AdvisorId);
 public sealed record UpdateContactEmailPermissionRequest(bool Allowed, string Source, string? EvidenceReference);
 public sealed record ContactEmailPermissionEventDto(bool Allowed, string Source, string? EvidenceReference,
     string ActorId, DateTime OccurredAt);
 public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, string? Phone, DateTime CreatedAt,
     DateTime UpdatedAt, string? Surname, bool CanReceiveAutomatedEmail, string? CustomerType,
-    string CustomerStatus, string? Address, string Country, string? Department, string? City);
+    string CustomerStatus, string? Address, string Country, string? Department, string? City, string CustomerFunnel);
 public sealed record ContactListResponse(int Total, IReadOnlyList<ContactSummaryDto> Items);
 public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities,
     IReadOnlyList<ContactTaskDto> Tasks, string? Landline, DateOnly? DateOfBirth, string? IdentificationNumber,

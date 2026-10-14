@@ -68,6 +68,7 @@ export interface ContactSummary {
   canReceiveAutomatedEmail: boolean
   customerType: string | null
   customerStatus: string
+  customerFunnel: string
   address: string | null
   country: string
   department: string | null
@@ -286,6 +287,7 @@ export interface CustomerDemandCrossPage {
     contactSurname?: string | null
     customerType?: string | null
     customerStatus: string
+    customerFunnel: string
     contactCreatedAt: string
     ownPropertyMatches: number
   }[]

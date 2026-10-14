@@ -28,7 +28,8 @@ public interface IContactRepository
         int take,
         CancellationToken ct = default,
         string? customerType = null,
-        string? customerStatus = null);
+        string? customerStatus = null,
+        string? customerFunnel = null);
     Task<IReadOnlyList<Contact>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default);
     Task<Contact> CreateOrGetAsync(Contact contact, CancellationToken ct = default);
     Task SaveAsync(Contact contact, CancellationToken ct = default);

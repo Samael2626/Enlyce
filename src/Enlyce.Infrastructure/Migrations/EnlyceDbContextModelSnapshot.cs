@@ -278,6 +278,12 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("CustomerFunnel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasDefaultValue("Clientes")
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("CustomerType")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");

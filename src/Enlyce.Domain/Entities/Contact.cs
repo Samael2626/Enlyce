@@ -16,6 +16,7 @@ public sealed class Contact
     public string? Surname { get; private set; }
     public string? CustomerType { get; private set; }
     public string CustomerStatus { get; private set; } = "Nuevo";
+    public string CustomerFunnel { get; private set; } = "Clientes";
     public string? Email { get; private set; }
     public string? Address { get; private set; }
     public string Country { get; private set; } = "Colombia";
@@ -41,13 +42,14 @@ public sealed class Contact
         string? address, string country, string? department, string? city,
         DateTime createdAt, DateTime updatedAt, bool active, Telefono? landline = null,
         DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
-        string? acquisitionMedium = null, string? additionalData = null)
+        string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes")
     {
         Id = id;
         Name = name;
         Surname = surname;
         CustomerType = customerType;
         CustomerStatus = customerStatus;
+        CustomerFunnel = customerFunnel;
         Email = email;
         Address = address;
         Country = country;
@@ -84,7 +86,7 @@ public sealed class Contact
         string customerStatus = "Nuevo", string? address = null, string? country = null,
         string? department = null, string? city = null, Telefono? landline = null,
         DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
-        string? acquisitionMedium = null, string? additionalData = null)
+        string? acquisitionMedium = null, string? additionalData = null, string customerFunnel = "Clientes")
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -98,22 +100,24 @@ public sealed class Contact
         var now = DateTime.UtcNow;
         ValidateType(customerType);
         ValidateStatus(customerStatus);
+        customerFunnel = ValidateFunnel(customerFunnel);
         if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
             throw new DomainError("La fecha de nacimiento no puede estar en el futuro.");
         return new Contact(Guid.NewGuid(), name.Trim(), CleanOptional(surname), email, phone, ownerAdvisorId,
             canReceiveAutomatedEmail, CleanOptional(customerType), customerStatus, CleanOptional(address),
             Normalize(country, "Colombia", 100)!, CleanOptional(department), CleanOptional(city), now, now, true,
             landline, dateOfBirth, Normalize(identificationNumber, null, 50), Normalize(referredBy, null, 200),
-            Normalize(acquisitionMedium, null, 200), Normalize(additionalData, null, 4000));
+            Normalize(acquisitionMedium, null, 200), Normalize(additionalData, null, 4000), customerFunnel);
     }
 
     public static Contact Reconstitute(Guid id, string name, string? email, Telefono? phone,
         DateTime createdAt, DateTime updatedAt, bool active, Guid? ownerAdvisorId = null,
         bool canReceiveAutomatedEmail = false, string? surname = null, string? customerType = null,
         string customerStatus = "Nuevo", string? address = null, string country = "Colombia",
-        string? department = null, string? city = null) =>
+        string? department = null, string? city = null, string customerFunnel = "Clientes") =>
         new(id, name, surname, email, phone, ownerAdvisorId, canReceiveAutomatedEmail, customerType,
-            customerStatus, address, country, department, city, createdAt, updatedAt, active);
+            customerStatus, address, country, department, city, createdAt, updatedAt, active,
+            customerFunnel: customerFunnel);
 
     public void AssignTo(Guid? advisorId)
     {
@@ -124,7 +128,8 @@ public sealed class Contact
     public void Update(string name, string? surname, Telefono? phone, string? customerType,
         string customerStatus, string? address, string? country, string? department, string? city,
         Telefono? landline = null, DateOnly? dateOfBirth = null, string? identificationNumber = null,
-        string? referredBy = null, string? acquisitionMedium = null, string? additionalData = null)
+        string? referredBy = null, string? acquisitionMedium = null, string? additionalData = null,
+        string customerFunnel = "Clientes")
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -134,6 +139,7 @@ public sealed class Contact
             throw new DomainError("El apellido no puede superar 200 caracteres.");
         ValidateType(customerType);
         ValidateStatus(customerStatus);
+        customerFunnel = ValidateFunnel(customerFunnel);
         if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
             throw new DomainError("La fecha de nacimiento no puede estar en el futuro.");
 
@@ -141,6 +147,7 @@ public sealed class Contact
         Surname = CleanOptional(surname);
         CustomerType = CleanOptional(customerType);
         CustomerStatus = customerStatus;
+        CustomerFunnel = customerFunnel;
         Phone = phone;
         Landline = landline;
         DateOfBirth = dateOfBirth;
@@ -182,5 +189,13 @@ public sealed class Contact
     {
         if (!CustomerStatuses.Contains(value))
             throw new DomainError("El estado del cliente no es valido.");
+    }
+
+    private static string ValidateFunnel(string? value)
+    {
+        var funnel = value?.Trim();
+        if (string.IsNullOrWhiteSpace(funnel) || funnel.Length > 100)
+            throw new DomainError("El embudo del cliente es obligatorio y no puede superar 100 caracteres.");
+        return funnel;
     }
 }

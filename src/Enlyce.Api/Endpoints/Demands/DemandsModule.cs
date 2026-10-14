@@ -42,6 +42,7 @@ public static class DemandsModule
             string? q,
             string? customerType,
             string? customerStatus,
+            string? customerFunnel,
             Guid? advisorId,
             DateOnly? contactFrom,
             DateOnly? contactTo,
@@ -65,6 +66,8 @@ public static class DemandsModule
             if (!string.IsNullOrWhiteSpace(customerStatus) &&
                 customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
                 return Results.BadRequest(new { error = "El estado del cliente no es valido." });
+            if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
+                return Results.BadRequest(new { error = "El embudo del cliente no puede superar 100 caracteres." });
             if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
                 return Results.Forbid();
 
@@ -94,6 +97,7 @@ public static class DemandsModule
                     (string.IsNullOrWhiteSpace(q) || $"{contact.Name} {contact.Surname}".Contains(q.Trim(), StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrWhiteSpace(customerType) || contact.CustomerType == customerType) &&
                     (string.IsNullOrWhiteSpace(customerStatus) || contact.CustomerStatus == customerStatus) &&
+                    (string.IsNullOrWhiteSpace(customerFunnel) || contact.CustomerFunnel == customerFunnel.Trim()) &&
                     (!contactStart.HasValue || contact.CreatedAt >= contactStart.Value) &&
                     (!contactEnd.HasValue || contact.CreatedAt <= contactEnd.Value) &&
                     (!demandStart.HasValue || demand.CreatedAt >= demandStart.Value) &&
@@ -106,7 +110,7 @@ public static class DemandsModule
             {
                 var contact = contactLookup[demand.ContactId];
                 return new CustomerDemandCrossItemDto(ToDto(demand), contact.Name, contact.Surname,
-                    contact.CustomerType, contact.CustomerStatus, contact.CreatedAt,
+                    contact.CustomerType, contact.CustomerStatus, contact.CustomerFunnel, contact.CreatedAt,
                     inventory.Count(demand.Matches));
             }).ToArray();
             return Results.Ok(new CustomerDemandCrossPage(total, currentPage, currentPageSize, items));
@@ -416,7 +420,7 @@ public sealed record CustomerDemandDto(Guid Id, Guid ContactId, Guid? LeadId, st
     int? Bedrooms, int? Bathrooms, int? ParkingSpaces,
     string? Notes, DateTime CreatedAt, DateTime UpdatedAt);
 public sealed record CustomerDemandCrossItemDto(CustomerDemandDto Demand, string ContactName,
-    string? ContactSurname, string? CustomerType, string CustomerStatus, DateTime ContactCreatedAt,
+    string? ContactSurname, string? CustomerType, string CustomerStatus, string CustomerFunnel, DateTime ContactCreatedAt,
     int OwnPropertyMatches);
 public sealed record CustomerDemandCrossPage(int Total, int Page, int PageSize,
     IReadOnlyList<CustomerDemandCrossItemDto> Items);

@@ -150,7 +150,7 @@ class ApiClient {
 
   // Contactos
   async createContact(data: { name: string; surname?: string; email?: string; phone?: string; landline?: string;
-    customerType?: string; customerStatus?: string; address?: string; country?: string; department?: string;
+    customerType?: string; customerStatus?: string; customerFunnel?: string; address?: string; country?: string; department?: string;
     city?: string; dateOfBirth?: string; identificationNumber?: string; referredBy?: string;
     acquisitionMedium?: string; additionalData?: string; advisorId?: string }) {
     return this.request<import("@/lib/types").ContactSummary>("/api/contactos", {
@@ -159,7 +159,7 @@ class ApiClient {
   }
 
   async getContacts(filters: { q?: string; from?: string; to?: string; customerType?: string;
-    customerStatus?: string; advisorId?: string; page?: number; pageSize?: number } = {}) {
+    customerStatus?: string; customerFunnel?: string; advisorId?: string; page?: number; pageSize?: number } = {}) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== "") query.set(key, String(value))
@@ -184,7 +184,7 @@ class ApiClient {
   }
 
   async updateContact(id: string, data: { name: string; surname?: string; phone?: string; customerType?: string;
-    customerStatus?: string; address?: string; country?: string; department?: string; city?: string;
+    customerStatus?: string; customerFunnel?: string; address?: string; country?: string; department?: string; city?: string;
     landline?: string; dateOfBirth?: string; identificationNumber?: string; referredBy?: string;
     acquisitionMedium?: string; additionalData?: string }) {
     return this.request<import("@/lib/types").ContactSummary>(`/api/contactos/${id}`, {
@@ -252,7 +252,7 @@ class ApiClient {
     return this.request<import("@/lib/types").CustomerDemand[]>(`/api/demandas?${query.toString()}`)
   }
 
-  async getCustomerDemandCross(filters: { q?: string; customerType?: string; customerStatus?: string;
+  async getCustomerDemandCross(filters: { q?: string; customerType?: string; customerStatus?: string; customerFunnel?: string;
     advisorId?: string; contactFrom?: string; contactTo?: string; demandFrom?: string; demandTo?: string;
     page?: number; pageSize?: number }) {
     const query = new URLSearchParams()
@@ -346,7 +346,7 @@ class ApiClient {
   }
 
   async downloadContactsCsv(filters: { q?: string; from?: string; to?: string; customerType?: string;
-    customerStatus?: string; advisorId?: string }): Promise<Blob> {
+    customerStatus?: string; customerFunnel?: string; advisorId?: string }): Promise<Blob> {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value) query.set(key, value)

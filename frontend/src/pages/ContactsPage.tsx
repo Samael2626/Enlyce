@@ -11,7 +11,8 @@ export function ContactsPage() {
   const [initialDemandError, setInitialDemandError] = useState("")
   const [newContact, setNewContact] = useState({ name: "", surname: "", email: "", phone: "", landline: "",
     customerType: "", address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
-    identificationNumber: "", referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "" })
+    identificationNumber: "", referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "",
+    customerFunnel: "Clientes" })
   const pageSize = 20
   const [selectedId, setSelectedId] = useState("")
   const [search, setSearch] = useState("")
@@ -19,8 +20,9 @@ export function ContactsPage() {
   const [createdTo, setCreatedTo] = useState("")
   const [customerTypeFilter, setCustomerTypeFilter] = useState("")
   const [customerStatusFilter, setCustomerStatusFilter] = useState("")
+  const [customerFunnelFilter, setCustomerFunnelFilter] = useState("")
   const [advisorFilter, setAdvisorFilter] = useState("")
-  const [crossFilters, setCrossFilters] = useState({ q: "", customerType: "", customerStatus: "", advisorId: "",
+  const [crossFilters, setCrossFilters] = useState({ q: "", customerType: "", customerStatus: "", customerFunnel: "", advisorId: "",
     contactFrom: "", contactTo: "", demandFrom: "", demandTo: "" })
   const [crossSearched, setCrossSearched] = useState(false)
   const [crossPage, setCrossPage] = useState(1)
@@ -29,7 +31,7 @@ export function ContactsPage() {
   const [exportingContacts, setExportingContacts] = useState(false)
   const [exportContactsError, setExportContactsError] = useState("")
   const contactsQuery = useContacts({ q: search, from: createdFrom, to: createdTo,
-    customerType: customerTypeFilter, customerStatus: customerStatusFilter,
+    customerType: customerTypeFilter, customerStatus: customerStatusFilter, customerFunnel: customerFunnelFilter,
     advisorId: advisorFilter || undefined, page, pageSize })
   const contacts = contactsQuery.data?.items ?? []
   const totalContacts = contactsQuery.data?.total ?? 0
@@ -42,7 +44,7 @@ export function ContactsPage() {
   }, [contacts, selectedId, contactsQuery.isFetching])
 
   useEffect(() => setSelectedContactIds([]), [search, createdFrom, createdTo,
-    customerTypeFilter, customerStatusFilter, advisorFilter, page])
+    customerTypeFilter, customerStatusFilter, customerFunnelFilter, advisorFilter, page])
 
   const detailQuery = useContact(selectedId)
   const contact = detailQuery.data?.contact
@@ -73,6 +75,7 @@ export function ContactsPage() {
   const [surname, setSurname] = useState("")
   const [customerType, setCustomerType] = useState("")
   const [customerStatus, setCustomerStatus] = useState("Nuevo")
+  const [customerFunnel, setCustomerFunnel] = useState("Clientes")
   const [address, setAddress] = useState("")
   const [country, setCountry] = useState("Colombia")
   const [department, setDepartment] = useState("")
@@ -179,6 +182,7 @@ export function ContactsPage() {
     setSurname(contact?.surname ?? "")
     setCustomerType(contact?.customerType ?? "")
     setCustomerStatus(contact?.customerStatus ?? "Nuevo")
+    setCustomerFunnel(contact?.customerFunnel ?? "Clientes")
     setAddress(contact?.address ?? "")
     setCountry(contact?.country ?? "Colombia")
     setDepartment(contact?.department ?? "")
@@ -266,7 +270,7 @@ export function ContactsPage() {
           }
             setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerType: "",
               address: "", country: "Colombia", department: "", city: "", dateOfBirth: "", identificationNumber: "",
-              referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "" })
+              referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "", customerFunnel: "Clientes" })
             setShowCreateContact(false)
             setIncludeInitialDemand(false)
         } catch {
@@ -288,6 +292,11 @@ export function ContactsPage() {
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             value={newContact[key]} onChange={(event) => setNewContact((value) => ({ ...value, [key]: event.target.value }))} />}
         </label>)}
+        <label className="text-xs text-muted-foreground">Embudo
+          <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.customerFunnel} onChange={(event) => setNewContact((value) => ({ ...value, customerFunnel: event.target.value }))}>
+            <option value="Clientes">Clientes</option>
+          </select>
+        </label>
         {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asesor encargado
           <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.advisorId} onChange={(event) => setNewContact((value) => ({ ...value, advisorId: event.target.value }))}>
             <option value="">Sin asignar</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
@@ -323,6 +332,7 @@ export function ContactsPage() {
           <label className="text-xs text-muted-foreground">Nombre del cliente<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.q} onChange={(event) => setCrossFilters((value) => ({ ...value, q: event.target.value }))} /></label>
           <label className="text-xs text-muted-foreground">Tipo de cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerType} onChange={(event) => setCrossFilters((value) => ({ ...value, customerType: event.target.value }))}><option value="">Todos</option><option value="Comprador">Comprador</option><option value="Arrendatario">Arrendatario</option><option value="Propietario">Propietario</option><option value="Arrendador">Arrendador</option></select></label>
           <label className="text-xs text-muted-foreground">Estado del cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerStatus} onChange={(event) => setCrossFilters((value) => ({ ...value, customerStatus: event.target.value }))}><option value="">Todos</option><option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option></select></label>
+          <label className="text-xs text-muted-foreground">Embudo<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerFunnel} onChange={(event) => setCrossFilters((value) => ({ ...value, customerFunnel: event.target.value }))}><option value="">Todos</option><option value="Clientes">Clientes</option></select></label>
           {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Usuario encargado<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.advisorId} onChange={(event) => setCrossFilters((value) => ({ ...value, advisorId: event.target.value }))}><option value="">Todos</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>}
           {(["contactFrom", "contactTo", "demandFrom", "demandTo"] as const).map((key) => <label key={key} className="text-xs text-muted-foreground">{key === "contactFrom" ? "Cliente desde" : key === "contactTo" ? "Cliente hasta" : key === "demandFrom" ? "Demanda desde" : "Demanda hasta"}<input type="date" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters[key]} onChange={(event) => setCrossFilters((value) => ({ ...value, [key]: event.target.value }))} /></label>)}
           <div className="flex items-end"><button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Buscar</button></div>
@@ -536,6 +546,11 @@ export function ContactsPage() {
                 <option value="Perdido">Perdido</option>
               </select>
             </label>
+            <label className="block text-xs text-muted-foreground">Embudo
+              <select value={customerFunnelFilter} onChange={(event) => { setCustomerFunnelFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
+                <option value="">Todos</option><option value="Clientes">Clientes</option>
+              </select>
+            </label>
             {user?.rol === "Administrador" && <label className="block text-xs text-muted-foreground">Usuario encargado
               <select value={advisorFilter} onChange={(event) => { setAdvisorFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
                 <option value="">Todos</option>
@@ -554,7 +569,8 @@ export function ContactsPage() {
                 setExportingContacts(true); setExportContactsError("")
                 try {
                   const blob = await api.downloadContactsCsv({ q: search, from: createdFrom, to: createdTo,
-                    customerType: customerTypeFilter, customerStatus: customerStatusFilter, advisorId: advisorFilter })
+                    customerType: customerTypeFilter, customerStatus: customerStatusFilter,
+                    customerFunnel: customerFunnelFilter, advisorId: advisorFilter })
                   const url = URL.createObjectURL(blob)
                   const link = document.createElement("a"); link.href = url; link.download = "clientes-enlyce.csv"; link.click()
                   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
@@ -615,7 +631,7 @@ export function ContactsPage() {
                     onSubmit={(event) => {
                       event.preventDefault()
                       updateContact.mutate({ id: contact.id, name, surname: surname || undefined,
-                        phone: phone || undefined, customerType: customerType || undefined, customerStatus,
+                        phone: phone || undefined, customerType: customerType || undefined, customerStatus, customerFunnel,
                         address: address || undefined, country, department: department || undefined, city: city || undefined,
                         landline: landline || undefined, dateOfBirth: dateOfBirth || undefined,
                         identificationNumber: identificationNumber || undefined, referredBy: referredBy || undefined,
@@ -636,6 +652,11 @@ export function ContactsPage() {
                     <label className="text-xs text-muted-foreground">Estado
                       <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerStatus} onChange={(event) => setCustomerStatus(event.target.value)}>
                         <option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option>
+                      </select>
+                    </label>
+                    <label className="text-xs text-muted-foreground">Embudo
+                      <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerFunnel} onChange={(event) => setCustomerFunnel(event.target.value)}>
+                        <option value="Clientes">Clientes</option>
                       </select>
                     </label>
                     <label className="text-xs text-muted-foreground">País

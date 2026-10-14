@@ -16,6 +16,7 @@ public static class CsvExportModule
             DateOnly? to,
             string? customerType,
             string? customerStatus,
+            string? customerFunnel,
             Guid? advisorId,
             HttpContext http,
             IContactRepository contacts,
@@ -49,7 +50,8 @@ public static class CsvExportModule
             do
             {
                 var result = await contacts.SearchAsync(q, from?.ToDateTime(TimeOnly.MinValue),
-                    to?.ToDateTime(TimeOnly.MaxValue), allowedIds, skip, batchSize, ct, customerType, customerStatus);
+                    to?.ToDateTime(TimeOnly.MaxValue), allowedIds, skip, batchSize, ct,
+                    customerType, customerStatus, customerFunnel);
                 total = result.Total;
                 if (total > maxRows)
                     return Results.Problem("La exportacion supera el limite de 50.000 clientes.", statusCode: StatusCodes.Status413PayloadTooLarge);
@@ -58,11 +60,12 @@ public static class CsvExportModule
             } while (skip < total && skip > 0);
 
             var csv = new StringBuilder();
-            AppendRow(csv, ["nombre", "apellidos", "correo", "telefono", "tipo_cliente", "estado", "creado"]);
+            AppendRow(csv, ["nombre", "apellidos", "correo", "telefono", "tipo_cliente", "estado", "embudo", "creado"]);
             foreach (var contact in allContacts)
                 AppendRow(csv, [contact.Name, contact.Surname ?? string.Empty, contact.Email ?? string.Empty,
                     contact.Phone?.Value ?? string.Empty, contact.CustomerType ?? string.Empty,
-                    contact.CustomerStatus, contact.CreatedAt.ToString("O", CultureInfo.InvariantCulture)]);
+                    contact.CustomerStatus, contact.CustomerFunnel,
+                    contact.CreatedAt.ToString("O", CultureInfo.InvariantCulture)]);
 
             var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
             return Results.File(bytes, "text/csv; charset=utf-8", "clientes-enlyce.csv");
