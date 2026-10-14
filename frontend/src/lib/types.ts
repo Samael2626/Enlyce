@@ -63,7 +63,9 @@ export interface GetLeadByIdResponse {
 export interface ContactSummary {
   id: string
   name: string
+    surname?: string | null
   email: string | null
+    canReceiveAutomatedEmail?: boolean
   phone?: string
   createdAt: string
   updatedAt: string

@@ -195,6 +195,14 @@ export function useContact(id: string) {
   })
 }
 
+export function useSetContactEmailPermission() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, allowed }: { id: string; allowed: boolean }) => api.setContactEmailPermission(id, allowed),
+    onSuccess: (_result, variables) => queryClient.invalidateQueries({ queryKey: ["contacts", variables.id] }),
+  })
+}
+
 export function useUpdateContact() {
   const queryClient = useQueryClient()
   return useMutation({

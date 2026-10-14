@@ -151,6 +151,31 @@ public static class ContactsModule
         })
         .RequireAuthorization("Administrador")
         .WithName("AssignContact");
+
+        group.MapPut("/{id:guid}/permiso-correo", async Task<IResult> (
+            Guid id,
+            UpdateContactEmailPermissionRequest request,
+            HttpContext http,
+            IContactRepository contacts,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            var contact = await contacts.GetByIdAsync(id, ct);
+            if (contact is null)
+                return Results.NotFound();
+            if (!http.User.IsInRole("Administrador"))
+            {
+                var visibleIds = await EndpointAccess.VisibleContactIdsAsync(http.User, leads, contacts, ct);
+                if (visibleIds is null || !visibleIds.Contains(contact.Id))
+                    return Results.NotFound();
+            }
+
+            contact.SetAutomatedEmailPermission(request.Allowed);
+            await contacts.SaveAsync(contact, ct);
+            return Results.Ok(new { contact.Id, contact.CanReceiveAutomatedEmail });
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("SetContactEmailPermission");
     }
 
     private static async Task<IReadOnlyCollection<Guid>> GetAdvisorContactIdsAsync(
@@ -161,12 +186,15 @@ public static class ContactsModule
         await EndpointAccess.VisibleContactIdsAsync(http.User, leads, contacts, ct) ?? [];
 
     private static ContactSummaryDto ToSummary(Contact contact) => new(
-        contact.Id, contact.Name, contact.Email, contact.Phone?.Value, contact.CreatedAt, contact.UpdatedAt);
+        contact.Id, contact.Name, contact.Email, contact.Phone?.Value, contact.CreatedAt, contact.UpdatedAt,
+        contact.Surname, contact.CanReceiveAutomatedEmail);
 }
 
 public sealed record UpdateContactRequest(string Name, string? Phone);
 public sealed record AssignContactRequest(Guid? AdvisorId);
-public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, string? Phone, DateTime CreatedAt, DateTime UpdatedAt);
+public sealed record UpdateContactEmailPermissionRequest(bool Allowed);
+public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, string? Phone, DateTime CreatedAt,
+    DateTime UpdatedAt, string? Surname, bool CanReceiveAutomatedEmail);
 public sealed record ContactListResponse(int Total, IReadOnlyList<ContactSummaryDto> Items);
 public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities, IReadOnlyList<ContactTaskDto> Tasks);
 public sealed record ContactTaskDto(Guid Id, Guid? LeadId, Guid AdvisorId, string Type, string Title,

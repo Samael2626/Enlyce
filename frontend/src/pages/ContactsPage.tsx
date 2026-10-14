@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
 import { api } from "@/api/client"
-import { useContact, useContacts, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact } from "@/hooks/useApi"
+import { useContact, useContacts, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 export function ContactsPage() {
@@ -27,6 +27,7 @@ export function ContactsPage() {
   const detailQuery = useContact(selectedId)
   const contact = detailQuery.data?.contact
   const updateContact = useUpdateContact()
+  const setEmailPermission = useSetContactEmailPermission()
   const createTask = useCreateCommercialTask()
   const completeTask = useCompleteCommercialTask()
   const cancelTask = useCancelCommercialTask()
@@ -58,8 +59,10 @@ export function ContactsPage() {
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importColumns, setImportColumns] = useState<string[]>([])
   const [nameColumn, setNameColumn] = useState("")
+  const [surnameColumn, setSurnameColumn] = useState("")
   const [emailColumn, setEmailColumn] = useState("")
   const [phoneColumn, setPhoneColumn] = useState("")
+  const [canReceiveEmailColumn, setCanReceiveEmailColumn] = useState("")
   const [importPreview, setImportPreview] = useState<Awaited<ReturnType<typeof api.previewClientImport>> | null>(null)
   const [importResult, setImportResult] = useState<Awaited<ReturnType<typeof api.confirmClientImport>> | null>(null)
   const [importError, setImportError] = useState("")
@@ -120,18 +123,24 @@ export function ContactsPage() {
             const preview = await api.previewClientImport(
               importFile,
               importColumns.length ? Number(nameColumn) : undefined,
+              surnameColumn === "" ? undefined : Number(surnameColumn),
               emailColumn === "" ? undefined : Number(emailColumn),
               phoneColumn === "" ? undefined : Number(phoneColumn),
+              canReceiveEmailColumn === "" ? undefined : Number(canReceiveEmailColumn),
             )
             setImportColumns(preview.sourceColumns)
             setImportPreview(importColumns.length ? preview : null)
             if (!importColumns.length) {
               const findColumn = (terms: string[]) => preview.sourceColumns.findIndex((column) => terms.some((term) => column.toLocaleLowerCase().includes(term)))
               setNameColumn(String(Math.max(0, findColumn(["nombre", "name", "cliente"])) ))
+              const surnameIndex = findColumn(["apellido", "surname", "last name"])
               const emailIndex = findColumn(["email", "correo"])
               const phoneIndex = findColumn(["tel", "celular", "phone"])
+              const consentIndex = findColumn(["recibe correo", "email consent", "email permission"])
+              setSurnameColumn(surnameIndex < 0 ? "" : String(surnameIndex))
               setEmailColumn(emailIndex < 0 ? "" : String(emailIndex))
               setPhoneColumn(phoneIndex < 0 ? "" : String(phoneIndex))
+              setCanReceiveEmailColumn(consentIndex < 0 ? "" : String(consentIndex))
               setImportPreview(null)
             }
           } catch (error) {
@@ -147,15 +156,20 @@ export function ContactsPage() {
               setImportPreview(null)
               setImportResult(null)
               setNameColumn("")
+              setSurnameColumn("")
               setEmailColumn("")
               setPhoneColumn("")
+              setCanReceiveEmailColumn("")
               setImportError("")
             }} />
           </label>
           {importColumns.length > 0 && <>
             <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={setNameColumn} />
+            <ImportColumnSelect label="Apellidos" value={surnameColumn} columns={importColumns} onChange={setSurnameColumn} optional />
             <ImportColumnSelect label="Email" value={emailColumn} columns={importColumns} onChange={setEmailColumn} optional />
             <ImportColumnSelect label="Teléfono" value={phoneColumn} columns={importColumns} onChange={setPhoneColumn} optional />
+            <ImportColumnSelect label="Recibe correo" value={canReceiveEmailColumn} columns={importColumns} onChange={setCanReceiveEmailColumn} optional />
+            <p className="text-xs text-muted-foreground">Solo un valor afirmativo en esta columna activa correos automáticos. La autorización de datos se registra por separado.</p>
             {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asignar a
               <select className="mt-1 block min-w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={ownerAdvisorId} onChange={(event) => setOwnerAdvisorId(event.target.value)}>
                 <option value="">Solo administradores</option>
@@ -170,8 +184,8 @@ export function ContactsPage() {
         {importError && <p role="alert" className="mt-3 text-sm text-destructive">{importError}</p>}
         {importPreview && <div className="mt-4 space-y-3">
           <p className="text-sm text-foreground">{importPreview.totalRows} filas · {importPreview.validRows} válidas · {importPreview.invalidRows} con errores · {importPreview.duplicateRows} duplicadas</p>
-          <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted-foreground"><th className="p-2">Fila</th><th className="p-2">Nombre</th><th className="p-2">Email</th><th className="p-2">Teléfono</th><th className="p-2">Resultado</th></tr></thead><tbody>
-            {importPreview.rows.map((row) => <tr key={row.rowNumber} className="border-b border-border"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.name || "—"}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.phone || "—"}</td><td className="p-2">{row.error || (row.duplicate ? "Email ya existe" : "Listo")}</td></tr>)}
+          <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted-foreground"><th className="p-2">Fila</th><th className="p-2">Nombre</th><th className="p-2">Apellidos</th><th className="p-2">Email</th><th className="p-2">Teléfono</th><th className="p-2">Recibe correo</th><th className="p-2">Resultado</th></tr></thead><tbody>
+            {importPreview.rows.map((row) => <tr key={row.rowNumber} className="border-b border-border"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.name || "—"}</td><td className="p-2">{row.surname || "—"}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.phone || "—"}</td><td className="p-2">{row.canReceiveAutomatedEmail ? "Sí" : "No"}</td><td className="p-2">{row.error || (row.duplicate ? "Email ya existe" : "Listo")}</td></tr>)}
           </tbody></table></div>
           {importPreview.totalRows > importPreview.rows.length && <p className="text-xs text-muted-foreground">Se muestran las primeras {importPreview.rows.length} filas.</p>}
           <button type="button" disabled={importing || importPreview.validRows === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" onClick={async () => {
@@ -179,7 +193,12 @@ export function ContactsPage() {
             setImporting(true)
             setImportError("")
             try {
-              const result = await api.confirmClientImport(importFile, Number(nameColumn), emailColumn === "" ? undefined : Number(emailColumn), phoneColumn === "" ? undefined : Number(phoneColumn), ownerAdvisorId || undefined)
+              const result = await api.confirmClientImport(importFile, Number(nameColumn),
+                surnameColumn === "" ? undefined : Number(surnameColumn),
+                emailColumn === "" ? undefined : Number(emailColumn),
+                phoneColumn === "" ? undefined : Number(phoneColumn),
+                canReceiveEmailColumn === "" ? undefined : Number(canReceiveEmailColumn),
+                ownerAdvisorId || undefined)
               setImportResult(result)
               await contactsQuery.refetch()
             } catch (error) {
@@ -260,10 +279,15 @@ export function ContactsPage() {
                     <span className="rounded-full bg-accent/10 p-3 text-accent"><UserRound className="h-5 w-5" /></span>
                     <div>
                       <p className="crm-eyebrow">Ficha de contacto</p>
-                      <h2 className="mt-1 font-display text-2xl text-foreground">{contact.name}</h2>
+                      <h2 className="mt-1 font-display text-2xl text-foreground">{[contact.name, contact.surname].filter(Boolean).join(" ")}</h2>
                       {contact.email && <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-4 w-4" />{contact.email}</p>}
                       <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><Phone className="h-4 w-4" />{contact.phone || "Sin teléfono"}</p>
                     </div>
+                <label className="mt-5 flex items-start gap-2 border-t border-border pt-4 text-sm text-foreground">
+                  <input type="checkbox" checked={contact.canReceiveAutomatedEmail} disabled={user?.rol !== "Administrador" || setEmailPermission.isPending}
+                    onChange={(event) => setEmailPermission.mutate({ id: contact.id, allowed: event.target.checked })} />
+                  <span>Puede recibir correos automáticos. Actívalo solo con evidencia de permiso registrada.</span>
+                </label>
                   </div>
                   <form
                     className="flex flex-wrap items-end gap-2"

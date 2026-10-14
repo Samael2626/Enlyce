@@ -23,14 +23,18 @@ public sealed record ClientImportPreviewResponse(
 public sealed record ClientImportPreviewRow(
     int RowNumber,
     string? Name,
+    string? Surname,
     string? Email,
     string? Phone,
+    bool CanReceiveAutomatedEmail,
     string? Error,
     bool Duplicate);
 
 public static class ClientImportFields
 {
     public const string Name = "name";
+    public const string Surname = "surname";
     public const string Email = "email";
     public const string Phone = "phone";
+    public const string CanReceiveAutomatedEmail = "canReceiveAutomatedEmail";
 }

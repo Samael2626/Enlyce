@@ -71,35 +71,43 @@ class ApiClient {
     return this.request<void>("/api/auth/logout", { method: "POST" })
   }
 
-  async previewClientImport(file: File, nameColumn?: number, emailColumn?: number, phoneColumn?: number) {
+  async previewClientImport(file: File, nameColumn?: number, surnameColumn?: number, emailColumn?: number,
+    phoneColumn?: number, canReceiveEmailColumn?: number) {
     const body = new FormData()
     body.set("archivo", file)
     if (nameColumn !== undefined) body.set("nameColumn", String(nameColumn))
+    if (surnameColumn !== undefined) body.set("surnameColumn", String(surnameColumn))
     if (emailColumn !== undefined) body.set("emailColumn", String(emailColumn))
     if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
+    if (canReceiveEmailColumn !== undefined) body.set("canReceiveEmailColumn", String(canReceiveEmailColumn))
     return this.request<{
       totalRows: number
       validRows: number
       invalidRows: number
       duplicateRows: number
       sourceColumns: string[]
-      rows: Array<{ rowNumber: number; name: string | null; email: string | null; phone: string | null; error: string | null; duplicate: boolean }>
+      rows: Array<{ rowNumber: number; name: string | null; surname: string | null; email: string | null;
+        phone: string | null; canReceiveAutomatedEmail: boolean; error: string | null; duplicate: boolean }>
     }>("/api/import/clientes/previsualizar", { method: "POST", body })
   }
 
-  async confirmClientImport(file: File, nameColumn: number, emailColumn?: number, phoneColumn?: number, advisorId?: string) {
+  async confirmClientImport(file: File, nameColumn: number, surnameColumn?: number, emailColumn?: number,
+    phoneColumn?: number, canReceiveEmailColumn?: number, advisorId?: string) {
     const body = new FormData()
     body.set("archivo", file)
     body.set("nameColumn", String(nameColumn))
+    if (surnameColumn !== undefined) body.set("surnameColumn", String(surnameColumn))
     if (emailColumn !== undefined) body.set("emailColumn", String(emailColumn))
     if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
+    if (canReceiveEmailColumn !== undefined) body.set("canReceiveEmailColumn", String(canReceiveEmailColumn))
     if (advisorId) body.set("advisorId", advisorId)
     return this.request<{
       totalRows: number
       importedRows: number
       invalidRows: number
       duplicateRows: number
-      rows: Array<{ rowNumber: number; name: string | null; email: string | null; phone: string | null; error: string | null; duplicate: boolean }>
+      rows: Array<{ rowNumber: number; name: string | null; surname: string | null; email: string | null;
+        phone: string | null; canReceiveAutomatedEmail: boolean; error: string | null; duplicate: boolean }>
     }>("/api/import/clientes/confirmar", { method: "POST", body })
   }
 
@@ -133,6 +141,12 @@ class ApiClient {
 
   async getContact(id: string) {
     return this.request<import("@/lib/types").ContactDetail>(`/api/contactos/${id}`)
+  }
+
+  async setContactEmailPermission(id: string, allowed: boolean) {
+    return this.request<{ id: string; canReceiveAutomatedEmail: boolean }>(`/api/contactos/${id}/permiso-correo`, {
+      method: "PUT", body: JSON.stringify({ allowed }),
+    })
   }
 
   async updateContact(id: string, data: { name: string; phone?: string }) {

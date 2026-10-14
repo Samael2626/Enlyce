@@ -12,6 +12,7 @@ public sealed class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.HasKey(contact => contact.Id);
         builder.Property(contact => contact.Id).ValueGeneratedNever();
         builder.Property(contact => contact.Name).HasMaxLength(200).IsRequired();
+        builder.Property(contact => contact.Surname).HasMaxLength(200);
         builder.Property(contact => contact.Email).HasMaxLength(320);
         builder.ComplexProperty(contact => contact.Phone, phone =>
             phone.Property(value => value.Value).HasColumnName("Phone").HasMaxLength(20));
@@ -19,7 +20,7 @@ public sealed class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.Property(contact => contact.UpdatedAt).IsRequired();
         builder.Property(contact => contact.Active).IsRequired();
         builder.Property(contact => contact.CanReceiveAutomatedEmail).IsRequired();
-        builder.HasIndex(contact => contact.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
+        builder.HasIndex(contact => contact.Email).HasFilter("\"Email\" IS NOT NULL");
         builder.HasOne<Asesor>().WithMany().HasForeignKey(contact => contact.OwnerAdvisorId)
             .OnDelete(DeleteBehavior.Restrict);
     }

@@ -28,7 +28,7 @@
 | Lista, ficha y edición de inmuebles | [~] | Enlyce lista/crea inmuebles. Faltan edición completa y paridad de filtros; Wasi añade mapa/lista, papelera, selección masiva, orden, búsqueda y búsqueda avanzada. |
 | Importación de inmuebles | [~] | Importación desde API Wasi en segundo plano existe. Wasi también importa XLS/XLSX/CSV y otras fuentes; falta cubrir formatos aplicables. |
 | Exportación de inmuebles | [?] | Wasi muestra acceso de importar/exportar; el flujo de exportación no quedó observado. |
-| Importación de clientes | [~] | Carga CSV/XLS/XLSX, mapeo, vista previa y confirmación implementados para nombre/email/teléfono; email es opcional, duplicados visibles al usuario se detectan por email y el contacto queda asignado al asesor o solo admins. La detección no consulta contactos de otros asesores; un conflicto global responde sin identificar filas. Wasi separa autorización de datos y permiso de recibir correo: el permiso automático queda apagado para importados y existentes tras migrar hasta registrar evidencia específica. Faltan apellidos, campos de ficha/demanda Wasi, gestión de consentimiento, errores descargables y pruebas. |
+| Importación de clientes | [~] | Carga CSV/XLS/XLSX, mapeo, vista previa y confirmación implementados para nombre/email/teléfono; email es opcional, duplicados visibles al usuario se detectan por email y el contacto queda asignado al asesor o solo admins. La detección no consulta contactos de otros asesores; un conflicto global responde sin identificar filas. Wasi separa autorización de datos y permiso de recibir correo: ambos se mapean por separado y solo el valor afirmativo explícito activa el correo; una preferencia admin permite registrar/corregir el permiso. Apellidos ahora se importan. Índice de email no único para igualar Wasi y permitir varias fichas; detecta duplicados antes de guardar. Faltan campos de ficha/demanda Wasi, errores descargables, reintentos y pruebas. |
 | Exportación de clientes | [~] | Enlyce exporta contactos/CRM en CSV. Wasi permite elegir grupo y envía el archivo al correo; falta paridad. |
 | Inmuebles de aliados | [ ] | Wasi lista inmuebles compartidos y permite republicación; Enlyce carece de red multiempresa. |
 | Alianzas, propietarios aliados y grupos | [ ] | Faltan modelo multiempresa, permisos, invitaciones, solicitudes recibidas/aceptadas, acuerdos y grupos. |
@@ -53,7 +53,7 @@
 
 ## Orden de trabajo acordado
 
-1. **Importar clientes (en curso):** flujo CSV/XLS/XLSX en `ContactsPage`, API `POST /api/import/clientes/previsualizar` y `/confirmar`, contactos independientes, email opcional, mapeo de campos no usados como omisión, resultado por fila (muestra de 100), duplicados por email dentro del alcance visible, asignación privada y bloqueo de alertas automáticas sin consentimiento. Los duplicados globales ocultos no se enumeran: provocan conflicto genérico al guardar. Falta importar apellidos y los campos Wasi restantes, exportar errores/reintentos y cubrir permisos, fallos y duplicados con pruebas. No crear oportunidades ficticias.
+1. **Importar clientes (en curso):** flujo CSV/XLS/XLSX en `ContactsPage`, API `POST /api/import/clientes/previsualizar` y `/confirmar`, contactos independientes, email opcional, mapeo de campos no usados como omisión, resultado por fila (muestra de 100), duplicados por email dentro del alcance visible, asignación privada y mapeo separado de apellidos y Recibe correo (solo valores afirmativos lo activan), y control admin del permiso en ficha. Email opcional y no único: se admiten homónimos con correo repetido como en Wasi. Falta el resto de campos Wasi, errores descargables, reintentos y pruebas. No crear oportunidades ficticias.
 2. **Directorio y ficha de cliente:** campos, ubicación, demandas, inmuebles vinculados, embudo y permisos por asesor; migrar sin crear oportunidades ficticias.
 3. **Cerrar ciclo de importación/exportación:** resultados por fila, errores descargables, reintentos seguros y exportación con filtros/alcances equivalentes.
 4. **Completar paridad de inmuebles:** validar campos/formulario y determinar si hace falta importación por archivo además de la integración Wasi existente.
@@ -82,6 +82,13 @@
 - El importador Wasi de inmuebles es API en segundo plano; no equivale al importador Excel/CSV documentado por Wasi.
 - La interfaz Chat es placeholder. No hay UI equivalente para red, usuarios, importación de clientes ni reportes operativos Wasi.
 - Enlyce ofrece calendario con tareas/visitas, analítica CRM/web y checkout; no prueba paridad con agenda/equipos, reportes y ciclo de cuenta Wasi.
+
+## Ajuste importador (14 oct 2026)
+
+- Ahora mapea nombre, apellidos, email, teléfono y «Recibe correo» por separado. Solo valores afirmativos explícitos activan correos automáticos; el permiso de tratamiento de datos no se infiere.
+- El correo puede repetirse en varios contactos, igual que en Wasi. La vista previa detecta repeticiones, pero no expone emails ajenos al alcance del asesor.
+- El permiso de correo puede corregirlo un administrador desde la ficha. No es aún un libro de evidencia/fecha/fuente de consentimiento; debe añadirse antes de considerar completa la gestión de consentimiento.
+- Migración preparada, no aplicada. La migración pone `CanReceiveAutomatedEmail=false` para contactos existentes y nuevos hasta que se habilite expresamente.
 
 ## Fuentes oficiales Wasi
 

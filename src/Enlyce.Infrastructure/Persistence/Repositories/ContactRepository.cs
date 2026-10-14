@@ -11,7 +11,7 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         context.Contacts.SingleOrDefaultAsync(contact => contact.Id == id, ct);
 
     public Task<Contact?> GetByEmailAsync(EmailAddress email, CancellationToken ct = default) =>
-        context.Contacts.SingleOrDefaultAsync(contact => contact.Email == email.Value, ct);
+        context.Contacts.FirstOrDefaultAsync(contact => contact.Email == email.Value, ct);
 
     public async Task<IReadOnlySet<string>> GetExistingEmailsAsync(
         IReadOnlyCollection<string> emails,
@@ -112,24 +112,12 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
 
     public async Task<Contact> CreateOrGetAsync(Contact contact, CancellationToken ct = default)
     {
-        context.Contacts.Add(contact);
-        try
-        {
-            await context.SaveChangesAsync(ct);
-            return contact;
-        }
-        catch (DbUpdateException)
-        {
-            context.Entry(contact).State = EntityState.Detached;
-            if (contact.Email is null)
-                throw;
-
-            var existing = await GetByEmailAsync(EmailAddress.Create(contact.Email), ct);
-            if (existing is null)
-                throw;
-
+        if (contact.Email is not null && await GetByEmailAsync(EmailAddress.Create(contact.Email), ct) is { } existing)
             return existing;
-        }
+
+        context.Contacts.Add(contact);
+        await context.SaveChangesAsync(ct);
+        return contact;
     }
 
     public async Task SaveAsync(Contact contact, CancellationToken ct = default)

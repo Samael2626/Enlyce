@@ -20,8 +20,10 @@ public static class ClientImportModule
         group.MapPost("/previsualizar", async (
             IFormFile archivo,
             [Microsoft.AspNetCore.Mvc.FromForm] int? nameColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? surnameColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? emailColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? phoneColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? canReceiveEmailColumn,
             HttpContext http,
             IClientImportTableReader reader,
             IContactRepository contacts,
@@ -53,8 +55,10 @@ public static class ClientImportModule
             var mapping = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
             {
                 [ClientImportFields.Name] = nameColumn?.ToString(),
+                [ClientImportFields.Surname] = surnameColumn?.ToString(),
                 [ClientImportFields.Email] = emailColumn?.ToString(),
-                [ClientImportFields.Phone] = phoneColumn?.ToString()
+                [ClientImportFields.Phone] = phoneColumn?.ToString(),
+                [ClientImportFields.CanReceiveAutomatedEmail] = canReceiveEmailColumn?.ToString()
             };
             if (!nameColumn.HasValue)
                 return Results.Ok(new ClientImportPreviewResponse(
@@ -64,8 +68,10 @@ public static class ClientImportModule
                 return Results.BadRequest(new { error = mappingError, sourceColumns = table.Columns });
 
             var nameIndex = nameColumn!.Value;
+            var surnameIndex = surnameColumn ?? -1;
             var emailIndex = emailColumn ?? -1;
             var phoneIndex = phoneColumn ?? -1;
+            var canReceiveEmailIndex = canReceiveEmailColumn ?? -1;
             var candidateEmails = table.Rows
                 .Select(row => emailIndex < 0 ? null : Cell(row, emailIndex))
                 .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -88,11 +94,14 @@ public static class ClientImportModule
             {
                 var row = table.Rows[index];
                 var name = Cell(row, nameIndex);
+                var surname = Cell(row, surnameIndex);
                 var emailText = emailIndex < 0 ? null : Cell(row, emailIndex);
                 var phone = phoneIndex < 0 ? null : Cell(row, phoneIndex);
+                var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
+                    ParseConsent(Cell(row, canReceiveEmailIndex));
                 var email = TryEmail(emailText);
                 var parsedPhone = TryPhone(phone);
-                var error = ValidateRow(name, emailText, email, phone, parsedPhone);
+                var error = ValidateRow(name, surname, emailText, email, phone, parsedPhone);
                 var duplicate = error is null && email is not null &&
                     (existing.Contains(email.Value) || !seenInFile.Add(email.Value));
                 if (duplicate)
@@ -103,7 +112,8 @@ public static class ClientImportModule
                     invalid++;
 
                 if (responseRows.Count < MaxPreviewRows)
-                    responseRows.Add(new ClientImportPreviewRow(index + 2, name, emailText, phone, error, duplicate));
+                    responseRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phone,
+                        canReceiveAutomatedEmail, error, duplicate));
             }
 
             return Results.Ok(new ClientImportPreviewResponse(
@@ -120,8 +130,10 @@ public static class ClientImportModule
     private static async Task<IResult> ConfirmAsync(
         IFormFile archivo,
         [Microsoft.AspNetCore.Mvc.FromForm] int? nameColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? surnameColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] int? emailColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] int? phoneColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? canReceiveEmailColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] Guid? advisorId,
         HttpContext http,
         IClientImportTableReader reader,
@@ -161,15 +173,19 @@ public static class ClientImportModule
         var mapping = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
         {
             [ClientImportFields.Name] = nameColumn?.ToString(),
+            [ClientImportFields.Surname] = surnameColumn?.ToString(),
             [ClientImportFields.Email] = emailColumn?.ToString(),
-            [ClientImportFields.Phone] = phoneColumn?.ToString()
+            [ClientImportFields.Phone] = phoneColumn?.ToString(),
+            [ClientImportFields.CanReceiveAutomatedEmail] = canReceiveEmailColumn?.ToString()
         };
         if (!ValidateMapping(mapping, table.Columns, out var mappingError))
             return Results.BadRequest(new { error = mappingError, sourceColumns = table.Columns });
 
         var nameIndex = nameColumn!.Value;
+        var surnameIndex = surnameColumn ?? -1;
         var emailIndex = emailColumn ?? -1;
         var phoneIndex = phoneColumn ?? -1;
+        var canReceiveEmailIndex = canReceiveEmailColumn ?? -1;
         var candidateEmails = table.Rows.Select(row => emailIndex < 0 ? null : TryEmail(Cell(row, emailIndex)))
             .Where(email => email is not null).Select(email => email!.Value)
             .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -186,11 +202,14 @@ public static class ClientImportModule
         {
             var row = table.Rows[index];
             var name = Cell(row, nameIndex);
+            var surname = Cell(row, surnameIndex);
             var emailText = emailIndex < 0 ? null : Cell(row, emailIndex);
             var phoneText = phoneIndex < 0 ? null : Cell(row, phoneIndex);
+            var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
+                ParseConsent(Cell(row, canReceiveEmailIndex));
             var email = TryEmail(emailText);
             var phone = TryPhone(phoneText);
-            var error = ValidateRow(name, emailText, email, phoneText, phone);
+            var error = ValidateRow(name, surname, emailText, email, phoneText, phone);
             var duplicate = email is not null && (existing.Contains(email.Value) || !seen.Add(email.Value));
 
             if (error is not null)
@@ -198,10 +217,12 @@ public static class ClientImportModule
             else if (duplicate)
                 duplicates++;
             else
-                newContacts.Add(Contact.CreateImported(name!, email?.Value, phone, ownerAdvisorId));
+                newContacts.Add(Contact.CreateImported(name!, surname, email?.Value, phone, ownerAdvisorId,
+                    canReceiveAutomatedEmail));
 
             if (resultRows.Count < MaxPreviewRows)
-                resultRows.Add(new ClientImportPreviewRow(index + 2, name, emailText, phoneText,
+                resultRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phoneText,
+                    canReceiveAutomatedEmail,
                     error ?? (duplicate ? "Email duplicado." : null), duplicate));
         }
 
@@ -232,10 +253,19 @@ public static class ClientImportModule
 
         var emailIndex = -1;
         var phoneIndex = -1;
+        var surnameIndex = -1;
+        var consentIndex = -1;
         if (mapping[ClientImportFields.Email] is { } emailText &&
             (!int.TryParse(emailText, out emailIndex) || emailIndex < 0 || emailIndex >= columns.Count))
         {
             error = "La columna de email no existe.";
+            return false;
+        }
+
+        if (mapping[ClientImportFields.Surname] is { } surnameText &&
+            (!int.TryParse(surnameText, out surnameIndex) || surnameIndex < 0 || surnameIndex >= columns.Count))
+        {
+            error = "La columna de apellidos no existe.";
             return false;
         }
 
@@ -252,7 +282,16 @@ public static class ClientImportModule
             return false;
         }
 
-        if (phoneIndex >= 0 && (phoneIndex == nameIndex || phoneIndex == emailIndex))
+        if (mapping[ClientImportFields.CanReceiveAutomatedEmail] is { } consentText &&
+            (!int.TryParse(consentText, out consentIndex) || consentIndex < 0 || consentIndex >= columns.Count))
+        {
+            error = "La columna Recibe correo no existe.";
+            return false;
+        }
+
+        var assigned = new[] { nameIndex, emailIndex, phoneIndex, surnameIndex, consentIndex }
+            .Where(index => index >= 0).ToArray();
+        if (assigned.Distinct().Count() != assigned.Length)
         {
             error = "Cada campo debe venir de una columna distinta.";
             return false;
@@ -293,13 +332,18 @@ public static class ClientImportModule
         }
     }
 
-    private static string? ValidateRow(string? name, string? emailText, Email? email,
+    private static bool ParseConsent(string? value) => value?.Trim().ToLowerInvariant() is
+        "si" or "sí" or "yes" or "true" or "1" or "x" or "acepta";
+
+    private static string? ValidateRow(string? name, string? surname, string? emailText, Email? email,
         string? phoneText, Telefono? phone)
     {
         if (string.IsNullOrWhiteSpace(name))
             return "Falta el nombre.";
         if (name.Length > 200)
             return "El nombre supera 200 caracteres.";
+        if (surname?.Length > 200)
+            return "Los apellidos superan 200 caracteres.";
         if (emailText is not null && email is null)
             return "El email no tiene formato valido.";
         if (phoneText is not null && phone is null)

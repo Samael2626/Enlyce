@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -32,6 +32,12 @@ namespace Enlyce.Infrastructure.Migrations
                 nullable: false,
                 defaultValue: false);
 
+            migrationBuilder.AddColumn<string>(
+                name: "Surname",
+                table: "Contacts",
+                type: "character varying(200)",
+                maxLength: 200,
+                nullable: true);
             migrationBuilder.AddColumn<Guid>(
                 name: "OwnerAdvisorId",
                 table: "Contacts",
@@ -42,7 +48,6 @@ namespace Enlyce.Infrastructure.Migrations
                 name: "IX_Contacts_Email",
                 table: "Contacts",
                 column: "Email",
-                unique: true,
                 filter: "\"Email\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
@@ -79,6 +84,10 @@ namespace Enlyce.Infrastructure.Migrations
                 table: "Contacts");
 
             migrationBuilder.DropColumn(
+                name: "Surname",
+                table: "Contacts");
+
+            migrationBuilder.DropColumn(
                 name: "OwnerAdvisorId",
                 table: "Contacts");
 
@@ -98,7 +107,7 @@ namespace Enlyce.Infrastructure.Migrations
                 name: "IX_Contacts_Email",
                 table: "Contacts",
                 column: "Email",
-                unique: true);
+                filter: "\"Email\" IS NOT NULL");
         }
     }
 }

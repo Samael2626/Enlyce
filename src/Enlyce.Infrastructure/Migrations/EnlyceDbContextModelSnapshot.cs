@@ -261,6 +261,10 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Surname")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<Guid?>("OwnerAdvisorId")
                         .HasColumnType("uuid");
 
@@ -279,7 +283,6 @@ namespace Enlyce.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique()
                         .HasFilter("\"Email\" IS NOT NULL");
 
                     b.HasIndex("OwnerAdvisorId");
