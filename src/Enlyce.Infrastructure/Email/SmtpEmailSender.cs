@@ -24,7 +24,8 @@ public sealed class EmailOptions
 // Un correo fallido nunca tumba el caso de uso: el lead o la publicacion ya se
 // guardaron y perderlos por el SMTP seria peor. El fallo se registra como error
 // para que salte en los logs, no se traga en silencio.
-public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<SmtpEmailSender> logger) : IEmailSender
+public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<SmtpEmailSender> logger)
+    : IEmailSender, IEmailAttachmentSender
 {
     private readonly EmailOptions _options = options.Value;
 
@@ -57,6 +58,42 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<Smtp
         catch (Exception exception) when (exception is SmtpException or FormatException or InvalidOperationException)
         {
             logger.LogError(exception, "FALLO envio de email a {To}: {Subject}", to, subject);
+        }
+    }
+
+    public async Task<bool> SendAttachmentAsync(string to, string subject, string body, string fileName,
+        string contentType, byte[] content, CancellationToken ct = default)
+    {
+        if (!_options.IsConfigured)
+        {
+            logger.LogWarning("Email SIN CONFIGURAR. No se envio el adjunto {FileName}.", fileName);
+            return false;
+        }
+
+        try
+        {
+            using var message = new MailMessage(new MailAddress(_options.From, _options.FromName), new MailAddress(to))
+            {
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = false,
+            };
+            message.Attachments.Add(new Attachment(new MemoryStream(content, writable: false), fileName, contentType));
+            using var client = new SmtpClient(_options.Host, _options.Port)
+            {
+                EnableSsl = _options.EnableSsl,
+                Credentials = string.IsNullOrEmpty(_options.Username)
+                    ? null
+                    : new NetworkCredential(_options.Username, _options.Password),
+            };
+            await client.SendMailAsync(message, ct);
+            logger.LogInformation("Email con adjunto enviado: {FileName}.", fileName);
+            return true;
+        }
+        catch (Exception exception) when (exception is SmtpException or FormatException or InvalidOperationException)
+        {
+            logger.LogError(exception, "Fallo envio de email con adjunto {FileName}.", fileName);
+            return false;
         }
     }
 }

@@ -359,6 +359,15 @@ class ApiClient {
     return response.blob()
   }
 
+  async emailContactsCsv(filters: { q?: string; from?: string; to?: string; customerType?: string;
+    customerStatus?: string; customerFunnel?: string; advisorId?: string }) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) query.set(key, value)
+    })
+    return this.request<{ sent: boolean; count: number }>(`/api/contactos/exportar-correo?${query}`, { method: "POST" })
+  }
+
   async moveLeadInPipeline(leadId: string, nuevaEtapa: string, reason = "Cambio desde pipeline") {
     return this.request<void>(`/api/pipeline/${leadId}/mover-etapa`, {
       method: "PUT",

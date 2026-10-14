@@ -57,7 +57,9 @@ public static class DependencyInjection
         services.AddSingleton<ImageVariantProcessor>();
         AddMediaStorage(services, configuration);
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
-        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<SmtpEmailSender>();
+        services.AddSingleton<IEmailSender>(provider => provider.GetRequiredService<SmtpEmailSender>());
+        services.AddSingleton<IEmailAttachmentSender>(provider => provider.GetRequiredService<SmtpEmailSender>());
         services.Configure<WasiOptions>(configuration.GetSection(WasiOptions.SectionName));
         services.AddHttpClient<IExternalListingSource, WasiListingSource>(client =>
             client.Timeout = TimeSpan.FromSeconds(30));

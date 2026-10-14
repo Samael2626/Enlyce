@@ -141,6 +141,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("public-leads", context => CreateIpLimiter(context, 40));
     options.AddPolicy("public-analytics", context => CreateIpLimiter(context, 120));
     options.AddPolicy("owner-details", context => CreateIpLimiter(context, 20));
+    options.AddPolicy("client-export-email", context => CreateIpLimiter(context, 2));
     options.AddPolicy("wompi-webhook", context => CreateIpLimiter(context, 120));
     options.AddPolicy("billing-checkout", context =>
         RateLimitPartition.GetFixedWindowLimiter(

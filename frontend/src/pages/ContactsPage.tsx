@@ -29,7 +29,9 @@ export function ContactsPage() {
   const [page, setPage] = useState(1)
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
   const [exportingContacts, setExportingContacts] = useState(false)
+  const [emailingContacts, setEmailingContacts] = useState(false)
   const [exportContactsError, setExportContactsError] = useState("")
+  const [exportContactsNotice, setExportContactsNotice] = useState("")
   const contactsQuery = useContacts({ q: search, from: createdFrom, to: createdTo,
     customerType: customerTypeFilter, customerStatus: customerStatusFilter, customerFunnel: customerFunnelFilter,
     advisorId: advisorFilter || undefined, page, pageSize })
@@ -580,8 +582,22 @@ export function ContactsPage() {
               }}>
                 <Download className="h-3.5 w-3.5" /> {exportingContacts ? "Exportando…" : "Exportar resultados filtrados"}
               </button>
+              <button type="button" disabled={emailingContacts || totalContacts === 0} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1.5 font-semibold text-foreground disabled:opacity-40" onClick={async () => {
+                setEmailingContacts(true); setExportContactsError(""); setExportContactsNotice("")
+                try {
+                  const result = await api.emailContactsCsv({ q: search, from: createdFrom, to: createdTo,
+                    customerType: customerTypeFilter, customerStatus: customerStatusFilter,
+                    customerFunnel: customerFunnelFilter, advisorId: advisorFilter })
+                  setExportContactsNotice(`Se enviaron ${result.count} clientes al correo de tu cuenta.`)
+                } catch (error) {
+                  setExportContactsError(error instanceof Error ? error.message : "No se pudo enviar el archivo.")
+                } finally { setEmailingContacts(false) }
+              }}>
+                <Mail className="h-3.5 w-3.5" /> {emailingContacts ? "Enviando…" : "Enviar resultados a mi correo"}
+              </button>
             </div>
             {exportContactsError && <p role="alert" className="text-xs text-destructive">{exportContactsError}</p>}
+            {exportContactsNotice && <p role="status" className="text-xs text-muted-foreground">{exportContactsNotice}</p>}
           </div>
           <div className="max-h-[70vh] overflow-y-auto">
             {contactsQuery.isPending && <p className="p-5 text-sm text-muted-foreground">Cargando contactos…</p>}
