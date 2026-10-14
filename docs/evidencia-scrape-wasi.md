@@ -29,6 +29,8 @@ El scrape preserva las etiquetas de campos y rutas, pero declara que no captura 
 
 Las capturas de formularios tampoco prueban que Wasi importe demandas o que el archivo de clientes permita mapear todos esos campos. La guía oficial de importación sigue siendo la fuente para el formato de importación.
 
+La guía oficial de inmuebles confirma importación por XLS/XLSX/CSV con mapeo, límite recomendado de 2.000 filas, sin fórmulas, y fotos mediante URLs separadas por `|`; la pantalla no quedó recorrida en las capturas. La misma guía dice que la exportación entrega un XLS por correo, pero no define en el texto qué estados incluye ni las columnas.
+
 ## Próxima evidencia interactiva
 
 1. Abrir cada exportación y registrar solo nombres de filtros/columnas, opciones de grupo y destino del archivo; ocultar filas y valores personales.
