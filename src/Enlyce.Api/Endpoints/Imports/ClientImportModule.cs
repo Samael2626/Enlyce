@@ -282,8 +282,6 @@ public static class ClientImportModule
             var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";
             customerType = NormalizeCustomerType(customerType);
             customerStatus = NormalizeCustomerStatus(customerStatus);
-            customerType = NormalizeCustomerType(customerType);
-            customerStatus = NormalizeCustomerStatus(customerStatus);
             var address = addressIndex < 0 ? null : Cell(row, addressIndex);
             var country = countryIndex < 0 ? "Colombia" : Cell(row, countryIndex) ?? "Colombia";
             var department = departmentIndex < 0 ? null : Cell(row, departmentIndex);
