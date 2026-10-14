@@ -2,6 +2,8 @@
 
 **Estado al 11 de octubre de 2026.** Prioridad inmediata: cerrar CRM comercial. La hoja también define la ruta para incorporar en Enlyce contabilidad y administración de arriendos; facturación electrónica queda sujeta a habilitación DIAN por emisor. No se presupone operar como proveedor tecnológico para terceros.
 
+Referencias de repositorios externos por necesidad de producto y plataforma: [radar de repositorios externos](radar-repositorios-externos.md). Las referencias orientan investigación; no autorizan copiar codigo ni incorporar dependencias sin revisar licencia, seguridad y encaje.
+
 ## Entrega implementada en esta sesión
 
 - [x] Contacto centralizado por correo normalizado, separado de oportunidades; migración enlaza oportunidades históricas.

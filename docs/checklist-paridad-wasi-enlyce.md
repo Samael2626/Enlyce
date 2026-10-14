@@ -2,7 +2,8 @@
 
 **Corte:** 14 de octubre de 2026  
 **Objetivo:** llevar a Enlyce las funciones de Wasi usadas por L&C, sin rehacer funciones que ya existen.  
-**Fuentes:** 27 JSON de interfaz en `C:\Users\USUARIO\Downloads\Wasi\Inventarios`, capturas compartidas y código actual de Enlyce. El inventario describe pantallas y controles; no demuestra reglas internas de Wasi. No contiene datos personales.
+**Referencias externas para todo Enlyce:** ver [radar de repositorios externos](radar-repositorios-externos.md), que cubre CRM, inmuebles, red, agenda, web, finanzas y operacion.
+**Fuentes:** 27 JSON de interfaz en `C:\Users\USUARIO\Downloads\Wasi\Inventarios`, capturas compartidas, ayuda oficial de Wasi y código actual de Enlyce. Algunos JSON iniciales incluyen texto de filas; no copiar esos datos a esta checklist ni al vault.
 
 ## Estados
 
@@ -17,26 +18,33 @@
 |---|---|---|
 | Escritorio y métricas del equipo | [~] | Enlyce tiene panel; verificar equivalencia de widgets, periodos y accesos directos de Wasi. |
 | Foro inmobiliario | [ ] | Wasi permite publicar y consultar actividad; no hay módulo equivalente. |
-| Agenda y tareas | [~] | Calendario, tareas y visitas existen; faltan eventos generales y validar vistas día/semana/mes, equipos y recordatorios de Wasi. |
-| Alta, lista y ficha de clientes | [~] | Contactos, oportunidades y demandas existen. Falta cliente independiente con los campos del directorio Wasi y sus vínculos. |
-| Embudo de clientes | [~] | Pipeline comercial existe; comparar etapas, transiciones y acciones reales de Wasi. |
+| Agenda y tareas | [~] | Tareas y visitas existen; faltan agenda día/semana/mes por equipo, Google Calendar, eventos generales y filtros Pendiente/Vencida/Terminada. |
+| Alta, lista y ficha de clientes | [~] | Contactos, oportunidades y demandas existen. Falta cliente independiente y la ficha Wasi con Datos, Inmuebles enlazados, Inmuebles/Demanda, Correos, Llamadas, Eventos y Más. |
+| Embudo de clientes | [~] | Pipeline Enlyce maneja oportunidades de venta/arriendo. Wasi gestiona clientes con Nuevo/En proceso/Convertido/Recuperado/Perdido y adjuntar cliente; no asumir equivalencia. |
 | Gestiones realizadas | [~] | Interacciones, tareas e historial existen; falta comparar filtros, tipos, asuntos y presentación de la lista Wasi. |
-| Demandas y cruce cliente → inmuebles | [x] | Demandas y coincidencias existen. |
+| Demandas y cruce cliente → inmuebles | [~] | Coincidencias propias cubiertas. Wasi separa Propios/Aliados/En Red y filtra por cliente, tipo/estado, asesor y rangos de fecha; aliados/red faltan. |
 | Cruce inmueble → clientes posibles | [x] | Conteo por página y detalle existen, con el mismo alcance por asesor. |
 | Inmuebles vinculados al cliente y estado del vínculo | [~] | Vínculos y estados existen; historial de cada cambio de estado sigue pendiente de aprobación/migración. |
-| Lista, ficha y edición de inmuebles | [~] | Inventario inmobiliario existe; falta comparar campos, catálogos, validaciones, filtros y acciones de Wasi. |
-| Importación de inmuebles | [~] | Importación desde API Wasi en segundo plano existe. Falta paridad con carga por archivo si Wasi la ofrece. |
+| Lista, ficha y edición de inmuebles | [~] | Enlyce lista/crea inmuebles. Faltan edición completa y paridad de filtros; Wasi añade mapa/lista, papelera, selección masiva, orden, búsqueda y búsqueda avanzada. |
+| Importación de inmuebles | [~] | Importación desde API Wasi en segundo plano existe. Wasi también importa XLS/XLSX/CSV y otras fuentes; falta cubrir formatos aplicables. |
 | Exportación de inmuebles | [?] | Wasi muestra acceso de importar/exportar; el flujo de exportación no quedó observado. |
-| Importación de clientes | [ ] | Wasi ofrece carga XLS/XLSX/CSV. Faltan formato/columnas y flujo de validación; Enlyce no tiene este módulo. |
-| Exportación de clientes | [~] | Enlyce exporta contactos/opciones CRM en CSV; comparar columnas, filtros y alcance con Wasi. |
+| Importación de clientes | [ ] | Sin módulo en Enlyce. Wasi acepta XLS/XLSX/CSV, permite mapear o ignorar columnas y exige Nombre. |
+| Exportación de clientes | [~] | Enlyce exporta contactos/CRM en CSV. Wasi permite elegir grupo y envía el archivo al correo; falta paridad. |
 | Inmuebles de aliados | [ ] | Wasi lista inmuebles compartidos y permite republicación; Enlyce carece de red multiempresa. |
-| Alianzas, propietarios aliados y grupos | [ ] | Pantallas detectadas en Wasi; modelo, permisos, invitaciones y acuerdos no implementados ni totalmente observados. |
+| Alianzas, propietarios aliados y grupos | [ ] | Faltan modelo multiempresa, permisos, invitaciones, solicitudes recibidas/aceptadas, acuerdos y grupos. |
 | Mercado inmobiliario | [?] | Pantalla Wasi detectada, contenido dinámico y métricas no identificados. |
-| Reporte general | [~] | Analítica CRM/web existe; falta comparar inventario, negocios, gestiones y demás totales de Wasi. |
+| Reporte general | [~] | Analítica CRM/web existe; faltan totales comparables de inventario/negocios/gestiones y exportación Wasi a Excel/PDF. |
 | Reportes de negocios, usuarios, propietarios y sitio web | [~] | Hay reportes CRM y web; los reportes específicos de Wasi requieren comparación de filtros y métricas. |
 | Correos enviados | [ ] | Wasi muestra reporte de envíos; Enlyce aún no tiene correo saliente integrado con registro de entrega. |
 | Usuarios y asesores | [~] | Autenticación y roles existen; falta comparar administración de usuarios, estados, permisos y campos de Wasi. |
 | Sitio web inmobiliario | [~] | Catálogo público y publicaciones existen; faltan funciones de administración y configuración web de Wasi. |
+| Portales inmobiliarios | [~] | Enlyce administra publicaciones, pero no está probada publicación directa/sincronización con portales. Wasi conecta portales externos. |
+| Compartir fichas por PDF, WhatsApp y correo | [~] | Revisar generación/compartición de fichas; correo y WhatsApp no están integrados como canales CRM. |
+| Marketing web (plantillas, dominio, formularios, blog y banners) | [~] | Catálogo y captación pública existen; faltan editor de sitio, dominios, plantillas, blog y banners equivalentes. |
+| Aplicación móvil | [ ] | Wasi ofrece aplicaciones Android/iOS; Enlyce no tiene app móvil identificada. |
+| Publicación en redes sociales | [~] | Wasi muestra controles para Facebook e Instagram en inmuebles; paridad de publicación no comprobada. |
+| Control de portales y publicación masiva | [~] | Enlyce gestiona publicaciones propias; falta verificar integración, sincronización, errores y publicación masiva en portales Wasi. |
+| Búsqueda y operaciones del inventario | [~] | Faltan comparar filtros avanzados, mapa/lista, selección y acciones masivas, papelera y recuperación. |
 | Configuración inicial de empresa | [ ] | Wasi presenta un asistente de puesta en marcha; Enlyce no muestra equivalente. |
 | Configuración comercial | [~] | Reglas de reparto y SLA existen; comparar el resto de ajustes visibles en Wasi. |
 | Mi Cuenta, reputación, academia y soporte | [ ] | Accesos visibles en Wasi; sin equivalentes CRM identificados en Enlyce. |
@@ -45,12 +53,12 @@
 
 ## Orden de trabajo acordado
 
-1. **Importar clientes:** identificar formato real XLS/XLSX/CSV; vista previa; crear/actualizar/omitir duplicados con coincidencia segura; guardar cliente independiente; consentimiento desconocido si no hay evidencia y bloquear comunicaciones automáticas sin autorización.
+1. **Importar clientes:** construir carga XLS/XLSX/CSV con mapeo/omisión de columnas, nombre obligatorio y resultado por fila; crear cliente independiente; duplicados seguros; consentimiento desconocido sin evidencia y bloqueo de comunicaciones automáticas. La ayuda lista nombre, apellidos, email y teléfono; la pantalla L&C aún no muestra el mapeo ni vista previa.
 2. **Directorio y ficha de cliente:** campos, ubicación, demandas, inmuebles vinculados, embudo y permisos por asesor; migrar sin crear oportunidades ficticias.
 3. **Cerrar ciclo de importación/exportación:** resultados por fila, errores descargables, reintentos seguros y exportación con filtros/alcances equivalentes.
 4. **Completar paridad de inmuebles:** validar campos/formulario y determinar si hace falta importación por archivo además de la integración Wasi existente.
 5. **Red inmobiliaria:** acordar modelo multiempresa, invitaciones, visibilidad, publicación, comisiones y auditoría antes de implementarla.
-6. **Módulos restantes:** agenda/eventos, reportes, usuarios, sitio web, foro, chat, configuración inicial y funciones de cuenta, según uso real de L&C.
+6. **Módulos restantes:** agenda/eventos, reportes, usuarios, sitio web/portales, foro, chat, app móvil, configuración inicial y funciones de cuenta. No sacar funciones de alcance; completar el inventario hasta cubrir Wasi.
 
 ## Criterio de cierre por módulo
 
@@ -64,5 +72,19 @@
 ## Límites de la evidencia actual
 
 - Los JSON muestran rutas, etiquetas, tipos de control y encabezados; no revelan de forma fiable validaciones, reglas del servidor ni resultados de acciones.
-- Las capturas aclaran varias pantallas de clientes, cruces, agenda, inmuebles y reportes; aún faltan recorridos interactivos de importación, alianzas, ajustes y otros flujos.
-- “Todo Wasi” queda acotado a las funciones disponibles para la cuenta L&C y al inventario observable. Cada nueva sección descubierta se agrega a esta lista.
+- Las capturas aclaran pantallas de clientes, cruces, agenda, inmuebles y reportes; faltan recorridos interactivos de importación, alianzas, ajustes y otros flujos.
+- El inventario combina funciones visibles en la cuenta L&C y catálogo público oficial; confirmar disponibilidad por plan/país antes de replicar integraciones externas.
+
+## Hallazgos de auditoría del código
+
+- El backend no tiene endpoint de importación de clientes. Contactos actuales exigen email; la visibilidad del asesor se deriva de oportunidades. Cliente independiente exige resolver alcance/permisos sin inventar oportunidades.
+- El matcher cubre algunos criterios, pero no replica todos los campos ni filtros Wasi. El cruce cliente→inmuebles es parcial mientras falten aliados y red.
+- El importador Wasi de inmuebles es API en segundo plano; no equivale al importador Excel/CSV documentado por Wasi.
+- La interfaz Chat es placeholder. No hay UI equivalente para red, usuarios, importación de clientes ni reportes operativos Wasi.
+- Enlyce ofrece calendario con tareas/visitas, analítica CRM/web y checkout; no prueba paridad con agenda/equipos, reportes y ciclo de cuenta Wasi.
+
+## Fuentes oficiales Wasi
+
+- [Importar y exportar clientes](https://ayuda.wasi.co/es/article/como-importar-exportar-clientes): formatos, mapeo de columnas, nombre requerido y exportación por grupo al correo.
+- [Importar y exportar inmuebles](https://ayuda.wasi.co/es/article/como-importar-exportar-inmuebles): archivo Excel/CSV, mapeo de atributos y datos mínimos.
+- [Software inmobiliario Wasi](https://wasi.co/softwareinmobiliario/): CRM, web inmobiliaria, red de aliados, portalización, móvil y academia.

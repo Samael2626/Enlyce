@@ -235,15 +235,15 @@ La navegacion y estructura principal ya estan inventariadas. Falta inspeccion vi
 
 | Funcion Wasi | Enlyce | Evidencia | Valor | Esfuerzo |
 |---|---|---|---|---|
-| Cruce clientes - inmuebles | Cubierta | `GET /api/demandas/{id}/coincidencias`, ficha de contacto | Alto | - |
+| Cruce clientes - inmuebles | Parcial | `GET /api/demandas/{id}/coincidencias` cubre propios; Wasi separa Propios/Aliados/En Red y tiene filtros adicionales | Alto | Alto, depende de red multiempresa |
 | Cruce inmuebles - clientes (conteo "Clientes posibles" + detalle) | Cubierta desde 14-oct, con conteo por fila | `GET /api/inmuebles/{id}/demandas`, boton "Clientes posibles" en Inmuebles | Alto: al captar un inmueble se sabe a quien ofrecerlo | Bajo, sin esquema |
 | Inmuebles vinculados al cliente | Cubierta | `DemandPropertyLink` con estados | Alto | - |
-| Importar inmuebles | Parcial | Importacion Wasi en segundo plano (`WasiListingSource`); no hay carga de archivo generica | Medio | Medio |
-| Importar clientes | Faltante | Wasi muestra acceso "Importar clientes"; formato no observado | Medio: migracion inicial | Medio; exige consentimiento Ley 1581 por fila |
+| Importar inmuebles | Parcial | Enlyce importa desde API Wasi en segundo plano (`WasiListingSource`); Wasi tambien documenta API/XML/XLS/XLSX/CSV | Medio | Medio |
+| Importar clientes | Faltante | Wasi documenta XLS/XLSX/CSV, mapeo/omision de columnas y Nombre obligatorio; Enlyce no tiene importador | Alto: migracion inicial | Medio; conservar consentimiento desconocido si no hay evidencia y bloquear comunicaciones automatizadas |
 | Exportar | Parcial | Enlyce exporta CSV de oportunidades/contactos; en Wasi no se encontro control de exportacion | Medio | - |
 | Red inmobiliaria / alianzas | Faltante | Formularios con nombre y ubicacion; tabla de aliados con comision y "Publicar en mi Pagina Web" | Incierto: depende de acuerdos entre inmobiliarias | Alto: multiempresa, permisos, comision |
 
-Decision: primera entrega = cruce inverso. Las demas brechas tienen menor impacto o exigen evidencia y decisiones (formato de importacion, modelo multiempresa) que aun no existen.
+Decision: primera entrega acordada = importar clientes. La ayuda oficial confirma formatos y mapeo; falta validar el flujo visual completo de Wasi y concretar el archivo de L&C. Despues siguen ficha/directorio, ciclo de importacion/exportacion, paridad de inmuebles y red multiempresa.
 
 Pendiente del cruce inverso: registrar cambios de estado del vinculo en el historial unificado.
 
