@@ -24,6 +24,12 @@ public sealed class Contact
     public Guid? OwnerAdvisorId { get; private set; }
     public bool CanReceiveAutomatedEmail { get; private set; }
     public Telefono? Phone { get; private set; }
+    public Telefono? Landline { get; private set; }
+    public DateOnly? DateOfBirth { get; private set; }
+    public string? IdentificationNumber { get; private set; }
+    public string? ReferredBy { get; private set; }
+    public string? AcquisitionMedium { get; private set; }
+    public string? AdditionalData { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
     public bool Active { get; private set; }
@@ -33,7 +39,9 @@ public sealed class Contact
     private Contact(Guid id, string name, string? surname, string? email, Telefono? phone, Guid? ownerAdvisorId,
         bool canReceiveAutomatedEmail, string? customerType, string customerStatus,
         string? address, string country, string? department, string? city,
-        DateTime createdAt, DateTime updatedAt, bool active)
+        DateTime createdAt, DateTime updatedAt, bool active, Telefono? landline = null,
+        DateOnly? dateOfBirth = null, string? identificationNumber = null, string? referredBy = null,
+        string? acquisitionMedium = null, string? additionalData = null)
     {
         Id = id;
         Name = name;
@@ -46,6 +54,12 @@ public sealed class Contact
         Department = department;
         City = city;
         Phone = phone;
+        Landline = landline;
+        DateOfBirth = dateOfBirth;
+        IdentificationNumber = identificationNumber;
+        ReferredBy = referredBy;
+        AcquisitionMedium = acquisitionMedium;
+        AdditionalData = additionalData;
         OwnerAdvisorId = ownerAdvisorId;
         CanReceiveAutomatedEmail = canReceiveAutomatedEmail;
         CreatedAt = createdAt;
@@ -102,7 +116,9 @@ public sealed class Contact
     }
 
     public void Update(string name, string? surname, Telefono? phone, string? customerType,
-        string customerStatus, string? address, string? country, string? department, string? city)
+        string customerStatus, string? address, string? country, string? department, string? city,
+        Telefono? landline = null, DateOnly? dateOfBirth = null, string? identificationNumber = null,
+        string? referredBy = null, string? acquisitionMedium = null, string? additionalData = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -112,12 +128,20 @@ public sealed class Contact
             throw new DomainError("El apellido no puede superar 200 caracteres.");
         ValidateType(customerType);
         ValidateStatus(customerStatus);
+        if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+            throw new DomainError("La fecha de nacimiento no puede estar en el futuro.");
 
         Name = name.Trim();
         Surname = CleanOptional(surname);
         CustomerType = CleanOptional(customerType);
         CustomerStatus = customerStatus;
         Phone = phone;
+        Landline = landline;
+        DateOfBirth = dateOfBirth;
+        IdentificationNumber = Normalize(identificationNumber, null, 50);
+        ReferredBy = Normalize(referredBy, null, 200);
+        AcquisitionMedium = Normalize(acquisitionMedium, null, 200);
+        AdditionalData = Normalize(additionalData, null, 4000);
         Address = Normalize(address, null, 500);
         Country = Normalize(country, "Colombia", 100);
         Department = Normalize(department, null, 100);

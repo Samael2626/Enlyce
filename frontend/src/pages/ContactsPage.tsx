@@ -61,6 +61,12 @@ export function ContactsPage() {
   const [department, setDepartment] = useState("")
   const [city, setCity] = useState("")
   const [phone, setPhone] = useState("")
+  const [landline, setLandline] = useState("")
+  const [dateOfBirth, setDateOfBirth] = useState("")
+  const [identificationNumber, setIdentificationNumber] = useState("")
+  const [referredBy, setReferredBy] = useState("")
+  const [acquisitionMedium, setAcquisitionMedium] = useState("")
+  const [additionalData, setAdditionalData] = useState("")
   const [taskTitle, setTaskTitle] = useState("")
   const [taskDescription, setTaskDescription] = useState("")
   const [taskReminderAt, setTaskReminderAt] = useState("")
@@ -159,7 +165,13 @@ export function ContactsPage() {
     setDepartment(contact?.department ?? "")
     setCity(contact?.city ?? "")
     setPhone(contact?.phone ?? "")
-  }, [contact?.id, contact?.name, contact?.phone])
+    setLandline(detailQuery.data?.landline ?? "")
+    setDateOfBirth(detailQuery.data?.dateOfBirth ?? "")
+    setIdentificationNumber(detailQuery.data?.identificationNumber ?? "")
+    setReferredBy(detailQuery.data?.referredBy ?? "")
+    setAcquisitionMedium(detailQuery.data?.acquisitionMedium ?? "")
+    setAdditionalData(detailQuery.data?.additionalData ?? "")
+  }, [contact?.id, contact?.name, contact?.phone, detailQuery.data?.dateOfBirth])
 
   useEffect(() => {
     if (!demandsQuery.data?.some((demand) => demand.id === selectedDemandId))
@@ -445,7 +457,10 @@ export function ContactsPage() {
                       event.preventDefault()
                       updateContact.mutate({ id: contact.id, name, surname: surname || undefined,
                         phone: phone || undefined, customerType: customerType || undefined, customerStatus,
-                        address: address || undefined, country, department: department || undefined, city: city || undefined })
+                        address: address || undefined, country, department: department || undefined, city: city || undefined,
+                        landline: landline || undefined, dateOfBirth: dateOfBirth || undefined,
+                        identificationNumber: identificationNumber || undefined, referredBy: referredBy || undefined,
+                        acquisitionMedium: acquisitionMedium || undefined, additionalData: additionalData || undefined })
                     }}
                   >
                     <label className="text-xs text-muted-foreground">Nombre
@@ -481,6 +496,24 @@ export function ContactsPage() {
                     </label>
                     <label className="text-xs text-muted-foreground">Teléfono
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={20} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Teléfono fijo
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={landline} onChange={(event) => setLandline(event.target.value)} maxLength={20} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Fecha de nacimiento
+                      <input type="date" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Número de identificación
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={identificationNumber} onChange={(event) => setIdentificationNumber(event.target.value)} maxLength={50} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Referido por
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={referredBy} onChange={(event) => setReferredBy(event.target.value)} maxLength={200} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Medio de captación
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={acquisitionMedium} onChange={(event) => setAcquisitionMedium(event.target.value)} maxLength={200} />
+                    </label>
+                    <label className="w-full text-xs text-muted-foreground">Datos adicionales / observaciones
+                      <textarea className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={additionalData} onChange={(event) => setAdditionalData(event.target.value)} maxLength={4000} rows={3} />
                     </label>
                     <button disabled={updateContact.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
                       {updateContact.isPending ? "Guardando…" : "Guardar"}

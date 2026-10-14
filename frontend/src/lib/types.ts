@@ -159,6 +159,12 @@ export interface ContactDetail {
   contact: ContactSummary
   opportunities: ContactOpportunity[]
   tasks: ContactTask[]
+  landline?: string | null
+  dateOfBirth?: string | null
+  identificationNumber?: string | null
+  referredBy?: string | null
+  acquisitionMedium?: string | null
+  additionalData?: string | null
 }
 
 export interface ContactTask {

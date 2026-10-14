@@ -22,6 +22,13 @@ public sealed class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.Property(contact => contact.City).HasMaxLength(100);
         builder.ComplexProperty(contact => contact.Phone, phone =>
             phone.Property(value => value.Value).HasColumnName("Phone").HasMaxLength(20));
+        builder.ComplexProperty(contact => contact.Landline, phone =>
+            phone.Property(value => value.Value).HasColumnName("Landline").HasMaxLength(20));
+        builder.Property(contact => contact.DateOfBirth);
+        builder.Property(contact => contact.IdentificationNumber).HasMaxLength(50);
+        builder.Property(contact => contact.ReferredBy).HasMaxLength(200);
+        builder.Property(contact => contact.AcquisitionMedium).HasMaxLength(200);
+        builder.Property(contact => contact.AdditionalData).HasMaxLength(4000);
         builder.Property(contact => contact.CreatedAt).IsRequired();
         builder.Property(contact => contact.UpdatedAt).IsRequired();
         builder.Property(contact => contact.Active).IsRequired();

@@ -243,8 +243,16 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AcquisitionMedium")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("AdditionalData")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.Property<string>("Address")
                         .HasMaxLength(500)
@@ -274,6 +282,9 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
+
                     b.Property<string>("Department")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -281,6 +292,10 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
+
+                    b.Property<string>("IdentificationNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -290,12 +305,25 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<Guid?>("OwnerAdvisorId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ReferredBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Surname")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Landline", "Enlyce.Domain.Entities.Contact.Landline#Telefono", b1 =>
+                        {
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("Landline");
+                        });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Phone", "Enlyce.Domain.Entities.Contact.Phone#Telefono", b1 =>
                         {

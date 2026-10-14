@@ -175,7 +175,9 @@ class ApiClient {
   }
 
   async updateContact(id: string, data: { name: string; surname?: string; phone?: string; customerType?: string;
-    customerStatus?: string; address?: string; country?: string; department?: string; city?: string }) {
+    customerStatus?: string; address?: string; country?: string; department?: string; city?: string;
+    landline?: string; dateOfBirth?: string; identificationNumber?: string; referredBy?: string;
+    acquisitionMedium?: string; additionalData?: string }) {
     return this.request<import("@/lib/types").ContactSummary>(`/api/contactos/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

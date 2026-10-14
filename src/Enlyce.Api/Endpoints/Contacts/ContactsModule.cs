@@ -121,7 +121,9 @@ public static class ContactsModule
             return Results.Ok(new ContactDetailDto(ToSummary(contact), history,
                 contactTasks.Select(task => new ContactTaskDto(task.Id, task.LeadId, task.AdvisorId,
                     task.Type.ToString(), task.Title, task.Description, task.DueAt,
-                    task.ReminderAt, task.Priority.ToString(), task.Status.ToString(), task.CompletedAt)).ToArray()));
+                    task.ReminderAt, task.Priority.ToString(), task.Status.ToString(), task.CompletedAt)).ToArray(),
+                contact.Landline?.Value, contact.DateOfBirth, contact.IdentificationNumber,
+                contact.ReferredBy, contact.AcquisitionMedium, contact.AdditionalData));
         })
         .WithName("GetContact");
 
@@ -144,11 +146,14 @@ public static class ContactsModule
                     return Results.NotFound();
             }
 
-            var phone = string.IsNullOrWhiteSpace(request.Phone) ? null : Telefono.Create(request.Phone);
             try
             {
+                var phone = string.IsNullOrWhiteSpace(request.Phone) ? null : Telefono.Create(request.Phone);
+                var landline = string.IsNullOrWhiteSpace(request.Landline) ? null : Telefono.Create(request.Landline);
                 contact.Update(request.Name, request.Surname, phone, request.CustomerType,
-                    request.CustomerStatus, request.Address, request.Country, request.Department, request.City);
+                    request.CustomerStatus, request.Address, request.Country, request.Department, request.City,
+                    landline, request.DateOfBirth, request.IdentificationNumber, request.ReferredBy,
+                    request.AcquisitionMedium, request.AdditionalData);
             }
             catch (DomainError error)
             {
@@ -248,7 +253,9 @@ public static class ContactsModule
 
 public sealed record UpdateContactRequest(string Name, string? Phone, string? Surname = null,
     string? CustomerType = null, string CustomerStatus = "Nuevo", string? Address = null,
-    string? Country = null, string? Department = null, string? City = null);
+    string? Country = null, string? Department = null, string? City = null, string? Landline = null,
+    DateOnly? DateOfBirth = null, string? IdentificationNumber = null, string? ReferredBy = null,
+    string? AcquisitionMedium = null, string? AdditionalData = null);
 public sealed record AssignContactRequest(Guid? AdvisorId);
 public sealed record UpdateContactEmailPermissionRequest(bool Allowed, string Source, string? EvidenceReference);
 public sealed record ContactEmailPermissionEventDto(bool Allowed, string Source, string? EvidenceReference,
@@ -257,7 +264,9 @@ public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, stri
     DateTime UpdatedAt, string? Surname, bool CanReceiveAutomatedEmail, string? CustomerType,
     string CustomerStatus, string? Address, string Country, string? Department, string? City);
 public sealed record ContactListResponse(int Total, IReadOnlyList<ContactSummaryDto> Items);
-public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities, IReadOnlyList<ContactTaskDto> Tasks);
+public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities,
+    IReadOnlyList<ContactTaskDto> Tasks, string? Landline, DateOnly? DateOfBirth, string? IdentificationNumber,
+    string? ReferredBy, string? AcquisitionMedium, string? AdditionalData);
 public sealed record ContactTaskDto(Guid Id, Guid? LeadId, Guid AdvisorId, string Type, string Title,
     string? Description, DateTime DueAt, DateTime? ReminderAt, string Priority, string Status, DateTime? CompletedAt);
 public sealed record ContactOpportunityDto(
