@@ -7,6 +7,8 @@ import { useAuthStore } from "@/stores/authStore"
 export function ContactsPage() {
   const createContact = useCreateContact()
   const [showCreateContact, setShowCreateContact] = useState(false)
+  const [includeInitialDemand, setIncludeInitialDemand] = useState(false)
+  const [initialDemandError, setInitialDemandError] = useState("")
   const [newContact, setNewContact] = useState({ name: "", surname: "", email: "", phone: "", landline: "",
     customerType: "", address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
     identificationNumber: "", referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "" })
@@ -30,9 +32,10 @@ export function ContactsPage() {
   const pageCount = Math.max(1, Math.ceil(totalContacts / pageSize))
 
   useEffect(() => {
+    if (contactsQuery.isFetching) return
     if (!contacts.some((contact) => contact.id === selectedId))
       setSelectedId(contacts[0]?.id ?? "")
-  }, [contacts, selectedId])
+  }, [contacts, selectedId, contactsQuery.isFetching])
 
   useEffect(() => setSelectedContactIds([]), [search, createdFrom, createdTo,
     customerTypeFilter, customerStatusFilter, advisorFilter, page])
@@ -212,21 +215,57 @@ export function ContactsPage() {
         <p className="crm-eyebrow">Relación comercial</p>
         <h1 className="mt-2 font-display text-3xl text-foreground">Contactos</h1>
         <p className="mt-2 text-sm text-muted-foreground">Personas, oportunidades y actividad en un solo expediente.</p>
-        <button type="button" className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => setShowCreateContact((value) => !value)}>
+        <button type="button" className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => {
+          if (!showCreateContact) {
+            setInitialDemandError(""); setIncludeInitialDemand(false)
+            setDemandOperation("Venta"); setDemandType(""); setDemandCity(""); setDemandCountry("Colombia")
+            setDemandDepartment(""); setDemandNeighborhood(""); setDemandMinPrice(""); setDemandMaxPrice("")
+            setDemandCurrency("COP"); setDemandMinArea(""); setDemandMaxArea(""); setDemandBedrooms("")
+            setDemandBathrooms(""); setDemandParkingSpaces(""); setDemandNotes("")
+          }
+          setShowCreateContact((value) => !value)
+        }}>
           {showCreateContact ? "Cerrar alta" : "Nuevo cliente"}
         </button>
       </header>
 
-      {showCreateContact && <form className="crm-panel grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3" onSubmit={(event) => {
+      {initialDemandError && !showCreateContact && <p role="alert" className="crm-panel p-4 text-sm text-destructive">{initialDemandError}</p>}
+
+      {showCreateContact && <form className="crm-panel grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3" onSubmit={async (event) => {
         event.preventDefault()
-        createContact.mutate({ ...newContact, advisorId: newContact.advisorId || undefined, customerStatus: "Nuevo" }, {
-          onSuccess: () => {
+        setInitialDemandError("")
+        try {
+          const created = await createContact.mutateAsync({ ...newContact, advisorId: newContact.advisorId || undefined, customerStatus: "Nuevo" })
+          setSearch(created.name)
+          setCreatedFrom(""); setCreatedTo(""); setCustomerTypeFilter(""); setCustomerStatusFilter(""); setAdvisorFilter(""); setPage(1)
+          setSelectedId(created.id)
+          if (includeInitialDemand) {
+            try {
+              await createDemand.mutateAsync({
+                contactId: created.id, operation: demandOperation, propertyType: demandType || undefined,
+                city: demandCity, country: demandCountry, department: demandDepartment || undefined,
+                neighborhood: demandNeighborhood || undefined, minimumPrice: demandMinPrice ? Number(demandMinPrice) : undefined,
+                maximumPrice: demandMaxPrice ? Number(demandMaxPrice) : undefined, currency: demandCurrency,
+                minimumArea: demandMinArea ? Number(demandMinArea) : undefined,
+                maximumArea: demandMaxArea ? Number(demandMaxArea) : undefined,
+                bedrooms: demandBedrooms ? Number(demandBedrooms) : undefined,
+                bathrooms: demandBathrooms ? Number(demandBathrooms) : undefined,
+                parkingSpaces: demandParkingSpaces ? Number(demandParkingSpaces) : undefined, notes: demandNotes || undefined,
+              })
+            } catch (error) {
+              setInitialDemandError(`Cliente creado; la demanda falló: ${error instanceof Error ? error.message : "error desconocido"}. La ficha quedó abierta para completar la demanda sin duplicar el cliente.`)
+              setShowCreateContact(false)
+              return
+            }
+          }
             setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerType: "",
               address: "", country: "Colombia", department: "", city: "", dateOfBirth: "", identificationNumber: "",
               referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "" })
             setShowCreateContact(false)
-          },
-        })
+            setIncludeInitialDemand(false)
+        } catch {
+          // El error de alta queda en createContact y se muestra bajo el formulario.
+        }
       }}>
         <h2 className="font-display text-xl text-foreground sm:col-span-2 lg:col-span-3">Nuevo cliente</h2>
         {([
@@ -248,10 +287,23 @@ export function ContactsPage() {
             <option value="">Sin asignar</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
           </select>
         </label>}
+        <label className="flex items-center gap-2 text-sm text-foreground sm:col-span-2 lg:col-span-3">
+          <input type="checkbox" checked={includeInitialDemand} onChange={(event) => setIncludeInitialDemand(event.target.checked)} />
+          Registrar también la demanda inicial
+        </label>
+        {includeInitialDemand && <div className="grid gap-3 rounded-md border border-border p-4 sm:col-span-2 sm:grid-cols-2 lg:col-span-3 lg:grid-cols-4">
+          <label className="text-xs text-muted-foreground">Operación<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandOperation} onChange={(event) => setDemandOperation(event.target.value)}><option value="Venta">Venta</option><option value="Arriendo">Arriendo</option></select></label>
+          <label className="text-xs text-muted-foreground">Tipo de inmueble<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandType} onChange={(event) => setDemandType(event.target.value)}><option value="">Cualquiera</option><option value="Apartamento">Apartamento</option><option value="Casa">Casa</option><option value="Local">Local</option><option value="Oficina">Oficina</option><option value="Lote">Lote</option><option value="Bodega">Bodega</option><option value="Finca">Finca</option></select></label>
+          {([["city", "Ciudad", demandCity, setDemandCity], ["country", "País", demandCountry, setDemandCountry], ["department", "Departamento", demandDepartment, setDemandDepartment], ["neighborhood", "Barrio", demandNeighborhood, setDemandNeighborhood]] as const).map(([key, label, value, setValue]) => <label key={key} className="text-xs text-muted-foreground">{label}<input required={key === "city" || key === "country"} maxLength={100} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={value} onChange={(event) => setValue(event.target.value)} /></label>)}
+          {([["minPrice", "Presupuesto mínimo", demandMinPrice, setDemandMinPrice], ["maxPrice", "Presupuesto máximo", demandMaxPrice, setDemandMaxPrice], ["minArea", "Área mínima", demandMinArea, setDemandMinArea], ["maxArea", "Área máxima", demandMaxArea, setDemandMaxArea], ["bedrooms", "Habitaciones mínimas", demandBedrooms, setDemandBedrooms], ["bathrooms", "Baños mínimos", demandBathrooms, setDemandBathrooms], ["parking", "Garajes mínimos", demandParkingSpaces, setDemandParkingSpaces]] as const).map(([key, label, value, setValue]) => <label key={key} className="text-xs text-muted-foreground">{label}<input type="number" min="0" step={key.includes("Area") || key.includes("Price") ? "0.01" : "1"} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={value} onChange={(event) => setValue(event.target.value)} /></label>)}
+          <label className="text-xs text-muted-foreground">Moneda<input required pattern="[A-Z]{3}" minLength={3} maxLength={3} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm uppercase text-foreground" value={demandCurrency} onChange={(event) => setDemandCurrency(event.target.value.toUpperCase())} /></label>
+          <label className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">Detalles de la propiedad<textarea maxLength={2000} rows={3} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandNotes} onChange={(event) => setDemandNotes(event.target.value)} /></label>
+        </div>}
         <label className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">Datos adicionales / observaciones
           <textarea maxLength={4000} rows={3} className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.additionalData} onChange={(event) => setNewContact((value) => ({ ...value, additionalData: event.target.value }))} />
         </label>
         {createContact.isError && <p role="alert" className="text-sm text-destructive sm:col-span-3">{createContact.error.message}</p>}
+        {initialDemandError && <p role="alert" className="text-sm text-destructive sm:col-span-3">{initialDemandError}</p>}
         <div className="flex gap-2 sm:col-span-3"><button disabled={createContact.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createContact.isPending ? "Guardando…" : "Guardar cliente"}</button>
           <button type="button" className="rounded-md border border-border px-4 py-2 text-sm text-foreground" onClick={() => setShowCreateContact(false)}>Cancelar</button></div>
       </form>}
