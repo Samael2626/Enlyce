@@ -110,17 +110,17 @@ class ApiClient {
     }>("/api/import/clientes/previsualizar", { method: "POST", body })
   }
 
-  async confirmClientImport(file: File, nameColumn: number, surnameColumn?: number, emailColumn?: number,
-    phoneColumn?: number, canReceiveEmailColumn?: number, advisorId?: string, customerTypeColumn?: number,
-    customerStatusColumn?: number, addressColumn?: number, countryColumn?: number,
-    departmentColumn?: number, cityColumn?: number, importRequestId?: string, landlineColumn?: number,
+  async confirmClientImport(file: File, nameColumn: number, importRequestId: string,
+    surnameColumn?: number, emailColumn?: number, phoneColumn?: number, canReceiveEmailColumn?: number,
+    advisorId?: string, customerTypeColumn?: number, customerStatusColumn?: number, addressColumn?: number,
+    countryColumn?: number, departmentColumn?: number, cityColumn?: number, landlineColumn?: number,
     dateOfBirthColumn?: number, identificationNumberColumn?: number, referredByColumn?: number,
     acquisitionMediumColumn?: number, additionalDataColumn?: number, customerLabelsColumn?: number,
     customerFunnelColumn?: number) {
     const body = new FormData()
     body.set("archivo", file)
     body.set("nameColumn", String(nameColumn))
-    if (importRequestId) body.set("importRequestId", importRequestId)
+    body.set("importRequestId", importRequestId)
     if (surnameColumn !== undefined) body.set("surnameColumn", String(surnameColumn))
     if (emailColumn !== undefined) body.set("emailColumn", String(emailColumn))
     if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
@@ -148,6 +148,7 @@ class ApiClient {
       rows: Array<{ rowNumber: number; name: string | null; surname: string | null; email: string | null;
         phone: string | null; canReceiveAutomatedEmail: boolean; error: string | null; duplicate: boolean }>
       errors: Array<{ rowNumber: number; error: string }>
+      importedContacts: Array<{ rowNumber: number; contactId: string }>
     }>("/api/import/clientes/confirmar", { method: "POST", body })
   }
 

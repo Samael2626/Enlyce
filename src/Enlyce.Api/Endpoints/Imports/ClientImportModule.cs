@@ -323,6 +323,7 @@ public static class ClientImportModule
             StringComparer.OrdinalIgnoreCase);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var newContacts = new List<Contact>();
+        var importedContactLinks = new List<ClientImportContactLink>(table.Rows.Count);
         var resultRows = new List<ClientImportPreviewRow>(Math.Min(MaxPreviewRows, table.Rows.Count));
         var errorRows = new List<ClientImportErrorRow>();
         var invalid = 0;
@@ -364,16 +365,19 @@ public static class ClientImportModule
                 referredBy, acquisitionMedium, additionalData, customerLabels, customerFunnel);
             var duplicate = error is null && email is not null &&
                 (existing.Contains(email.Value) || !seen.Add(email.Value));
-
             if (error is not null)
                 invalid++;
             else if (duplicate)
                 duplicates++;
             else
-                newContacts.Add(Contact.CreateImported(name!, surname, email?.Value, phone, ownerAdvisorId,
+            {
+                var contact = Contact.CreateImported(name!, surname, email?.Value, phone, ownerAdvisorId,
                     canReceiveAutomatedEmail, customerType, customerStatus, address, country, department, city,
                     landline, dateOfBirth, identificationNumber, referredBy, acquisitionMedium,
-                    additionalData, customerFunnel, customerTypes, customerLabels));
+                    additionalData, customerFunnel, customerTypes, customerLabels);
+                newContacts.Add(contact);
+                importedContactLinks.Add(new ClientImportContactLink(index + 2, contact.Id));
+            }
 
             if (error is not null || duplicate)
                 errorRows.Add(new ClientImportErrorRow(index + 2,
@@ -388,10 +392,11 @@ public static class ClientImportModule
         try
         {
             var response = new ClientImportConfirmationResponse(
-                table.Rows.Count, newContacts.Count, invalid, duplicates, resultRows, errorRows);
+                table.Rows.Count, newContacts.Count, invalid, duplicates, resultRows, errorRows, importedContactLinks);
             var batch = ContactImportBatch.Create(importRequestId, actorId, payloadHash,
                 response.TotalRows, response.ImportedRows, response.InvalidRows, response.DuplicateRows,
-                System.Text.Json.JsonSerializer.Serialize(response.Errors));
+                System.Text.Json.JsonSerializer.Serialize(new ClientImportStoredResult(
+                    response.Errors, response.ImportedContacts)));
             await contacts.AddImportedAsync(newContacts, batch, ct);
             return Results.Ok(response);
         }
@@ -404,9 +409,23 @@ public static class ClientImportModule
         }
     }
 
-    private static ClientImportConfirmationResponse ToResponse(ContactImportBatch batch) => new(
-        batch.TotalRows, batch.ImportedRows, batch.InvalidRows, batch.DuplicateRows, [],
-        System.Text.Json.JsonSerializer.Deserialize<IReadOnlyList<ClientImportErrorRow>>(batch.ErrorsJson) ?? []);
+    private static ClientImportConfirmationResponse ToResponse(ContactImportBatch batch)
+    {
+        try
+        {
+            if (System.Text.Json.JsonSerializer.Deserialize<ClientImportStoredResult>(batch.ErrorsJson) is { } stored)
+                return new ClientImportConfirmationResponse(batch.TotalRows, batch.ImportedRows, batch.InvalidRows,
+                    batch.DuplicateRows, [], stored.Errors, stored.ImportedContacts);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // Lotes anteriores guardaban solo la lista de errores.
+        }
+
+        return new ClientImportConfirmationResponse(batch.TotalRows, batch.ImportedRows, batch.InvalidRows,
+            batch.DuplicateRows, [],
+            System.Text.Json.JsonSerializer.Deserialize<IReadOnlyList<ClientImportErrorRow>>(batch.ErrorsJson) ?? [], []);
+    }
 
     private static bool ValidateMapping(
         IReadOnlyDictionary<string, string?> mapping,
@@ -631,5 +650,9 @@ public static class ClientImportModule
 
 public sealed record ClientImportConfirmationResponse(
     int TotalRows, int ImportedRows, int InvalidRows, int DuplicateRows,
-    IReadOnlyList<ClientImportPreviewRow> Rows, IReadOnlyList<ClientImportErrorRow> Errors);
+    IReadOnlyList<ClientImportPreviewRow> Rows, IReadOnlyList<ClientImportErrorRow> Errors,
+    IReadOnlyList<ClientImportContactLink> ImportedContacts);
 public sealed record ClientImportErrorRow(int RowNumber, string Error);
+public sealed record ClientImportContactLink(int RowNumber, Guid ContactId);
+public sealed record ClientImportStoredResult(
+    IReadOnlyList<ClientImportErrorRow> Errors, IReadOnlyList<ClientImportContactLink> ImportedContacts);

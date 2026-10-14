@@ -108,6 +108,7 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 ## Fuentes oficiales Wasi
 
+- Importacion de clientes (2026-10-14): la guia oficial confirma enlace a la ficha al finalizar. Enlyce devuelve enlaces paginados para todos los clientes importados y persiste esos IDs con los errores del lote para repetir la respuesta idempotente sin migracion ni datos personales adicionales.
 - Exportacion de clientes: la guia dice que el usuario elige un grupo y Wasi envia el archivo al correo registrado. No define las opciones de grupo ni las columnas exportadas. Enlyce ya descarga seleccionados/filtros y envia filtros al correo autenticado. No hay evidencia de historial de exportaciones en Wasi; no exigirlo como paridad. Falta captura de la ventana del grupo y del correo recibido.
 - Auditoria de importacion Enlyce (2026-10-14): corregidos preview incompleto (ahora muestra los valores fuente mapeados por fila), preview obsoleto al cambiar mapeos/asesor, y nombre asignado a columna 0 sin encabezado claro. El índice de email no es único; el alcance de deduplicación organizacional necesita decisión por privacidad. No hay ID Wasi ni resolución crear/actualizar/omitir por fila. El indicador de permiso importado no es evidencia auditable; por eso no activa correo automático. El admin puede importar sin asignación y los asesores no ven esos contactos. Excel conserva máscaras simples de ceros iniciales; redondea identificaciones numéricas largas antes de importarse. Resolver lo restante antes de declarar paridad.
 

@@ -17,6 +17,7 @@ export function ContactsPage() {
     customerFunnel: "Clientes" })
   const pageSize = 20
   const [selectedId, setSelectedId] = useState("")
+  const [pinnedImportedContactId, setPinnedImportedContactId] = useState("")
   const [search, setSearch] = useState("")
   const [createdFrom, setCreatedFrom] = useState("")
   const [createdTo, setCreatedTo] = useState("")
@@ -43,9 +44,10 @@ export function ContactsPage() {
 
   useEffect(() => {
     if (contactsQuery.isFetching) return
+    if (selectedId && selectedId === pinnedImportedContactId) return
     if (!contacts.some((contact) => contact.id === selectedId))
       setSelectedId(contacts[0]?.id ?? "")
-  }, [contacts, selectedId, contactsQuery.isFetching])
+  }, [contacts, selectedId, pinnedImportedContactId, contactsQuery.isFetching])
 
   useEffect(() => setSelectedContactIds([]), [search, createdFrom, createdTo,
     customerTypeFilter, customerStatusFilter, customerFunnelFilter, advisorFilter, page])
@@ -148,6 +150,8 @@ export function ContactsPage() {
   const [importRequestId, setImportRequestId] = useState("")
   const [importRequestStorageKey, setImportRequestStorageKey] = useState("")
   const [importRequestIdReady, setImportRequestIdReady] = useState(false)
+  const [importedContactsPage, setImportedContactsPage] = useState(0)
+  const importedContactsPageSize = 20
   const updateImportMapping = (setter: (value: string) => void, value: string) => {
     setter(value)
     setImportPreview(null)
@@ -483,7 +487,7 @@ export function ContactsPage() {
           }
         }}>
           <label className="text-xs text-muted-foreground">Archivo
-            <input className="mt-1 block text-sm text-foreground" type="file" accept=".csv,.xls,.xlsx" required onChange={(event) => {
+            <input disabled={importing} className="mt-1 block text-sm text-foreground disabled:opacity-50" type="file" accept=".csv,.xls,.xlsx" required onChange={(event) => {
               setImportFile(event.target.files?.[0] ?? null)
               setImportColumns([])
               setImportPreview(null)
@@ -512,6 +516,7 @@ export function ContactsPage() {
           </label>
           <p className="text-xs text-muted-foreground">En Excel, guarda teléfonos e identificaciones como texto. Excel puede redondear números de más de 15 dígitos antes de que Enlyce los lea.</p>
           {importColumns.length > 0 && <>
+            <fieldset disabled={importing} className="contents">
             <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setNameColumn, value)} />
             <ImportColumnSelect label="Apellidos" value={surnameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setSurnameColumn, value)} optional />
             <ImportColumnSelect label="Email" value={emailColumn} columns={importColumns} onChange={(value) => updateImportMapping(setEmailColumn, value)} optional />
@@ -538,6 +543,7 @@ export function ContactsPage() {
                 {advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
               </select>
             </label>}
+            </fieldset>
           </>}
           <button disabled={!importFile || importing} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
             {importing ? "Revisando…" : importColumns.length ? "Actualizar vista previa" : "Leer columnas"}
@@ -555,7 +561,7 @@ export function ContactsPage() {
             setImporting(true)
             setImportError("")
             try {
-              const result = await api.confirmClientImport(importFile, Number(nameColumn),
+              const result = await api.confirmClientImport(importFile, Number(nameColumn), importRequestId,
                 surnameColumn === "" ? undefined : Number(surnameColumn),
                 emailColumn === "" ? undefined : Number(emailColumn),
                 phoneColumn === "" ? undefined : Number(phoneColumn),
@@ -566,7 +572,7 @@ export function ContactsPage() {
                 addressColumn === "" ? undefined : Number(addressColumn),
                 countryColumn === "" ? undefined : Number(countryColumn),
                 departmentColumn === "" ? undefined : Number(departmentColumn),
-                cityColumn === "" ? undefined : Number(cityColumn), importRequestId,
+                cityColumn === "" ? undefined : Number(cityColumn),
                 landlineColumn === "" ? undefined : Number(landlineColumn),
                 dateOfBirthColumn === "" ? undefined : Number(dateOfBirthColumn),
                 identificationNumberColumn === "" ? undefined : Number(identificationNumberColumn),
@@ -576,6 +582,7 @@ export function ContactsPage() {
                 customerLabelsColumn === "" ? undefined : Number(customerLabelsColumn),
                 customerFunnelColumn === "" ? undefined : Number(customerFunnelColumn))
               setImportResult(result)
+              setImportedContactsPage(0)
               const nextRequestId = crypto.randomUUID()
               if (importRequestStorageKey) {
                 try { sessionStorage.setItem(importRequestStorageKey, nextRequestId) } catch { /* Reintento solo durante esta sesión. */ }
@@ -591,6 +598,23 @@ export function ContactsPage() {
         </div>}
         {importResult && <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
           <p role="status" className="text-emerald-700">Importados: {importResult.importedRows} · con errores: {importResult.invalidRows} · duplicados: {importResult.duplicateRows}</p>
+          {importResult.importedContacts.length > 0 && <div className="space-y-2" aria-label="Clientes importados">
+            <div className="flex flex-wrap gap-2">
+            {importResult.importedContacts.slice(importedContactsPage * importedContactsPageSize,
+              (importedContactsPage + 1) * importedContactsPageSize).map((item) => {
+              const row = importPreview?.rows.find((previewRow) => previewRow.rowNumber === item.rowNumber)
+              return <button key={item.contactId} type="button" className="text-primary underline"
+                onClick={() => { setPinnedImportedContactId(item.contactId); setSelectedId(item.contactId) }}>
+                Abrir {row ? [row.name, row.surname].filter(Boolean).join(" ") : `cliente de la fila ${item.rowNumber}`}
+              </button>
+            })}
+            </div>
+            {importResult.importedContacts.length > importedContactsPageSize && <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <button type="button" disabled={importedContactsPage === 0} className="rounded border border-border px-2 py-1 disabled:opacity-40" onClick={() => setImportedContactsPage((page) => page - 1)}>Anterior</button>
+              <span>{importedContactsPage + 1} / {Math.ceil(importResult.importedContacts.length / importedContactsPageSize)}</span>
+              <button type="button" disabled={(importedContactsPage + 1) * importedContactsPageSize >= importResult.importedContacts.length} className="rounded border border-border px-2 py-1 disabled:opacity-40" onClick={() => setImportedContactsPage((page) => page + 1)}>Siguiente</button>
+            </div>}
+          </div>}
           {importResult.errors.length > 0 && <button type="button" className="rounded-md border border-border px-3 py-1 text-foreground"
             onClick={() => {
               const quote = (value: string) => `"${value.replaceAll('"', '""')}"`
@@ -698,7 +722,7 @@ export function ContactsPage() {
             {contacts.map((item) => (
               <div key={item.id} className={`flex items-start gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-muted/60 ${selectedId === item.id ? "bg-muted" : ""}`}>
                 <input aria-label={`Seleccionar ${[item.name, item.surname].filter(Boolean).join(" ")}`} type="checkbox" checked={selectedContactIds.includes(item.id)} onChange={(event) => setSelectedContactIds((ids) => event.target.checked ? [...ids, item.id] : ids.filter((id) => id !== item.id))} />
-                <button type="button" onClick={() => setSelectedId(item.id)} aria-pressed={selectedId === item.id} className="min-w-0 flex-1 text-left">
+                <button type="button" onClick={() => { setPinnedImportedContactId(""); setSelectedId(item.id) }} aria-pressed={selectedId === item.id} className="min-w-0 flex-1 text-left">
                   <span className="block font-semibold text-foreground">{[item.name, item.surname].filter(Boolean).join(" ")}</span>
                   <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email || "Sin email"}</span>
                   {item.phone && <span className="mt-1 block text-xs text-muted-foreground">{item.phone}</span>}
