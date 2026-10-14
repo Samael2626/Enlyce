@@ -343,8 +343,8 @@ public static class ClientImportModule
             var additionalData = additionalDataIndex < 0 ? null : Cell(row, additionalDataIndex);
             var customerLabels = customerLabelsIndex < 0 ? [] : ParseCustomerLabels(Cell(row, customerLabelsIndex));
             var customerFunnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex) ?? "Clientes";
-            var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
-                ParseConsent(Cell(row, canReceiveEmailIndex));
+            // Un indicador afirmativo del archivo no es evidencia auditable del consentimiento.
+            var canReceiveAutomatedEmail = false;
             var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
             var customerType = customerTypes.FirstOrDefault();
             var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";

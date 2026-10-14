@@ -428,7 +428,8 @@ export function ContactsPage() {
                   return aliases.some((term) => term.length >= 5 && term !== "telefono" && header.includes(term))
                 })
               }
-              setNameColumn(String(Math.max(0, findColumn(["nombre", "name", "cliente"])) ))
+              const nameIndex = findColumn(["nombre", "name"])
+              setNameColumn(nameIndex < 0 ? "" : String(nameIndex))
               const surnameIndex = findColumn(["apellido", "surname", "last name"])
               const emailIndex = findColumn(["email", "correo"])
               const phoneIndex = findColumn(["telefono movil", "telefono", "celular", "phone", "mobile"])
@@ -521,7 +522,7 @@ export function ContactsPage() {
             <ImportColumnSelect label="Referido por" value={referredByColumn} columns={importColumns} onChange={setReferredByColumn} optional />
             <ImportColumnSelect label="Medio de captación" value={acquisitionMediumColumn} columns={importColumns} onChange={setAcquisitionMediumColumn} optional />
             <ImportColumnSelect label="Datos adicionales" value={additionalDataColumn} columns={importColumns} onChange={setAdditionalDataColumn} optional />
-            <p className="text-xs text-muted-foreground">Solo un valor afirmativo en esta columna activa correos automáticos. La autorización de datos se registra por separado.</p>
+            <p className="text-xs text-muted-foreground">La columna se conserva para referencia, pero importar un valor afirmativo no activa correos automáticos: hace falta registrar evidencia verificable del permiso.</p>
             {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asignar a
               <select className="mt-1 block min-w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={ownerAdvisorId} onChange={(event) => setOwnerAdvisorId(event.target.value)}>
                 <option value="">Solo administradores</option>
