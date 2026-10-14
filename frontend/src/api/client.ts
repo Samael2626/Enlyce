@@ -259,6 +259,16 @@ class ApiClient {
     })
   }
 
+  async updateCustomerDemand(id: string, data: import("@/lib/types").UpdateCustomerDemandInput) {
+    return this.request<import("@/lib/types").CustomerDemand>(`/api/demandas/${id}`, {
+      method: "PUT", body: JSON.stringify(data),
+    })
+  }
+
+  async deleteCustomerDemand(id: string) {
+    return this.request<void>(`/api/demandas/${id}`, { method: "DELETE" })
+  }
+
   async getDemandMatches(demandId: string) {
     return this.request<import("@/lib/types").DemandPropertyMatch[]>(`/api/demandas/${demandId}/coincidencias`)
   }

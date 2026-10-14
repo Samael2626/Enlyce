@@ -343,6 +343,29 @@ export function useCreateCustomerDemand() {
   })
 }
 
+export function useUpdateCustomerDemand() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: import("@/lib/types").UpdateCustomerDemandInput }) =>
+      api.updateCustomerDemand(id, data),
+    onSuccess: (_demand, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["demands"] })
+      queryClient.invalidateQueries({ queryKey: ["demand-matches"] })
+    },
+  })
+}
+
+export function useDeleteCustomerDemand() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.deleteCustomerDemand,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["demands"] })
+      queryClient.invalidateQueries({ queryKey: ["demand-matches"] })
+    },
+  })
+}
+
 export function useDemandMatches(demandId: string) {
   return useQuery({
     queryKey: ["demand-matches", demandId],

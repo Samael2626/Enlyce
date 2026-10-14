@@ -22,7 +22,7 @@
 | Alta, lista y ficha de clientes | [~] | Alta manual y edición permiten tipo/estado, apellidos, ubicación, móvil/fijo, nacimiento, identificación, referido, medio de captación y observaciones; migración de campos nuevos preparada, no aplicada, contactos existentes quedan sin esos datos. El directorio filtra tipo, estado, asesor (admin), texto y fechas. Demanda admite presupuesto/moneda, rango de área, habitaciones, baños, garajes y detalles libres; país y departamento participan en el cruce. La alta manual no concede permiso de correo; Enlyce exige evidencia por su flujo admin. Faltan filtro de embudo, características internas/externas estructuradas y paridad de gestiones. |
 | Embudo de clientes | [~] | Pipeline Enlyce maneja oportunidades de venta/arriendo. Wasi gestiona clientes con Nuevo/En proceso/Convertido/Recuperado/Perdido y adjuntar cliente; no asumir equivalencia. |
 | Gestiones realizadas | [~] | Interacciones, tareas e historial existen; el formulario de leads ahora envía el GUID del asesor autenticado (antes enviaba email y chocaba con la API). Falta comparar filtros, tipos, asuntos y presentación de la lista Wasi. |
-| Demandas y cruce cliente → inmuebles | [~] | Coincidencias propias cubiertas. Wasi separa Propios/Aliados/En Red y filtra por cliente, tipo/estado, asesor y rangos de fecha; aliados/red faltan. |
+| Demandas y cruce cliente → inmuebles | [~] | Coincidencias propias cubiertas. La demanda ahora se puede modificar y dar de baja lógicamente desde la ficha; las relaciones quedan conservadas. Wasi separa Propios/Aliados/En Red y filtra por cliente, tipo/estado, asesor y rangos de fecha; aliados/red y características internas/externas estructuradas faltan. La guía oficial confirma esas características, pero los JSON raspados no contienen este formulario ni sus catálogos; falta evidencia de las opciones y reglas del cruce. |
 | Cruce inmueble → clientes posibles | [x] | Conteo por página y detalle existen, con el mismo alcance por asesor. |
 | Inmuebles vinculados al cliente y estado del vínculo | [~] | Vínculos y estados existen; historial de cada cambio de estado sigue pendiente de aprobación/migración. |
 | Lista, ficha y edición de inmuebles | [~] | Enlyce lista/crea inmuebles. Faltan edición completa y paridad de filtros; Wasi añade mapa/lista, papelera, selección masiva, orden, búsqueda y búsqueda avanzada. |
@@ -94,5 +94,7 @@
 ## Fuentes oficiales Wasi
 
 - [Importar y exportar clientes](https://ayuda.wasi.co/es/article/como-importar-exportar-clientes): formatos, mapeo de columnas, nombre requerido y exportación por grupo al correo.
+- [Agregar el primer cliente](https://ayuda.wasi.co/es/article/agrega-tu-primer-cliente): formulario de demanda, características internas/externas, detalles y enlaces de inmuebles.
+- [Cruce inmuebles - clientes](https://ayuda.wasi.co/es/article/cruce-inmuebles-clientes): filtros del cruce y acciones para modificar/borrar demandas; se evidencia compartir propiedad por correo.
 - [Importar y exportar inmuebles](https://ayuda.wasi.co/es/article/como-importar-exportar-inmuebles): archivo Excel/CSV, mapeo de atributos y datos mínimos.
 - [Software inmobiliario Wasi](https://wasi.co/softwareinmobiliario/): CRM, web inmobiliaria, red de aliados, portalización, móvil y academia.

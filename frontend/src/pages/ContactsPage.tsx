@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
 import { api } from "@/api/client"
-import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
+import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useUpdateCustomerDemand, useDeleteCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 export function ContactsPage() {
@@ -52,6 +52,9 @@ export function ContactsPage() {
   const taskHistory = useCommercialTaskHistory(selectedTaskId)
   const addTaskComment = useAddCommercialTaskComment()
   const createDemand = useCreateCustomerDemand()
+  const updateDemand = useUpdateCustomerDemand()
+  const deleteDemand = useDeleteCustomerDemand()
+  const [editingDemandId, setEditingDemandId] = useState("")
   const demandsQuery = useCustomerDemands(contact?.id ?? "")
   const [selectedDemandId, setSelectedDemandId] = useState("")
   const matchesQuery = useDemandMatches(selectedDemandId)
@@ -677,9 +680,7 @@ export function ContactsPage() {
                       className="grid w-full gap-2 sm:grid-cols-2 xl:grid-cols-6"
                       onSubmit={(event) => {
                         event.preventDefault()
-                        createDemand.mutate({
-                          contactId: contact.id,
-                          leadId: detailQuery.data?.opportunities[0]?.id,
+                        const demandInput = {
                           operation: demandOperation,
                           propertyType: demandType || undefined,
                           city: demandCity,
@@ -695,7 +696,17 @@ export function ContactsPage() {
                           bathrooms: demandBathrooms ? Number(demandBathrooms) : undefined,
                           parkingSpaces: demandParkingSpaces ? Number(demandParkingSpaces) : undefined,
                           notes: demandNotes || undefined,
-                        }, { onSuccess: (demand) => { setSelectedDemandId(demand.id); setDemandCity(""); setDemandNeighborhood("") } })
+                        }
+                        if (editingDemandId) {
+                          updateDemand.mutate({ id: editingDemandId, data: demandInput }, {
+                            onSuccess: (demand) => { setSelectedDemandId(demand.id); setEditingDemandId("") },
+                          })
+                        } else {
+                          createDemand.mutate({ ...demandInput, contactId: contact.id,
+                            leadId: detailQuery.data?.opportunities[0]?.id }, {
+                              onSuccess: (demand) => { setSelectedDemandId(demand.id); setDemandCity(""); setDemandNeighborhood("") },
+                            })
+                        }
                       }}
                     >
                       <label className="text-xs text-muted-foreground">Operación
@@ -744,19 +755,38 @@ export function ContactsPage() {
                         <textarea className="mt-1 block min-h-20 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={demandNotes} onChange={(event) => setDemandNotes(event.target.value)} maxLength={2000} />
                       </label>
                       <div className="sm:col-span-2 xl:col-span-6">
-                        <button disabled={createDemand.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createDemand.isPending ? "Guardando…" : "Guardar búsqueda"}</button>
+                        <button disabled={createDemand.isPending || updateDemand.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createDemand.isPending || updateDemand.isPending ? "Guardando…" : editingDemandId ? "Guardar cambios de búsqueda" : "Guardar búsqueda"}</button>
+                        {editingDemandId && <button type="button" className="ml-2 rounded-md border border-border px-4 py-2 text-sm text-foreground" onClick={() => setEditingDemandId("")}>Cancelar edición</button>}
                       </div>
                     </form>
                   </div>
-                  {createDemand.isError && <p role="alert" className="mt-3 text-sm text-destructive">{createDemand.error.message}</p>}
+                  {(createDemand.isError || updateDemand.isError || deleteDemand.isError) && <p role="alert" className="mt-3 text-sm text-destructive">{createDemand.error?.message ?? updateDemand.error?.message ?? deleteDemand.error?.message}</p>}
                   <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(220px,.65fr)_minmax(0,1fr)]">
                     <div className="space-y-2">
                       <h4 className="text-sm font-semibold text-foreground">Demandas guardadas</h4>
                       {demandsQuery.data?.map((demand) => (
-                        <button key={demand.id} type="button" onClick={() => setSelectedDemandId(demand.id)} aria-pressed={selectedDemandId === demand.id} className={`block w-full rounded-md border border-border p-3 text-left hover:bg-muted ${selectedDemandId === demand.id ? "bg-muted" : ""}`}>
-                          <span className="block text-sm font-semibold text-foreground">{demand.operation} · {demand.propertyType ?? "Cualquier inmueble"}</span>
-                          <span className="mt-1 block text-xs text-muted-foreground">{demand.city}{demand.department ? `, ${demand.department}` : ""}, {demand.country}{demand.neighborhood ? ` · ${demand.neighborhood}` : ""}{demand.minimumPrice || demand.maximumPrice ? ` · ${demand.currency} ${demand.minimumPrice?.toLocaleString("es-CO") ?? "0"}–${demand.maximumPrice?.toLocaleString("es-CO") ?? "sin máximo"}` : ""}{demand.minimumArea || demand.maximumArea ? ` · ${demand.minimumArea ?? 0}–${demand.maximumArea ?? "sin máximo"} m²` : ""}</span>
-                        </button>
+                        <article key={demand.id} className={`rounded-md border border-border p-3 ${selectedDemandId === demand.id ? "bg-muted" : ""}`}>
+                          <button type="button" onClick={() => setSelectedDemandId(demand.id)} aria-pressed={selectedDemandId === demand.id} className="block w-full text-left">
+                            <span className="block text-sm font-semibold text-foreground">{demand.operation} · {demand.propertyType ?? "Cualquier inmueble"}</span>
+                            <span className="mt-1 block text-xs text-muted-foreground">{demand.city}{demand.department ? `, ${demand.department}` : ""}, {demand.country}{demand.neighborhood ? ` · ${demand.neighborhood}` : ""}{demand.minimumPrice || demand.maximumPrice ? ` · ${demand.currency} ${demand.minimumPrice?.toLocaleString("es-CO") ?? "0"}–${demand.maximumPrice?.toLocaleString("es-CO") ?? "sin máximo"}` : ""}{demand.minimumArea || demand.maximumArea ? ` · ${demand.minimumArea ?? 0}–${demand.maximumArea ?? "sin máximo"} m²` : ""}</span>
+                          </button>
+                          <div className="mt-2 flex gap-2">
+                            <button type="button" className="rounded border border-border px-2 py-1 text-xs font-semibold text-foreground" onClick={() => {
+                              setSelectedDemandId(demand.id); setEditingDemandId(demand.id); setDemandOperation(demand.operation);
+                              setDemandType(demand.propertyType ?? ""); setDemandCity(demand.city); setDemandCountry(demand.country);
+                              setDemandDepartment(demand.department ?? ""); setDemandNeighborhood(demand.neighborhood ?? "");
+                              setDemandMinPrice(demand.minimumPrice?.toString() ?? ""); setDemandMaxPrice(demand.maximumPrice?.toString() ?? "");
+                              setDemandCurrency(demand.currency); setDemandMinArea(demand.minimumArea?.toString() ?? "");
+                              setDemandMaxArea(demand.maximumArea?.toString() ?? ""); setDemandBedrooms(demand.bedrooms?.toString() ?? "");
+                              setDemandBathrooms(demand.bathrooms?.toString() ?? ""); setDemandParkingSpaces(demand.parkingSpaces?.toString() ?? "");
+                              setDemandNotes(demand.notes ?? "")
+                            }}>Modificar demanda</button>
+                            <button type="button" disabled={deleteDemand.isPending} className="rounded border border-destructive/40 px-2 py-1 text-xs font-semibold text-destructive disabled:opacity-40" onClick={() => {
+                              if (window.confirm("¿Dar de baja esta demanda? Se conservarán sus relaciones en el historial."))
+                                deleteDemand.mutate(demand.id, { onSuccess: () => { if (selectedDemandId === demand.id) setSelectedDemandId(""); if (editingDemandId === demand.id) setEditingDemandId("") } })
+                            }}>Borrar demanda</button>
+                          </div>
+                        </article>
                       ))}
                       {demandsQuery.data?.length === 0 && <p className="text-sm text-muted-foreground">Todavía no hay una búsqueda guardada.</p>}
                     </div>

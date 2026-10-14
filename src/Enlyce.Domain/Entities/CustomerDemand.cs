@@ -136,6 +136,33 @@ public sealed class CustomerDemand
                (!ParkingSpaces.HasValue || property.Parqueaderos >= ParkingSpaces.Value);
     }
 
+    public void Update(ModalidadInmueble operation, TipoInmueble? propertyType, string? city,
+        string? neighborhood, decimal? minimumPrice, decimal? maximumPrice, int? bedrooms,
+        int? bathrooms, int? parkingSpaces, string? notes, string currency = "COP",
+        decimal? minimumArea = null, decimal? maximumArea = null, string country = "Colombia",
+        string? department = null)
+    {
+        var validated = Create(ContactId, LeadId, operation, propertyType, city, neighborhood,
+            minimumPrice, maximumPrice, bedrooms, bathrooms, parkingSpaces, notes, currency,
+            minimumArea, maximumArea, country, department);
+        Operation = validated.Operation;
+        PropertyType = validated.PropertyType;
+        City = validated.City;
+        Country = validated.Country;
+        Department = validated.Department;
+        Neighborhood = validated.Neighborhood;
+        MinimumPrice = validated.MinimumPrice;
+        MaximumPrice = validated.MaximumPrice;
+        Currency = validated.Currency;
+        MinimumArea = validated.MinimumArea;
+        MaximumArea = validated.MaximumArea;
+        Bedrooms = validated.Bedrooms;
+        Bathrooms = validated.Bathrooms;
+        ParkingSpaces = validated.ParkingSpaces;
+        Notes = validated.Notes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     // Baja logica: la alerta deja de enviar avisos pero queda auditada.
     public void Deactivate()
     {

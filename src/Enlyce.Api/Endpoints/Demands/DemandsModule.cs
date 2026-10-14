@@ -81,6 +81,65 @@ public static class DemandsModule
         })
         .WithName("CreateCustomerDemand");
 
+        group.MapPut("/{id:guid}", async Task<IResult> (
+            Guid id,
+            [FromBody] UpdateDemandRequest request,
+            HttpContext http,
+            ICustomerDemandRepository demands,
+            IContactRepository contacts,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            var demand = await demands.GetByIdAsync(id, ct);
+            if (demand is null)
+                return Results.NotFound();
+            if (!await CanAccessDemandAsync(http, demand, leads, contacts))
+                return Results.Forbid();
+            if (!TryParse(request.Operation, out ModalidadInmueble operation) ||
+                operation is not (ModalidadInmueble.Venta or ModalidadInmueble.Arriendo))
+                return Results.BadRequest(new { error = "La operacion debe ser Venta o Arriendo." });
+            if (!string.IsNullOrWhiteSpace(request.PropertyType) &&
+                !TryParse(request.PropertyType, out TipoInmueble _))
+                return Results.BadRequest(new { error = "El tipo de inmueble no es valido." });
+
+            try
+            {
+                var propertyType = string.IsNullOrWhiteSpace(request.PropertyType)
+                    ? null
+                    : Enum.Parse<TipoInmueble>(request.PropertyType, true);
+                demand.Update(operation, propertyType, request.City, request.Neighborhood,
+                    request.MinimumPrice, request.MaximumPrice, request.Bedrooms, request.Bathrooms,
+                    request.ParkingSpaces, request.Notes, request.Currency ?? "COP", request.MinimumArea,
+                    request.MaximumArea, request.Country ?? "Colombia", request.Department);
+            }
+            catch (DomainError error)
+            {
+                return Results.BadRequest(new { error = error.Message });
+            }
+            await demands.SaveAsync(demand, ct);
+            return Results.Ok(ToDto(demand));
+        })
+        .WithName("UpdateCustomerDemand");
+
+        group.MapDelete("/{id:guid}", async Task<IResult> (
+            Guid id,
+            HttpContext http,
+            ICustomerDemandRepository demands,
+            IContactRepository contacts,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            var demand = await demands.GetByIdAsync(id, ct);
+            if (demand is null)
+                return Results.NotFound();
+            if (!await CanAccessDemandAsync(http, demand, leads, contacts))
+                return Results.Forbid();
+            demand.Deactivate();
+            await demands.SaveAsync(demand, ct);
+            return Results.NoContent();
+        })
+        .WithName("DeleteCustomerDemand");
+
         group.MapGet("/{id:guid}/coincidencias", async Task<IResult> (
             Guid id,
             HttpContext http,
@@ -270,6 +329,11 @@ public sealed record CreateDemandRequest(Guid ContactId, Guid? LeadId, string Op
     decimal? MaximumPrice, int? Bedrooms, int? Bathrooms, int? ParkingSpaces, string? Notes,
     string? Currency = null, decimal? MinimumArea = null, decimal? MaximumArea = null,
     string? Country = null, string? Department = null);
+public sealed record UpdateDemandRequest(string Operation, string? PropertyType, string? City,
+    string? Neighborhood, decimal? MinimumPrice, decimal? MaximumPrice, int? Bedrooms,
+    int? Bathrooms, int? ParkingSpaces, string? Notes, string? Currency = null,
+    decimal? MinimumArea = null, decimal? MaximumArea = null, string? Country = null,
+    string? Department = null);
 public sealed record SetDemandPropertyStatusRequest(string Status);
 public sealed record CustomerDemandDto(Guid Id, Guid ContactId, Guid? LeadId, string Operation,
     string? PropertyType, string City, string Country, string? Department, string? Neighborhood, decimal? MinimumPrice,

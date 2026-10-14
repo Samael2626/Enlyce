@@ -274,6 +274,8 @@ export interface CreateCustomerDemandInput {
   notes?: string
 }
 
+export type UpdateCustomerDemandInput = Omit<CreateCustomerDemandInput, "contactId" | "leadId">
+
 // Pipeline
 export interface PipelineResponse {
   etapas: EtapaPipelineDto[]
