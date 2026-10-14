@@ -1,4 +1,6 @@
 using Enlyce.Domain.Errors;
+using System.Globalization;
+using System.Text;
 
 namespace Enlyce.Domain.Entities;
 
@@ -206,8 +208,21 @@ public sealed class CustomerDemand
         return normalized;
     }
 
-    private static bool ContainsAll(string[] available, string[] requested) =>
-        requested.All(feature => available.Contains(feature, StringComparer.OrdinalIgnoreCase));
+    private static bool ContainsAll(string[] available, string[] requested)
+    {
+        var availableKeys = available.Select(FeatureKey).ToHashSet(StringComparer.Ordinal);
+        return requested.All(feature => availableKeys.Contains(FeatureKey(feature)));
+    }
+
+    private static string FeatureKey(string value)
+    {
+        var decomposed = value.Trim().Normalize(NormalizationForm.FormD);
+        var withoutDiacritics = new string(decomposed
+            .Where(character => CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+            .ToArray());
+        return string.Join(' ', withoutDiacritics.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .ToUpperInvariant();
+    }
 }
 
 public enum DemandPropertyStatus { Suggested, Shared, Visited, Discarded }
