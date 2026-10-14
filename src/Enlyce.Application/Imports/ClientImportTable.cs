@@ -27,6 +27,7 @@ public sealed record ClientImportPreviewRow(
     string? Email,
     string? Phone,
     bool CanReceiveAutomatedEmail,
+    IReadOnlyDictionary<string, string?> MappedValues,
     string? Error,
     bool Duplicate);
 

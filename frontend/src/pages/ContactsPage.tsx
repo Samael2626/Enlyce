@@ -147,6 +147,11 @@ export function ContactsPage() {
   const [ownerAdvisorId, setOwnerAdvisorId] = useState("")
   const [importRequestId, setImportRequestId] = useState("")
   const [importRequestIdReady, setImportRequestIdReady] = useState(false)
+  const updateImportMapping = (setter: (value: string) => void, value: string) => {
+    setter(value)
+    setImportPreview(null)
+    setImportResult(null)
+  }
 
   useEffect(() => {
     if (!importFile) {
@@ -503,28 +508,28 @@ export function ContactsPage() {
             }} />
           </label>
           {importColumns.length > 0 && <>
-            <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={setNameColumn} />
-            <ImportColumnSelect label="Apellidos" value={surnameColumn} columns={importColumns} onChange={setSurnameColumn} optional />
-            <ImportColumnSelect label="Email" value={emailColumn} columns={importColumns} onChange={setEmailColumn} optional />
-            <ImportColumnSelect label="Teléfono" value={phoneColumn} columns={importColumns} onChange={setPhoneColumn} optional />
-            <ImportColumnSelect label="Recibe correo" value={canReceiveEmailColumn} columns={importColumns} onChange={setCanReceiveEmailColumn} optional />
-            <ImportColumnSelect label="Tipo de cliente" value={customerTypeColumn} columns={importColumns} onChange={setCustomerTypeColumn} optional />
-            <ImportColumnSelect label="Etiquetas" value={customerLabelsColumn} columns={importColumns} onChange={setCustomerLabelsColumn} optional />
-            <ImportColumnSelect label="Embudo" value={customerFunnelColumn} columns={importColumns} onChange={setCustomerFunnelColumn} optional />
-            <ImportColumnSelect label="Estado del cliente" value={customerStatusColumn} columns={importColumns} onChange={setCustomerStatusColumn} optional />
-            <ImportColumnSelect label="Dirección" value={addressColumn} columns={importColumns} onChange={setAddressColumn} optional />
-            <ImportColumnSelect label="País" value={countryColumn} columns={importColumns} onChange={setCountryColumn} optional />
-            <ImportColumnSelect label="Departamento" value={departmentColumn} columns={importColumns} onChange={setDepartmentColumn} optional />
-            <ImportColumnSelect label="Ciudad" value={cityColumn} columns={importColumns} onChange={setCityColumn} optional />
-            <ImportColumnSelect label="Teléfono fijo" value={landlineColumn} columns={importColumns} onChange={setLandlineColumn} optional />
-            <ImportColumnSelect label="Fecha de nacimiento" value={dateOfBirthColumn} columns={importColumns} onChange={setDateOfBirthColumn} optional />
-            <ImportColumnSelect label="Identificación" value={identificationNumberColumn} columns={importColumns} onChange={setIdentificationNumberColumn} optional />
-            <ImportColumnSelect label="Referido por" value={referredByColumn} columns={importColumns} onChange={setReferredByColumn} optional />
-            <ImportColumnSelect label="Medio de captación" value={acquisitionMediumColumn} columns={importColumns} onChange={setAcquisitionMediumColumn} optional />
-            <ImportColumnSelect label="Datos adicionales" value={additionalDataColumn} columns={importColumns} onChange={setAdditionalDataColumn} optional />
+            <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setNameColumn, value)} />
+            <ImportColumnSelect label="Apellidos" value={surnameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setSurnameColumn, value)} optional />
+            <ImportColumnSelect label="Email" value={emailColumn} columns={importColumns} onChange={(value) => updateImportMapping(setEmailColumn, value)} optional />
+            <ImportColumnSelect label="Teléfono" value={phoneColumn} columns={importColumns} onChange={(value) => updateImportMapping(setPhoneColumn, value)} optional />
+            <ImportColumnSelect label="Recibe correo" value={canReceiveEmailColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCanReceiveEmailColumn, value)} optional />
+            <ImportColumnSelect label="Tipo de cliente" value={customerTypeColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCustomerTypeColumn, value)} optional />
+            <ImportColumnSelect label="Etiquetas" value={customerLabelsColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCustomerLabelsColumn, value)} optional />
+            <ImportColumnSelect label="Embudo" value={customerFunnelColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCustomerFunnelColumn, value)} optional />
+            <ImportColumnSelect label="Estado del cliente" value={customerStatusColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCustomerStatusColumn, value)} optional />
+            <ImportColumnSelect label="Dirección" value={addressColumn} columns={importColumns} onChange={(value) => updateImportMapping(setAddressColumn, value)} optional />
+            <ImportColumnSelect label="País" value={countryColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCountryColumn, value)} optional />
+            <ImportColumnSelect label="Departamento" value={departmentColumn} columns={importColumns} onChange={(value) => updateImportMapping(setDepartmentColumn, value)} optional />
+            <ImportColumnSelect label="Ciudad" value={cityColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCityColumn, value)} optional />
+            <ImportColumnSelect label="Teléfono fijo" value={landlineColumn} columns={importColumns} onChange={(value) => updateImportMapping(setLandlineColumn, value)} optional />
+            <ImportColumnSelect label="Fecha de nacimiento" value={dateOfBirthColumn} columns={importColumns} onChange={(value) => updateImportMapping(setDateOfBirthColumn, value)} optional />
+            <ImportColumnSelect label="Identificación" value={identificationNumberColumn} columns={importColumns} onChange={(value) => updateImportMapping(setIdentificationNumberColumn, value)} optional />
+            <ImportColumnSelect label="Referido por" value={referredByColumn} columns={importColumns} onChange={(value) => updateImportMapping(setReferredByColumn, value)} optional />
+            <ImportColumnSelect label="Medio de captación" value={acquisitionMediumColumn} columns={importColumns} onChange={(value) => updateImportMapping(setAcquisitionMediumColumn, value)} optional />
+            <ImportColumnSelect label="Datos adicionales" value={additionalDataColumn} columns={importColumns} onChange={(value) => updateImportMapping(setAdditionalDataColumn, value)} optional />
             <p className="text-xs text-muted-foreground">La columna se conserva para referencia, pero importar un valor afirmativo no activa correos automáticos: hace falta registrar evidencia verificable del permiso.</p>
             {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asignar a
-              <select className="mt-1 block min-w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={ownerAdvisorId} onChange={(event) => setOwnerAdvisorId(event.target.value)}>
+              <select className="mt-1 block min-w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={ownerAdvisorId} onChange={(event) => updateImportMapping(setOwnerAdvisorId, event.target.value)}>
                 <option value="">Solo administradores</option>
                 {advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
               </select>
@@ -538,7 +543,7 @@ export function ContactsPage() {
         {importPreview && <div className="mt-4 space-y-3">
           <p className="text-sm text-foreground">{importPreview.totalRows} filas · {importPreview.validRows} válidas · {importPreview.invalidRows} con errores · {importPreview.duplicateRows} duplicadas</p>
           <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted-foreground"><th className="p-2">Fila</th><th className="p-2">Nombre</th><th className="p-2">Apellidos</th><th className="p-2">Email</th><th className="p-2">Teléfono</th><th className="p-2">Recibe correo</th><th className="p-2">Resultado</th></tr></thead><tbody>
-            {importPreview.rows.map((row) => <tr key={row.rowNumber} className="border-b border-border"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.name || "—"}</td><td className="p-2">{row.surname || "—"}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.phone || "—"}</td><td className="p-2">{row.canReceiveAutomatedEmail ? "Sí" : "No"}</td><td className="p-2">{row.error || (row.duplicate ? "Email ya existe" : "Listo")}</td></tr>)}
+            {importPreview.rows.map((row) => <tr key={row.rowNumber} className="border-b border-border"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.name || "—"}</td><td className="p-2">{row.surname || "—"}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.phone || "—"}</td><td className="p-2">Permiso sin activar</td><td className="p-2">{row.error || (row.duplicate ? "Email ya existe" : "Listo")}<details className="mt-1"><summary className="cursor-pointer text-primary">Campos mapeados</summary><dl className="mt-2 space-y-1">{Object.entries(row.mappedValues).map(([field, value]) => <div key={field}><dt className="inline font-medium">{field}: </dt><dd className="inline break-all">{value || "—"}</dd></div>)}</dl></details></td></tr>)}
           </tbody></table></div>
           {importPreview.totalRows > importPreview.rows.length && <p className="text-xs text-muted-foreground">Se muestran las primeras {importPreview.rows.length} filas.</p>}
           <button type="button" disabled={importing || !importRequestIdReady || importPreview.validRows === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" onClick={async () => {

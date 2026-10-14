@@ -175,7 +175,7 @@ public static class ClientImportModule
 
                 if (responseRows.Count < MaxPreviewRows)
                     responseRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phone,
-                        canReceiveAutomatedEmail, error, duplicate));
+                        canReceiveAutomatedEmail, GetMappedValues(row, mapping), error, duplicate));
             }
 
             return Results.Ok(new ClientImportPreviewResponse(
@@ -381,7 +381,7 @@ public static class ClientImportModule
 
             if (resultRows.Count < MaxPreviewRows)
                 resultRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phoneText,
-                    canReceiveAutomatedEmail,
+                    canReceiveAutomatedEmail, GetMappedValues(row, mapping),
                     error ?? (duplicate ? "Email duplicado." : null), duplicate));
         }
 
@@ -518,6 +518,11 @@ public static class ClientImportModule
 
     private static string? Cell(IReadOnlyList<string?> row, int index) =>
         index >= 0 && index < row.Count ? row[index]?.Trim() is { Length: > 0 } value ? value : null : null;
+
+    private static IReadOnlyDictionary<string, string?> GetMappedValues(
+        IReadOnlyList<string?> row, IReadOnlyDictionary<string, string?> mapping) =>
+        mapping.Where(pair => int.TryParse(pair.Value, out var index) && index >= 0)
+            .ToDictionary(pair => pair.Key, pair => Cell(row, int.Parse(pair.Value!)));
 
     private static Email? TryEmail(string? value)
     {
