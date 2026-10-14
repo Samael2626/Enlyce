@@ -42,6 +42,13 @@ export function ContactsPage() {
   const setPropertyStatus = useSetDemandPropertyStatus()
   const user = useAuthStore((state) => state.user)
   const [name, setName] = useState("")
+  const [surname, setSurname] = useState("")
+  const [customerType, setCustomerType] = useState("")
+  const [customerStatus, setCustomerStatus] = useState("Nuevo")
+  const [address, setAddress] = useState("")
+  const [country, setCountry] = useState("Colombia")
+  const [department, setDepartment] = useState("")
+  const [city, setCity] = useState("")
   const [phone, setPhone] = useState("")
   const [taskTitle, setTaskTitle] = useState("")
   const [taskDescription, setTaskDescription] = useState("")
@@ -63,6 +70,12 @@ export function ContactsPage() {
   const [emailColumn, setEmailColumn] = useState("")
   const [phoneColumn, setPhoneColumn] = useState("")
   const [canReceiveEmailColumn, setCanReceiveEmailColumn] = useState("")
+  const [customerTypeColumn, setCustomerTypeColumn] = useState("")
+  const [customerStatusColumn, setCustomerStatusColumn] = useState("")
+  const [addressColumn, setAddressColumn] = useState("")
+  const [countryColumn, setCountryColumn] = useState("")
+  const [departmentColumn, setDepartmentColumn] = useState("")
+  const [cityColumn, setCityColumn] = useState("")
   const [importPreview, setImportPreview] = useState<Awaited<ReturnType<typeof api.previewClientImport>> | null>(null)
   const [importResult, setImportResult] = useState<Awaited<ReturnType<typeof api.confirmClientImport>> | null>(null)
   const [importError, setImportError] = useState("")
@@ -77,6 +90,13 @@ export function ContactsPage() {
 
   useEffect(() => {
     setName(contact?.name ?? "")
+    setSurname(contact?.surname ?? "")
+    setCustomerType(contact?.customerType ?? "")
+    setCustomerStatus(contact?.customerStatus ?? "Nuevo")
+    setAddress(contact?.address ?? "")
+    setCountry(contact?.country ?? "Colombia")
+    setDepartment(contact?.department ?? "")
+    setCity(contact?.city ?? "")
     setPhone(contact?.phone ?? "")
   }, [contact?.id, contact?.name, contact?.phone])
 
@@ -127,6 +147,12 @@ export function ContactsPage() {
               emailColumn === "" ? undefined : Number(emailColumn),
               phoneColumn === "" ? undefined : Number(phoneColumn),
               canReceiveEmailColumn === "" ? undefined : Number(canReceiveEmailColumn),
+              customerTypeColumn === "" ? undefined : Number(customerTypeColumn),
+              customerStatusColumn === "" ? undefined : Number(customerStatusColumn),
+              addressColumn === "" ? undefined : Number(addressColumn),
+              countryColumn === "" ? undefined : Number(countryColumn),
+              departmentColumn === "" ? undefined : Number(departmentColumn),
+              cityColumn === "" ? undefined : Number(cityColumn),
             )
             setImportColumns(preview.sourceColumns)
             setImportPreview(importColumns.length ? preview : null)
@@ -137,10 +163,22 @@ export function ContactsPage() {
               const emailIndex = findColumn(["email", "correo"])
               const phoneIndex = findColumn(["tel", "celular", "phone"])
               const consentIndex = findColumn(["recibe correo", "email consent", "email permission"])
+              const typeIndex = findColumn(["tipo de cliente", "tipo cliente", "customer type"])
+              const statusIndex = findColumn(["estado del cliente", "estado cliente", "customer status"])
+              const addressIndex = findColumn(["direccion", "dirección", "address"])
+              const countryIndex = findColumn(["pais", "país", "country"])
+              const departmentIndex = findColumn(["departamento", "department"])
+              const cityIndex = findColumn(["ciudad", "city"])
               setSurnameColumn(surnameIndex < 0 ? "" : String(surnameIndex))
               setEmailColumn(emailIndex < 0 ? "" : String(emailIndex))
               setPhoneColumn(phoneIndex < 0 ? "" : String(phoneIndex))
               setCanReceiveEmailColumn(consentIndex < 0 ? "" : String(consentIndex))
+              setCustomerTypeColumn(typeIndex < 0 ? "" : String(typeIndex))
+              setCustomerStatusColumn(statusIndex < 0 ? "" : String(statusIndex))
+              setAddressColumn(addressIndex < 0 ? "" : String(addressIndex))
+              setCountryColumn(countryIndex < 0 ? "" : String(countryIndex))
+              setDepartmentColumn(departmentIndex < 0 ? "" : String(departmentIndex))
+              setCityColumn(cityIndex < 0 ? "" : String(cityIndex))
               setImportPreview(null)
             }
           } catch (error) {
@@ -160,6 +198,12 @@ export function ContactsPage() {
               setEmailColumn("")
               setPhoneColumn("")
               setCanReceiveEmailColumn("")
+              setCustomerTypeColumn("")
+              setCustomerStatusColumn("")
+              setAddressColumn("")
+              setCountryColumn("")
+              setDepartmentColumn("")
+              setCityColumn("")
               setImportError("")
             }} />
           </label>
@@ -169,6 +213,12 @@ export function ContactsPage() {
             <ImportColumnSelect label="Email" value={emailColumn} columns={importColumns} onChange={setEmailColumn} optional />
             <ImportColumnSelect label="Teléfono" value={phoneColumn} columns={importColumns} onChange={setPhoneColumn} optional />
             <ImportColumnSelect label="Recibe correo" value={canReceiveEmailColumn} columns={importColumns} onChange={setCanReceiveEmailColumn} optional />
+            <ImportColumnSelect label="Tipo de cliente" value={customerTypeColumn} columns={importColumns} onChange={setCustomerTypeColumn} optional />
+            <ImportColumnSelect label="Estado del cliente" value={customerStatusColumn} columns={importColumns} onChange={setCustomerStatusColumn} optional />
+            <ImportColumnSelect label="Dirección" value={addressColumn} columns={importColumns} onChange={setAddressColumn} optional />
+            <ImportColumnSelect label="País" value={countryColumn} columns={importColumns} onChange={setCountryColumn} optional />
+            <ImportColumnSelect label="Departamento" value={departmentColumn} columns={importColumns} onChange={setDepartmentColumn} optional />
+            <ImportColumnSelect label="Ciudad" value={cityColumn} columns={importColumns} onChange={setCityColumn} optional />
             <p className="text-xs text-muted-foreground">Solo un valor afirmativo en esta columna activa correos automáticos. La autorización de datos se registra por separado.</p>
             {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asignar a
               <select className="mt-1 block min-w-44 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={ownerAdvisorId} onChange={(event) => setOwnerAdvisorId(event.target.value)}>
@@ -198,7 +248,13 @@ export function ContactsPage() {
                 emailColumn === "" ? undefined : Number(emailColumn),
                 phoneColumn === "" ? undefined : Number(phoneColumn),
                 canReceiveEmailColumn === "" ? undefined : Number(canReceiveEmailColumn),
-                ownerAdvisorId || undefined)
+                ownerAdvisorId || undefined,
+                customerTypeColumn === "" ? undefined : Number(customerTypeColumn),
+                customerStatusColumn === "" ? undefined : Number(customerStatusColumn),
+                addressColumn === "" ? undefined : Number(addressColumn),
+                countryColumn === "" ? undefined : Number(countryColumn),
+                departmentColumn === "" ? undefined : Number(departmentColumn),
+                cityColumn === "" ? undefined : Number(cityColumn))
               setImportResult(result)
               await contactsQuery.refetch()
             } catch (error) {
@@ -249,9 +305,9 @@ export function ContactsPage() {
             )}
             {contacts.map((item) => (
               <div key={item.id} className={`flex items-start gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-muted/60 ${selectedId === item.id ? "bg-muted" : ""}`}>
-                <input aria-label={`Seleccionar ${item.name}`} type="checkbox" checked={selectedContactIds.includes(item.id)} onChange={(event) => setSelectedContactIds((ids) => event.target.checked ? [...ids, item.id] : ids.filter((id) => id !== item.id))} />
+                <input aria-label={`Seleccionar ${[item.name, item.surname].filter(Boolean).join(" ")}`} type="checkbox" checked={selectedContactIds.includes(item.id)} onChange={(event) => setSelectedContactIds((ids) => event.target.checked ? [...ids, item.id] : ids.filter((id) => id !== item.id))} />
                 <button type="button" onClick={() => setSelectedId(item.id)} aria-pressed={selectedId === item.id} className="min-w-0 flex-1 text-left">
-                  <span className="block font-semibold text-foreground">{item.name}</span>
+                  <span className="block font-semibold text-foreground">{[item.name, item.surname].filter(Boolean).join(" ")}</span>
                   <span className="mt-1 block truncate text-xs text-muted-foreground">{item.email || "Sin email"}</span>
                   {item.phone && <span className="mt-1 block text-xs text-muted-foreground">{item.phone}</span>}
                 </button>
@@ -283,21 +339,46 @@ export function ContactsPage() {
                       {contact.email && <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-4 w-4" />{contact.email}</p>}
                       <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><Phone className="h-4 w-4" />{contact.phone || "Sin teléfono"}</p>
                     </div>
-                <label className="mt-5 flex items-start gap-2 border-t border-border pt-4 text-sm text-foreground">
-                  <input type="checkbox" checked={contact.canReceiveAutomatedEmail} disabled={user?.rol !== "Administrador" || setEmailPermission.isPending}
-                    onChange={(event) => setEmailPermission.mutate({ id: contact.id, allowed: event.target.checked })} />
-                  <span>Puede recibir correos automáticos. Actívalo solo con evidencia de permiso registrada.</span>
-                </label>
                   </div>
                   <form
                     className="flex flex-wrap items-end gap-2"
                     onSubmit={(event) => {
                       event.preventDefault()
-                      updateContact.mutate({ id: contact.id, name, phone: phone || undefined })
+                      updateContact.mutate({ id: contact.id, name, surname: surname || undefined,
+                        phone: phone || undefined, customerType: customerType || undefined, customerStatus,
+                        address: address || undefined, country, department: department || undefined, city: city || undefined })
                     }}
                   >
                     <label className="text-xs text-muted-foreground">Nombre
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={name} onChange={(event) => setName(event.target.value)} maxLength={200} required />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Apellidos
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={surname} onChange={(event) => setSurname(event.target.value)} maxLength={200} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Tipo de cliente
+                      <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerType} onChange={(event) => setCustomerType(event.target.value)}>
+                        <option value="">Sin clasificar</option><option value="Comprador">Comprador</option><option value="Arrendatario">Arrendatario</option><option value="Propietario">Propietario</option><option value="Arrendador">Arrendador</option>
+                      </select>
+                    </label>
+                    <label className="text-xs text-muted-foreground">Estado
+                      <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerStatus} onChange={(event) => setCustomerStatus(event.target.value)}>
+                        <option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option>
+                      </select>
+                    </label>
+                    <label className="text-xs text-muted-foreground">País
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={country} onChange={(event) => setCountry(event.target.value)} maxLength={100} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Departamento
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={department} onChange={(event) => setDepartment(event.target.value)} maxLength={100} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Ciudad
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={city} onChange={(event) => setCity(event.target.value)} maxLength={100} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Dirección
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={address} onChange={(event) => setAddress(event.target.value)} maxLength={500} />
+                    </label>
+                    <label className="text-xs text-muted-foreground">Dirección
+                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={address} onChange={(event) => setAddress(event.target.value)} maxLength={500} />
                     </label>
                     <label className="text-xs text-muted-foreground">Teléfono
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={20} />
@@ -309,6 +390,11 @@ export function ContactsPage() {
                 </div>
                 {updateContact.isError && <p role="alert" className="mt-3 text-sm text-destructive">{updateContact.error.message}</p>}
                 {updateContact.isSuccess && <p className="mt-3 text-sm text-emerald-700">Cambios guardados.</p>}
+                {user?.rol === "Administrador" && <label className="mt-4 flex items-start gap-2 border-t border-border pt-4 text-sm text-foreground">
+                  <input type="checkbox" checked={contact.canReceiveAutomatedEmail} disabled={setEmailPermission.isPending}
+                    onChange={(event) => setEmailPermission.mutate({ id: contact.id, allowed: event.target.checked })} />
+                  <span>Puede recibir correos automáticos. Actívalo solo con evidencia de permiso registrada.</span>
+                </label>}
               </div>
 
               <div className="grid gap-5 lg:grid-cols-2">

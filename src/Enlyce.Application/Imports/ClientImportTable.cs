@@ -37,4 +37,10 @@ public static class ClientImportFields
     public const string Email = "email";
     public const string Phone = "phone";
     public const string CanReceiveAutomatedEmail = "canReceiveAutomatedEmail";
+    public const string CustomerType = "customerType";
+    public const string CustomerStatus = "customerStatus";
+    public const string Address = "address";
+    public const string Country = "country";
+    public const string Department = "department";
+    public const string City = "city";
 }

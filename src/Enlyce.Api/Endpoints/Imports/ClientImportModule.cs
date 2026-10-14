@@ -24,6 +24,12 @@ public static class ClientImportModule
             [Microsoft.AspNetCore.Mvc.FromForm] int? emailColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? phoneColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? canReceiveEmailColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? customerTypeColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? customerStatusColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? addressColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? countryColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? departmentColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int? cityColumn,
             HttpContext http,
             IClientImportTableReader reader,
             IContactRepository contacts,
@@ -58,7 +64,13 @@ public static class ClientImportModule
                 [ClientImportFields.Surname] = surnameColumn?.ToString(),
                 [ClientImportFields.Email] = emailColumn?.ToString(),
                 [ClientImportFields.Phone] = phoneColumn?.ToString(),
-                [ClientImportFields.CanReceiveAutomatedEmail] = canReceiveEmailColumn?.ToString()
+                [ClientImportFields.CanReceiveAutomatedEmail] = canReceiveEmailColumn?.ToString(),
+                [ClientImportFields.CustomerType] = customerTypeColumn?.ToString(),
+                [ClientImportFields.CustomerStatus] = customerStatusColumn?.ToString(),
+                [ClientImportFields.Address] = addressColumn?.ToString(),
+                [ClientImportFields.Country] = countryColumn?.ToString(),
+                [ClientImportFields.Department] = departmentColumn?.ToString(),
+                [ClientImportFields.City] = cityColumn?.ToString()
             };
             if (!nameColumn.HasValue)
                 return Results.Ok(new ClientImportPreviewResponse(
@@ -72,6 +84,12 @@ public static class ClientImportModule
             var emailIndex = emailColumn ?? -1;
             var phoneIndex = phoneColumn ?? -1;
             var canReceiveEmailIndex = canReceiveEmailColumn ?? -1;
+            var customerTypeIndex = customerTypeColumn ?? -1;
+            var customerStatusIndex = customerStatusColumn ?? -1;
+            var addressIndex = addressColumn ?? -1;
+            var countryIndex = countryColumn ?? -1;
+            var departmentIndex = departmentColumn ?? -1;
+            var cityIndex = cityColumn ?? -1;
             var candidateEmails = table.Rows
                 .Select(row => emailIndex < 0 ? null : Cell(row, emailIndex))
                 .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -99,9 +117,18 @@ public static class ClientImportModule
                 var phone = phoneIndex < 0 ? null : Cell(row, phoneIndex);
                 var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
                     ParseConsent(Cell(row, canReceiveEmailIndex));
+                var customerType = customerTypeIndex < 0 ? null : Cell(row, customerTypeIndex);
+                var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";
+                customerType = NormalizeCustomerType(customerType);
+                customerStatus = NormalizeCustomerStatus(customerStatus);
+                var address = addressIndex < 0 ? null : Cell(row, addressIndex);
+                var country = countryIndex < 0 ? "Colombia" : Cell(row, countryIndex) ?? "Colombia";
+                var department = departmentIndex < 0 ? null : Cell(row, departmentIndex);
+                var city = cityIndex < 0 ? null : Cell(row, cityIndex);
                 var email = TryEmail(emailText);
                 var parsedPhone = TryPhone(phone);
-                var error = ValidateRow(name, surname, emailText, email, phone, parsedPhone);
+                var error = ValidateRow(name, surname, emailText, email, phone, parsedPhone,
+                    customerType, customerStatus, address, country, department, city);
                 var duplicate = error is null && email is not null &&
                     (existing.Contains(email.Value) || !seenInFile.Add(email.Value));
                 if (duplicate)
@@ -134,6 +161,12 @@ public static class ClientImportModule
         [Microsoft.AspNetCore.Mvc.FromForm] int? emailColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] int? phoneColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] int? canReceiveEmailColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? customerTypeColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? customerStatusColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? addressColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? countryColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? departmentColumn,
+        [Microsoft.AspNetCore.Mvc.FromForm] int? cityColumn,
         [Microsoft.AspNetCore.Mvc.FromForm] Guid? advisorId,
         HttpContext http,
         IClientImportTableReader reader,
@@ -176,7 +209,13 @@ public static class ClientImportModule
             [ClientImportFields.Surname] = surnameColumn?.ToString(),
             [ClientImportFields.Email] = emailColumn?.ToString(),
             [ClientImportFields.Phone] = phoneColumn?.ToString(),
-            [ClientImportFields.CanReceiveAutomatedEmail] = canReceiveEmailColumn?.ToString()
+            [ClientImportFields.CanReceiveAutomatedEmail] = canReceiveEmailColumn?.ToString(),
+            [ClientImportFields.CustomerType] = customerTypeColumn?.ToString(),
+            [ClientImportFields.CustomerStatus] = customerStatusColumn?.ToString(),
+            [ClientImportFields.Address] = addressColumn?.ToString(),
+            [ClientImportFields.Country] = countryColumn?.ToString(),
+            [ClientImportFields.Department] = departmentColumn?.ToString(),
+            [ClientImportFields.City] = cityColumn?.ToString()
         };
         if (!ValidateMapping(mapping, table.Columns, out var mappingError))
             return Results.BadRequest(new { error = mappingError, sourceColumns = table.Columns });
@@ -186,6 +225,12 @@ public static class ClientImportModule
         var emailIndex = emailColumn ?? -1;
         var phoneIndex = phoneColumn ?? -1;
         var canReceiveEmailIndex = canReceiveEmailColumn ?? -1;
+        var customerTypeIndex = customerTypeColumn ?? -1;
+        var customerStatusIndex = customerStatusColumn ?? -1;
+        var addressIndex = addressColumn ?? -1;
+        var countryIndex = countryColumn ?? -1;
+        var departmentIndex = departmentColumn ?? -1;
+        var cityIndex = cityColumn ?? -1;
         var candidateEmails = table.Rows.Select(row => emailIndex < 0 ? null : TryEmail(Cell(row, emailIndex)))
             .Where(email => email is not null).Select(email => email!.Value)
             .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -207,9 +252,20 @@ public static class ClientImportModule
             var phoneText = phoneIndex < 0 ? null : Cell(row, phoneIndex);
             var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
                 ParseConsent(Cell(row, canReceiveEmailIndex));
+            var customerType = customerTypeIndex < 0 ? null : Cell(row, customerTypeIndex);
+            var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";
+            customerType = NormalizeCustomerType(customerType);
+            customerStatus = NormalizeCustomerStatus(customerStatus);
+            customerType = NormalizeCustomerType(customerType);
+            customerStatus = NormalizeCustomerStatus(customerStatus);
+            var address = addressIndex < 0 ? null : Cell(row, addressIndex);
+            var country = countryIndex < 0 ? "Colombia" : Cell(row, countryIndex) ?? "Colombia";
+            var department = departmentIndex < 0 ? null : Cell(row, departmentIndex);
+            var city = cityIndex < 0 ? null : Cell(row, cityIndex);
             var email = TryEmail(emailText);
             var phone = TryPhone(phoneText);
-            var error = ValidateRow(name, surname, emailText, email, phoneText, phone);
+            var error = ValidateRow(name, surname, emailText, email, phoneText, phone,
+                customerType, customerStatus, address, country, department, city);
             var duplicate = email is not null && (existing.Contains(email.Value) || !seen.Add(email.Value));
 
             if (error is not null)
@@ -218,7 +274,7 @@ public static class ClientImportModule
                 duplicates++;
             else
                 newContacts.Add(Contact.CreateImported(name!, surname, email?.Value, phone, ownerAdvisorId,
-                    canReceiveAutomatedEmail));
+                    canReceiveAutomatedEmail, customerType, customerStatus, address, country, department, city));
 
             if (resultRows.Count < MaxPreviewRows)
                 resultRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phoneText,
@@ -255,6 +311,12 @@ public static class ClientImportModule
         var phoneIndex = -1;
         var surnameIndex = -1;
         var consentIndex = -1;
+        var customerTypeIndex = -1;
+        var statusIndex = -1;
+        var addressIndex = -1;
+        var countryIndex = -1;
+        var departmentIndex = -1;
+        var cityIndex = -1;
         if (mapping[ClientImportFields.Email] is { } emailText &&
             (!int.TryParse(emailText, out emailIndex) || emailIndex < 0 || emailIndex >= columns.Count))
         {
@@ -289,7 +351,29 @@ public static class ClientImportModule
             return false;
         }
 
-        var assigned = new[] { nameIndex, emailIndex, phoneIndex, surnameIndex, consentIndex }
+        var optionalFields = new (string Key, string Label, Action<int> Set)[]
+        {
+            (ClientImportFields.CustomerType, "tipo de cliente", index => customerTypeIndex = index),
+            (ClientImportFields.CustomerStatus, "estado de cliente", index => statusIndex = index),
+            (ClientImportFields.Address, "direccion", index => addressIndex = index),
+            (ClientImportFields.Country, "pais", index => countryIndex = index),
+            (ClientImportFields.Department, "departamento", index => departmentIndex = index),
+            (ClientImportFields.City, "ciudad", index => cityIndex = index)
+        };
+        foreach (var (key, label, set) in optionalFields)
+        {
+            if (mapping[key] is not { } columnText)
+                continue;
+            if (!int.TryParse(columnText, out var index) || index < 0 || index >= columns.Count)
+            {
+                error = $"La columna de {label} no existe.";
+                return false;
+            }
+            set(index);
+        }
+
+        var assigned = new[] { nameIndex, emailIndex, phoneIndex, surnameIndex, consentIndex,
+                customerTypeIndex, statusIndex, addressIndex, countryIndex, departmentIndex, cityIndex }
             .Where(index => index >= 0).ToArray();
         if (assigned.Distinct().Count() != assigned.Length)
         {
@@ -335,8 +419,28 @@ public static class ClientImportModule
     private static bool ParseConsent(string? value) => value?.Trim().ToLowerInvariant() is
         "si" or "sí" or "yes" or "true" or "1" or "x" or "acepta";
 
+    private static string? NormalizeCustomerType(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        "comprador" => "Comprador",
+        "arrendatario" or "inquilino" => "Arrendatario",
+        "propietario" => "Propietario",
+        "arrendador" => "Arrendador",
+        null or "" => null,
+        _ => value.Trim()
+    };
+
+    private static string NormalizeCustomerStatus(string value) => value.Trim().ToLowerInvariant() switch
+    {
+        "en proceso" or "enproceso" => "EnProceso",
+        "convertido" => "Convertido",
+        "recuperado" => "Recuperado",
+        "perdido" => "Perdido",
+        _ => value.Trim()
+    };
+
     private static string? ValidateRow(string? name, string? surname, string? emailText, Email? email,
-        string? phoneText, Telefono? phone)
+        string? phoneText, Telefono? phone, string? customerType, string customerStatus,
+        string? address, string country, string? department, string? city)
     {
         if (string.IsNullOrWhiteSpace(name))
             return "Falta el nombre.";
@@ -348,6 +452,12 @@ public static class ClientImportModule
             return "El email no tiene formato valido.";
         if (phoneText is not null && phone is null)
             return "El telefono no tiene formato valido.";
+        if (customerType is not null && customerType is not ("Comprador" or "Arrendatario" or "Propietario" or "Arrendador"))
+            return "El tipo de cliente no es valido.";
+        if (customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
+            return "El estado del cliente no es valido.";
+        if (address?.Length > 500 || country.Length > 100 || department?.Length > 100 || city?.Length > 100)
+            return "Uno de los campos de ubicacion supera la longitud permitida.";
         return null;
     }
 }

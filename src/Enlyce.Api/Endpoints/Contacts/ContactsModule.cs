@@ -1,4 +1,5 @@
 using Enlyce.Domain.Entities;
+using Enlyce.Domain.Errors;
 using Enlyce.Domain.Ports;
 using Enlyce.Domain.ValueObjects;
 using Enlyce.Api.Endpoints.Tasks;
@@ -117,16 +118,21 @@ public static class ContactsModule
 
             if (!http.User.IsInRole("Administrador"))
             {
-                var advisorId = EndpointAccess.AdvisorId(http.User);
-                var assigned = advisorId is not null &&
-                    (contact.OwnerAdvisorId == advisorId ||
-                     (await leads.GetByContactIdAsync(id, ct)).Any(lead => lead.AsesorAsignadoId == advisorId));
-                if (!assigned)
-                    return Results.Forbid();
+                var visibleIds = await EndpointAccess.VisibleContactIdsAsync(http.User, leads, contacts, ct);
+                if (visibleIds is null || !visibleIds.Contains(contact.Id))
+                    return Results.NotFound();
             }
 
             var phone = string.IsNullOrWhiteSpace(request.Phone) ? null : Telefono.Create(request.Phone);
-            contact.Update(request.Name, phone);
+            try
+            {
+                contact.Update(request.Name, request.Surname, phone, request.CustomerType,
+                    request.CustomerStatus, request.Address, request.Country, request.Department, request.City);
+            }
+            catch (DomainError error)
+            {
+                return Results.BadRequest(new { error = error.Message });
+            }
             await contacts.SaveAsync(contact, ct);
             return Results.Ok(ToSummary(contact));
         })
@@ -187,14 +193,18 @@ public static class ContactsModule
 
     private static ContactSummaryDto ToSummary(Contact contact) => new(
         contact.Id, contact.Name, contact.Email, contact.Phone?.Value, contact.CreatedAt, contact.UpdatedAt,
-        contact.Surname, contact.CanReceiveAutomatedEmail);
+        contact.Surname, contact.CanReceiveAutomatedEmail, contact.CustomerType, contact.CustomerStatus,
+        contact.Address, contact.Country, contact.Department, contact.City);
 }
 
-public sealed record UpdateContactRequest(string Name, string? Phone);
+public sealed record UpdateContactRequest(string Name, string? Phone, string? Surname = null,
+    string? CustomerType = null, string CustomerStatus = "Nuevo", string? Address = null,
+    string? Country = null, string? Department = null, string? City = null);
 public sealed record AssignContactRequest(Guid? AdvisorId);
 public sealed record UpdateContactEmailPermissionRequest(bool Allowed);
 public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, string? Phone, DateTime CreatedAt,
-    DateTime UpdatedAt, string? Surname, bool CanReceiveAutomatedEmail);
+    DateTime UpdatedAt, string? Surname, bool CanReceiveAutomatedEmail, string? CustomerType,
+    string CustomerStatus, string? Address, string Country, string? Department, string? City);
 public sealed record ContactListResponse(int Total, IReadOnlyList<ContactSummaryDto> Items);
 public sealed record ContactDetailDto(ContactSummaryDto Contact, IReadOnlyList<ContactOpportunityDto> Opportunities, IReadOnlyList<ContactTaskDto> Tasks);
 public sealed record ContactTaskDto(Guid Id, Guid? LeadId, Guid AdvisorId, string Type, string Title,

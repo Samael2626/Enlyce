@@ -72,7 +72,9 @@ class ApiClient {
   }
 
   async previewClientImport(file: File, nameColumn?: number, surnameColumn?: number, emailColumn?: number,
-    phoneColumn?: number, canReceiveEmailColumn?: number) {
+    phoneColumn?: number, canReceiveEmailColumn?: number, customerTypeColumn?: number,
+    customerStatusColumn?: number, addressColumn?: number, countryColumn?: number,
+    departmentColumn?: number, cityColumn?: number) {
     const body = new FormData()
     body.set("archivo", file)
     if (nameColumn !== undefined) body.set("nameColumn", String(nameColumn))
@@ -80,6 +82,12 @@ class ApiClient {
     if (emailColumn !== undefined) body.set("emailColumn", String(emailColumn))
     if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
     if (canReceiveEmailColumn !== undefined) body.set("canReceiveEmailColumn", String(canReceiveEmailColumn))
+    if (customerTypeColumn !== undefined) body.set("customerTypeColumn", String(customerTypeColumn))
+    if (customerStatusColumn !== undefined) body.set("customerStatusColumn", String(customerStatusColumn))
+    if (addressColumn !== undefined) body.set("addressColumn", String(addressColumn))
+    if (countryColumn !== undefined) body.set("countryColumn", String(countryColumn))
+    if (departmentColumn !== undefined) body.set("departmentColumn", String(departmentColumn))
+    if (cityColumn !== undefined) body.set("cityColumn", String(cityColumn))
     return this.request<{
       totalRows: number
       validRows: number
@@ -92,7 +100,9 @@ class ApiClient {
   }
 
   async confirmClientImport(file: File, nameColumn: number, surnameColumn?: number, emailColumn?: number,
-    phoneColumn?: number, canReceiveEmailColumn?: number, advisorId?: string) {
+    phoneColumn?: number, canReceiveEmailColumn?: number, advisorId?: string, customerTypeColumn?: number,
+    customerStatusColumn?: number, addressColumn?: number, countryColumn?: number,
+    departmentColumn?: number, cityColumn?: number) {
     const body = new FormData()
     body.set("archivo", file)
     body.set("nameColumn", String(nameColumn))
@@ -101,6 +111,12 @@ class ApiClient {
     if (phoneColumn !== undefined) body.set("phoneColumn", String(phoneColumn))
     if (canReceiveEmailColumn !== undefined) body.set("canReceiveEmailColumn", String(canReceiveEmailColumn))
     if (advisorId) body.set("advisorId", advisorId)
+    if (customerTypeColumn !== undefined) body.set("customerTypeColumn", String(customerTypeColumn))
+    if (customerStatusColumn !== undefined) body.set("customerStatusColumn", String(customerStatusColumn))
+    if (addressColumn !== undefined) body.set("addressColumn", String(addressColumn))
+    if (countryColumn !== undefined) body.set("countryColumn", String(countryColumn))
+    if (departmentColumn !== undefined) body.set("departmentColumn", String(departmentColumn))
+    if (cityColumn !== undefined) body.set("cityColumn", String(cityColumn))
     return this.request<{
       totalRows: number
       importedRows: number
@@ -149,7 +165,8 @@ class ApiClient {
     })
   }
 
-  async updateContact(id: string, data: { name: string; phone?: string }) {
+  async updateContact(id: string, data: { name: string; surname?: string; phone?: string; customerType?: string;
+    customerStatus?: string; address?: string; country?: string; department?: string; city?: string }) {
     return this.request<import("@/lib/types").ContactSummary>(`/api/contactos/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

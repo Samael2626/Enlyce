@@ -38,6 +38,13 @@ namespace Enlyce.Infrastructure.Migrations
                 type: "character varying(200)",
                 maxLength: 200,
                 nullable: true);
+
+            migrationBuilder.AddColumn<string>(name: "CustomerType", table: "Contacts", type: "character varying(30)", maxLength: 30, nullable: true);
+            migrationBuilder.AddColumn<string>(name: "CustomerStatus", table: "Contacts", type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "Nuevo");
+            migrationBuilder.AddColumn<string>(name: "Address", table: "Contacts", type: "character varying(500)", maxLength: 500, nullable: true);
+            migrationBuilder.AddColumn<string>(name: "Country", table: "Contacts", type: "character varying(100)", maxLength: 100, nullable: false, defaultValue: "Colombia");
+            migrationBuilder.AddColumn<string>(name: "Department", table: "Contacts", type: "character varying(100)", maxLength: 100, nullable: true);
+            migrationBuilder.AddColumn<string>(name: "City", table: "Contacts", type: "character varying(100)", maxLength: 100, nullable: true);
             migrationBuilder.AddColumn<Guid>(
                 name: "OwnerAdvisorId",
                 table: "Contacts",
@@ -87,6 +94,13 @@ namespace Enlyce.Infrastructure.Migrations
                 name: "Surname",
                 table: "Contacts");
 
+            migrationBuilder.DropColumn(name: "CustomerType", table: "Contacts");
+            migrationBuilder.DropColumn(name: "CustomerStatus", table: "Contacts");
+            migrationBuilder.DropColumn(name: "Address", table: "Contacts");
+            migrationBuilder.DropColumn(name: "Country", table: "Contacts");
+            migrationBuilder.DropColumn(name: "Department", table: "Contacts");
+            migrationBuilder.DropColumn(name: "City", table: "Contacts");
+
             migrationBuilder.DropColumn(
                 name: "OwnerAdvisorId",
                 table: "Contacts");
@@ -107,7 +121,7 @@ namespace Enlyce.Infrastructure.Migrations
                 name: "IX_Contacts_Email",
                 table: "Contacts",
                 column: "Email",
-                filter: "\"Email\" IS NOT NULL");
+                unique: true);
         }
     }
 }

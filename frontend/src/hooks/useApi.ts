@@ -206,8 +206,10 @@ export function useSetContactEmailPermission() {
 export function useUpdateContact() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, name, phone }: { id: string; name: string; phone?: string }) =>
-      api.updateContact(id, { name, phone }),
+    mutationFn: ({ id, name, surname, phone, customerType, customerStatus, address, country, department, city }: {
+      id: string; name: string; surname?: string; phone?: string; customerType?: string; customerStatus?: string;
+      address?: string; country?: string; department?: string; city?: string
+    }) => api.updateContact(id, { name, surname, phone, customerType, customerStatus, address, country, department, city }),
     onSuccess: (_contact, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
       queryClient.invalidateQueries({ queryKey: ["contacts", variables.id] })

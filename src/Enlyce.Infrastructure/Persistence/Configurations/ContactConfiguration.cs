@@ -13,7 +13,13 @@ public sealed class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.Property(contact => contact.Id).ValueGeneratedNever();
         builder.Property(contact => contact.Name).HasMaxLength(200).IsRequired();
         builder.Property(contact => contact.Surname).HasMaxLength(200);
+        builder.Property(contact => contact.CustomerType).HasMaxLength(30);
+        builder.Property(contact => contact.CustomerStatus).HasMaxLength(20).IsRequired();
         builder.Property(contact => contact.Email).HasMaxLength(320);
+        builder.Property(contact => contact.Address).HasMaxLength(500);
+        builder.Property(contact => contact.Country).HasMaxLength(100).IsRequired();
+        builder.Property(contact => contact.Department).HasMaxLength(100);
+        builder.Property(contact => contact.City).HasMaxLength(100);
         builder.ComplexProperty(contact => contact.Phone, phone =>
             phone.Property(value => value.Value).HasColumnName("Phone").HasMaxLength(20));
         builder.Property(contact => contact.CreatedAt).IsRequired();

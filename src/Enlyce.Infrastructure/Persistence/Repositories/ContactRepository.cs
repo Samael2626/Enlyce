@@ -76,6 +76,9 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         {
             var search = query.Trim().ToLowerInvariant();
             contacts = contacts.Where(contact => contact.Name.ToLower().Contains(search)
+                || (contact.Surname != null && contact.Surname.ToLower().Contains(search))
+                || (contact.Address != null && contact.Address.ToLower().Contains(search))
+                || (contact.City != null && contact.City.ToLower().Contains(search))
                 || (contact.Email != null && contact.Email.ToLower().Contains(search))
                 || (contact.Phone != null && contact.Phone.Value.ToLower().Contains(search)));
         }
