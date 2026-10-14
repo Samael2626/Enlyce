@@ -507,6 +507,7 @@ export function ContactsPage() {
               setImportError("")
             }} />
           </label>
+          <p className="text-xs text-muted-foreground">En Excel, guarda teléfonos e identificaciones como texto. Excel puede redondear números de más de 15 dígitos antes de que Enlyce los lea.</p>
           {importColumns.length > 0 && <>
             <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setNameColumn, value)} />
             <ImportColumnSelect label="Apellidos" value={surnameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setSurnameColumn, value)} optional />

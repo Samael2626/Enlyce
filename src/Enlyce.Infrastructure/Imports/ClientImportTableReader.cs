@@ -31,7 +31,7 @@ public sealed class ClientImportTableReader : IClientImportTableReader
             throw new InvalidDataException($"El archivo debe tener entre 1 y {MaximumColumns} columnas.");
 
         var columns = Enumerable.Range(0, reader.FieldCount)
-            .Select(index => CellText(reader.GetValue(index)) ?? string.Empty)
+            .Select(index => CellText(reader.GetValue(index), reader.GetNumberFormatString(index)) ?? string.Empty)
             .ToArray();
         if (columns.All(string.IsNullOrWhiteSpace))
             throw new InvalidDataException("La primera fila debe contener los encabezados.");
@@ -41,7 +41,7 @@ public sealed class ClientImportTableReader : IClientImportTableReader
         {
             ct.ThrowIfCancellationRequested();
             var row = Enumerable.Range(0, reader.FieldCount)
-                .Select(index => CellText(reader.GetValue(index)))
+                .Select(index => CellText(reader.GetValue(index), reader.GetNumberFormatString(index)))
                 .ToArray();
             if (row.All(string.IsNullOrWhiteSpace))
                 continue;
@@ -61,10 +61,13 @@ public sealed class ClientImportTableReader : IClientImportTableReader
         LeaveOpen = true
     };
 
-    private static string? CellText(object? value) => value switch
+    private static string? CellText(object? value, string? numberFormat) => value switch
     {
         null => null,
         DateTime date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        double number when numberFormat is { Length: > 0 } format && format.All(character => character == '0') &&
+                           number >= 0 && number <= long.MaxValue && number == Math.Truncate(number) =>
+            ((long)number).ToString(new string('0', Math.Min(format.Length, 20)), CultureInfo.InvariantCulture),
         double number => number.ToString("G", CultureInfo.InvariantCulture),
         decimal number => number.ToString(CultureInfo.InvariantCulture),
         _ => Convert.ToString(value, CultureInfo.InvariantCulture)?.Trim() is { Length: > 0 } text ? text : null
