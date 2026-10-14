@@ -176,12 +176,40 @@ public static class ContactsModule
                     return Results.NotFound();
             }
 
+            if (contact.CanReceiveAutomatedEmail == request.Allowed)
+                return Results.Ok(new { contact.Id, contact.CanReceiveAutomatedEmail });
+            var actorId = http.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? http.User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+            if (string.IsNullOrWhiteSpace(actorId))
+                return Results.Forbid();
+            Enlyce.Domain.Entities.ContactEmailPermissionEvent permissionEvent;
+            try
+            {
+                permissionEvent = Enlyce.Domain.Entities.ContactEmailPermissionEvent.Create(
+                    contact.Id, request.Allowed, request.Source, request.EvidenceReference, actorId);
+            }
+            catch (ArgumentException exception)
+            {
+                return Results.BadRequest(new { error = exception.Message });
+            }
             contact.SetAutomatedEmailPermission(request.Allowed);
-            await contacts.SaveAsync(contact, ct);
+            await contacts.SetEmailPermissionAsync(contact, permissionEvent, ct);
             return Results.Ok(new { contact.Id, contact.CanReceiveAutomatedEmail });
         })
         .RequireAuthorization("Administrador")
         .WithName("SetContactEmailPermission");
+
+        group.MapGet("/{id:guid}/permiso-correo/historial", async Task<IResult> (
+            Guid id, IContactRepository contacts, CancellationToken ct) =>
+        {
+            if (await contacts.GetByIdAsync(id, ct) is null)
+                return Results.NotFound();
+            var history = await contacts.GetEmailPermissionHistoryAsync(id, ct);
+            return Results.Ok(history.Select(item => new ContactEmailPermissionEventDto(
+                item.Allowed, item.Source, item.EvidenceReference, item.ActorId, item.OccurredAt)));
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetContactEmailPermissionHistory");
     }
 
     private static async Task<IReadOnlyCollection<Guid>> GetAdvisorContactIdsAsync(
@@ -201,7 +229,9 @@ public sealed record UpdateContactRequest(string Name, string? Phone, string? Su
     string? CustomerType = null, string CustomerStatus = "Nuevo", string? Address = null,
     string? Country = null, string? Department = null, string? City = null);
 public sealed record AssignContactRequest(Guid? AdvisorId);
-public sealed record UpdateContactEmailPermissionRequest(bool Allowed);
+public sealed record UpdateContactEmailPermissionRequest(bool Allowed, string Source, string? EvidenceReference);
+public sealed record ContactEmailPermissionEventDto(bool Allowed, string Source, string? EvidenceReference,
+    string ActorId, DateTime OccurredAt);
 public sealed record ContactSummaryDto(Guid Id, string Name, string? Email, string? Phone, DateTime CreatedAt,
     DateTime UpdatedAt, string? Surname, bool CanReceiveAutomatedEmail, string? CustomerType,
     string CustomerStatus, string? Address, string Country, string? Department, string? City);

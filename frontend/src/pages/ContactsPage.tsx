@@ -26,8 +26,14 @@ export function ContactsPage() {
 
   const detailQuery = useContact(selectedId)
   const contact = detailQuery.data?.contact
+  const user = useAuthStore((state) => state.user)
+  const [emailPermissionHistory, setEmailPermissionHistory] = useState<Awaited<ReturnType<typeof api.getContactEmailPermissionHistory>>>([])
   const updateContact = useUpdateContact()
   const setEmailPermission = useSetContactEmailPermission()
+  useEffect(() => {
+    if (user?.rol !== "Administrador" || !selectedId) return
+    void api.getContactEmailPermissionHistory(selectedId).then(setEmailPermissionHistory).catch(() => setEmailPermissionHistory([]))
+  }, [selectedId, user?.rol, contact?.canReceiveAutomatedEmail])
   const createTask = useCreateCommercialTask()
   const completeTask = useCompleteCommercialTask()
   const cancelTask = useCancelCommercialTask()
@@ -40,7 +46,6 @@ export function ContactsPage() {
   const matchesQuery = useDemandMatches(selectedDemandId)
   const linkProperty = useLinkDemandProperty()
   const setPropertyStatus = useSetDemandPropertyStatus()
-  const user = useAuthStore((state) => state.user)
   const [name, setName] = useState("")
   const [surname, setSurname] = useState("")
   const [customerType, setCustomerType] = useState("")
@@ -392,9 +397,21 @@ export function ContactsPage() {
                 {updateContact.isSuccess && <p className="mt-3 text-sm text-emerald-700">Cambios guardados.</p>}
                 {user?.rol === "Administrador" && <label className="mt-4 flex items-start gap-2 border-t border-border pt-4 text-sm text-foreground">
                   <input type="checkbox" checked={contact.canReceiveAutomatedEmail} disabled={setEmailPermission.isPending}
-                    onChange={(event) => setEmailPermission.mutate({ id: contact.id, allowed: event.target.checked })} />
+                    onChange={(event) => {
+                      const allowed = event.target.checked
+                      const evidenceReference = allowed ? window.prompt("Referencia de evidencia del permiso (no incluyas datos personales):")?.trim() ?? null : null
+                      if (allowed && !evidenceReference) return
+                      setEmailPermission.mutate({ id: contact.id, allowed, evidenceReference })
+                    }} />
                   <span>Puede recibir correos automáticos. Actívalo solo con evidencia de permiso registrada.</span>
                 </label>}
+                {user?.rol === "Administrador" && emailPermissionHistory.length > 0 && <div className="mt-3 text-xs text-muted-foreground">
+                  <p className="font-semibold">Historial de permiso de correo</p>
+                  {emailPermissionHistory.map((item, index) => <p key={`${item.occurredAt}-${index}`}>
+                    {new Date(item.occurredAt).toLocaleString("es-CO")} · {item.allowed ? "Concedido" : "Revocado"} · {item.source} · actor {item.actorId}
+                    {item.evidenceReference ? ` · ${item.evidenceReference}` : ""}
+                  </p>)}
+                </div>}
               </div>
 
               <div className="grid gap-5 lg:grid-cols-2">

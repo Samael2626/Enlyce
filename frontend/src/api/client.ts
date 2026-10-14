@@ -159,10 +159,16 @@ class ApiClient {
     return this.request<import("@/lib/types").ContactDetail>(`/api/contactos/${id}`)
   }
 
-  async setContactEmailPermission(id: string, allowed: boolean) {
+  async setContactEmailPermission(id: string, allowed: boolean, evidenceReference: string | null) {
     return this.request<{ id: string; canReceiveAutomatedEmail: boolean }>(`/api/contactos/${id}/permiso-correo`, {
-      method: "PUT", body: JSON.stringify({ allowed }),
+      method: "PUT", body: JSON.stringify({ allowed, source: "Manual", evidenceReference }),
     })
+  }
+
+  async getContactEmailPermissionHistory(id: string) {
+    return this.request<Array<{ allowed: boolean; source: string; evidenceReference: string | null; actorId: string; occurredAt: string }>>(
+      `/api/contactos/${id}/permiso-correo/historial`,
+    )
   }
 
   async updateContact(id: string, data: { name: string; surname?: string; phone?: string; customerType?: string;

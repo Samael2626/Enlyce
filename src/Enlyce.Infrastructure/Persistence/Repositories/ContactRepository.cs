@@ -48,13 +48,32 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         await context.SaveChangesAsync(ct);
     }
 
-    public async Task AddImportedAsync(IReadOnlyCollection<Contact> contacts, CancellationToken ct = default)
+    public async Task AddImportedAsync(IReadOnlyCollection<Contact> contacts, string actorId, CancellationToken ct = default)
     {
         if (contacts.Count == 0)
             return;
         await context.Contacts.AddRangeAsync(contacts, ct);
+        var events = contacts.Where(contact => contact.CanReceiveAutomatedEmail)
+            .Select(contact => ContactEmailPermissionEvent.Create(contact.Id, true, "Importacion",
+                "Columna Recibe correo del archivo importado", actorId));
+        await context.ContactEmailPermissionEvents.AddRangeAsync(events, ct);
         await context.SaveChangesAsync(ct);
     }
+
+    public async Task SetEmailPermissionAsync(Contact contact, ContactEmailPermissionEvent permissionEvent,
+        CancellationToken ct = default)
+    {
+        context.Contacts.Update(contact);
+        await context.ContactEmailPermissionEvents.AddAsync(permissionEvent, ct);
+        await context.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<ContactEmailPermissionEvent>> GetEmailPermissionHistoryAsync(
+        Guid contactId, CancellationToken ct = default) =>
+        await context.ContactEmailPermissionEvents.AsNoTracking()
+            .Where(item => item.ContactId == contactId)
+            .OrderByDescending(item => item.OccurredAt)
+            .ToListAsync(ct);
 
     public async Task<IReadOnlyList<Contact>> GetAllAsync(CancellationToken ct = default) =>
         await context.Contacts.Where(contact => contact.Active)

@@ -87,8 +87,9 @@
 
 - Ahora mapea nombre, apellidos, email, teléfono y «Recibe correo» por separado. Solo valores afirmativos explícitos activan correos automáticos; el permiso de tratamiento de datos no se infiere.
 - El correo puede repetirse en varios contactos, igual que en Wasi. La vista previa detecta repeticiones, pero no expone emails ajenos al alcance del asesor.
-- El permiso de correo puede corregirlo un administrador desde la ficha. No es aún un libro de evidencia/fecha/fuente de consentimiento; debe añadirse antes de considerar completa la gestión de consentimiento.
-- Migración preparada, no aplicada. La migración pone `CanReceiveAutomatedEmail=false` para contactos existentes y nuevos hasta que se habilite expresamente.
+- Administrador puede conceder o revocar el permiso desde la ficha; conceder exige una referencia de evidencia. El historial registra estado, fuente, actor y fecha de registro, en tabla append-only consultable solo por administradores.
+- La importación registra como fuente la columna «Recibe correo» y como actor quien confirma. La fecha es la de registro en Enlyce; la fecha original del permiso no se reconstruye. Contactos previos a la migración no reciben eventos inventados.
+- Migraciones preparadas, no aplicadas. Contactos existentes quedan con `CanReceiveAutomatedEmail=false`; verificar evidencia real antes de habilitar envíos.
 
 ## Fuentes oficiales Wasi
 

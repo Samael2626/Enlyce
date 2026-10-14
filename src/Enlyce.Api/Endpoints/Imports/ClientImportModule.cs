@@ -284,7 +284,11 @@ public static class ClientImportModule
 
         try
         {
-            await contacts.AddImportedAsync(newContacts, ct);
+            var actorId = http.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? http.User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+            if (string.IsNullOrWhiteSpace(actorId))
+                return Results.Forbid();
+            await contacts.AddImportedAsync(newContacts, actorId, ct);
         }
         catch (DbUpdateException)
         {

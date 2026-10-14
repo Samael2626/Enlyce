@@ -11,6 +11,7 @@ public class EnlyceDbContext : DbContext
     public DbSet<LeadSlaRule> LeadSlaRules => Set<LeadSlaRule>();
     public DbSet<LeadDistributionSettings> LeadDistributionSettings => Set<LeadDistributionSettings>();
     public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<ContactEmailPermissionEvent> ContactEmailPermissionEvents => Set<ContactEmailPermissionEvent>();
     public DbSet<CommercialTask> CommercialTasks => Set<CommercialTask>();
     public DbSet<CommercialTaskEvent> CommercialTaskEvents => Set<CommercialTaskEvent>();
     public DbSet<CustomerDemand> CustomerDemands => Set<CustomerDemand>();
