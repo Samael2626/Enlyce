@@ -38,6 +38,81 @@ public static class DemandsModule
         })
         .WithName("ListCustomerDemands");
 
+        group.MapGet("/cruce", async Task<IResult> (
+            string? q,
+            string? customerType,
+            string? customerStatus,
+            Guid? advisorId,
+            DateOnly? contactFrom,
+            DateOnly? contactTo,
+            DateOnly? demandFrom,
+            DateOnly? demandTo,
+            int? page,
+            int? pageSize,
+            HttpContext http,
+            IContactRepository contacts,
+            ICustomerDemandRepository demands,
+            ILeadRepository leads,
+            IInmuebleRepository properties,
+            CancellationToken ct) =>
+        {
+            if ((contactFrom.HasValue && contactTo.HasValue && contactFrom > contactTo) ||
+                (demandFrom.HasValue && demandTo.HasValue && demandFrom > demandTo))
+                return Results.BadRequest(new { error = "El rango de fechas no es valido." });
+            if (!string.IsNullOrWhiteSpace(customerType) &&
+                customerType is not ("Comprador" or "Arrendatario" or "Propietario" or "Arrendador"))
+                return Results.BadRequest(new { error = "El tipo de cliente no es valido." });
+            if (!string.IsNullOrWhiteSpace(customerStatus) &&
+                customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
+                return Results.BadRequest(new { error = "El estado del cliente no es valido." });
+            if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
+                return Results.Forbid();
+
+            var currentPage = page ?? 1;
+            var currentPageSize = pageSize ?? 20;
+            if (currentPage < 1 || currentPageSize is < 1 or > 100 ||
+                (long)(currentPage - 1) * currentPageSize > int.MaxValue)
+                return Results.BadRequest(new { error = "La paginacion no es valida." });
+
+            var scoped = await ScopedActiveDemandsAsync(http, demands, leads, contacts, ct);
+            if (advisorId.HasValue)
+            {
+                var advisorContactIds = (await contacts.GetIdsByOwnerAdvisorAsync(advisorId.Value, ct)).ToHashSet();
+                var advisorLeads = await leads.GetByAsesorIdAsync(advisorId.Value);
+                advisorContactIds.UnionWith(advisorLeads.Where(lead => lead.ContactId.HasValue)
+                    .Select(lead => lead.ContactId!.Value));
+                scoped = scoped.Where(demand => advisorContactIds.Contains(demand.ContactId)).ToArray();
+            }
+
+            var contactIds = scoped.Select(demand => demand.ContactId).Distinct().ToArray();
+            var contactLookup = (await contacts.GetByIdsAsync(contactIds, ct)).ToDictionary(contact => contact.Id);
+            var contactStart = contactFrom?.ToDateTime(TimeOnly.MinValue);
+            var contactEnd = contactTo?.ToDateTime(TimeOnly.MaxValue);
+            var demandStart = demandFrom?.ToDateTime(TimeOnly.MinValue);
+            var demandEnd = demandTo?.ToDateTime(TimeOnly.MaxValue);
+            var filtered = scoped.Where(demand => contactLookup.TryGetValue(demand.ContactId, out var contact) &&
+                    (string.IsNullOrWhiteSpace(q) || $"{contact.Name} {contact.Surname}".Contains(q.Trim(), StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrWhiteSpace(customerType) || contact.CustomerType == customerType) &&
+                    (string.IsNullOrWhiteSpace(customerStatus) || contact.CustomerStatus == customerStatus) &&
+                    (!contactStart.HasValue || contact.CreatedAt >= contactStart.Value) &&
+                    (!contactEnd.HasValue || contact.CreatedAt <= contactEnd.Value) &&
+                    (!demandStart.HasValue || demand.CreatedAt >= demandStart.Value) &&
+                    (!demandEnd.HasValue || demand.CreatedAt <= demandEnd.Value))
+                .OrderByDescending(demand => demand.UpdatedAt).ThenBy(demand => demand.Id).ToArray();
+            var total = filtered.Length;
+            var pageItems = filtered.Skip((currentPage - 1) * currentPageSize).Take(currentPageSize).ToArray();
+            var inventory = await properties.GetAllAsync();
+            var items = pageItems.Select(demand =>
+            {
+                var contact = contactLookup[demand.ContactId];
+                return new CustomerDemandCrossItemDto(ToDto(demand), contact.Name, contact.Surname,
+                    contact.CustomerType, contact.CustomerStatus, contact.CreatedAt,
+                    inventory.Count(demand.Matches));
+            }).ToArray();
+            return Results.Ok(new CustomerDemandCrossPage(total, currentPage, currentPageSize, items));
+        })
+        .WithName("ListCustomerDemandCross");
+
         group.MapPost("/", async Task<IResult> (
             [FromBody] CreateDemandRequest request,
             HttpContext http,
@@ -104,7 +179,7 @@ public static class DemandsModule
 
             try
             {
-                var propertyType = string.IsNullOrWhiteSpace(request.PropertyType)
+                TipoInmueble? propertyType = string.IsNullOrWhiteSpace(request.PropertyType)
                     ? null
                     : Enum.Parse<TipoInmueble>(request.PropertyType, true);
                 demand.Update(operation, propertyType, request.City, request.Neighborhood,
@@ -340,6 +415,11 @@ public sealed record CustomerDemandDto(Guid Id, Guid ContactId, Guid? LeadId, st
     decimal? MaximumPrice, string Currency, decimal? MinimumArea, decimal? MaximumArea,
     int? Bedrooms, int? Bathrooms, int? ParkingSpaces,
     string? Notes, DateTime CreatedAt, DateTime UpdatedAt);
+public sealed record CustomerDemandCrossItemDto(CustomerDemandDto Demand, string ContactName,
+    string? ContactSurname, string? CustomerType, string CustomerStatus, DateTime ContactCreatedAt,
+    int OwnPropertyMatches);
+public sealed record CustomerDemandCrossPage(int Total, int Page, int PageSize,
+    IReadOnlyList<CustomerDemandCrossItemDto> Items);
 public sealed record DemandPropertyMatchDto(Guid PropertyId, string Name, string PropertyType,
     string Operation, string City, string Country, string? Department, string? Neighborhood,
     decimal Price, string Currency,

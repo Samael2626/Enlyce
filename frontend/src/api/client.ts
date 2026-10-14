@@ -252,6 +252,16 @@ class ApiClient {
     return this.request<import("@/lib/types").CustomerDemand[]>(`/api/demandas?${query.toString()}`)
   }
 
+  async getCustomerDemandCross(filters: { q?: string; customerType?: string; customerStatus?: string;
+    advisorId?: string; contactFrom?: string; contactTo?: string; demandFrom?: string; demandTo?: string;
+    page?: number; pageSize?: number }) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, String(value))
+    })
+    return this.request<import("@/lib/types").CustomerDemandCrossPage>(`/api/demandas/cruce?${query}`)
+  }
+
   async createCustomerDemand(data: import("@/lib/types").CreateCustomerDemandInput) {
     return this.request<import("@/lib/types").CustomerDemand>("/api/demandas", {
       method: "POST",

@@ -335,6 +335,14 @@ export function useCustomerDemands(contactId: string) {
   })
 }
 
+export function useCustomerDemandCross(filters: Parameters<typeof api.getCustomerDemandCross>[0], enabled: boolean) {
+  return useQuery({
+    queryKey: ["demand-cross", filters],
+    queryFn: () => api.getCustomerDemandCross(filters),
+    enabled,
+  })
+}
+
 export function useCreateCustomerDemand() {
   const queryClient = useQueryClient()
   return useMutation({

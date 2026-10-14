@@ -276,6 +276,21 @@ export interface CreateCustomerDemandInput {
 
 export type UpdateCustomerDemandInput = Omit<CreateCustomerDemandInput, "contactId" | "leadId">
 
+export interface CustomerDemandCrossPage {
+  total: number
+  page: number
+  pageSize: number
+  items: {
+    demand: CustomerDemand
+    contactName: string
+    contactSurname?: string | null
+    customerType?: string | null
+    customerStatus: string
+    contactCreatedAt: string
+    ownPropertyMatches: number
+  }[]
+}
+
 // Pipeline
 export interface PipelineResponse {
   etapas: EtapaPipelineDto[]

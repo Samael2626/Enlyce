@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
 import { api } from "@/api/client"
-import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useUpdateCustomerDemand, useDeleteCustomerDemand, useCustomerDemands, useDemandMatches, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
+import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useUpdateCustomerDemand, useDeleteCustomerDemand, useCustomerDemands, useDemandMatches, useCustomerDemandCross, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 export function ContactsPage() {
@@ -20,6 +20,10 @@ export function ContactsPage() {
   const [customerTypeFilter, setCustomerTypeFilter] = useState("")
   const [customerStatusFilter, setCustomerStatusFilter] = useState("")
   const [advisorFilter, setAdvisorFilter] = useState("")
+  const [crossFilters, setCrossFilters] = useState({ q: "", customerType: "", customerStatus: "", advisorId: "",
+    contactFrom: "", contactTo: "", demandFrom: "", demandTo: "" })
+  const [crossSearched, setCrossSearched] = useState(false)
+  const [crossPage, setCrossPage] = useState(1)
   const [page, setPage] = useState(1)
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([])
   const [exportingContacts, setExportingContacts] = useState(false)
@@ -120,6 +124,8 @@ export function ContactsPage() {
   const [importError, setImportError] = useState("")
   const [importing, setImporting] = useState(false)
   const [advisors, setAdvisors] = useState<Array<{ id: string; name: string }>>([])
+  const crossQuery = useCustomerDemandCross({ ...crossFilters, page: crossPage, pageSize: 10 }, crossSearched)
+  const crossResult = crossQuery.data
   const [ownerAdvisorId, setOwnerAdvisorId] = useState("")
   const [importRequestId, setImportRequestId] = useState("")
   const [importRequestIdReady, setImportRequestIdReady] = useState(false)
@@ -307,6 +313,40 @@ export function ContactsPage() {
         <div className="flex gap-2 sm:col-span-3"><button disabled={createContact.isPending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createContact.isPending ? "Guardando…" : "Guardar cliente"}</button>
           <button type="button" className="rounded-md border border-border px-4 py-2 text-sm text-foreground" onClick={() => setShowCreateContact(false)}>Cancelar</button></div>
       </form>}
+
+      <section className="crm-panel p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><h2 className="font-display text-xl text-foreground">Cruce de clientes e inmuebles</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Busca demandas por cliente, tipo, estado, asesor y fecha. Las coincidencias cuentan inmuebles propios.</p></div>
+        </div>
+        <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(event) => { event.preventDefault(); setCrossPage(1); setCrossSearched(true) }}>
+          <label className="text-xs text-muted-foreground">Nombre del cliente<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.q} onChange={(event) => setCrossFilters((value) => ({ ...value, q: event.target.value }))} /></label>
+          <label className="text-xs text-muted-foreground">Tipo de cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerType} onChange={(event) => setCrossFilters((value) => ({ ...value, customerType: event.target.value }))}><option value="">Todos</option><option value="Comprador">Comprador</option><option value="Arrendatario">Arrendatario</option><option value="Propietario">Propietario</option><option value="Arrendador">Arrendador</option></select></label>
+          <label className="text-xs text-muted-foreground">Estado del cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerStatus} onChange={(event) => setCrossFilters((value) => ({ ...value, customerStatus: event.target.value }))}><option value="">Todos</option><option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option></select></label>
+          {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Usuario encargado<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.advisorId} onChange={(event) => setCrossFilters((value) => ({ ...value, advisorId: event.target.value }))}><option value="">Todos</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>}
+          {(["contactFrom", "contactTo", "demandFrom", "demandTo"] as const).map((key) => <label key={key} className="text-xs text-muted-foreground">{key === "contactFrom" ? "Cliente desde" : key === "contactTo" ? "Cliente hasta" : key === "demandFrom" ? "Demanda desde" : "Demanda hasta"}<input type="date" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters[key]} onChange={(event) => setCrossFilters((value) => ({ ...value, [key]: event.target.value }))} /></label>)}
+          <div className="flex items-end"><button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Buscar</button></div>
+        </form>
+        {crossQuery.isError && <p role="alert" className="mt-3 text-sm text-destructive">No se pudo consultar el cruce de demandas.</p>}
+        {crossSearched && <div className="mt-4 space-y-2">
+          {crossQuery.isPending && <p className="text-sm text-muted-foreground">Buscando demandas…</p>}
+          {crossResult?.items.map((item) => <article key={item.demand.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3">
+            <div><button type="button" className="font-semibold text-primary underline" onClick={() => {
+              setSearch(`${item.contactName} ${item.contactSurname ?? ""}`.trim()); setCreatedFrom(""); setCreatedTo("");
+              setCustomerTypeFilter(""); setCustomerStatusFilter(""); setAdvisorFilter(""); setPage(1); setSelectedId(item.demand.contactId)
+            }}>{item.contactName} {item.contactSurname}</button>
+              <p className="text-xs text-muted-foreground">{item.customerType ?? "Sin tipo"} · {item.customerStatus} · cliente {new Date(item.contactCreatedAt).toLocaleDateString("es-CO")}</p>
+              <p className="mt-1 text-sm text-foreground">{item.demand.operation} · {item.demand.propertyType ?? "Cualquier inmueble"} · {item.demand.city}{item.demand.department ? `, ${item.demand.department}` : ""}, {item.demand.country}{item.demand.neighborhood ? ` · ${item.demand.neighborhood}` : ""}</p>
+              <p className="text-xs text-muted-foreground">Demanda {new Date(item.demand.createdAt).toLocaleDateString("es-CO")} · {item.demand.currency} {item.demand.minimumPrice?.toLocaleString("es-CO") ?? "0"}–{item.demand.maximumPrice?.toLocaleString("es-CO") ?? "sin máximo"}</p>
+            </div>
+            <span className="rounded-full bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">Propios: {item.ownPropertyMatches}</span>
+          </article>)}
+          {crossResult?.total === 0 && <p className="text-sm text-muted-foreground">No hay demandas que coincidan con estos filtros.</p>}
+          {crossResult && crossResult.total > crossResult.pageSize && <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{crossResult.total} demandas</span><div className="flex gap-2"><button type="button" disabled={crossPage <= 1} className="rounded border border-border px-3 py-1 disabled:opacity-40" onClick={() => setCrossPage((page) => page - 1)}>Anterior</button><button type="button" disabled={crossPage * crossResult.pageSize >= crossResult.total} className="rounded border border-border px-3 py-1 disabled:opacity-40" onClick={() => setCrossPage((page) => page + 1)}>Siguiente</button></div>
+          </div>}
+        </div>}
+      </section>
 
       <section className="crm-panel p-5">
         <h2 className="font-display text-xl text-foreground">Importar clientes</h2>
