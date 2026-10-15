@@ -177,8 +177,9 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 ## Importación de clientes: números de identificación y teléfono (2026-10-15)
 
-- El lector de Excel ahora conserva las posiciones de celdas numéricas enteras con 16 o más dígitos. Si se mapean a teléfono, fijo o identificación, preview y confirmación rechazan esa fila con instrucción de corregir la celda como texto; evita importar el número redondeado silenciosamente.
-- Los números de menos de 16 dígitos pueden haber perdido ceros iniciales si Excel los guardó como valor numérico sin máscara. El lector recupera máscaras simples de ceros (`000...`), pero no puede reconstruir ceros que el archivo ya descartó: importar teléfonos e identificaciones como texto sigue siendo requisito operativo.
+- La vista previa, los errores y los enlaces a clientes importados conservan el número de fila fuente aunque el lector omita filas vacías.
+- Si teléfono, fijo o identificación se mapean desde una celda numérica de Excel, preview y confirmación rechazan la fila cuando el formato no es una máscara simple de ceros (`000...`); también rechazan enteros de 16 o más dígitos aunque tengan esa máscara. Así no se importan números cuyo formato o precisión no puede recuperarse con seguridad. Para esos campos, guardarlos como texto sigue siendo la opción recomendada.
+- Los valores CSV se leen como texto; esta protección de formato aplica a celdas numéricas XLS/XLSX.
 
 ## Revisión de importador y vitrina pública (2026-10-15)
 

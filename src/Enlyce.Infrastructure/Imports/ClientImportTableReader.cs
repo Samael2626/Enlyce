@@ -78,6 +78,9 @@ public sealed class ClientImportTableReader : IClientImportTableReader
                            number >= 0 && number <= long.MaxValue && number == Math.Truncate(number) =>
             ((long)number).ToString(new string('0', Math.Min(format.Length, 20)), CultureInfo.InvariantCulture),
         double number => number.ToString("G", CultureInfo.InvariantCulture),
+        decimal number when numberFormat is { Length: > 0 } format && format.All(character => character == '0') &&
+                             number >= 0 && number <= long.MaxValue && number == decimal.Truncate(number) =>
+            ((long)number).ToString(new string('0', Math.Min(format.Length, 20)), CultureInfo.InvariantCulture),
         decimal number => number.ToString(CultureInfo.InvariantCulture),
         _ => Convert.ToString(value, CultureInfo.InvariantCulture)?.Trim() is { Length: > 0 } text ? text : null
     };
@@ -85,9 +88,11 @@ public sealed class ClientImportTableReader : IClientImportTableReader
     private static bool IsUnsafeNumericIdentifier(object? value, string? numberFormat) => value switch
     {
         double number => numberFormat is not { Length: > 0 } format || format.Any(character => character != '0') ||
-                         Math.Abs(number) >= 1_000_000_000_000_000d && number == Math.Truncate(number),
+                         number < 0 || number > long.MaxValue || number != Math.Truncate(number) ||
+                         number >= 1_000_000_000_000_000d,
         decimal number => numberFormat is not { Length: > 0 } format || format.Any(character => character != '0') ||
-                          Math.Abs(number) >= 1_000_000_000_000_000m && number == decimal.Truncate(number),
+                          number < 0 || number > long.MaxValue || number != decimal.Truncate(number) ||
+                          number >= 1_000_000_000_000_000m,
         _ => false
     };
 }
