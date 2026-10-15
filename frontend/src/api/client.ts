@@ -76,7 +76,8 @@ class ApiClient {
     customerStatusColumn?: number, addressColumn?: number, countryColumn?: number,
     departmentColumn?: number, cityColumn?: number, landlineColumn?: number, dateOfBirthColumn?: number,
     identificationNumberColumn?: number, referredByColumn?: number, acquisitionMediumColumn?: number,
-    additionalDataColumn?: number, customerLabelsColumn?: number, customerFunnelColumn?: number) {
+    additionalDataColumn?: number, customerLabelsColumn?: number, customerFunnelColumn?: number,
+    previewPage = 1, previewPageSize = 100) {
     const body = new FormData()
     body.set("archivo", file)
     if (nameColumn !== undefined) body.set("nameColumn", String(nameColumn))
@@ -98,12 +99,16 @@ class ApiClient {
     if (additionalDataColumn !== undefined) body.set("additionalDataColumn", String(additionalDataColumn))
     if (customerLabelsColumn !== undefined) body.set("customerLabelsColumn", String(customerLabelsColumn))
     if (customerFunnelColumn !== undefined) body.set("customerFunnelColumn", String(customerFunnelColumn))
+    body.set("previewPage", String(previewPage))
+    body.set("previewPageSize", String(previewPageSize))
     return this.request<{
       totalRows: number
       validRows: number
       invalidRows: number
       duplicateRows: number
       sourceColumns: string[]
+      page: number
+      pageSize: number
       rows: Array<{ rowNumber: number; name: string | null; surname: string | null; email: string | null;
         phone: string | null; canReceiveAutomatedEmail: boolean; mappedValues: Record<string, string | null>;
         error: string | null; duplicate: boolean }>

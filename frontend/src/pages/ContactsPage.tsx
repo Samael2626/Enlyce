@@ -331,6 +331,7 @@ export function ContactsPage() {
   const [importResult, setImportResult] = useState<Awaited<ReturnType<typeof api.confirmClientImport>> | null>(null)
   const [importError, setImportError] = useState("")
   const [importing, setImporting] = useState(false)
+  const [importPreviewPage, setImportPreviewPage] = useState(1)
   const [advisors, setAdvisors] = useState<Array<{ id: string; name: string }>>([])
   const crossQuery = useCustomerDemandCross({ ...crossFilters, page: crossPage, pageSize: 10 }, crossSearched)
   const crossResult = crossQuery.data
@@ -344,6 +345,41 @@ export function ContactsPage() {
     setter(value)
     setImportPreview(null)
     setImportResult(null)
+    setImportPreviewPage(1)
+  }
+  const getClientImportPreview = (page: number) => api.previewClientImport(
+    importFile!, importColumns.length ? Number(nameColumn) : undefined,
+    surnameColumn === "" ? undefined : Number(surnameColumn),
+    emailColumn === "" ? undefined : Number(emailColumn),
+    phoneColumn === "" ? undefined : Number(phoneColumn),
+    canReceiveEmailColumn === "" ? undefined : Number(canReceiveEmailColumn),
+    customerTypeColumn === "" ? undefined : Number(customerTypeColumn),
+    customerStatusColumn === "" ? undefined : Number(customerStatusColumn),
+    addressColumn === "" ? undefined : Number(addressColumn),
+    countryColumn === "" ? undefined : Number(countryColumn),
+    departmentColumn === "" ? undefined : Number(departmentColumn),
+    cityColumn === "" ? undefined : Number(cityColumn),
+    landlineColumn === "" ? undefined : Number(landlineColumn),
+    dateOfBirthColumn === "" ? undefined : Number(dateOfBirthColumn),
+    identificationNumberColumn === "" ? undefined : Number(identificationNumberColumn),
+    referredByColumn === "" ? undefined : Number(referredByColumn),
+    acquisitionMediumColumn === "" ? undefined : Number(acquisitionMediumColumn),
+    additionalDataColumn === "" ? undefined : Number(additionalDataColumn),
+    customerLabelsColumn === "" ? undefined : Number(customerLabelsColumn),
+    customerFunnelColumn === "" ? undefined : Number(customerFunnelColumn), page, 100)
+  const loadClientImportPreviewPage = async (page: number) => {
+    if (!importFile || page < 1 || importing) return
+    setImporting(true)
+    setImportError("")
+    try {
+      const preview = await getClientImportPreview(page)
+      setImportPreview(preview)
+      setImportPreviewPage(page)
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : "No se pudo cargar esa página de la vista previa.")
+    } finally {
+      setImporting(false)
+    }
   }
 
   useEffect(() => {
@@ -615,28 +651,8 @@ export function ContactsPage() {
           setImporting(true)
           setImportError("")
           try {
-            const preview = await api.previewClientImport(
-              importFile,
-              importColumns.length ? Number(nameColumn) : undefined,
-              surnameColumn === "" ? undefined : Number(surnameColumn),
-              emailColumn === "" ? undefined : Number(emailColumn),
-              phoneColumn === "" ? undefined : Number(phoneColumn),
-              canReceiveEmailColumn === "" ? undefined : Number(canReceiveEmailColumn),
-              customerTypeColumn === "" ? undefined : Number(customerTypeColumn),
-              customerStatusColumn === "" ? undefined : Number(customerStatusColumn),
-              addressColumn === "" ? undefined : Number(addressColumn),
-              countryColumn === "" ? undefined : Number(countryColumn),
-              departmentColumn === "" ? undefined : Number(departmentColumn),
-              cityColumn === "" ? undefined : Number(cityColumn),
-              landlineColumn === "" ? undefined : Number(landlineColumn),
-              dateOfBirthColumn === "" ? undefined : Number(dateOfBirthColumn),
-              identificationNumberColumn === "" ? undefined : Number(identificationNumberColumn),
-              referredByColumn === "" ? undefined : Number(referredByColumn),
-              acquisitionMediumColumn === "" ? undefined : Number(acquisitionMediumColumn),
-              additionalDataColumn === "" ? undefined : Number(additionalDataColumn),
-              customerLabelsColumn === "" ? undefined : Number(customerLabelsColumn),
-              customerFunnelColumn === "" ? undefined : Number(customerFunnelColumn),
-            )
+            const preview = await getClientImportPreview(1)
+            setImportPreviewPage(1)
             setImportColumns(preview.sourceColumns)
             setImportPreview(importColumns.length ? preview : null)
             if (!importColumns.length) {
@@ -701,6 +717,7 @@ export function ContactsPage() {
               setImportColumns([])
               setImportPreview(null)
               setImportResult(null)
+              setImportPreviewPage(1)
               setNameColumn("")
               setSurnameColumn("")
               setEmailColumn("")
@@ -761,11 +778,15 @@ export function ContactsPage() {
         {importError && <p role="alert" className="mt-3 text-sm text-destructive">{importError}</p>}
         {importPreview && <div className="mt-4 space-y-3">
           <p className="text-sm text-foreground">{importPreview.totalRows} filas · {importPreview.validRows} válidas · {importPreview.invalidRows} con errores · {importPreview.duplicateRows} duplicadas</p>
-          {importPreview.totalRows > importPreview.rows.length && <p role="note" className="text-xs text-muted-foreground">La vista muestra las primeras {importPreview.rows.length} de {importPreview.totalRows} filas. La validación y la importación cubren el archivo completo.</p>}
+          {importPreview.totalRows > importPreview.rows.length && <p role="note" className="text-xs text-muted-foreground">La validación y la importación cubren el archivo completo. Vista previa: filas {((importPreview.page - 1) * importPreview.pageSize) + 1}–{Math.min(importPreview.page * importPreview.pageSize, importPreview.totalRows)} de {importPreview.totalRows}.</p>}
           <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted-foreground"><th className="p-2">Fila</th><th className="p-2">Nombre</th><th className="p-2">Apellidos</th><th className="p-2">Email</th><th className="p-2">Teléfono</th><th className="p-2">Recibe correo</th><th className="p-2">Resultado</th></tr></thead><tbody>
             {importPreview.rows.map((row) => <tr key={row.rowNumber} className="border-b border-border"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.name || "—"}</td><td className="p-2">{row.surname || "—"}</td><td className="p-2">{row.email || "—"}</td><td className="p-2">{row.phone || "—"}</td><td className="p-2">Permiso sin activar</td><td className="p-2">{row.error || (row.duplicate ? "Email ya existe" : "Listo")}<details className="mt-1"><summary className="cursor-pointer text-primary">Campos mapeados</summary><dl className="mt-2 space-y-1">{Object.entries(row.mappedValues).map(([field, value]) => <div key={field}><dt className="inline font-medium">{field}: </dt><dd className="inline break-all">{value || "—"}</dd></div>)}</dl></details></td></tr>)}
           </tbody></table></div>
-          {importPreview.totalRows > importPreview.rows.length && <p className="text-xs text-muted-foreground">Se muestran las primeras {importPreview.rows.length} filas.</p>}
+          {importPreview.totalRows > importPreview.pageSize && <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <button type="button" disabled={importing || importPreview.page <= 1} className="rounded border border-border px-3 py-1.5 disabled:opacity-40" onClick={() => void loadClientImportPreviewPage(importPreview.page - 1)}>Filas anteriores</button>
+            <span>Página {importPreview.page} de {Math.ceil(importPreview.totalRows / importPreview.pageSize)}</span>
+            <button type="button" disabled={importing || importPreview.page * importPreview.pageSize >= importPreview.totalRows} className="rounded border border-border px-3 py-1.5 disabled:opacity-40" onClick={() => void loadClientImportPreviewPage(importPreview.page + 1)}>Filas siguientes</button>
+          </div>}
           <button type="button" disabled={importing || !importRequestIdReady || importPreview.validRows === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50" onClick={async () => {
             if (!importFile) return
             setImporting(true)

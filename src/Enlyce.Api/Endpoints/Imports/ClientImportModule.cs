@@ -38,6 +38,8 @@ public static class ClientImportModule
             [Microsoft.AspNetCore.Mvc.FromForm] int? additionalDataColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? customerLabelsColumn,
             [Microsoft.AspNetCore.Mvc.FromForm] int? customerFunnelColumn,
+            [Microsoft.AspNetCore.Mvc.FromForm] int previewPage,
+            [Microsoft.AspNetCore.Mvc.FromForm] int previewPageSize,
             HttpContext http,
             IClientImportTableReader reader,
             IContactRepository contacts,
@@ -49,6 +51,8 @@ public static class ClientImportModule
                 return Results.Forbid();
             if (archivo.Length is <= 0 or > MaxFileBytes)
                 return Results.BadRequest(new { error = "El archivo debe pesar entre 1 byte y 10 MB." });
+            if (previewPage < 1 || previewPageSize is < 1 or > MaxPreviewRows)
+                return Results.BadRequest(new { error = "La pagina debe ser positiva y el tamano debe estar entre 1 y 100 filas." });
 
             ClientImportTable table;
             await using (var stream = archivo.OpenReadStream())
@@ -91,7 +95,7 @@ public static class ClientImportModule
             };
             if (!nameColumn.HasValue)
                 return Results.Ok(new ClientImportPreviewResponse(
-                    table.Rows.Count, 0, 0, 0, table.Columns, []));
+                    table.Rows.Count, 0, 0, 0, table.Columns, [], previewPage, previewPageSize));
 
             if (!ValidateMapping(mapping, table.Columns, out var mappingError))
                 return Results.BadRequest(new { error = mappingError, sourceColumns = table.Columns });
@@ -132,6 +136,9 @@ public static class ClientImportModule
             var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var responseRows = new List<ClientImportPreviewRow>(Math.Min(table.Rows.Count, MaxPreviewRows));
+            var firstPreviewRow = (long)(previewPage - 1) * previewPageSize;
+            if (firstPreviewRow >= table.Rows.Count && table.Rows.Count > 0)
+                return Results.BadRequest(new { error = "La pagina de vista previa no existe." });
             var valid = 0;
             var invalid = 0;
             var duplicates = 0;
@@ -180,13 +187,13 @@ public static class ClientImportModule
                 else
                     invalid++;
 
-                if (responseRows.Count < MaxPreviewRows)
+                if (index >= firstPreviewRow && responseRows.Count < previewPageSize)
                     responseRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phone,
                         canReceiveAutomatedEmail, GetMappedValues(row, mapping), error, duplicate));
             }
 
             return Results.Ok(new ClientImportPreviewResponse(
-                table.Rows.Count, valid, invalid, duplicates, table.Columns, responseRows));
+                table.Rows.Count, valid, invalid, duplicates, table.Columns, responseRows, previewPage, previewPageSize));
         })
         .DisableAntiforgery()
         .WithName("PreviewClientImport");

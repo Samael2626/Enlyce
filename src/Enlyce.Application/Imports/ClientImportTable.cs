@@ -18,7 +18,9 @@ public sealed record ClientImportPreviewResponse(
     int InvalidRows,
     int DuplicateRows,
     IReadOnlyList<string> SourceColumns,
-    IReadOnlyList<ClientImportPreviewRow> Rows);
+    IReadOnlyList<ClientImportPreviewRow> Rows,
+    int Page,
+    int PageSize);
 
 public sealed record ClientImportPreviewRow(
     int RowNumber,
