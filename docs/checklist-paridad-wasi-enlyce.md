@@ -139,6 +139,10 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - La guía no aclara si email/teléfono son obligatorios ni qué hace el importador con filas duplicadas. La captura compartida solo muestra el selector de archivo; no prueba el resultado de una importación real. Mantener estas reglas como pendientes hasta observar una carga controlada en Wasi.
 - Auditoría del código: Enlyce mapea campos de perfil adicionales (tipo/estado/embudo/etiquetas, ubicación, teléfono fijo, nacimiento, identificación, referido, medio de captación y datos adicionales), pero no importa campos de demanda; Wasi no documenta que su importador importe demandas. La vista previa y la tabla separan `canReceiveAutomatedEmail` (permiso efectivo, siempre falso al importar) de `sourceIndicatesEmailPermission` (indicador declarado por el archivo), y muestran «Archivo: Sí/No» junto con «Enlyce: desactivado». La confirmación no persiste el indicador en el lote ni lo usa para habilitar envíos. Para conservarlo después de importar se necesita definir cómo registrar y verificar su procedencia como evidencia de consentimiento.
 
+## Origen y medio de captación de clientes (2026-10-15)
+
+- La [guía oficial de alta de cliente](https://ayuda.wasi.co/es/article/agrega-tu-primer-cliente) define «Medio de captación» como el canal por el que llegó el cliente (por ejemplo, Facebook, sitio web o portal). La ficha Wasi capturada muestra «Origen» como campo separado; no se debe tratar como sinónimo. Falta evidencia de cómo se asigna/modifica «Origen» y si se importa/exporta. Enlyce solo persiste «Medio de captación».
+
 ## Caracteristicas de inmuebles y demandas
 
 - Las capturas de Wasi muestran selectores multiples separados para caracteristicas internas y externas en el alta de inmuebles y en el registro de demanda. El JSON de interfaz confirma `select-multiple` en ambos campos; no trae el catalogo de opciones ni reglas de seleccion.
