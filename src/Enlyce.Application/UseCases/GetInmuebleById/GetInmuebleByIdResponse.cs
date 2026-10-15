@@ -24,4 +24,5 @@ public record GetInmuebleByIdResponse(
     Guid PropietarioId,
     DateTime FechaCreacion,
     bool Activo,
-    int? AnioConstruccion = null);
+    int? AnioConstruccion = null,
+    string? EstadoFisico = null);

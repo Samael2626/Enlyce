@@ -54,7 +54,7 @@ export function InmueblesPage() {
       nombre: property.nombre, descripcion: property.descripcion, tipo: property.tipo, modalidad: property.modalidad,
       calle: property.calle, ciudad: property.ciudad, barrio: property.barrio ?? "", precio: String(property.precio),
       moneda: property.moneda, metrosCuadrados: String(property.metrosCuadrados), habitaciones: String(property.habitaciones),
-      banos: String(property.banos), parqueaderos: String(property.parqueaderos), anioConstruccion: property.anioConstruccion == null ? "" : String(property.anioConstruccion), propietarioId: property.propietarioId,
+      banos: String(property.banos), parqueaderos: String(property.parqueaderos), anioConstruccion: property.anioConstruccion == null ? "" : String(property.anioConstruccion), estadoFisico: property.estadoFisico ?? "", propietarioId: property.propietarioId,
       caracteristicasInternas: property.caracteristicasInternas.join(", "),
       caracteristicasExternas: property.caracteristicasExternas.join(", "),
     })
@@ -75,6 +75,7 @@ export function InmueblesPage() {
     banos: "",
     parqueaderos: "",
     anioConstruccion: "",
+    estadoFisico: "",
     propietarioId: "",
     caracteristicasInternas: "",
     caracteristicasExternas: "",
@@ -90,13 +91,14 @@ export function InmueblesPage() {
         banos: parseInt(form.banos) || 0,
         parqueaderos: parseInt(form.parqueaderos) || 0,
         anioConstruccion: form.anioConstruccion ? parseInt(form.anioConstruccion) : null,
+        estadoFisico: form.estadoFisico.trim() || null,
         caracteristicasInternas: splitFeatures(form.caracteristicasInternas),
         caracteristicasExternas: splitFeatures(form.caracteristicasExternas),
       }
     const onSuccess = () => {
       setShowForm(false)
       setEditingId("")
-      setForm({ nombre: "", descripcion: "", tipo: "Apartamento", modalidad: "Venta", calle: "", ciudad: "", barrio: "", precio: "", moneda: "COP", metrosCuadrados: "", habitaciones: "", banos: "", parqueaderos: "", anioConstruccion: "", propietarioId: "", caracteristicasInternas: "", caracteristicasExternas: "" })
+      setForm({ nombre: "", descripcion: "", tipo: "Apartamento", modalidad: "Venta", calle: "", ciudad: "", barrio: "", precio: "", moneda: "COP", metrosCuadrados: "", habitaciones: "", banos: "", parqueaderos: "", anioConstruccion: "", estadoFisico: "", propietarioId: "", caracteristicasInternas: "", caracteristicasExternas: "" })
     }
     if (editingId) {
       updateInmueble.mutate({ id: editingId, data }, { onSuccess })
@@ -319,6 +321,10 @@ export function InmueblesPage() {
                   <label className="text-sm font-medium">Año de construcción</label>
                   <input type="number" min="1" max="9999" value={form.anioConstruccion} onChange={(e) => setForm({ ...form, anioConstruccion: e.target.value })} className="mt-1 w-full rounded-md border bg-background px-3 py-2" />
                 </div>
+
+                <label className="text-sm font-medium">Estado físico
+                  <input maxLength={100} value={form.estadoFisico} onChange={(e) => setForm({ ...form, estadoFisico: e.target.value })} className="mt-1 w-full rounded-md border bg-background px-3 py-2" placeholder="Ej.: Usado" />
+                </label>
 
                 <div>
                   <label className="text-sm font-medium">Habitaciones</label>

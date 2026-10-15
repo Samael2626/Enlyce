@@ -17,6 +17,7 @@ public class InmuebleConfiguration : IEntityTypeConfiguration<Inmueble>
         builder.Property(i => i.InternalFeatures).HasColumnType("text[]").HasDefaultValueSql("ARRAY[]::text[]").IsRequired();
         builder.Property(i => i.ExternalFeatures).HasColumnType("text[]").HasDefaultValueSql("ARRAY[]::text[]").IsRequired();
         builder.Property(i => i.AnioConstruccion);
+        builder.Property(i => i.EstadoFisico).HasMaxLength(100);
         builder.Property(i => i.Tipo).HasConversion<string>().HasMaxLength(20);
         builder.Property(i => i.Modalidad).HasConversion<string>().HasMaxLength(20);
         builder.Property(i => i.Estado).HasConversion<string>().HasMaxLength(20);

@@ -625,6 +625,10 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("EstadoFisico")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.PrimitiveCollection<string[]>("ExternalFeatures")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
