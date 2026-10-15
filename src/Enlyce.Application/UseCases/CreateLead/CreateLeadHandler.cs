@@ -135,7 +135,8 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         await _emailSender.SendAsync(
             command.Email,
             "Recibimos tu solicitud en L&C Propiedad Raíz",
-            $"Hola {command.Nombre.Trim()}, gracias por escribirnos. Un asesor de L&C te contactará pronto.");
+            $"Hola {command.Nombre.Trim()}, gracias por escribirnos. Un asesor de L&C te contactará pronto.",
+            "Confirmación de solicitud web");
         await NotifyAdvisorAsync(saved.AsesorAsignadoId, "Nueva oportunidad desde la web", command, publication);
 
         return new CreateLeadResponse(
@@ -205,7 +206,8 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             {interest}
 
             Responde pronto: el primer contacto define la venta. Revisa la oportunidad en ENLYCE.
-            """);
+            """,
+            "Aviso de nueva oportunidad al asesor");
     }
 
     private async Task RegisterConsentAsync(Guid leadId, CreateLeadCommand command)

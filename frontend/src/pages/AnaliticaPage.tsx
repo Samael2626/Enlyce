@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
 import { api } from "@/api/client"
-import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport } from "@/hooks/useApi"
+import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport, useSentEmailReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const labels: Record<string, string> = {
@@ -23,6 +23,9 @@ export function AnaliticaPage() {
   const [dealOperation, setDealOperation] = useState("")
   const [dealPropertyType, setDealPropertyType] = useState("")
   const [dealPage, setDealPage] = useState(1)
+  const [emailFrom, setEmailFrom] = useState(() => dateOffset(-29))
+  const [emailTo, setEmailTo] = useState(() => dateOffset(0))
+  const [emailPage, setEmailPage] = useState(1)
   const user = useAuthStore((state) => state.user)
   const funnel = useAnalyticsFunnel(days)
   const crmReport = useCrmReportMetrics(crmFrom, crmTo)
@@ -35,6 +38,7 @@ export function AnaliticaPage() {
   })
   const advisorReport = useAdvisorPerformanceReport(dealFrom, dealTo)
   const ownerReport = useOwnerPerformanceReport(dealFrom, dealTo)
+  const sentEmailReport = useSentEmailReport({ from: emailFrom, to: emailTo, page: emailPage, pageSize: 10 })
 
   if (user?.rol !== "Administrador") return <Navigate to="/dashboard" replace />
 
@@ -144,6 +148,17 @@ export function AnaliticaPage() {
 
       <AdvisorPerformanceSection report={advisorReport.data} isLoading={advisorReport.isLoading} isError={advisorReport.isError} />
       <OwnerPerformanceSection report={ownerReport.data} from={dealFrom} to={dealTo} isLoading={ownerReport.isLoading} isError={ownerReport.isError} />
+      <SentEmailReportSection
+        report={sentEmailReport.data}
+        from={emailFrom}
+        to={emailTo}
+        page={emailPage}
+        isLoading={sentEmailReport.isLoading}
+        isError={sentEmailReport.isError}
+        onFromChange={(value) => { setEmailPage(1); setEmailFrom(value) }}
+        onToChange={(value) => { setEmailPage(1); setEmailTo(value) }}
+        onPageChange={setEmailPage}
+      />
 
       <section className="space-y-4" aria-labelledby="crm-report-title">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -298,6 +313,84 @@ function OwnerPerformanceSection({
             </tbody>
           </table>
           <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">Visitas en página cuenta eventos de página de inmuebles publicados. Llamadas, correos y eventos cuentan interacciones registradas; visitas cuenta citas no canceladas. Los contactos recibidos son leads vinculados a una publicación.</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function SentEmailReportSection({
+  report,
+  from,
+  to,
+  page,
+  isLoading,
+  isError,
+  onFromChange,
+  onToChange,
+  onPageChange,
+}: {
+  report?: import("@/lib/types").SentEmailReportPage
+  from: string
+  to: string
+  page: number
+  isLoading: boolean
+  isError: boolean
+  onFromChange: (value: string) => void
+  onToChange: (value: string) => void
+  onPageChange: (value: number) => void
+}) {
+  const pageCount = Math.max(1, Math.ceil((report?.total ?? 0) / (report?.pageSize ?? 10)))
+  const statusLabels = {
+    AcceptedBySmtp: "Aceptado por SMTP",
+    Failed: "Falló el envío",
+    NotConfigured: "SMTP no configurado",
+  }
+
+  return (
+    <section className="space-y-4" aria-labelledby="sent-email-report-title">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="crm-eyebrow">Trazabilidad</span>
+          <h2 id="sent-email-report-title" className="mt-2 font-display text-3xl tracking-tight">Correos enviados</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Registra intentos desde que se habilite la migración. “Aceptado por SMTP” no confirma entrega en la bandeja.</p>
+        </div>
+        <div className="flex flex-wrap gap-3 text-xs font-bold text-muted-foreground">
+          <label>Desde <input aria-label="Correos desde" type="date" value={from} max={to} onChange={(event) => onFromChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+          <label>Hasta <input aria-label="Correos hasta" type="date" value={to} min={from} onChange={(event) => onToChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando registro de correos…</div>
+      ) : isError ? (
+        <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el registro de correos.</div>
+      ) : (
+        <div className="crm-panel overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="bg-muted/50 text-xs text-muted-foreground">
+              <tr><th className="px-4 py-3">Fecha</th><th className="px-3 py-3">Asunto</th><th className="px-3 py-3">Descripción</th><th className="px-3 py-3">Destinatario</th><th className="px-3 py-3">Usuario encargado</th><th className="px-3 py-3">Estado</th></tr>
+            </thead>
+            <tbody>
+              {(report?.items ?? []).map((item) => (
+                <tr key={item.id} className="border-t border-border">
+                  <td className="whitespace-nowrap px-4 py-3">{new Intl.DateTimeFormat("es-CO", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.attemptedAt))}</td>
+                  <td className="px-3 py-3">{item.subject}</td>
+                  <td className="px-3 py-3">{item.description}</td>
+                  <td className="px-3 py-3">{item.recipientAddress}</td>
+                  <td className="px-3 py-3">{item.senderName}</td>
+                  <td className="px-3 py-3">{statusLabels[item.status]}{item.failureCode ? ` (${item.failureCode})` : ""}</td>
+                </tr>
+              ))}
+              {report?.items.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No hay intentos de correo en este periodo.</td></tr>}
+            </tbody>
+          </table>
+          <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-sm">
+            <span>{report?.total ?? 0} registros · página {page} de {pageCount}</span>
+            <div className="flex gap-2">
+              <button type="button" className="crm-button min-h-8 px-3 py-1 text-xs" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>Anterior</button>
+              <button type="button" className="crm-button min-h-8 px-3 py-1 text-xs" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}>Siguiente</button>
+            </div>
+          </footer>
         </div>
       )}
     </section>

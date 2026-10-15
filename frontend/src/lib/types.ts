@@ -697,6 +697,22 @@ export interface OwnerPerformanceReport {
   }[]
 }
 
+export interface SentEmailReportPage {
+  total: number
+  page: number
+  pageSize: number
+  items: {
+    id: string
+    attemptedAt: string
+    recipientAddress: string
+    subject: string
+    description: string
+    senderName: string
+    status: "AcceptedBySmtp" | "Failed" | "NotConfigured"
+    failureCode: string | null
+  }[]
+}
+
 export interface CreateRealizedDealInput {
   propertyId: string
   contactId: string

@@ -14,6 +14,7 @@
 - Red y alianzas: `/administrador/empresa/alianzas`, `/administrador/empresa/alianzas-propietario`, `/administrador/grupo`.
 - Mercado y reportes: `/administrador/reportes/mercado`, `/administrador/reportes2`, `/administrador/reportes/negocios/negocios`, `/administrador/reportes2/agentes`, `/administrador/reportes2/propietarios`, `/administrador/reportes/estadisticas`, `/administrador/reportes/correos`.
 - Reporte de propietarios (`/administrador/reportes2/propietarios`): el JSON `wasi-ui-wasi.co-1791954561589.json` conserva los encabezados Propietario, Visitas En Página, Llamadas, Correos, Eventos, Visitas, Contactos recibidos y Opciones. No conserva filas ni permite verificar filtros, periodos o las reglas de conteo.
+- Reporte de correos (`/administrador/reportes/correos`): el JSON `wasi-ui-wasi.co-1791954587334.json` conserva las columnas Fecha, Asunto, Descripción, Usuario encargado y Estado. No conserva filas, filtros ni acciones de detalle.
 - Usuarios: `/administrador/agentes` (2 capturas).
 
 ## Campos visibles en formularios

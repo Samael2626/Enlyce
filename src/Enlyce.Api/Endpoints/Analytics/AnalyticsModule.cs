@@ -224,6 +224,30 @@ public static class AnalyticsModule
         .WithName("GetOwnerPerformanceReport")
         .Produces<OwnerPerformanceReport>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        app.MapGet("/api/analytics/sent-emails", async (
+            DateOnly? from,
+            DateOnly? to,
+            int? page,
+            int? pageSize,
+            ISentEmailReportReadRepository report,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-29);
+            var currentPage = page ?? 1;
+            var currentPageSize = pageSize ?? 10;
+            if (since > through || through.DayNumber - since.DayNumber >= 366 || currentPage < 1 || currentPageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Revise el rango de fechas y la paginacion." });
+
+            return Results.Ok(await report.GetAsync(
+                new SentEmailReportFilter(since, through, currentPage, currentPageSize), ct));
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetSentEmailReport")
+        .Produces<SentEmailReportPage>()
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static DateTime EnsureUtc(DateTime value) => value.Kind switch

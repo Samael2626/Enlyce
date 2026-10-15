@@ -33,6 +33,7 @@ public class EnlyceDbContext : DbContext
     public DbSet<PaymentOrderStatusChange> PaymentOrderStatusChanges => Set<PaymentOrderStatusChange>();
     public DbSet<WebAnalyticsEvent> WebAnalyticsEvents => Set<WebAnalyticsEvent>();
     public DbSet<RealizedDeal> RealizedDeals => Set<RealizedDeal>();
+    public DbSet<EmailDeliveryLog> EmailDeliveryLogs => Set<EmailDeliveryLog>();
 
     public EnlyceDbContext(DbContextOptions<EnlyceDbContext> options) : base(options) { }
 

@@ -73,7 +73,8 @@ public sealed class CreateSearchAlertHandler(
             Un asesor de L&C también puede contactarte con opciones que aún no están publicadas.
 
             Para dejar de recibir estos avisos: {links.UnsubscribeAlertUrl(demand.Id)}
-            """);
+            """,
+            "Confirmación de alerta de búsqueda");
 
         return new CreateSearchAlertResponse(demand.Id);
     }

@@ -400,6 +400,12 @@ class ApiClient {
     return this.request<import("@/lib/types").OwnerPerformanceReport>(`/api/analytics/owners?${query}`)
   }
 
+  async getSentEmailReport(filters: { from: string; to: string; page?: number; pageSize?: number }) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => query.set(key, String(value)))
+    return this.request<import("@/lib/types").SentEmailReportPage>(`/api/analytics/sent-emails?${query}`)
+  }
+
   async downloadRealizedDealsXlsx(filters: { from?: string; to?: string; advisorId?: string; operation?: string; propertyType?: string }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {

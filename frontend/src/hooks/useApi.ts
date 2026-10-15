@@ -101,6 +101,13 @@ export function useOwnerPerformanceReport(from: string, to: string) {
   })
 }
 
+export function useSentEmailReport(filters: Parameters<typeof api.getSentEmailReport>[0]) {
+  return useQuery({
+    queryKey: ["analytics", "sent-emails", filters],
+    queryFn: () => api.getSentEmailReport(filters),
+  })
+}
+
 export function useCreateRealizedDeal() {
   const queryClient = useQueryClient()
   return useMutation({

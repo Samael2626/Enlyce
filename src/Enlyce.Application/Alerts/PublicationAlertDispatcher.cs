@@ -49,7 +49,8 @@ public sealed class PublicationAlertDispatcher(
                 Si te interesa, responde este correo o agenda una visita desde la ficha.
 
                 Para dejar de recibir estos avisos: {links.UnsubscribeAlertUrl(demand.Id)}
-                """);
+                """,
+                "Aviso de inmueble coincidente");
             notified.Add($"- {contact.Name} <{contact.Email}>");
         }
 
@@ -62,7 +63,8 @@ public sealed class PublicationAlertDispatcher(
                 {string.Join(Environment.NewLine, notified)}
 
                 Revísalos en ENLYCE para hacer seguimiento.
-                """);
+                """,
+                "Resumen de contactos avisados al publicar");
         }
 
         return notified.Count;

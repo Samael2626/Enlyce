@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Mail;
+using Enlyce.Domain.Entities;
 using Enlyce.Domain.Ports;
+using Enlyce.Infrastructure.Persistence;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Enlyce.Infrastructure.Email;
@@ -24,16 +27,20 @@ public sealed class EmailOptions
 // Un correo fallido nunca tumba el caso de uso: el lead o la publicacion ya se
 // guardaron y perderlos por el SMTP seria peor. El fallo se registra como error
 // para que salte en los logs, no se traga en silencio.
-public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<SmtpEmailSender> logger)
+public sealed class SmtpEmailSender(
+    IOptions<EmailOptions> options,
+    ILogger<SmtpEmailSender> logger,
+    IServiceScopeFactory scopeFactory)
     : IEmailSender, IEmailAttachmentSender
 {
     private readonly EmailOptions _options = options.Value;
 
-    public async Task SendAsync(string to, string subject, string body)
+    public async Task SendAsync(string to, string subject, string body, string? description = null)
     {
         if (!_options.IsConfigured)
         {
             logger.LogWarning("Email SIN CONFIGURAR (Email:Host vacio). No se envio a {To}: {Subject}", to, subject);
+            await SaveAttemptAsync(to, subject, description, EmailDeliveryStatus.NotConfigured, null);
             return;
         }
 
@@ -54,10 +61,12 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<Smtp
             };
             await client.SendMailAsync(message);
             logger.LogInformation("Email enviado a {To}: {Subject}", to, subject);
+            await SaveAttemptAsync(to, subject, description, EmailDeliveryStatus.AcceptedBySmtp, null);
         }
-        catch (Exception exception) when (exception is SmtpException or FormatException or InvalidOperationException)
+        catch (Exception exception)
         {
             logger.LogError(exception, "FALLO envio de email a {To}: {Subject}", to, subject);
+            await SaveAttemptAsync(to, subject, description, EmailDeliveryStatus.Failed, exception.GetType().Name);
         }
     }
 
@@ -67,6 +76,7 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<Smtp
         if (!_options.IsConfigured)
         {
             logger.LogWarning("Email SIN CONFIGURAR. No se envio el adjunto {FileName}.", fileName);
+            await SaveAttemptAsync(to, subject, $"Adjunto: {fileName}", EmailDeliveryStatus.NotConfigured, null);
             return false;
         }
 
@@ -88,12 +98,31 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<Smtp
             };
             await client.SendMailAsync(message, ct);
             logger.LogInformation("Email con adjunto enviado: {FileName}.", fileName);
+            await SaveAttemptAsync(to, subject, $"Adjunto: {fileName}", EmailDeliveryStatus.AcceptedBySmtp, null);
             return true;
         }
-        catch (Exception exception) when (exception is SmtpException or FormatException or InvalidOperationException)
+        catch (Exception exception)
         {
             logger.LogError(exception, "Fallo envio de email con adjunto {FileName}.", fileName);
+            await SaveAttemptAsync(to, subject, $"Adjunto: {fileName}", EmailDeliveryStatus.Failed, exception.GetType().Name);
             return false;
+        }
+    }
+
+    private async Task SaveAttemptAsync(string to, string subject, string? description,
+        EmailDeliveryStatus status, string? failureCode)
+    {
+        try
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+            context.EmailDeliveryLogs.Add(EmailDeliveryLog.Create(
+                to, subject, description, status, failureCode, DateTime.UtcNow));
+            await context.SaveChangesAsync();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "No se pudo guardar el registro de envio de correo.");
         }
     }
 }
