@@ -1,12 +1,130 @@
 import { useEffect, useMemo, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
 import { api } from "@/api/client"
 import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useUpdateCustomerDemand, useDeleteCustomerDemand, useCustomerDemands, useDemandMatches, useCustomerDemandCross, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
+import type { ContactSummary } from "@/lib/types"
 
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
 const DEFAULT_CUSTOMER_TYPES = ["Comprador", "Vendedor", "Arrendador", "Arrendatario"]
+
+function CustomerFunnelBoard({ funnels, stages }: {
+  funnels: string[]
+  stages: Array<{ id: string; funnelName: string; name: string; sortOrder: number }>
+}) {
+  const queryClient = useQueryClient()
+  const [funnelName, setFunnelName] = useState(funnels[0] ?? "Clientes")
+  const [pageByStage, setPageByStage] = useState<Record<string, number>>({})
+  const [attachStageId, setAttachStageId] = useState("")
+  const [attachQuery, setAttachQuery] = useState("")
+  const boardStages = useMemo(() => stages.filter((stage) => stage.funnelName === funnelName)
+    .sort((first, second) => first.sortOrder - second.sortOrder), [stages, funnelName])
+  const boardQuery = useQuery({
+    queryKey: ["customer-funnel-board", funnelName, boardStages.map((stage) => stage.id), pageByStage],
+    enabled: boardStages.length > 0,
+    queryFn: async () => Object.fromEntries(await Promise.all(boardStages.map(async (stage) => {
+      const page = pageByStage[stage.id] ?? 1
+      const result = await api.getContacts({ customerFunnel: funnelName, customerStatus: stage.name, page, pageSize: 20 })
+      return [stage.id, { ...result, page }]
+    }))),
+  })
+  const attachQueryResult = useQuery({
+    queryKey: ["customer-funnel-attach", attachQuery],
+    queryFn: () => api.getContacts({ q: attachQuery.trim(), page: 1, pageSize: 8 }),
+    enabled: !!attachStageId && attachQuery.trim().length >= 2,
+  })
+  const moveContact = useMutation({
+    mutationFn: ({ contactId, targetStage }: { contactId: string; targetStage: string }) =>
+      api.updateContactFunnelStage(contactId, funnelName, targetStage),
+    onSuccess: (_contact, variables) => {
+      setAttachStageId("")
+      setAttachQuery("")
+      setPageByStage((pages) => ({ ...pages, [variables.targetStage]: 1 }))
+      queryClient.invalidateQueries({ queryKey: ["customer-funnel-board"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+    },
+  })
+  const selectedAttachStage = boardStages.find((stage) => stage.id === attachStageId)
+
+  return <section className="crm-panel space-y-4 p-5">
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 className="font-display text-xl text-foreground">Embudo de clientes</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Mueve clientes entre etapas o adjunta clientes existentes. Solo aparecen contactos visibles para tu cuenta.</p>
+      </div>
+      <label className="text-xs text-muted-foreground">Embudo
+        <select value={funnelName} onChange={(event) => {
+          setFunnelName(event.target.value)
+          setPageByStage({})
+          setAttachStageId("")
+        }} className="mt-1 block min-w-48 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+          {funnels.map((funnel) => <option key={funnel} value={funnel}>{funnel}</option>)}
+        </select>
+      </label>
+    </div>
+    {boardQuery.isError && <p role="alert" className="text-sm text-destructive">No se pudo cargar el embudo.</p>}
+    {moveContact.isError && <p role="alert" className="text-sm text-destructive">No se pudo cambiar el cliente de etapa.</p>}
+    {boardStages.length === 0 && <p className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">Este embudo todavía no tiene etapas.</p>}
+    {boardStages.length > 0 && <div className="grid auto-cols-[minmax(250px,1fr)] grid-flow-col gap-3 overflow-x-auto pb-2">
+      {boardStages.map((stage) => {
+        const result = boardQuery.data?.[stage.id]
+        const page = pageByStage[stage.id] ?? 1
+        const attachResults = attachQueryResult.data?.items.filter((contact) =>
+          !(contact.customerFunnel === funnelName && contact.customerStatus === stage.name)) ?? []
+        return <article key={stage.id} className="flex min-w-0 flex-col rounded-md border border-border bg-muted/20">
+          <header className="flex items-center justify-between gap-2 border-b border-border p-3">
+            <h3 className="font-semibold text-foreground">{stage.name}</h3>
+            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-foreground">{result?.total ?? 0}</span>
+          </header>
+          <div className="max-h-[65vh] min-h-28 space-y-2 overflow-y-auto p-2">
+            {!result && boardQuery.isPending && <p className="p-2 text-xs text-muted-foreground">Cargando…</p>}
+            {result?.items.map((contact: ContactSummary) => <div key={contact.id} className="rounded-md border border-border bg-background p-3 shadow-sm">
+              <p className="font-semibold text-foreground">{[contact.name, contact.surname].filter(Boolean).join(" ")}</p>
+              {contact.phone && <p className="mt-1 text-xs text-muted-foreground">{contact.phone}</p>}
+              {(contact.city || contact.department) && <p className="text-xs text-muted-foreground">{[contact.city, contact.department].filter(Boolean).join(", ")}</p>}
+              <p className="mt-1 text-xs text-muted-foreground">Fecha reg. {new Date(contact.createdAt).toLocaleDateString("es-CO")}</p>
+              {boardStages.length > 1 && <label className="mt-2 block text-xs text-muted-foreground">Mover a
+                <select aria-label={`Mover ${contact.name} a otra etapa`} value={stage.name} disabled={moveContact.isPending}
+                  onChange={(event) => moveContact.mutate({ contactId: contact.id, targetStage: event.target.value })}
+                  className="mt-1 block w-full rounded border border-border bg-background px-2 py-1.5 text-foreground">
+                  {boardStages.map((option) => <option key={option.id} value={option.name}>{option.name}</option>)}
+                </select>
+              </label>}
+            </div>)}
+            {result?.total === 0 && <p className="p-2 text-xs text-muted-foreground">Sin clientes en esta etapa.</p>}
+          </div>
+          {result && result.total > 20 && <div className="flex items-center justify-between border-t border-border px-3 py-2 text-xs">
+            <span>{page} / {Math.ceil(result.total / 20)}</span>
+            <div className="flex gap-1">
+              <button type="button" aria-label={`Anterior: ${stage.name}`} disabled={page <= 1}
+                onClick={() => setPageByStage((pages) => ({ ...pages, [stage.id]: page - 1 }))} className="rounded border border-border px-2 py-1 disabled:opacity-40">‹</button>
+              <button type="button" aria-label={`Siguiente: ${stage.name}`} disabled={page * 20 >= result.total}
+                onClick={() => setPageByStage((pages) => ({ ...pages, [stage.id]: page + 1 }))} className="rounded border border-border px-2 py-1 disabled:opacity-40">›</button>
+            </div>
+          </div>}
+          <footer className="border-t border-border p-2">
+            {attachStageId === stage.id ? <div className="space-y-2">
+              <input autoFocus value={attachQuery} onChange={(event) => setAttachQuery(event.target.value)} placeholder="Buscar cliente (2 letras mínimo)"
+                className="w-full rounded border border-border bg-background px-2 py-2 text-sm text-foreground" />
+              {attachQuery.trim().length >= 2 && attachQueryResult.isPending && <p className="text-xs text-muted-foreground">Buscando…</p>}
+              {attachQueryResult.isError && <p role="alert" className="text-xs text-destructive">No se pudo buscar.</p>}
+              {attachResults.map((contact) => <button type="button" key={contact.id} disabled={moveContact.isPending}
+                onClick={() => moveContact.mutate({ contactId: contact.id, targetStage: stage.name })}
+                className="block w-full rounded border border-border p-2 text-left text-sm hover:bg-muted disabled:opacity-50">
+                <span className="block font-medium">{[contact.name, contact.surname].filter(Boolean).join(" ")}</span>
+                <span className="text-xs text-muted-foreground">{contact.customerFunnel} · {contact.customerStatus}</span>
+              </button>)}
+              <button type="button" onClick={() => { setAttachStageId(""); setAttachQuery("") }} className="text-xs text-muted-foreground underline">Cancelar</button>
+            </div> : <button type="button" onClick={() => { setAttachStageId(stage.id); setAttachQuery("") }}
+              className="w-full rounded-md border border-dashed border-border px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted">+ Adjuntar cliente</button>}
+          </footer>
+        </article>
+      })}
+    </div>}
+    {selectedAttachStage && <p className="sr-only">Destino seleccionado: {selectedAttachStage.name}</p>}
+  </section>
+}
 
 function MultiValuePicker({ id, selectionLabel, placeholder, value, options, onChange,
   onCreateCatalogValue }: {
@@ -69,6 +187,7 @@ export function ContactsPage() {
   const acquisitionMediumOptions = customerCatalogs?.acquisitionMedia ?? []
   const createContact = useCreateContact()
   const [showCreateContact, setShowCreateContact] = useState(false)
+  const [showFunnelBoard, setShowFunnelBoard] = useState(false)
   const [includeInitialDemand, setIncludeInitialDemand] = useState(false)
   const [initialDemandError, setInitialDemandError] = useState("")
   const [newContact, setNewContact] = useState({ name: "", surname: "", email: "", phone: "", landline: "",
@@ -328,7 +447,8 @@ export function ContactsPage() {
         <p className="crm-eyebrow">Relación comercial</p>
         <h1 className="mt-2 font-display text-3xl text-foreground">Contactos</h1>
         <p className="mt-2 text-sm text-muted-foreground">Personas, oportunidades y actividad en un solo expediente.</p>
-        <button type="button" className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => {
+        <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => {
           if (!showCreateContact) {
             setInitialDemandError(""); setIncludeInitialDemand(false)
             setDemandOperation("Venta"); setDemandType(""); setDemandCity(""); setDemandCountry("Colombia")
@@ -340,6 +460,11 @@ export function ContactsPage() {
         }}>
           {showCreateContact ? "Cerrar alta" : "Nuevo cliente"}
         </button>
+        <button type="button" aria-pressed={showFunnelBoard} className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground"
+          onClick={() => { setShowFunnelBoard((value) => !value); setShowCreateContact(false) }}>
+          {showFunnelBoard ? "Volver al directorio" : "Ver embudos"}
+        </button>
+        </div>
       </header>
 
       {initialDemandError && !showCreateContact && <p role="alert" className="crm-panel p-4 text-sm text-destructive">{initialDemandError}</p>}
@@ -714,7 +839,11 @@ export function ContactsPage() {
         </div>}
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
+      {showFunnelBoard && customerFunnelStagesQuery.isPending && <p role="status" className="crm-panel p-4 text-sm text-muted-foreground">Cargando etapas…</p>}
+      {showFunnelBoard && customerFunnelStagesQuery.isError && <p role="alert" className="crm-panel p-4 text-sm text-destructive">No se pudieron cargar las etapas. La migración de embudos debe estar aplicada.</p>}
+      {showFunnelBoard && customerFunnelStagesQuery.isSuccess && <CustomerFunnelBoard funnels={customerFunnelOptions} stages={customerFunnelStages} />}
+
+      <div className={showFunnelBoard ? "hidden" : "grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]"}>
         <section className="crm-panel overflow-hidden">
           <div className="space-y-3 border-b border-border p-4">
             <label className="relative block">

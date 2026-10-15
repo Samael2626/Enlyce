@@ -31,7 +31,8 @@ public static class ContactsModule
             }
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.BadRequest(new { error = "El nombre es obligatorio." });
-            if (!await funnelStages.IsStageAsync(request.CustomerFunnel, request.CustomerStatus, ct))
+            if (string.IsNullOrWhiteSpace(request.CustomerFunnel) || string.IsNullOrWhiteSpace(request.CustomerStatus) ||
+                !await funnelStages.IsStageAsync(request.CustomerFunnel, request.CustomerStatus, ct))
                 return Results.BadRequest(new { error = "La etapa no pertenece al embudo seleccionado." });
 
             try
@@ -193,7 +194,8 @@ public static class ContactsModule
                     return Results.NotFound();
             }
 
-            if (!await funnelStages.IsStageAsync(request.CustomerFunnel, request.CustomerStatus, ct))
+            if (string.IsNullOrWhiteSpace(request.CustomerFunnel) || string.IsNullOrWhiteSpace(request.CustomerStatus) ||
+                !await funnelStages.IsStageAsync(request.CustomerFunnel, request.CustomerStatus, ct))
                 return Results.BadRequest(new { error = "La etapa no pertenece al embudo seleccionado." });
 
             try
@@ -213,6 +215,43 @@ public static class ContactsModule
             return Results.Ok(ToSummary(contact));
         })
         .WithName("UpdateContact");
+
+        group.MapPut("/{id:guid}/embudo", async Task<IResult> (
+            Guid id,
+            [FromBody] UpdateContactFunnelStageRequest request,
+            HttpContext http,
+            IContactRepository contacts,
+            ICustomerFunnelStageRepository funnelStages,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            var contact = await contacts.GetByIdAsync(id, ct);
+            if (contact is null)
+                return Results.NotFound();
+
+            if (!http.User.IsInRole("Administrador"))
+            {
+                var visibleIds = await EndpointAccess.VisibleContactIdsAsync(http.User, leads, contacts, ct);
+                if (visibleIds is null || !visibleIds.Contains(contact.Id))
+                    return Results.NotFound();
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CustomerFunnel) || string.IsNullOrWhiteSpace(request.CustomerStatus) ||
+                !await funnelStages.IsStageAsync(request.CustomerFunnel, request.CustomerStatus, ct))
+                return Results.BadRequest(new { error = "La etapa no pertenece al embudo seleccionado." });
+
+            try
+            {
+                contact.MoveToCustomerFunnelStage(request.CustomerFunnel, request.CustomerStatus);
+            }
+            catch (DomainError error)
+            {
+                return Results.BadRequest(new { error = error.Message });
+            }
+
+            await contacts.SaveAsync(contact, ct);
+            return Results.Ok(ToSummary(contact));
+        }).WithName("MoveContactToCustomerFunnelStage");
 
         group.MapPut("/{id:guid}/asignacion", async Task<IResult> (
             Guid id,
@@ -308,6 +347,7 @@ public sealed record UpdateContactRequest(string Name, string? Phone, string? Su
     DateOnly? DateOfBirth = null, string? IdentificationNumber = null, string? ReferredBy = null,
     string? AcquisitionMedium = null, string? AdditionalData = null, string CustomerFunnel = "Clientes", string[]? CustomerTypes = null,
     string[]? CustomerLabels = null);
+public sealed record UpdateContactFunnelStageRequest(string CustomerFunnel, string CustomerStatus);
 public sealed record CreateContactRequest(string Name, string? Surname = null, string? Email = null,
     string? Phone = null, string? Landline = null, string? CustomerType = null,
     string CustomerStatus = "Nuevo", string? Address = null, string? Country = null,

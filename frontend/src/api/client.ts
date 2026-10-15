@@ -216,6 +216,12 @@ class ApiClient {
     })
   }
 
+  async updateContactFunnelStage(id: string, customerFunnel: string, customerStatus: string) {
+    return this.request<import("@/lib/types").ContactSummary>(`/api/contactos/${id}/embudo`, {
+      method: "PUT", body: JSON.stringify({ customerFunnel, customerStatus }),
+    })
+  }
+
   async createCommercialTask(data: import("@/lib/types").CreateCommercialTaskInput) {
     return this.request<import("@/lib/types").CommercialTask>("/api/tareas", {
       method: "POST",

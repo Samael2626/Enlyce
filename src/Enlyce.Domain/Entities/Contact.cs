@@ -175,6 +175,14 @@ public sealed class Contact
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void MoveToCustomerFunnelStage(string customerFunnel, string customerStatus)
+    {
+        ValidateStatus(customerStatus);
+        CustomerFunnel = ValidateFunnel(customerFunnel);
+        CustomerStatus = customerStatus.Trim();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetAutomatedEmailPermission(bool allowed)
     {
         CanReceiveAutomatedEmail = allowed;
