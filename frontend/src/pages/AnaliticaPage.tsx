@@ -266,20 +266,32 @@ function AdvisorPerformanceSection({
     }
   }
 
-  function exportPdf(advisor: import("@/lib/types").AdvisorPerformanceReport["advisors"][number]) {
+  async function exportPdf(advisor: import("@/lib/types").AdvisorPerformanceReport["advisors"][number]) {
     const popup = window.open("", "_blank")
     if (!popup) {
       setActionError("El navegador bloqueó la ventana de impresión.")
       return
     }
     setActionError("")
-    const rows = metrics.map(([label, currentKey, previousKey]) =>
-      `<tr><th>${escapeHtml(label)}</th><td>${advisor[currentKey]}</td><td>${advisor[previousKey]}</td></tr>`
-    ).join("")
-    popup.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reporte de ${escapeHtml(advisor.advisorName)}</title><style>body{font:14px Arial,sans-serif;margin:32px;color:#222}h1{font-size:22px}p{color:#555}table{border-collapse:collapse;width:100%;margin-top:24px}th,td{border-bottom:1px solid #ddd;padding:10px;text-align:left}td{text-align:right}@media print{body{margin:12mm}}</style></head><body><h1>Rendimiento por usuario encargado</h1><p>${escapeHtml(advisor.advisorName)} · periodo ${escapeHtml(report?.from ?? from)} a ${escapeHtml(report?.through ?? to)} · comparación ${escapeHtml(report?.previousFrom ?? "")} a ${escapeHtml(report?.previousThrough ?? "")}</p><table><thead><tr><th>Indicador</th><th>Actual</th><th>Anterior</th></tr></thead><tbody>${rows}</tbody></table></body></html>`)
-    popup.document.close()
-    popup.focus()
-    window.setTimeout(() => popup.print(), 300)
+    popup.document.write("<p style='font:14px Arial;padding:24px'>Preparando reporte…</p>")
+    try {
+      const detail = await api.getAdvisorActivityDetail(advisor.advisorId, from, to)
+      const summaryRows = metrics.map(([label, currentKey, previousKey]) =>
+        `<tr><th>${escapeHtml(label)}</th><td>${advisor[currentKey]}</td><td>${advisor[previousKey]}</td></tr>`
+      ).join("")
+      const table = (headers: string[], rows: string) => `<table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="${headers.length}">Sin registros</td></tr>`}</tbody></table>`
+      const interactionRows = detail.interactions.map((item) => `<tr><td>${escapeHtml(new Date(item.date).toLocaleString("es-CO"))}</td><td>${escapeHtml(item.type)}</td><td>${escapeHtml(item.clientName)}</td><td>${escapeHtml(item.summary || "")}</td></tr>`).join("")
+      const visitRows = detail.visits.map((item) => `<tr><td>${escapeHtml(new Date(item.scheduledAt).toLocaleString("es-CO"))}</td><td>${escapeHtml(item.status)}</td><td>${escapeHtml(item.clientName)}</td><td>${escapeHtml(item.propertyName)}</td><td>${escapeHtml(item.feedback || "")}</td></tr>`).join("")
+      const dealRows = detail.deals.map((item) => `<tr><td>${escapeHtml(item.closedOn)}</td><td>${escapeHtml(item.operation)}</td><td>${escapeHtml(item.propertyName)}</td><td>${escapeHtml(item.clientName)}</td><td>${item.grossAmount.toLocaleString("es-CO")} ${escapeHtml(item.currency)}</td><td>${item.commissionAmount.toLocaleString("es-CO")} ${escapeHtml(item.currency)}</td></tr>`).join("")
+      popup.document.open()
+      popup.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reporte de ${escapeHtml(advisor.advisorName)}</title><style>body{font:12px Arial,sans-serif;margin:28px;color:#222}h1{font-size:22px}h2{font-size:16px;margin-top:28px}p{color:#555}table{border-collapse:collapse;width:100%;margin-top:12px}th,td{border:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}thead{background:#eee}@media print{body{margin:10mm}h2{break-after:avoid}tr{break-inside:avoid}}</style></head><body><h1>Rendimiento por usuario encargado</h1><p>${escapeHtml(advisor.advisorName)} · periodo ${escapeHtml(report?.from ?? from)} a ${escapeHtml(report?.through ?? to)} · comparación ${escapeHtml(report?.previousFrom ?? "")} a ${escapeHtml(report?.previousThrough ?? "")}</p>${table(["Indicador", "Actual", "Anterior"], summaryRows)}<h2>Interacciones (${detail.interactions.length})</h2>${table(["Fecha", "Tipo", "Cliente", "Resumen"], interactionRows)}<h2>Visitas (${detail.visits.length})</h2>${table(["Programada", "Estado", "Cliente", "Inmueble", "Feedback"], visitRows)}<h2>Ventas y arriendos (${detail.deals.length})</h2>${table(["Fecha", "Operación", "Inmueble", "Cliente", "Valor bruto", "Comisión"], dealRows)}</body></html>`)
+      popup.document.close()
+      popup.focus()
+      window.setTimeout(() => popup.print(), 300)
+    } catch (error) {
+      popup.close()
+      setActionError(error instanceof Error ? error.message : "No se pudo cargar el detalle para PDF.")
+    }
   }
 
   async function sendEmail(advisorId: string) {
@@ -350,7 +362,7 @@ function AdvisorPerformanceSection({
                       const difference = current - advisor[previousKey]
                       return <td key={label} className="px-3 py-3 tabular-nums">{current} <span className="text-xs text-muted-foreground">{difference > 0 ? `↑ ${difference}` : difference < 0 ? `↓ ${Math.abs(difference)}` : "→ 0"}</span></td>
                     })}
-                    <td className="px-3 py-2"><div className="flex flex-wrap gap-1"><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => void toggleDetail(advisor.advisorId)}>{loadingDetailId === advisor.advisorId ? "Cargando…" : detailAdvisorId === advisor.advisorId ? "Ocultar detalle" : "Detalle"}</button><button type="button" disabled={Boolean(exportingId)} className="rounded border px-2 py-1 text-xs disabled:opacity-50" onClick={() => void exportXlsx(advisor)}>{exportingId === advisor.advisorId ? "Preparando…" : "Excel"}</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => exportPdf(advisor)}>PDF</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => { setEmailAdvisorId((current) => current === advisor.advisorId ? "" : advisor.advisorId); setRecipientEmail(""); setEmailMessage(""); setActionError("") }}>Enviar</button></div></td>
+                    <td className="px-3 py-2"><div className="flex flex-wrap gap-1"><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => void toggleDetail(advisor.advisorId)}>{loadingDetailId === advisor.advisorId ? "Cargando…" : detailAdvisorId === advisor.advisorId ? "Ocultar detalle" : "Detalle"}</button><button type="button" disabled={Boolean(exportingId)} className="rounded border px-2 py-1 text-xs disabled:opacity-50" onClick={() => void exportXlsx(advisor)}>{exportingId === advisor.advisorId ? "Preparando…" : "Excel"}</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => void exportPdf(advisor)}>PDF</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => { setEmailAdvisorId((current) => current === advisor.advisorId ? "" : advisor.advisorId); setRecipientEmail(""); setEmailMessage(""); setActionError("") }}>Enviar</button></div></td>
                   </tr>
                   {detailAdvisorId === advisor.advisorId && <tr className="border-t border-border bg-muted/10"><td colSpan={metrics.length + 2} className="space-y-5 px-4 py-4"><AdvisorActivityDetailView detail={activityDetails[advisor.advisorId]} loading={loadingDetailId === advisor.advisorId} /></td></tr>}
                   {emailAdvisorId === advisor.advisorId && <tr key={`${advisor.advisorId}-email`} className="border-t border-border bg-muted/20"><td colSpan={metrics.length + 2} className="px-4 py-3"><form className="flex flex-wrap items-end gap-2" onSubmit={(event) => { event.preventDefault(); void sendEmail(advisor.advisorId) }}><label className="min-w-64 flex-1 text-xs font-semibold text-muted-foreground">Correo destinatario<input type="email" value={recipientEmail} onChange={(event) => setRecipientEmail(event.target.value)} placeholder="Vacío: correo del asesor" className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-sm text-foreground" /></label><button type="submit" disabled={sendingEmail} className="crm-button disabled:opacity-50">{sendingEmail ? "Enviando…" : "Enviar reporte ZIP"}</button><button type="button" disabled={sendingEmail} className="rounded border px-3 py-2 text-sm" onClick={() => setEmailAdvisorId("")}>Cancelar</button></form></td></tr>}

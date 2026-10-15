@@ -10,74 +10,91 @@ internal static class XlsxWorkbook
     private const string SpreadsheetNamespace = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
 
     public static byte[] Build(string sheetName, IReadOnlyList<string> headers, IEnumerable<object?[]> dataRows)
+        => Build([new WorkbookSheet(sheetName, headers, dataRows.ToArray())]);
+
+    public static byte[] Build(IReadOnlyList<WorkbookSheet> sheets)
     {
-        var rows = new List<object?[]> { headers.Cast<object?>().ToArray() };
-        rows.AddRange(dataRows);
+        if (sheets.Count == 0)
+            throw new ArgumentException("El libro debe tener al menos una hoja.", nameof(sheets));
+
         using var stream = new MemoryStream();
         using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
-            WriteEntry(archive, "[Content_Types].xml", """
-                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>
-                """);
+            var contentTypes = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>");
+            var workbookSheets = new StringBuilder();
+            var relationships = new StringBuilder();
+            for (var index = 0; index < sheets.Count; index++)
+            {
+                var id = index + 1;
+                contentTypes.Append($"<Override PartName=\"/xl/worksheets/sheet{id}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>");
+                workbookSheets.Append($"<sheet name=\"{XmlEscape(sheets[index].Name)}\" sheetId=\"{id}\" r:id=\"rId{id}\"/>");
+                relationships.Append($"<Relationship Id=\"rId{id}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet{id}.xml\"/>");
+            }
+            contentTypes.Append("</Types>");
+            WriteEntry(archive, "[Content_Types].xml", contentTypes.ToString());
             WriteEntry(archive, "_rels/.rels", """
                 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>
                 """);
-            WriteEntry(archive, "xl/workbook.xml", $"""
-                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                <workbook xmlns="{SpreadsheetNamespace}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="{XmlEscape(sheetName)}" sheetId="1" r:id="rId1"/></sheets></workbook>
-                """);
-            WriteEntry(archive, "xl/_rels/workbook.xml.rels", """
-                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>
-                """);
+            WriteEntry(archive, "xl/workbook.xml", $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><workbook xmlns=\"{SpreadsheetNamespace}\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets>{workbookSheets}</sheets></workbook>");
+            WriteEntry(archive, "xl/_rels/workbook.xml.rels", $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">{relationships}</Relationships>");
 
-            using var sheetStream = new MemoryStream();
-            using (var writer = XmlWriter.Create(sheetStream, new XmlWriterSettings { Encoding = new UTF8Encoding(false) }))
+            for (var index = 0; index < sheets.Count; index++)
             {
-                writer.WriteStartDocument(true);
-                writer.WriteStartElement("worksheet", SpreadsheetNamespace);
-                writer.WriteStartElement("sheetData", SpreadsheetNamespace);
-                for (var rowIndex = 0; rowIndex < rows.Count; rowIndex++)
-                {
-                    writer.WriteStartElement("row", SpreadsheetNamespace);
-                    writer.WriteAttributeString("r", (rowIndex + 1).ToString(CultureInfo.InvariantCulture));
-                    for (var columnIndex = 0; columnIndex < rows[rowIndex].Length; columnIndex++)
-                    {
-                        var value = rows[rowIndex][columnIndex];
-                        if (value is null) continue;
-                        writer.WriteStartElement("c", SpreadsheetNamespace);
-                        writer.WriteAttributeString("r", $"{ColumnName(columnIndex + 1)}{rowIndex + 1}");
-                        if (value is string text)
-                        {
-                            writer.WriteAttributeString("t", "inlineStr");
-                            writer.WriteStartElement("is", SpreadsheetNamespace);
-                            writer.WriteStartElement("t", SpreadsheetNamespace);
-                            writer.WriteAttributeString("xml", "space", "http://www.w3.org/XML/1998/namespace", "preserve");
-                            writer.WriteString(SanitizeText(text));
-                            writer.WriteEndElement();
-                            writer.WriteEndElement();
-                        }
-                        else
-                        {
-                            writer.WriteAttributeString("t", "n");
-                            writer.WriteElementString("v", SpreadsheetNamespace, Convert.ToString(value, CultureInfo.InvariantCulture)!);
-                        }
-                        writer.WriteEndElement();
-                    }
-                    writer.WriteEndElement();
-                }
-                writer.WriteEndElement();
-                writer.WriteEndElement();
+                var sheet = sheets[index];
+                var rows = new List<object?[]> { sheet.Headers.Cast<object?>().ToArray() };
+                rows.AddRange(sheet.Rows);
+                using var sheetStream = new MemoryStream();
+                using (var writer = XmlWriter.Create(sheetStream, new XmlWriterSettings { Encoding = new UTF8Encoding(false) }))
+                    WriteWorksheet(writer, rows);
+                sheetStream.Position = 0;
+                var sheetEntry = archive.CreateEntry($"xl/worksheets/sheet{index + 1}.xml", CompressionLevel.Fastest);
+                using var entryStream = sheetEntry.Open();
+                sheetStream.CopyTo(entryStream);
             }
-            sheetStream.Position = 0;
-            var sheetEntry = archive.CreateEntry("xl/worksheets/sheet1.xml", CompressionLevel.Fastest);
-            using var entryStream = sheetEntry.Open();
-            sheetStream.CopyTo(entryStream);
         }
         return stream.ToArray();
     }
+
+    private static void WriteWorksheet(XmlWriter writer, IReadOnlyList<object?[]> rows)
+    {
+        writer.WriteStartDocument(true);
+        writer.WriteStartElement("worksheet", SpreadsheetNamespace);
+        writer.WriteStartElement("sheetData", SpreadsheetNamespace);
+        for (var rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+        {
+            writer.WriteStartElement("row", SpreadsheetNamespace);
+            writer.WriteAttributeString("r", (rowIndex + 1).ToString(CultureInfo.InvariantCulture));
+            for (var columnIndex = 0; columnIndex < rows[rowIndex].Length; columnIndex++)
+            {
+                var value = rows[rowIndex][columnIndex];
+                if (value is null) continue;
+                writer.WriteStartElement("c", SpreadsheetNamespace);
+                writer.WriteAttributeString("r", $"{ColumnName(columnIndex + 1)}{rowIndex + 1}");
+                if (value is string text)
+                {
+                    writer.WriteAttributeString("t", "inlineStr");
+                    writer.WriteStartElement("is", SpreadsheetNamespace);
+                    writer.WriteStartElement("t", SpreadsheetNamespace);
+                    writer.WriteAttributeString("xml", "space", "http://www.w3.org/XML/1998/namespace", "preserve");
+                    writer.WriteString(SanitizeText(text));
+                    writer.WriteEndElement();
+                    writer.WriteEndElement();
+                }
+                else
+                {
+                    writer.WriteAttributeString("t", "n");
+                    writer.WriteElementString("v", SpreadsheetNamespace, Convert.ToString(value, CultureInfo.InvariantCulture)!);
+                }
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+        }
+        writer.WriteEndElement();
+        writer.WriteEndElement();
+    }
+
+    internal sealed record WorkbookSheet(string Name, IReadOnlyList<string> Headers, IReadOnlyList<object?[]> Rows);
 
     private static void WriteEntry(ZipArchive archive, string path, string content)
     {

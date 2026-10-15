@@ -247,8 +247,11 @@ public static class AnalyticsModule
             var advisor = result.Advisors.SingleOrDefault(item => item.AdvisorId == advisorId);
             if (advisor is null)
                 return Results.NotFound();
+            var detail = await report.GetDetailAsync(advisorId, since, through, ct);
+            if (detail is null)
+                return Results.NotFound();
 
-            return Results.File(BuildAdvisorReportXlsx(result, advisor),
+            return Results.File(BuildAdvisorReportXlsx(result, advisor, detail),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 $"reporte-{SafeFileName(advisor.AdvisorName)}-{since:yyyyMMdd}-{through:yyyyMMdd}.xlsx");
         })
@@ -281,6 +284,9 @@ public static class AnalyticsModule
             var advisorAccount = await advisorsRepository.ObtenerPorIdAsync(advisorId);
             if (advisorAccount is not { Activo: true, Rol: "Asesor" })
                 return Results.NotFound();
+            var detail = await report.GetDetailAsync(advisorId, since, through, ct);
+            if (detail is null)
+                return Results.NotFound();
 
             var recipient = advisorAccount.Correo.Value;
             if (!string.IsNullOrWhiteSpace(request.RecipientEmail))
@@ -289,7 +295,7 @@ public static class AnalyticsModule
                 catch (FormatException) { return Results.BadRequest(new { error = "El correo destinatario no es valido." }); }
             }
 
-            var xlsx = BuildAdvisorReportXlsx(result, advisor);
+            var xlsx = BuildAdvisorReportXlsx(result, advisor, detail);
             using var archiveStream = new MemoryStream();
             using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, leaveOpen: true))
             {
@@ -418,15 +424,36 @@ public static class AnalyticsModule
     private static bool ValidAdvisorReportRange(DateOnly from, DateOnly through) =>
         from <= through && through.DayNumber - from.DayNumber < 366;
 
-    private static byte[] BuildAdvisorReportXlsx(AdvisorPerformanceReport report, AdvisorPerformanceRow advisor)
+    private static byte[] BuildAdvisorReportXlsx(AdvisorPerformanceReport report, AdvisorPerformanceRow advisor,
+        AdvisorActivityDetailReport detail)
     {
-        var headers = new[] { "Periodo", "Desde", "Hasta", "Gestiones", "Visitas", "Ventas", "Arriendos", "Clientes nuevos", "Inmuebles nuevos" };
-        var rows = new object?[][]
+        var summaryHeaders = new[] { "Periodo", "Desde", "Hasta", "Gestiones", "Visitas", "Ventas", "Arriendos", "Clientes nuevos", "Inmuebles nuevos" };
+        var summaryRows = new object?[][]
         {
             ["Actual", report.From.ToString("yyyy-MM-dd"), report.Through.ToString("yyyy-MM-dd"), advisor.Interactions, advisor.Visits, advisor.Sales, advisor.Rentals, advisor.NewClients, advisor.NewProperties],
             ["Anterior", report.PreviousFrom.ToString("yyyy-MM-dd"), report.PreviousThrough.ToString("yyyy-MM-dd"), advisor.PreviousInteractions, advisor.PreviousVisits, advisor.PreviousSales, advisor.PreviousRentals, advisor.PreviousNewClients, advisor.PreviousNewProperties]
         };
-        return XlsxWorkbook.Build("Reporte por asesor", headers, rows);
+        var interactionRows = detail.Interactions.Select(item => new object?[]
+        {
+            item.Date.ToString("yyyy-MM-dd HH:mm"), item.Type, item.ClientName, item.Summary
+        }).ToArray();
+        var visitRows = detail.Visits.Select(item => new object?[]
+        {
+            item.ScheduledAt.ToString("yyyy-MM-dd HH:mm"), item.CompletedAt?.ToString("yyyy-MM-dd HH:mm"),
+            item.Status, item.ClientName, item.PropertyName, item.Feedback
+        }).ToArray();
+        var dealRows = detail.Deals.Select(item => new object?[]
+        {
+            item.ClosedOn.ToString("yyyy-MM-dd"), item.Operation, item.PropertyName, item.ClientName,
+            item.GrossAmount, item.CommissionAmount, item.Currency
+        }).ToArray();
+
+        return XlsxWorkbook.Build([
+            new XlsxWorkbook.WorkbookSheet("Resumen", summaryHeaders, summaryRows),
+            new XlsxWorkbook.WorkbookSheet("Interacciones", ["Fecha", "Tipo", "Cliente", "Resumen"], interactionRows),
+            new XlsxWorkbook.WorkbookSheet("Visitas", ["Programada", "Realizada", "Estado", "Cliente", "Inmueble", "Feedback"], visitRows),
+            new XlsxWorkbook.WorkbookSheet("Cierres", ["Fecha", "Operacion", "Inmueble", "Cliente", "Valor bruto", "Comision", "Moneda"], dealRows)
+        ]);
     }
 
     private static string SafeFileName(string value)
