@@ -11,6 +11,7 @@
 - Inmuebles: `/usuario/inmuebles`, `/inmueble-editar.htm`, `/usuario/inmuebles/exportar`, `/administrador/inmuebles/aliados`.
 - Cruces: `/administrador/cruces/propiedades-clientes` y `/administrador/cruces/clientes-propiedades`.
 - Clientes: `/usuario/clientes`, `/usuario/clientes/directorio`, `/usuario/clientes/create`, `/usuario/clientes/exportar`, `/usuario/pipeline/1`, `/usuario/crm`.
+- Foro inmobiliario: el menú del escritorio `/desktop` enlaza `/usuario/muro`; la captura del escritorio muestra formulario de publicación, filtros de actividad, reacciones, comentarios y compartir. Los JSON `wasi-ui-wasi.co-1791953952270.json` y `wasi-ui-wasi.co-1791954022045.json` solo prueban el enlace desde el escritorio; no documentan la pantalla del muro ni permisos/acciones de moderación.
 - Red y alianzas: `/administrador/empresa/alianzas`, `/administrador/empresa/alianzas-propietario`, `/administrador/grupo`.
 - Mercado y reportes: `/administrador/reportes/mercado`, `/administrador/reportes2`, `/administrador/reportes/negocios/negocios`, `/administrador/reportes2/agentes`, `/administrador/reportes2/propietarios`, `/administrador/reportes/estadisticas`, `/administrador/reportes/correos`.
 - Reporte de propietarios (`/administrador/reportes2/propietarios`): el JSON `wasi-ui-wasi.co-1791954561589.json` conserva los encabezados Propietario, Visitas En Página, Llamadas, Correos, Eventos, Visitas, Contactos recibidos y Opciones. No conserva filas ni permite verificar filtros, periodos o las reglas de conteo.
