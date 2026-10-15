@@ -433,6 +433,36 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("ContactImportBatches", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.CustomerCatalogItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Catalog")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Catalog", "NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("CustomerCatalogItems", (string)null);
+                });
             modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1479,6 +1509,36 @@ namespace Enlyce.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.CustomerCatalogItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Catalog")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Catalog", "NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("CustomerCatalogItems", (string)null);
+                });
             modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>
                 {
                     b.HasOne("Enlyce.Domain.Entities.Contact", null)
@@ -1620,3 +1680,4 @@ namespace Enlyce.Infrastructure.Migrations
         }
     }
 }
+

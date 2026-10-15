@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } from "lucide-react"
 import { api } from "@/api/client"
 import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useUpdateCustomerDemand, useDeleteCustomerDemand, useCustomerDemands, useDemandMatches, useCustomerDemandCross, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
+const DEFAULT_CUSTOMER_TYPES = ["Comprador", "Vendedor", "Arrendador", "Arrendatario"]
 
 export function ContactsPage() {
+  const customerCatalogsQuery = useQuery({ queryKey: ["customer-catalogs"], queryFn: () => api.getCustomerCatalogs() })
+  const customerCatalogs = customerCatalogsQuery.data
+  const customerTypeOptions = customerCatalogs?.types ?? DEFAULT_CUSTOMER_TYPES
+  const customerLabelOptions = customerCatalogs?.labels ?? []
+  const customerFunnelOptions = customerCatalogs?.funnels ?? ["Clientes"]
+  const acquisitionMediumOptions = customerCatalogs?.acquisitionMedia ?? []
   const createContact = useCreateContact()
   const [showCreateContact, setShowCreateContact] = useState(false)
   const [includeInitialDemand, setIncludeInitialDemand] = useState(false)
@@ -253,6 +261,9 @@ export function ContactsPage() {
 
   return (
     <div className="space-y-6">
+      <datalist id="customer-type-options">{customerTypeOptions.map((value) => <option key={value} value={value} />)}</datalist>
+      <datalist id="customer-label-options">{customerLabelOptions.map((value) => <option key={value} value={value} />)}</datalist>
+      <datalist id="customer-acquisition-options">{acquisitionMediumOptions.map((value) => <option key={value} value={value} />)}</datalist>
       <header>
         <p className="crm-eyebrow">Relación comercial</p>
         <h1 className="mt-2 font-display text-3xl text-foreground">Contactos</h1>
@@ -319,19 +330,20 @@ export function ContactsPage() {
           ["referredBy", "Referido por"], ["acquisitionMedium", "Medio de captación"], ["country", "País"],
           ["department", "Departamento"], ["city", "Ciudad"], ["address", "Dirección"],
         ] as const).map(([key, label, required, type]) => <label key={key} className="text-xs text-muted-foreground">{label}
-          {key === "customerTypes" ? <input type="text" placeholder="Comprador, Propietario" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+          {key === "customerTypes" ? <input type="text" list="customer-type-options" placeholder="Comprador, Propietario" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             value={newContact.customerTypes.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
               customerTypes: event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean) }))} /> :
-          key === "customerLabels" ? <input type="text" placeholder="VIP, Seguimiento" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+          key === "customerLabels" ? <input type="text" list="customer-label-options" placeholder="VIP, Seguimiento" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             value={newContact.customerLabels.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
               customerLabels: event.target.value.split(",").map((label) => label.trim()).filter(Boolean) }))} /> :
           <input type={type ?? "text"} required={required} maxLength={key === "address" ? 500 : 200}
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+            list={key === "acquisitionMedium" ? "customer-acquisition-options" : undefined}
             value={newContact[key]} onChange={(event) => setNewContact((value) => ({ ...value, [key]: event.target.value }))} />}
         </label>)}
         <label className="text-xs text-muted-foreground">Embudo
           <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.customerFunnel} onChange={(event) => setNewContact((value) => ({ ...value, customerFunnel: event.target.value }))}>
-            <option value="Clientes">Clientes</option>
+            {customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}
           </select>
         </label>
         {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asesor encargado
@@ -369,9 +381,9 @@ export function ContactsPage() {
         </div>
         <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(event) => { event.preventDefault(); setCrossPage(1); setCrossSearched(true) }}>
           <label className="text-xs text-muted-foreground">Nombre del cliente<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.q} onChange={(event) => setCrossFilters((value) => ({ ...value, q: event.target.value }))} /></label>
-          <label className="text-xs text-muted-foreground">Tipo de cliente<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder="Cualquiera o personalizado" value={crossFilters.customerType} onChange={(event) => setCrossFilters((value) => ({ ...value, customerType: event.target.value }))} /></label>
+          <label className="text-xs text-muted-foreground">Tipo de cliente<input list="customer-type-options" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder="Cualquiera o personalizado" value={crossFilters.customerType} onChange={(event) => setCrossFilters((value) => ({ ...value, customerType: event.target.value }))} /></label>
           <label className="text-xs text-muted-foreground">Estado del cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerStatus} onChange={(event) => setCrossFilters((value) => ({ ...value, customerStatus: event.target.value }))}><option value="">Todos</option><option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option></select></label>
-          <label className="text-xs text-muted-foreground">Embudo<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerFunnel} onChange={(event) => setCrossFilters((value) => ({ ...value, customerFunnel: event.target.value }))}><option value="">Todos</option><option value="Clientes">Clientes</option></select></label>
+          <label className="text-xs text-muted-foreground">Embudo<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerFunnel} onChange={(event) => setCrossFilters((value) => ({ ...value, customerFunnel: event.target.value }))}><option value="">Todos</option>{customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
           {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Usuario encargado<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.advisorId} onChange={(event) => setCrossFilters((value) => ({ ...value, advisorId: event.target.value }))}><option value="">Todos</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>}
           {(["contactFrom", "contactTo", "demandFrom", "demandTo"] as const).map((key) => <label key={key} className="text-xs text-muted-foreground">{key === "contactFrom" ? "Cliente desde" : key === "contactTo" ? "Cliente hasta" : key === "demandFrom" ? "Demanda desde" : "Demanda hasta"}<input type="date" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters[key]} onChange={(event) => setCrossFilters((value) => ({ ...value, [key]: event.target.value }))} /></label>)}
           <div className="flex items-end"><button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Buscar</button></div>
@@ -650,7 +662,7 @@ export function ContactsPage() {
               </label>
             </div>
             <label className="block text-xs text-muted-foreground">Tipo de cliente
-              <input value={customerTypeFilter} onChange={(event) => { setCustomerTypeFilter(event.target.value); setPage(1) }} placeholder="Cualquiera o personalizado" className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
+              <input list="customer-type-options" value={customerTypeFilter} onChange={(event) => { setCustomerTypeFilter(event.target.value); setPage(1) }} placeholder="Cualquiera o personalizado" className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
             </label>
             <label className="block text-xs text-muted-foreground">Estado del cliente
               <select value={customerStatusFilter} onChange={(event) => { setCustomerStatusFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
@@ -664,7 +676,7 @@ export function ContactsPage() {
             </label>
             <label className="block text-xs text-muted-foreground">Embudo
               <select value={customerFunnelFilter} onChange={(event) => { setCustomerFunnelFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
-                <option value="">Todos</option><option value="Clientes">Clientes</option>
+                <option value="">Todos</option>{customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}
               </select>
             </label>
             {user?.rol === "Administrador" && <label className="block text-xs text-muted-foreground">Usuario encargado
@@ -777,11 +789,11 @@ export function ContactsPage() {
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={surname} onChange={(event) => setSurname(event.target.value)} maxLength={200} />
                     </label>
                     <label className="text-xs text-muted-foreground">Tipos de cliente (separa con coma)
-                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerTypes.join(", ")}
+                      <input list="customer-type-options" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerTypes.join(", ")}
                         onChange={(event) => setCustomerTypes(event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean))} />
                     </label>
                     <label className="text-xs text-muted-foreground">Etiquetas (separa con coma)
-                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerLabels.join(", ")}
+                      <input list="customer-label-options" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerLabels.join(", ")}
                         onChange={(event) => setCustomerLabels(event.target.value.split(",").map((label) => label.trim()).filter(Boolean))} />
                     </label>
                     <label className="text-xs text-muted-foreground">Estado
@@ -791,7 +803,8 @@ export function ContactsPage() {
                     </label>
                     <label className="text-xs text-muted-foreground">Embudo
                       <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerFunnel} onChange={(event) => setCustomerFunnel(event.target.value)}>
-                        <option value="Clientes">Clientes</option>
+                        {!customerFunnelOptions.includes(customerFunnel) && <option value={customerFunnel}>{customerFunnel}</option>}
+                        {customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}
                       </select>
                     </label>
                     <label className="text-xs text-muted-foreground">País
@@ -822,7 +835,7 @@ export function ContactsPage() {
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={referredBy} onChange={(event) => setReferredBy(event.target.value)} maxLength={200} />
                     </label>
                     <label className="text-xs text-muted-foreground">Medio de captación
-                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={acquisitionMedium} onChange={(event) => setAcquisitionMedium(event.target.value)} maxLength={200} />
+                      <input list="customer-acquisition-options" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={acquisitionMedium} onChange={(event) => setAcquisitionMedium(event.target.value)} maxLength={200} />
                     </label>
                     <label className="w-full text-xs text-muted-foreground">Datos adicionales / observaciones
                       <textarea className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={additionalData} onChange={(event) => setAdditionalData(event.target.value)} maxLength={4000} rows={3} />

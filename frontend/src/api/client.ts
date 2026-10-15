@@ -597,6 +597,17 @@ class ApiClient {
     return this.request<{ rules: import("@/lib/types").LeadSlaRule[] }>("/api/configuracion/sla-leads")
   }
 
+  async getCustomerCatalogs() {
+    return this.request<{ types: string[]; labels: string[]; funnels: string[]; acquisitionMedia: string[] }>(
+      "/api/configuracion/catalogos-clientes")
+  }
+
+  async addCustomerCatalogItem(catalog: string, name: string) {
+    return this.request<{ catalog: string; name: string }>("/api/configuracion/catalogos-clientes", {
+      method: "POST", body: JSON.stringify({ catalog, name }),
+    })
+  }
+
   async upsertLeadSlaRule(rule: import("@/lib/types").UpsertLeadSlaRule) {
     return this.request<void>("/api/configuracion/sla-leads", {
       method: "PUT",

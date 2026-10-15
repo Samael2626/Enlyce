@@ -12,6 +12,19 @@ const RULE_LABELS: Record<LeadDistributionRule, string> = {
 
 export function SettingsPage() {
   const queryClient = useQueryClient()
+  const customerCatalogsQuery = useQuery({ queryKey: ["customer-catalogs"], queryFn: () => api.getCustomerCatalogs() })
+  const [catalog, setCatalog] = useState("Tipo")
+  const [catalogName, setCatalogName] = useState("")
+  const [catalogError, setCatalogError] = useState("")
+  const addCatalogItem = useMutation({
+    mutationFn: () => api.addCustomerCatalogItem(catalog, catalogName),
+    onSuccess: async () => {
+      setCatalogName("")
+      setCatalogError("")
+      await queryClient.invalidateQueries({ queryKey: ["customer-catalogs"] })
+    },
+    onError: (error) => setCatalogError(error instanceof Error ? error.message : "No se pudo guardar la opcion."),
+  })
   const settings = useQuery({
     queryKey: ["lead-distribution-rule"],
     queryFn: () => api.getLeadDistributionRule(),
@@ -192,6 +205,47 @@ export function SettingsPage() {
             <button className="rounded border border-border px-4 py-2 hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent" type="button" disabled={saveSla.isPending} onClick={() => { setSlaDraft(null); setEditingSla(false); setSlaError(null) }}>Cancelar</button>
           </div>
         </form>}
+      </section>
+
+      <section className="crm-panel space-y-5 p-6" aria-labelledby="customer-catalog-title">
+        <div>
+          <h2 id="customer-catalog-title" className="font-display text-2xl">Clasificación de clientes</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Agrega opciones reutilizables para tipos, etiquetas, embudos y medios de captación. Los valores guardados en fichas se conservan aunque no aparezcan en este catálogo.</p>
+        </div>
+        {customerCatalogsQuery.isLoading && <p role="status" className="text-sm text-muted-foreground">Cargando catálogos…</p>}
+        {customerCatalogsQuery.isError && <p role="alert" className="text-sm text-destructive">No se pudieron cargar los catálogos.</p>}
+        {customerCatalogsQuery.data && <div className="grid gap-4 sm:grid-cols-2">
+          {([
+            ["CustomerType", "Tipos de cliente", customerCatalogsQuery.data.types],
+            ["CustomerLabel", "Etiquetas", customerCatalogsQuery.data.labels],
+            ["CustomerFunnel", "Embudos", customerCatalogsQuery.data.funnels],
+            ["AcquisitionMedium", "Medios de captación", customerCatalogsQuery.data.acquisitionMedia],
+          ] as const).map(([key, label, values]) => <article key={key} className="rounded-md border border-border p-4">
+            <h3 className="font-semibold">{label}</h3>
+            <ul className="mt-2 flex flex-wrap gap-2 text-sm">{values.map((value) => <li key={value} className="rounded-full bg-muted px-3 py-1">{value}</li>)}</ul>
+            {values.length === 0 && <p className="mt-2 text-sm text-muted-foreground">Sin opciones creadas.</p>}
+          </article>)}
+        </div>}
+        <form className="grid gap-3 sm:grid-cols-[220px_minmax(0,1fr)_auto]" onSubmit={(event) => {
+          event.preventDefault()
+          setCatalogError("")
+          addCatalogItem.mutate()
+        }}>
+          <label className="grid gap-1 text-sm font-medium">Catálogo
+            <select className="rounded border border-border bg-background px-3 py-2" value={catalog} onChange={(event) => setCatalog(event.target.value)}>
+              <option value="CustomerType">Tipo de cliente</option><option value="CustomerLabel">Etiqueta</option>
+              <option value="CustomerFunnel">Embudo</option><option value="AcquisitionMedium">Medio de captación</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-medium">Nueva opción
+            <input className="rounded border border-border bg-background px-3 py-2" maxLength={catalog === "CustomerType" ? 30 : catalog === "CustomerLabel" ? 50 : catalog === "CustomerFunnel" ? 100 : 200}
+              value={catalogName} onChange={(event) => setCatalogName(event.target.value)} required />
+          </label>
+          <button className="crm-button self-end inline-flex items-center justify-center gap-2" type="submit" disabled={addCatalogItem.isPending}>
+            <Plus className="h-4 w-4" aria-hidden="true" />{addCatalogItem.isPending ? "Guardando…" : "Agregar"}
+          </button>
+          {catalogError && <p role="alert" className="text-sm text-destructive sm:col-span-3">{catalogError}</p>}
+        </form>
       </section>
     </main>
   )

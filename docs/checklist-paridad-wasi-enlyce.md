@@ -59,7 +59,14 @@ La guía oficial de Wasi confirma que las etiquetas y medios de captación se cr
 
 Sigue faltando un catálogo administrable para gestionar tipos, etiquetas, embudos/etapas y medios de captación. La migración `20261014170000_AddMultipleCustomerTypes` está preparada y copia el tipo legado a la nueva columna; no se ha aplicado. No desplegar hasta validar migraciones pendientes y el procedimiento de respaldo/restauración de la base objetivo.
 
-Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, y se incluyen en el CSV exportado. Todavía falta un catálogo global para reutilizar y administrar etiquetas, colores y opciones; la migración 20261014180000_AddCustomerLabels está preparada, no aplicada.
+Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, y se incluyen en el CSV exportado. Falta administrar colores para etiquetas si Wasi los admite en clientes; la guía disponible solo confirma creación personalizada, no colores. La migración 20261014180000_AddCustomerLabels está preparada, no aplicada.
+
+## Catálogos de clasificación de clientes (15 oct 2026)
+
+- Se agregó un catálogo global aditivo para tipos, etiquetas, embudos y medios de captación. Administradores pueden agregar opciones; asesores reciben sugerencias en alta, edición, filtros y cruce. Los campos conservan escritura libre y los valores existentes no se reescriben.
+- No hay renombrar ni borrar: la ayuda de Wasi no documenta qué ocurre con clasificaciones ya asignadas. Tampoco están configurables las etapas/estados del embudo; Enlyce conserva los cinco estados fijos. La guía tampoco confirma roles permitidos para editar catálogos.
+- Migración `20261015010253_AddCustomerCatalogItems` preparada, no aplicada. Crea una tabla e índice únicos; no modifica `Contacts`. Aplicar solo tras validar respaldo y restauración de la base objetivo.
+- El alta inline de etiquetas/tipos y el selector múltiple visual de Wasi siguen pendientes; hoy se usan sugerencias de una sola opción y texto separado por comas para varios valores.
 
 ## Orden de trabajo acordado
 

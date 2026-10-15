@@ -13,6 +13,7 @@ public class EnlyceDbContext : DbContext
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<ContactEmailPermissionEvent> ContactEmailPermissionEvents => Set<ContactEmailPermissionEvent>();
     public DbSet<ContactImportBatch> ContactImportBatches => Set<ContactImportBatch>();
+    public DbSet<CustomerCatalogItem> CustomerCatalogItems => Set<CustomerCatalogItem>();
     public DbSet<CommercialTask> CommercialTasks => Set<CommercialTask>();
     public DbSet<CommercialTaskEvent> CommercialTaskEvents => Set<CommercialTaskEvent>();
     public DbSet<CustomerDemand> CustomerDemands => Set<CustomerDemand>();
