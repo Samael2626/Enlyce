@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useChangeInmuebleTrashState, useCreateInmueble, useInmueble, useInmuebles, usePropertyDemandCounts, useUpdateInmueble } from "@/hooks/useApi"
+import { useChangeInmuebleTrashState, useChangeInmueblesTrashState, useCreateInmueble, useInmueble, useInmuebles, usePropertyDemandCounts, useUpdateInmueble } from "@/hooks/useApi"
 import { PropertyDemandsPanel } from "@/components/PropertyDemandsPanel"
 import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE } from "@/lib/constants"
 import { api } from "@/api/client"
@@ -19,6 +19,7 @@ export function InmueblesPage() {
   const [page, setPage] = useState(1)
   const [editingId, setEditingId] = useState("")
   const [showTrash, setShowTrash] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [draftFilters, setDraftFilters] = useState({
     search: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "",
     moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "",
@@ -42,6 +43,7 @@ export function InmueblesPage() {
   const createInmueble = useCreateInmueble()
   const updateInmueble = useUpdateInmueble()
   const changeTrashState = useChangeInmuebleTrashState()
+  const changeInmueblesTrashState = useChangeInmueblesTrashState()
   const editingProperty = useInmueble(editingId)
 
   useEffect(() => {
@@ -120,7 +122,7 @@ export function InmueblesPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => { setShowTrash(!showTrash); setShowForm(false); setEditingId(""); setPage(1) }} className="rounded border border-border px-3 py-2 text-sm font-semibold">
+          <button type="button" onClick={() => { setShowTrash(!showTrash); setShowForm(false); setEditingId(""); setSelectedIds([]); setPage(1) }} className="rounded border border-border px-3 py-2 text-sm font-semibold">
             {showTrash ? "Volver al inventario" : "Ver papelera"}
           </button>
           {!showTrash && <>
@@ -156,6 +158,7 @@ export function InmueblesPage() {
       {!showTrash && <form onSubmit={(event) => {
         event.preventDefault()
         setPage(1)
+        setSelectedIds([])
         setFilters(Object.fromEntries(Object.entries(draftFilters).filter(([key, value]) => key === "orden" || value !== "")))
       }} className="crm-panel space-y-4 p-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -172,7 +175,7 @@ export function InmueblesPage() {
           {(["habitaciones", "banos", "parqueaderos"] as const).map((key) => <input key={key} aria-label={key} type="number" min="0" placeholder={`${key[0].toUpperCase()}${key.slice(1)} mín.`} value={draftFilters[key]} onChange={(e) => setDraftFilters({ ...draftFilters, [key]: e.target.value })} className="rounded-md border bg-background px-3 py-2" />)}
           <select aria-label="Ordenar" value={draftFilters.orden} onChange={(e) => setDraftFilters({ ...draftFilters, orden: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="recent">Más recientes</option><option value="oldest">Más antiguos</option><option value="priceAsc">Menor precio</option><option value="priceDesc">Mayor precio</option></select>
         </div>
-        <div className="flex gap-2"><button className="crm-button" type="submit"><Search className="h-4 w-4" /> Buscar</button><button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { const empty = { search: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "", habitaciones: "", banos: "", parqueaderos: "", orden: "recent" }; setDraftFilters(empty); setFilters({ orden: "recent" }); setPage(1) }}>Limpiar</button></div>
+        <div className="flex gap-2"><button className="crm-button" type="submit"><Search className="h-4 w-4" /> Buscar</button><button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { const empty = { search: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "", habitaciones: "", banos: "", parqueaderos: "", orden: "recent" }; setDraftFilters(empty); setFilters({ orden: "recent" }); setSelectedIds([]); setPage(1) }}>Limpiar</button></div>
       </form>}
 
       {/* Form modal */}
@@ -382,11 +385,18 @@ export function InmueblesPage() {
         </div>
       ) : (
         <div className="crm-panel overflow-x-auto">
+          {changeInmueblesTrashState.isError && <p role="alert" className="p-3 text-sm text-destructive">No se aplicó la acción masiva. La selección puede haber cambiado.</p>}
+          <div className="flex flex-wrap items-center gap-3 border-b p-3">
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={(inventory.data?.items.length ?? 0) > 0 && inventory.data!.items.every((item) => selectedIds.includes(item.id))} onChange={(event) => setSelectedIds(event.target.checked ? inventory.data?.items.map((item) => item.id) ?? [] : [])} /> Seleccionar página</label>
+            <button className="rounded border px-3 py-2 text-sm disabled:opacity-50" disabled={!selectedIds.length || changeInmueblesTrashState.isPending} onClick={() => changeInmueblesTrashState.mutate({ ids: selectedIds, restore: showTrash }, { onSuccess: () => setSelectedIds([]) })}>
+              {showTrash ? "Restaurar seleccionados" : "Enviar seleccionados a papelera"} ({selectedIds.length})
+            </button>
+          </div>
           <table className="w-full text-left text-sm">
-            <thead><tr className="border-b text-muted-foreground"><th className="p-4">Nombre</th><th className="p-4">Ubicación</th><th className="p-4">Precio</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th><th className="p-4"><span className="sr-only">Acciones</span></th></tr></thead>
-            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4 font-medium">{item.nombre}</td><td className="p-4">{[item.barrio, item.ciudad].filter(Boolean).join(", ")}</td><td className="p-4">{new Intl.NumberFormat("es-CO", { style: "currency", currency: item.moneda }).format(item.precio)}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="space-y-2 p-4">{showTrash ? <button className="crm-button" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: true })}>Restaurar</button> : <><button className="rounded border px-3 py-1" onClick={() => void beginEditing(item.id)}>Editar</button><button className="rounded border px-3 py-1" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: false })}>Enviar a papelera</button><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></>}</td></tr>)}</tbody>
+            <thead><tr className="border-b text-muted-foreground"><th className="p-4"><span className="sr-only">Seleccionar</span></th><th className="p-4">Nombre</th><th className="p-4">Ubicación</th><th className="p-4">Precio</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th><th className="p-4"><span className="sr-only">Acciones</span></th></tr></thead>
+            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4"><input type="checkbox" aria-label={`Seleccionar ${item.nombre}`} checked={selectedIds.includes(item.id)} onChange={(event) => setSelectedIds((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /></td><td className="p-4 font-medium">{item.nombre}</td><td className="p-4">{[item.barrio, item.ciudad].filter(Boolean).join(", ")}</td><td className="p-4">{new Intl.NumberFormat("es-CO", { style: "currency", currency: item.moneda }).format(item.precio)}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="space-y-2 p-4">{showTrash ? <button className="crm-button" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: true }, { onSuccess: () => setSelectedIds((current) => current.filter((id) => id !== item.id)) })}>Restaurar</button> : <><button className="rounded border px-3 py-1" onClick={() => void beginEditing(item.id)}>Editar</button><button className="rounded border px-3 py-1" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: false }, { onSuccess: () => setSelectedIds((current) => current.filter((id) => id !== item.id)) })}>Enviar a papelera</button><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></>}</td></tr>)}</tbody>
           </table>
-          <div className="flex items-center justify-between p-4"><span className="text-sm text-muted-foreground">{inventory.data?.total} inmuebles</span><div className="flex gap-2"><button className="crm-button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button><button className="crm-button" disabled={page * (inventory.data?.pageSize ?? 20) >= (inventory.data?.total ?? 0)} onClick={() => setPage(page + 1)}>Siguiente</button></div></div>
+          <div className="flex items-center justify-between p-4"><span className="text-sm text-muted-foreground">{inventory.data?.total} inmuebles</span><div className="flex gap-2"><button className="crm-button" disabled={page <= 1} onClick={() => { setSelectedIds([]); setPage(page - 1) }}>Anterior</button><button className="crm-button" disabled={page * (inventory.data?.pageSize ?? 20) >= (inventory.data?.total ?? 0)} onClick={() => { setSelectedIds([]); setPage(page + 1) }}>Siguiente</button></div></div>
         </div>
       )}
       {crossProperty && <PropertyDemandsPanel propertyId={crossProperty.id} propertyName={crossProperty.name} onClose={() => setCrossProperty(null)} />}

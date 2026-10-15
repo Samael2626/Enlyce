@@ -539,6 +539,14 @@ export function useChangeInmuebleTrashState() {
   })
 }
 
+export function useChangeInmueblesTrashState() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ ids, restore }: { ids: string[]; restore: boolean }) => api.changeInmueblesTrashState(ids, restore),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["inmuebles"] }),
+  })
+}
+
 // Publicaciones
 export function usePublications() {
   return useQuery({

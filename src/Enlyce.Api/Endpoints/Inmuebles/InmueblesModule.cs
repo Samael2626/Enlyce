@@ -98,6 +98,18 @@ public static class InmueblesModule
             .WithName("RestoreInmuebleFromTrash")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/lote/papelera", ChangeTrashStatesAsync(false))
+            .WithName("MoveInmueblesToTrash")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        group.MapPost("/lote/restaurar", ChangeTrashStatesAsync(true))
+            .WithName("RestoreInmueblesFromTrash")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private static Func<Guid, ICommandHandler<ChangeInmuebleTrashStateCommand, bool>, CancellationToken, Task<IResult>>
@@ -105,6 +117,16 @@ public static class InmueblesModule
     {
         var changed = await handler.HandleAsync(new ChangeInmuebleTrashStateCommand(id, restore), ct);
         return changed ? Results.NoContent() : Results.NotFound();
+    };
+
+    private static Func<BatchInmuebleTrashRequest, ICommandHandler<ChangeInmueblesTrashStateCommand, bool>, CancellationToken, Task<IResult>>
+        ChangeTrashStatesAsync(bool restore) => async (request, handler, ct) =>
+    {
+        if (request.Ids is not { Length: > 0 and <= 100 } || request.Ids.Distinct().Count() != request.Ids.Length)
+            return Results.BadRequest(new { error = "Envie entre 1 y 100 inmuebles sin IDs repetidos." });
+
+        var changed = await handler.HandleAsync(new ChangeInmueblesTrashStateCommand(request.Ids, restore), ct);
+        return changed ? Results.NoContent() : Results.Conflict(new { error = "La seleccion cambio o contiene inmuebles inexistentes; no se modifico ninguno." });
     };
 
     private static bool ValidEnum<T>(string? value) where T : struct, Enum =>
@@ -142,3 +164,5 @@ public record UpdateInmuebleRequest(
     int MetrosCuadrados, int Habitaciones, int Banos, int Parqueaderos,
     string Pais = "Colombia", string? Departamento = null,
     string[]? CaracteristicasInternas = null, string[]? CaracteristicasExternas = null);
+
+public record BatchInmuebleTrashRequest(Guid[]? Ids);

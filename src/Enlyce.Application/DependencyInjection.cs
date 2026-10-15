@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse>, CreateInmuebleHandler>();
         services.AddScoped<ICommandHandler<UpdateInmuebleCommand, CreateInmuebleResponse?>, UpdateInmuebleHandler>();
         services.AddScoped<ICommandHandler<ChangeInmuebleTrashStateCommand, bool>, ChangeInmuebleTrashStateHandler>();
+        services.AddScoped<ICommandHandler<ChangeInmueblesTrashStateCommand, bool>, ChangeInmueblesTrashStateHandler>();
         services.AddScoped<ICommandHandler<UploadPublicationPhotoCommand, UploadPublicationPhotoResponse>, UploadPublicationPhotoHandler>();
         services.AddScoped<IQueryHandler<GetLeadByIdQuery, GetLeadByIdResponse?>, GetLeadByIdHandler>();
         services.AddScoped<IQueryHandler<GetInmuebleByIdQuery, GetInmuebleByIdResponse?>, GetInmuebleByIdHandler>();

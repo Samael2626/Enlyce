@@ -498,6 +498,12 @@ class ApiClient {
     return this.request<void>(`/api/inmuebles/${id}/${restore ? "restaurar" : "papelera"}`, { method: "POST" })
   }
 
+  async changeInmueblesTrashState(ids: string[], restore: boolean) {
+    return this.request<void>(`/api/inmuebles/lote/${restore ? "restaurar" : "papelera"}`, {
+      method: "POST", body: JSON.stringify({ ids }),
+    })
+  }
+
   async getInmuebles(filters: {
     page?: number; pageSize?: number; search?: string; modalidad?: string; estado?: string; tipo?: string;
     pais?: string; departamento?: string; ciudad?: string; barrio?: string; moneda?: string;
