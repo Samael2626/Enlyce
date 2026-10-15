@@ -117,7 +117,7 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 ## Ajuste importador (14 oct 2026)
 
 - Ahora mapea nombre, apellidos, email, teléfono y «Recibe correo» por separado. La columna se conserva para revisión, pero importar un valor afirmativo no habilita correos automáticos: falta evidencia verificable del permiso.
-- El correo puede repetirse en varios contactos, igual que en Wasi. La vista previa detecta repeticiones, pero no expone emails ajenos al alcance del asesor.
+- En Enlyce el correo puede repetirse en varios contactos. La vista previa detecta repeticiones, pero no expone emails ajenos al alcance del asesor. La evidencia disponible no confirma si el importador Wasi conserva esos duplicados; no atribuirle a Wasi el comportamiento de Enlyce.
 - Administrador puede conceder o revocar el permiso desde la ficha; conceder exige una referencia de evidencia. El historial registra estado, fuente, actor y fecha de registro, en tabla append-only consultable solo por administradores.
 - La importación no crea eventos de permiso a partir de «Recibe correo». Cuando un administrador concede permiso desde la ficha, la bitácora registra fuente, referencia de evidencia, actor y fecha de registro. La fecha original no se reconstruye; contactos previos a la migración no reciben eventos inventados.
 - Migraciones preparadas, no aplicadas. Contactos existentes quedan con `CanReceiveAutomatedEmail=false`; verificar evidencia real antes de habilitar envíos.
