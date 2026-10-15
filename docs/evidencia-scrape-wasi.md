@@ -1,7 +1,7 @@
 # Evidencia estructural del scrape de Wasi
 
 **Corte:** 2026-10-14  
-**Fuente local:** `C:\Users\USUARIO\Downloads\Wasi\Inventarios` (27 JSON).  
+**Fuente local:** `C:\Users\USUARIO\Downloads\Wasi\Inventarios` (28 JSON).  
 **Uso:** inventario de superficies y campos visibles para la paridad ENLYCE. No copiar registros, valores de formulario ni datos personales.
 
 ## Superficies observadas
