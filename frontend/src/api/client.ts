@@ -411,6 +411,13 @@ class ApiClient {
     return this.request<import("@/lib/types").WebPropertyVisitsReport>(`/api/analytics/web-properties?${query}`)
   }
 
+  async downloadWebPropertyVisitsXlsx(from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    const response = await fetch(`${this.baseUrl}/api/analytics/web-properties.xlsx?${query}`, { credentials: "include" })
+    if (!response.ok) throw new Error(`No se pudo exportar el reporte (${response.status}).`)
+    return response.blob()
+  }
+
   async downloadRealizedDealsXlsx(filters: { from?: string; to?: string; advisorId?: string; operation?: string; propertyType?: string }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {

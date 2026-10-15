@@ -267,6 +267,35 @@ public static class AnalyticsModule
         .WithName("GetWebPropertyVisitsReport")
         .Produces<WebPropertyVisitsReport>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        app.MapGet("/api/analytics/web-properties.xlsx", async (
+            DateOnly? from,
+            DateOnly? to,
+            IWebPropertyVisitsReportReadRepository report,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-29);
+            if (since > through || through.DayNumber - since.DayNumber >= 366)
+                return Results.BadRequest(new { error = "El rango debe ser valido y no superar 366 dias." });
+
+            const int maxRows = 50_000;
+            var result = await report.GetAsync(since, through, ct);
+            if (result.Properties.Count > maxRows)
+                return Results.Problem("El reporte supera el limite de 50.000 inmuebles.", statusCode: StatusCodes.Status413PayloadTooLarge);
+
+            var rows = result.Properties.Select(property => new object?[] { property.Title, property.Visits });
+            var content = XlsxWorkbook.Build("Visitas web", ["Título inmueble", "Visitas"], rows);
+            return Results.File(content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"visitas-inmuebles-{since:yyyyMMdd}-{through:yyyyMMdd}.xlsx");
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("ExportWebPropertyVisitsXlsx")
+        .Produces(StatusCodes.Status200OK, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status413PayloadTooLarge);
     }
 
     private static DateTime EnsureUtc(DateTime value) => value.Kind switch

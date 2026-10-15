@@ -426,6 +426,43 @@ function WebPropertyVisitsSection({
   onFromChange: (value: string) => void
   onToChange: (value: string) => void
 }) {
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState("")
+
+  async function exportXlsx() {
+    setExporting(true)
+    setExportError("")
+    try {
+      const blob = await api.downloadWebPropertyVisitsXlsx(from, to)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `visitas-inmuebles-${from}-${to}.xlsx`
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "No se pudo exportar el reporte.")
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  function exportPdf() {
+    const popup = window.open("", "_blank")
+    if (!popup) {
+      setExportError("El navegador bloqueó la ventana de impresión.")
+      return
+    }
+    setExportError("")
+    const rows = (report?.properties ?? []).map((property) =>
+      `<tr><th>${escapeHtml(property.title)}</th><td>${property.visits}</td></tr>`
+    ).join("")
+    popup.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Visitas por inmueble</title><style>body{font:14px Arial,sans-serif;margin:32px;color:#222}h1{font-size:22px}p{color:#555}table{border-collapse:collapse;width:100%;margin-top:24px}th,td{border-bottom:1px solid #ddd;padding:10px;text-align:left}td{text-align:right}@media print{body{margin:12mm}}</style></head><body><h1>Visitas por inmueble publicado</h1><p>Periodo: ${escapeHtml(from)} a ${escapeHtml(to)}</p><table><thead><tr><th>Título inmueble</th><th>Visitas</th></tr></thead><tbody>${rows || "<tr><td colspan='2'>No hay inmuebles publicados.</td></tr>"}</tbody></table></body></html>`)
+    popup.document.close()
+    popup.focus()
+    window.setTimeout(() => popup.print(), 300)
+  }
+
   return (
     <section className="space-y-4" aria-labelledby="web-property-report-title">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -434,11 +471,14 @@ function WebPropertyVisitsSection({
           <h2 id="web-property-report-title" className="mt-2 font-display text-3xl tracking-tight">Visitas por inmueble publicado</h2>
           <p className="mt-2 text-sm text-muted-foreground">Cuenta sesiones únicas por URL actual; incluye publicaciones publicadas, pausadas o retiradas.</p>
         </div>
-        <div className="flex flex-wrap gap-3 text-xs font-bold text-muted-foreground">
+        <div className="flex flex-wrap items-end gap-3 text-xs font-bold text-muted-foreground">
           <label>Desde <input aria-label="Visitas web desde" type="date" value={from} max={to} onChange={(event) => onFromChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
           <label>Hasta <input aria-label="Visitas web hasta" type="date" value={to} min={from} onChange={(event) => onToChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+          <button type="button" disabled={exporting || isLoading || isError} className="rounded-sm border border-border px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-50" onClick={() => void exportXlsx()}>{exporting ? "Preparando…" : "Excel"}</button>
+          <button type="button" disabled={isLoading || isError} className="rounded-sm border border-border px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-50" onClick={exportPdf}>PDF</button>
         </div>
       </div>
+      {exportError && <p role="alert" className="text-sm text-destructive">{exportError}</p>}
       {isLoading ? (
         <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando visitas del sitio…</div>
       ) : isError ? (
@@ -689,6 +729,16 @@ function RealizedDealForm({ advisors }: { advisors: { id: string; name: string }
 
 function formatMoney(amount: number, currency: string) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount)
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>\"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  })[character]!)
 }
 
 function dateOffset(days: number) {
