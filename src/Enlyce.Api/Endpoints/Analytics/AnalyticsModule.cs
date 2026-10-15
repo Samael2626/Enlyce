@@ -3,6 +3,8 @@ using Enlyce.Application.Analytics;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.Ports;
 using Microsoft.AspNetCore.Mvc;
+using System.IO.Compression;
+using System.Net.Mail;
 
 namespace Enlyce.Api.Endpoints.Analytics;
 
@@ -206,6 +208,92 @@ public static class AnalyticsModule
         .Produces<AdvisorPerformanceReport>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        app.MapGet("/api/analytics/advisors/{advisorId:guid}.xlsx", async (
+            Guid advisorId,
+            DateOnly? from,
+            DateOnly? to,
+            IAdvisorPerformanceReportReadRepository report,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-29);
+            if (!ValidAdvisorReportRange(since, through))
+                return Results.BadRequest(new { error = "El rango debe ser valido y no superar 366 dias." });
+
+            var result = await report.GetAsync(since, through, ct);
+            var advisor = result.Advisors.SingleOrDefault(item => item.AdvisorId == advisorId);
+            if (advisor is null)
+                return Results.NotFound();
+
+            return Results.File(BuildAdvisorReportXlsx(result, advisor),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"reporte-{SafeFileName(advisor.AdvisorName)}-{since:yyyyMMdd}-{through:yyyyMMdd}.xlsx");
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("ExportAdvisorPerformanceXlsx")
+        .Produces(StatusCodes.Status200OK, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+        app.MapPost("/api/analytics/advisors/{advisorId:guid}/email", async (
+            Guid advisorId,
+            [FromBody] SendAdvisorReportRequest request,
+            DateOnly? from,
+            DateOnly? to,
+            IAdvisorPerformanceReportReadRepository report,
+            IAsesorRepository advisorsRepository,
+            IEmailAttachmentSender email,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-29);
+            if (!ValidAdvisorReportRange(since, through))
+                return Results.BadRequest(new { error = "El rango debe ser valido y no superar 366 dias." });
+
+            var result = await report.GetAsync(since, through, ct);
+            var advisor = result.Advisors.SingleOrDefault(item => item.AdvisorId == advisorId);
+            if (advisor is null)
+                return Results.NotFound();
+            var advisorAccount = await advisorsRepository.ObtenerPorIdAsync(advisorId);
+            if (advisorAccount is not { Activo: true, Rol: "Asesor" })
+                return Results.NotFound();
+
+            var recipient = advisorAccount.Correo.Value;
+            if (!string.IsNullOrWhiteSpace(request.RecipientEmail))
+            {
+                try { recipient = new MailAddress(request.RecipientEmail.Trim()).Address; }
+                catch (FormatException) { return Results.BadRequest(new { error = "El correo destinatario no es valido." }); }
+            }
+
+            var xlsx = BuildAdvisorReportXlsx(result, advisor);
+            using var archiveStream = new MemoryStream();
+            using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                var entry = archive.CreateEntry(
+                    $"reporte-{SafeFileName(advisor.AdvisorName)}-{since:yyyyMMdd}-{through:yyyyMMdd}.xlsx",
+                    CompressionLevel.Fastest);
+                await using var entryStream = entry.Open();
+                await entryStream.WriteAsync(xlsx, ct);
+            }
+
+            var sent = await email.SendAttachmentAsync(recipient,
+                $"Reporte de gestion: {advisor.AdvisorName}",
+                $"Adjuntamos el reporte del {since:yyyy-MM-dd} al {through:yyyy-MM-dd}, con comparacion del periodo anterior.",
+                $"reporte-{SafeFileName(advisor.AdvisorName)}-{since:yyyyMMdd}-{through:yyyyMMdd}.zip",
+                "application/zip", archiveStream.ToArray(), ct);
+            return sent
+                ? Results.Accepted(value: new { message = "Reporte enviado al correo indicado." })
+                : Results.Problem("No se pudo enviar el reporte por correo.", statusCode: StatusCodes.Status503ServiceUnavailable);
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("EmailAdvisorPerformanceReport")
+        .Produces(StatusCodes.Status202Accepted)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
         app.MapGet("/api/analytics/owners", async (
             DateOnly? from,
             DateOnly? to,
@@ -305,6 +393,26 @@ public static class AnalyticsModule
         _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
     };
 
+    private static bool ValidAdvisorReportRange(DateOnly from, DateOnly through) =>
+        from <= through && through.DayNumber - from.DayNumber < 366;
+
+    private static byte[] BuildAdvisorReportXlsx(AdvisorPerformanceReport report, AdvisorPerformanceRow advisor)
+    {
+        var headers = new[] { "Periodo", "Desde", "Hasta", "Gestiones", "Visitas", "Ventas", "Arriendos", "Clientes nuevos", "Inmuebles nuevos" };
+        var rows = new object?[][]
+        {
+            ["Actual", report.From.ToString("yyyy-MM-dd"), report.Through.ToString("yyyy-MM-dd"), advisor.Interactions, advisor.Visits, advisor.Sales, advisor.Rentals, advisor.NewClients, advisor.NewProperties],
+            ["Anterior", report.PreviousFrom.ToString("yyyy-MM-dd"), report.PreviousThrough.ToString("yyyy-MM-dd"), advisor.PreviousInteractions, advisor.PreviousVisits, advisor.PreviousSales, advisor.PreviousRentals, advisor.PreviousNewClients, advisor.PreviousNewProperties]
+        };
+        return XlsxWorkbook.Build("Reporte por asesor", headers, rows);
+    }
+
+    private static string SafeFileName(string value)
+    {
+        var safe = string.Concat(value.Normalize().Where(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_'));
+        return string.IsNullOrWhiteSpace(safe) ? "asesor" : safe;
+    }
+
     private static bool TryParseOptional<TEnum>(string? value, out TEnum? result) where TEnum : struct, Enum
     {
         result = null;
@@ -323,6 +431,8 @@ public sealed record InventoryAnalyticsResponse(
     IReadOnlyList<InventoryCount> ByOperation);
 
 public sealed record InventoryCount(string Name, int Count);
+
+public sealed record SendAdvisorReportRequest(string? RecipientEmail);
 
 public sealed record RecordWebAnalyticsEventRequest(
     string SessionId,

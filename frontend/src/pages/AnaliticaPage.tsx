@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
 import { api } from "@/api/client"
@@ -149,7 +149,7 @@ export function AnaliticaPage() {
         onPageChange={setDealPage}
       />
 
-      <AdvisorPerformanceSection report={advisorReport.data} isLoading={advisorReport.isLoading} isError={advisorReport.isError} />
+      <AdvisorPerformanceSection report={advisorReport.data} from={dealFrom} to={dealTo} isLoading={advisorReport.isLoading} isError={advisorReport.isError} />
       <OwnerPerformanceSection report={ownerReport.data} from={dealFrom} to={dealTo} isLoading={ownerReport.isLoading} isError={ownerReport.isError} />
       <SentEmailReportSection
         report={sentEmailReport.data}
@@ -219,13 +219,23 @@ export function AnaliticaPage() {
 
 function AdvisorPerformanceSection({
   report,
+  from,
+  to,
   isLoading,
   isError,
 }: {
   report?: import("@/lib/types").AdvisorPerformanceReport
+  from: string
+  to: string
   isLoading: boolean
   isError: boolean
 }) {
+  const [exportingId, setExportingId] = useState("")
+  const [emailAdvisorId, setEmailAdvisorId] = useState("")
+  const [recipientEmail, setRecipientEmail] = useState("")
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailMessage, setEmailMessage] = useState("")
+  const [actionError, setActionError] = useState("")
   const metrics = [
     ["Interacciones", "interactions", "previousInteractions"],
     ["Visitas", "visits", "previousVisits"],
@@ -234,6 +244,56 @@ function AdvisorPerformanceSection({
     ["Clientes nuevos", "newClients", "previousNewClients"],
     ["Inmuebles nuevos", "newProperties", "previousNewProperties"],
   ] as const
+
+  async function exportXlsx(advisor: import("@/lib/types").AdvisorPerformanceReport["advisors"][number]) {
+    setExportingId(advisor.advisorId)
+    setActionError("")
+    try {
+      const blob = await api.downloadAdvisorReportXlsx(advisor.advisorId, from, to)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `reporte-${advisor.advisorName.replace(/[^a-z0-9_-]/gi, "-")}-${from}-${to}.xlsx`
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "No se pudo exportar el reporte.")
+    } finally {
+      setExportingId("")
+    }
+  }
+
+  function exportPdf(advisor: import("@/lib/types").AdvisorPerformanceReport["advisors"][number]) {
+    const popup = window.open("", "_blank")
+    if (!popup) {
+      setActionError("El navegador bloqueó la ventana de impresión.")
+      return
+    }
+    setActionError("")
+    const rows = metrics.map(([label, currentKey, previousKey]) =>
+      `<tr><th>${escapeHtml(label)}</th><td>${advisor[currentKey]}</td><td>${advisor[previousKey]}</td></tr>`
+    ).join("")
+    popup.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reporte de ${escapeHtml(advisor.advisorName)}</title><style>body{font:14px Arial,sans-serif;margin:32px;color:#222}h1{font-size:22px}p{color:#555}table{border-collapse:collapse;width:100%;margin-top:24px}th,td{border-bottom:1px solid #ddd;padding:10px;text-align:left}td{text-align:right}@media print{body{margin:12mm}}</style></head><body><h1>Rendimiento por usuario encargado</h1><p>${escapeHtml(advisor.advisorName)} · periodo ${escapeHtml(report?.from ?? from)} a ${escapeHtml(report?.through ?? to)} · comparación ${escapeHtml(report?.previousFrom ?? "")} a ${escapeHtml(report?.previousThrough ?? "")}</p><table><thead><tr><th>Indicador</th><th>Actual</th><th>Anterior</th></tr></thead><tbody>${rows}</tbody></table></body></html>`)
+    popup.document.close()
+    popup.focus()
+    window.setTimeout(() => popup.print(), 300)
+  }
+
+  async function sendEmail(advisorId: string) {
+    setSendingEmail(true)
+    setEmailMessage("")
+    setActionError("")
+    try {
+      const result = await api.emailAdvisorReport(advisorId, from, to, recipientEmail)
+      setEmailMessage(result.message)
+      setEmailAdvisorId("")
+      setRecipientEmail("")
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "No se pudo enviar el reporte.")
+    } finally {
+      setSendingEmail(false)
+    }
+  }
 
   return (
     <section className="space-y-4" aria-labelledby="advisor-report-title">
@@ -248,25 +308,31 @@ function AdvisorPerformanceSection({
         <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el reporte por asesor.</div>
       ) : (
         <div className="crm-panel overflow-x-auto">
+          {actionError && <p role="alert" className="border-b border-border px-5 py-3 text-sm text-destructive">{actionError}</p>}
+          {emailMessage && <p role="status" className="border-b border-border px-5 py-3 text-sm text-success">{emailMessage}</p>}
           <p className="border-b border-border px-5 py-3 text-xs text-muted-foreground">
             Periodo {report?.from} a {report?.through} · comparación {report?.previousFrom} a {report?.previousThrough}. Interacciones son registros del CRM; visitas son citas no canceladas por fecha programada.
           </p>
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="bg-muted/50 text-xs text-muted-foreground">
-              <tr><th className="px-4 py-3">Usuario encargado</th>{metrics.map(([label]) => <th key={label} className="px-3 py-3">{label}</th>)}</tr>
+              <tr><th className="px-4 py-3">Usuario encargado</th>{metrics.map(([label]) => <th key={label} className="px-3 py-3">{label}</th>)}<th className="px-3 py-3">Opciones</th></tr>
             </thead>
             <tbody>
               {(report?.advisors ?? []).map((advisor) => (
-                <tr key={advisor.advisorId} className="border-t border-border">
-                  <th scope="row" className="px-4 py-3 font-medium">{advisor.advisorName}</th>
-                  {metrics.map(([label, currentKey, previousKey]) => {
-                    const current = advisor[currentKey]
-                    const difference = current - advisor[previousKey]
-                    return <td key={label} className="px-3 py-3 tabular-nums">{current} <span className="text-xs text-muted-foreground">{difference > 0 ? `↑ ${difference}` : difference < 0 ? `↓ ${Math.abs(difference)}` : "→ 0"}</span></td>
-                  })}
-                </tr>
+                <Fragment key={advisor.advisorId}>
+                  <tr className="border-t border-border">
+                    <th scope="row" className="px-4 py-3 font-medium">{advisor.advisorName}</th>
+                    {metrics.map(([label, currentKey, previousKey]) => {
+                      const current = advisor[currentKey]
+                      const difference = current - advisor[previousKey]
+                      return <td key={label} className="px-3 py-3 tabular-nums">{current} <span className="text-xs text-muted-foreground">{difference > 0 ? `↑ ${difference}` : difference < 0 ? `↓ ${Math.abs(difference)}` : "→ 0"}</span></td>
+                    })}
+                    <td className="px-3 py-2"><div className="flex flex-wrap gap-1"><button type="button" disabled={Boolean(exportingId)} className="rounded border px-2 py-1 text-xs disabled:opacity-50" onClick={() => void exportXlsx(advisor)}>{exportingId === advisor.advisorId ? "Preparando…" : "Excel"}</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => exportPdf(advisor)}>PDF</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => { setEmailAdvisorId((current) => current === advisor.advisorId ? "" : advisor.advisorId); setRecipientEmail(""); setEmailMessage(""); setActionError("") }}>Enviar</button></div></td>
+                  </tr>
+                  {emailAdvisorId === advisor.advisorId && <tr key={`${advisor.advisorId}-email`} className="border-t border-border bg-muted/20"><td colSpan={metrics.length + 2} className="px-4 py-3"><form className="flex flex-wrap items-end gap-2" onSubmit={(event) => { event.preventDefault(); void sendEmail(advisor.advisorId) }}><label className="min-w-64 flex-1 text-xs font-semibold text-muted-foreground">Correo destinatario<input type="email" value={recipientEmail} onChange={(event) => setRecipientEmail(event.target.value)} placeholder="Vacío: correo del asesor" className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-sm text-foreground" /></label><button type="submit" disabled={sendingEmail} className="crm-button disabled:opacity-50">{sendingEmail ? "Enviando…" : "Enviar reporte ZIP"}</button><button type="button" disabled={sendingEmail} className="rounded border px-3 py-2 text-sm" onClick={() => setEmailAdvisorId("")}>Cancelar</button></form></td></tr>}
+                </Fragment>
               ))}
-              {report?.advisors.length === 0 && <tr><td colSpan={metrics.length + 1} className="px-4 py-8 text-center text-muted-foreground">No hay usuarios encargados para mostrar.</td></tr>}
+              {report?.advisors.length === 0 && <tr><td colSpan={metrics.length + 2} className="px-4 py-8 text-center text-muted-foreground">No hay usuarios encargados para mostrar.</td></tr>}
             </tbody>
           </table>
         </div>

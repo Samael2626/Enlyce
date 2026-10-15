@@ -395,6 +395,21 @@ class ApiClient {
     return this.request<import("@/lib/types").AdvisorPerformanceReport>(`/api/analytics/advisors?${query}`)
   }
 
+  async downloadAdvisorReportXlsx(advisorId: string, from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    const response = await fetch(`${this.baseUrl}/api/analytics/advisors/${advisorId}.xlsx?${query}`, { credentials: "include" })
+    if (!response.ok) throw new Error(`No se pudo exportar el reporte (${response.status}).`)
+    return response.blob()
+  }
+
+  async emailAdvisorReport(advisorId: string, from: string, to: string, recipientEmail?: string) {
+    const query = new URLSearchParams({ from, to })
+    return this.request<{ message: string }>(`/api/analytics/advisors/${advisorId}/email?${query}`, {
+      method: "POST",
+      body: JSON.stringify({ recipientEmail: recipientEmail?.trim() || null }),
+    })
+  }
+
   async getOwnerPerformanceReport(from: string, to: string) {
     const query = new URLSearchParams({ from, to })
     return this.request<import("@/lib/types").OwnerPerformanceReport>(`/api/analytics/owners?${query}`)
