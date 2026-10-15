@@ -8,6 +8,7 @@ const operations = [
   { value: "", label: "Venta y arriendo" },
   { value: "Venta", label: "Comprar" },
   { value: "Arriendo", label: "Arrendar" },
+  { value: "Permuta", label: "Permutar" },
 ] as const;
 
 const propertyTypes = [
@@ -37,6 +38,7 @@ const salePrices = [
 ] as const;
 
 function priceOptions(operation: string) {
+  if (operation === "Permuta") return [];
   if (operation === "Arriendo") return rentPrices;
   if (operation === "Venta") return salePrices;
   return [...rentPrices, ...salePrices];

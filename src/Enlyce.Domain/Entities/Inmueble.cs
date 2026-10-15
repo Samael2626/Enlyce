@@ -18,7 +18,8 @@ public enum ModalidadInmueble
 {
     Venta,
     Arriendo,
-    VentaYArriendo
+    VentaYArriendo,
+    Permuta
 }
 
 public enum EstadoInmueble

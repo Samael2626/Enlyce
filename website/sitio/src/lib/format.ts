@@ -18,6 +18,7 @@ export function formatArea(squareMeters: number): string {
 export function formatOperation(operation: string): string {
   if (operation === "Arriendo") return "En arriendo";
   if (operation === "VentaYArriendo") return "En venta y arriendo";
+  if (operation === "Permuta") return "En permuta";
   return "En venta";
 }
 

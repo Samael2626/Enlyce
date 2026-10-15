@@ -120,10 +120,11 @@ export function AnaliticaPage() {
         ) : inventory.isError ? (
           <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el inventario.</div>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-2">
             <div className="crm-panel p-5"><span className="text-xs text-muted-foreground">Total disponible</span><b className="mt-1 block font-display text-3xl">{inventory.data?.totalProperties ?? 0}</b></div>
             <InventoryBreakdown title="Por tipo de inmueble" rows={inventory.data?.byPropertyType ?? []} />
             <InventoryBreakdown title="Por modalidad" rows={inventory.data?.byOperation ?? []} />
+            <InventoryTypeOperationBreakdown rows={inventory.data?.byTypeAndOperation ?? []} />
           </div>
         )}
       </section>
@@ -894,6 +895,18 @@ function InventoryBreakdown({ title, rows }: { title: string; rows: { name: stri
       {rows.length === 0 ? <p className="p-5 text-sm text-muted-foreground">Sin propiedades disponibles.</p> : (
         <ul className="divide-y divide-border">{rows.map((row) => <li key={row.name} className="flex items-center justify-between gap-4 px-5 py-3 text-sm"><span>{row.name}</span><b>{row.count}</b></li>)}</ul>
       )}
+    </section>
+  )
+}
+
+function InventoryTypeOperationBreakdown({ rows }: { rows: { name: string; sale: number; rent: number; transfer: number; total: number }[] }) {
+  return (
+    <section className="crm-panel overflow-x-auto lg:col-span-2" aria-label="Inventario por tipo y negocio">
+      <h3 className="border-b border-border p-5 font-display text-xl">Por tipo y negocio</h3>
+      <table className="w-full text-left text-sm"><thead><tr className="border-b text-muted-foreground"><th className="p-3">Tipo</th><th className="p-3">Venta</th><th className="p-3">Arriendo</th><th className="p-3">Permuta</th><th className="p-3">Total de inmuebles</th></tr></thead>
+        <tbody>{rows.map((row) => <tr key={row.name} className="border-b border-border"><td className="p-3">{row.name}</td><td className="p-3">{row.sale}</td><td className="p-3">{row.rent}</td><td className="p-3">{row.transfer}</td><td className="p-3">{row.total}</td></tr>)}
+          {rows.length === 0 && <tr><td colSpan={5} className="p-5 text-muted-foreground">Sin propiedades disponibles.</td></tr>}</tbody></table>
+      <p className="p-3 text-xs text-muted-foreground">Venta y arriendo cuenta en ambas columnas, pero una sola vez en el total.</p>
     </section>
   )
 }

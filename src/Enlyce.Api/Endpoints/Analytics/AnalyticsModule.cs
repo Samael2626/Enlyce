@@ -29,10 +29,22 @@ public static class AnalyticsModule
             var byOperation = new[]
             {
                 new InventoryCount("Venta", activeInventory.Count(property => property.Modalidad is ModalidadInmueble.Venta or ModalidadInmueble.VentaYArriendo)),
-                new InventoryCount("Arriendo", activeInventory.Count(property => property.Modalidad is ModalidadInmueble.Arriendo or ModalidadInmueble.VentaYArriendo))
+                new InventoryCount("Arriendo", activeInventory.Count(property => property.Modalidad is ModalidadInmueble.Arriendo or ModalidadInmueble.VentaYArriendo)),
+                new InventoryCount("Permuta", activeInventory.Count(property => property.Modalidad == ModalidadInmueble.Permuta))
             };
 
-            return Results.Ok(new InventoryAnalyticsResponse(activeInventory.Length, byType, byOperation));
+            var byTypeAndOperation = activeInventory
+                .GroupBy(property => property.Tipo.ToString())
+                .Select(group => new InventoryTypeOperationCount(
+                    group.Key,
+                    group.Count(property => property.Modalidad is ModalidadInmueble.Venta or ModalidadInmueble.VentaYArriendo),
+                    group.Count(property => property.Modalidad is ModalidadInmueble.Arriendo or ModalidadInmueble.VentaYArriendo),
+                    group.Count(property => property.Modalidad == ModalidadInmueble.Permuta),
+                    group.Count()))
+                .OrderBy(item => item.Name)
+                .ToArray();
+
+            return Results.Ok(new InventoryAnalyticsResponse(activeInventory.Length, byType, byOperation, byTypeAndOperation));
         })
         .RequireAuthorization("Administrador")
         .WithName("GetInventoryAnalytics")
@@ -477,9 +489,11 @@ public static class AnalyticsModule
 public sealed record InventoryAnalyticsResponse(
     int TotalProperties,
     IReadOnlyList<InventoryCount> ByPropertyType,
-    IReadOnlyList<InventoryCount> ByOperation);
+    IReadOnlyList<InventoryCount> ByOperation,
+    IReadOnlyList<InventoryTypeOperationCount> ByTypeAndOperation);
 
 public sealed record InventoryCount(string Name, int Count);
+public sealed record InventoryTypeOperationCount(string Name, int Sale, int Rent, int Transfer, int Total);
 
 public sealed record SendAdvisorReportRequest(string? RecipientEmail);
 

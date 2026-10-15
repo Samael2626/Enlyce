@@ -638,6 +638,7 @@ export interface InventoryAnalytics {
   totalProperties: number
   byPropertyType: { name: string; count: number }[]
   byOperation: { name: string; count: number }[]
+  byTypeAndOperation: { name: string; sale: number; rent: number; transfer: number; total: number }[]
 }
 
 export interface RealizedDealReportPage {

@@ -10,6 +10,7 @@ const operations = [
   { value: "", label: "Todos" },
   { value: "Venta", label: "Venta" },
   { value: "Arriendo", label: "Arriendo" },
+  { value: "Permuta", label: "Permuta" },
 ] as const;
 
 const propertyTypes = [

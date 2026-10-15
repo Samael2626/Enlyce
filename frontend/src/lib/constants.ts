@@ -56,7 +56,15 @@ export const MODALIDADES_INMUEBLE = [
   "Venta",
   "Arriendo",
   "VentaYArriendo",
+  "Permuta",
 ] as const
+
+export const ETIQUETAS_MODALIDAD_INMUEBLE: Record<string, string> = {
+  Venta: "Venta",
+  Arriendo: "Arriendo",
+  VentaYArriendo: "Venta y arriendo",
+  Permuta: "Permuta",
+}
 
 export const ESTADOS_INMUEBLE = [
   "Disponible",
