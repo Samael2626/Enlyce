@@ -126,11 +126,12 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 ## Ajuste importador (14 oct 2026)
 
-- Ahora mapea nombre, apellidos, email, teléfono y «Recibe correo» por separado. La columna se conserva para revisión, pero importar un valor afirmativo no habilita correos automáticos: falta evidencia verificable del permiso.
+- Ahora mapea nombre, apellidos, email, teléfono y «Recibe correo» por separado. El valor fuente se muestra en la vista previa; no se conserva después en el lote. Importar un valor afirmativo no habilita correos automáticos.
 - En Enlyce el correo puede repetirse en varios contactos. La vista previa detecta repeticiones, pero no expone emails ajenos al alcance del asesor. La evidencia disponible no confirma si el importador Wasi conserva esos duplicados; no atribuirle a Wasi el comportamiento de Enlyce.
 - Administrador puede conceder o revocar el permiso desde la ficha; conceder exige una referencia de evidencia. El historial registra estado, fuente, actor y fecha de registro, en tabla append-only consultable solo por administradores.
 - La importación no crea eventos de permiso a partir de «Recibe correo». Cuando un administrador concede permiso desde la ficha, la bitácora registra fuente, referencia de evidencia, actor y fecha de registro. La fecha original no se reconstruye; contactos previos a la migración no reciben eventos inventados.
 - Migraciones preparadas, no aplicadas. Contactos existentes quedan con `CanReceiveAutomatedEmail=false`; verificar evidencia real antes de habilitar envíos.
+- Criterio de evidencia: el [artículo 9 de la Ley 1581](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?africa=1&i=49981) exige autorización previa e informada por un medio consultable posteriormente. La [SIC](https://sedeelectronica.sic.gov.co/publicaciones/boletin-juridico/boletin/el-silencio-las-casillas-premarcadas-por-defecto-y-la-inaccion-no-constituyen-el-consentimiento-conforme-con) exige conservar prueba y aclara que casillas premarcadas, silencio e inacción no prueban consentimiento. Un «Sí» importado no trae por sí solo fecha, aviso/finalidad aceptada ni prueba de quién lo manifestó; conservarlo como indicador de origen no debe activar envíos hasta vincular una evidencia consultable.
 
 ### Verificación de importación Wasi (15 oct 2026)
 
