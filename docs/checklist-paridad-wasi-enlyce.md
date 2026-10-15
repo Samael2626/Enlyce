@@ -92,6 +92,7 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - El importador Wasi de inmuebles es API en segundo plano; no equivale al importador Excel/CSV documentado por Wasi.
 - Chat sigue como placeholder. Faltan UI equivalente para red, usuarios y reportes; el importador de clientes ya tiene UI básica.
 - Enlyce ofrece calendario con tareas/visitas, analítica CRM/web y checkout; no prueba paridad con agenda/equipos, reportes y ciclo de cuenta Wasi.
+- Auditoría de ficha (2026-10-14): la edición de contacto mostraba Dirección dos veces, ambas enlazadas al mismo campo; se quitó el control duplicado. Los catálogos y etapas configurables siguen pendientes.
 
 ## Ajuste importador (14 oct 2026)
 

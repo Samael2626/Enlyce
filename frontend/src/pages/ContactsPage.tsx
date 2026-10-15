@@ -806,9 +806,6 @@ export function ContactsPage() {
                     <label className="text-xs text-muted-foreground">Dirección
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={address} onChange={(event) => setAddress(event.target.value)} maxLength={500} />
                     </label>
-                    <label className="text-xs text-muted-foreground">Dirección
-                      <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={address} onChange={(event) => setAddress(event.target.value)} maxLength={500} />
-                    </label>
                     <label className="text-xs text-muted-foreground">Teléfono
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={20} />
                     </label>
