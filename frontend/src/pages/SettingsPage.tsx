@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Check, Pencil, Plus, Settings2 } from "lucide-react"
 import { api } from "@/api/client"
 import type { LeadDistributionRule, LeadSlaRule, UpsertLeadSlaRule } from "@/lib/types"
+import { useAuthStore } from "@/stores/authStore"
 
 const RULE_LABELS: Record<LeadDistributionRule, string> = {
   LeastOpenLeads: "Menor carga abierta",
@@ -12,7 +13,14 @@ const RULE_LABELS: Record<LeadDistributionRule, string> = {
 
 export function SettingsPage() {
   const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.user)
+  const canManageFunnels = user?.rol === "Administrador"
   const customerCatalogsQuery = useQuery({ queryKey: ["customer-catalogs"], queryFn: () => api.getCustomerCatalogs() })
+  const customerFunnelStagesQuery = useQuery({ queryKey: ["customer-funnel-stages"], queryFn: () => api.getCustomerFunnelStages() })
+  const customerFunnels = [...new Set([
+    ...(customerCatalogsQuery.data?.funnels ?? []),
+    ...(customerFunnelStagesQuery.data?.stages.map((stage) => stage.funnelName) ?? []),
+  ])]
   const [catalog, setCatalog] = useState("Tipo")
   const [catalogName, setCatalogName] = useState("")
   const [catalogError, setCatalogError] = useState("")
@@ -24,6 +32,22 @@ export function SettingsPage() {
       await queryClient.invalidateQueries({ queryKey: ["customer-catalogs"] })
     },
     onError: (error) => setCatalogError(error instanceof Error ? error.message : "No se pudo guardar la opcion."),
+  })
+  const [stageFunnel, setStageFunnel] = useState("Clientes")
+  const [stageName, setStageName] = useState("")
+  const [stageError, setStageError] = useState("")
+  const addCustomerFunnelStage = useMutation({
+    mutationFn: () => api.addCustomerFunnelStage(stageFunnel, stageName),
+    onSuccess: async () => {
+      setStageName("")
+      setStageError("")
+      await queryClient.invalidateQueries({ queryKey: ["customer-funnel-stages"] })
+    },
+    onError: (error) => setStageError(error instanceof Error ? error.message : "No se pudo guardar la etapa."),
+  })
+  const setDefaultCustomerFunnelStage = useMutation({
+    mutationFn: (id: string) => api.setDefaultCustomerFunnelStage(id),
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["customer-funnel-stages"] }) },
   })
   const settings = useQuery({
     queryKey: ["lead-distribution-rule"],
@@ -246,6 +270,49 @@ export function SettingsPage() {
           </button>
           {catalogError && <p role="alert" className="text-sm text-destructive sm:col-span-3">{catalogError}</p>}
         </form>
+      </section>
+
+      <section className="crm-panel space-y-5 p-6" aria-labelledby="customer-funnel-stages-title">
+        <div>
+          <h2 id="customer-funnel-stages-title" className="font-display text-2xl">Etapas de embudos de clientes</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Cada etapa pertenece a un embudo. La opción predeterminada se conserva para próximos contactos entrantes.</p>
+        </div>
+        {customerFunnelStagesQuery.isError && <p role="alert" className="text-sm text-destructive">No se pudieron cargar las etapas.</p>}
+        {customerCatalogsQuery.data && customerFunnelStagesQuery.data && <div className="grid gap-4 sm:grid-cols-2">
+          {customerFunnels.map((funnelName) => {
+            const stages = customerFunnelStagesQuery.data.stages.filter((stage) => stage.funnelName === funnelName)
+            return <article key={funnelName} className="rounded-md border border-border p-4">
+              <h3 className="font-semibold">{funnelName}</h3>
+              {stages.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">Sin etapas.</p> :
+                <ol className="mt-2 space-y-2 text-sm">{stages.map((stage) => <li key={stage.id} className="flex items-center justify-between gap-3">
+                  <span>{stage.name}{stage.isDefaultForInbound && <span className="ml-2 rounded bg-accent/10 px-2 py-1 text-xs">Predeterminada</span>}</span>
+                  {canManageFunnels && !stage.isDefaultForInbound && <button type="button" className="rounded border border-border px-2 py-1 text-xs"
+                    disabled={setDefaultCustomerFunnelStage.isPending}
+                    onClick={() => setDefaultCustomerFunnelStage.mutate(stage.id)}>Usar para contactos entrantes</button>}
+                </li>)}</ol>}
+              {setDefaultCustomerFunnelStage.isError && <p role="alert" className="mt-2 text-xs text-destructive">No se pudo cambiar la etapa predeterminada.</p>}
+            </article>
+          })}
+        </div>}
+        {canManageFunnels && customerCatalogsQuery.data && <form className="grid gap-3 sm:grid-cols-[220px_minmax(0,1fr)_auto]" onSubmit={(event) => {
+          event.preventDefault()
+          setStageError("")
+          addCustomerFunnelStage.mutate()
+        }}>
+          <label className="grid gap-1 text-sm font-medium">Embudo
+            <select className="rounded border border-border bg-background px-3 py-2" value={stageFunnel} onChange={(event) => setStageFunnel(event.target.value)}>
+              {customerFunnels.map((funnel) => <option key={funnel} value={funnel}>{funnel}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-medium">Nueva etapa
+            <input className="rounded border border-border bg-background px-3 py-2" maxLength={100} value={stageName}
+              onChange={(event) => setStageName(event.target.value)} required />
+          </label>
+          <button className="crm-button self-end inline-flex items-center justify-center gap-2" type="submit" disabled={addCustomerFunnelStage.isPending}>
+            <Plus className="h-4 w-4" aria-hidden="true" />{addCustomerFunnelStage.isPending ? "Guardando…" : "Agregar etapa"}
+          </button>
+          {stageError && <p role="alert" className="text-sm text-destructive sm:col-span-3">{stageError}</p>}
+        </form>}
       </section>
     </main>
   )

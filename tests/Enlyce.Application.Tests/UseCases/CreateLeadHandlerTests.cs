@@ -11,6 +11,8 @@ public sealed class CreateLeadHandlerTests
     private readonly IAsesorRepository _asesorRepository = Substitute.For<IAsesorRepository>();
     private readonly ILeadDistributionSettingsRepository _distributionSettings = Substitute.For<ILeadDistributionSettingsRepository>();
     private readonly IContactRepository _contactRepository = Substitute.For<IContactRepository>();
+    private readonly ICustomerFunnelStageRepository _customerFunnelStageRepository =
+        Substitute.For<ICustomerFunnelStageRepository>();
     private readonly IPropertyPublicationRepository _publicationRepository =
         Substitute.For<IPropertyPublicationRepository>();
     private readonly IConsentimientoRepository _consentRepository =
@@ -410,6 +412,7 @@ public sealed class CreateLeadHandlerTests
         _asesorRepository,
         _distributionSettings,
         _contactRepository,
+        _customerFunnelStageRepository,
         _publicationRepository,
         _consentRepository,
         _policyRepository,

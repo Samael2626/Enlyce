@@ -288,8 +288,8 @@ namespace Enlyce.Infrastructure.Migrations
 
                     b.Property<string>("CustomerStatus")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("CustomerType")
                         .HasMaxLength(30)
@@ -573,6 +573,44 @@ namespace Enlyce.Infrastructure.Migrations
                     b.HasIndex("City", "PropertyType", "Operation");
 
                     b.ToTable("CustomerDemands", (string)null);
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.CustomerFunnelStage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FunnelName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsDefaultForInbound")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDefaultForInbound")
+                        .IsUnique()
+                        .HasFilter("\"IsDefaultForInbound\" = TRUE");
+
+                    b.HasIndex("SortOrder");
+
+                    b.HasIndex("FunnelName", "Name")
+                        .IsUnique();
+
+                    b.ToTable("CustomerFunnelStages", (string)null);
                 });
 
             modelBuilder.Entity("Enlyce.Domain.Entities.DemandPropertyLink", b =>

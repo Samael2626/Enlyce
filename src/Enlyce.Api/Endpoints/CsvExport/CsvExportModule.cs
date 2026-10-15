@@ -313,9 +313,8 @@ public static class CsvExportModule
             return new(null, 0, Results.Forbid());
         if (!string.IsNullOrWhiteSpace(customerType) && customerType.Trim().Length > 30)
             return new(null, 0, Results.BadRequest(new { error = "El tipo de cliente no puede superar 30 caracteres." }));
-        if (!string.IsNullOrWhiteSpace(customerStatus) &&
-            customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
-            return new(null, 0, Results.BadRequest(new { error = "El estado del cliente no es valido." }));
+        if (customerStatus?.Length > 100)
+            return new(null, 0, Results.BadRequest(new { error = "La etapa del cliente no puede superar 100 caracteres." }));
         if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
             return new(null, 0, Results.BadRequest(new { error = "El embudo no puede superar 100 caracteres." }));
         if (!string.IsNullOrWhiteSpace(customerLabel) && customerLabel.Trim().Length > 50)

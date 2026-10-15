@@ -635,6 +635,22 @@ class ApiClient {
     })
   }
 
+  async getCustomerFunnelStages() {
+    return this.request<{ stages: Array<{ id: string; funnelName: string; name: string; sortOrder: number; isDefaultForInbound: boolean }> }>(
+      "/api/configuracion/embudos-clientes/etapas")
+  }
+
+  async addCustomerFunnelStage(funnelName: string, name: string) {
+    return this.request<{ id: string; funnelName: string; name: string; sortOrder: number; isDefaultForInbound: boolean }>(
+      "/api/configuracion/embudos-clientes/etapas", {
+        method: "POST", body: JSON.stringify({ funnelName, name }),
+      })
+  }
+
+  async setDefaultCustomerFunnelStage(id: string) {
+    return this.request<void>(`/api/configuracion/embudos-clientes/etapas/${id}/predeterminada`, { method: "PUT" })
+  }
+
   async upsertLeadSlaRule(rule: import("@/lib/types").UpsertLeadSlaRule) {
     return this.request<void>("/api/configuracion/sla-leads", {
       method: "PUT",

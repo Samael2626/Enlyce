@@ -17,6 +17,7 @@ public static class ContactsModule
             [FromBody] CreateContactRequest request,
             HttpContext http,
             IContactRepository contacts,
+            ICustomerFunnelStageRepository funnelStages,
             IAsesorRepository advisors,
             CancellationToken ct) =>
         {
@@ -30,6 +31,8 @@ public static class ContactsModule
             }
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.BadRequest(new { error = "El nombre es obligatorio." });
+            if (!await funnelStages.IsStageAsync(request.CustomerFunnel, request.CustomerStatus, ct))
+                return Results.BadRequest(new { error = "La etapa no pertenece al embudo seleccionado." });
 
             try
             {
@@ -72,8 +75,8 @@ public static class ContactsModule
                 return Results.BadRequest(new { error = "El rango o la paginacion no son validos." });
             if (customerType?.Length > 30)
                 return Results.BadRequest(new { error = "El tipo de cliente no puede superar 30 caracteres." });
-            if (!string.IsNullOrWhiteSpace(customerStatus) && customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
-                return Results.BadRequest(new { error = "El estado del cliente no es valido." });
+            if (customerStatus?.Length > 100)
+                return Results.BadRequest(new { error = "La etapa del cliente no puede superar 100 caracteres." });
             if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
                 return Results.BadRequest(new { error = "El embudo del cliente no puede superar 100 caracteres." });
             if (!string.IsNullOrWhiteSpace(customerLabel) && customerLabel.Trim().Length > 50)
@@ -175,6 +178,7 @@ public static class ContactsModule
             [FromBody] UpdateContactRequest request,
             HttpContext http,
             IContactRepository contacts,
+            ICustomerFunnelStageRepository funnelStages,
             ILeadRepository leads,
             CancellationToken ct) =>
         {
@@ -188,6 +192,9 @@ public static class ContactsModule
                 if (visibleIds is null || !visibleIds.Contains(contact.Id))
                     return Results.NotFound();
             }
+
+            if (!await funnelStages.IsStageAsync(request.CustomerFunnel, request.CustomerStatus, ct))
+                return Results.BadRequest(new { error = "La etapa no pertenece al embudo seleccionado." });
 
             try
             {

@@ -34,6 +34,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
     private readonly IAsesorRepository _asesorRepo;
     private readonly ILeadDistributionSettingsRepository _distributionSettings;
     private readonly IContactRepository _contactRepo;
+    private readonly ICustomerFunnelStageRepository _customerFunnelStages;
     private readonly IPropertyPublicationRepository _publicationRepo;
     private readonly IConsentimientoRepository _consentimientoRepo;
     private readonly IPoliticaTratamientoRepository _politicaRepo;
@@ -45,6 +46,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         IAsesorRepository asesorRepo,
         ILeadDistributionSettingsRepository distributionSettings,
         IContactRepository contactRepo,
+        ICustomerFunnelStageRepository customerFunnelStages,
         IPropertyPublicationRepository publicationRepo,
         IConsentimientoRepository consentimientoRepo,
         IPoliticaTratamientoRepository politicaRepo,
@@ -55,6 +57,7 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
         _asesorRepo = asesorRepo;
         _distributionSettings = distributionSettings;
         _contactRepo = contactRepo;
+        _customerFunnelStages = customerFunnelStages;
         _publicationRepo = publicationRepo;
         _consentimientoRepo = consentimientoRepo;
         _politicaRepo = politicaRepo;
@@ -96,7 +99,9 @@ public class CreateLeadHandler : ICommandHandler<CreateLeadCommand, CreateLeadRe
             command.AutorizacionDatos, command.TipoOperacion, ownerService, publicationId,
             sourceRoute: NormalizeSourceRoute(command.SourceRoute),
             utmCampaign: NormalizeUtmCampaign(command.UtmCampaign));
-        var contact = await _contactRepo.CreateOrGetAsync(Contact.Create(command.Nombre, email, telefono), ct);
+        var inboundStage = await _customerFunnelStages.GetDefaultForInboundAsync(ct);
+        var contact = await _contactRepo.CreateOrGetAsync(Contact.Create(command.Nombre, email, telefono,
+            inboundStage?.Name ?? "Nuevo", inboundStage?.FunnelName ?? "Clientes"), ct);
         lead.LinkContact(contact.Id);
 
         var continuation = OwnerInquiryContinuationToken.Issue();

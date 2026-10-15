@@ -6,9 +6,6 @@ namespace Enlyce.Domain.Entities;
 
 public sealed class Contact
 {
-    private static readonly HashSet<string> CustomerStatuses = new(StringComparer.OrdinalIgnoreCase)
-        { "Nuevo", "EnProceso", "Convertido", "Recuperado", "Perdido" };
-
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? Surname { get; private set; }
@@ -72,7 +69,8 @@ public sealed class Contact
         Active = active;
     }
 
-    public static Contact Create(string name, Email email, Telefono? phone = null)
+    public static Contact Create(string name, Email email, Telefono? phone = null,
+        string customerStatus = "Nuevo", string customerFunnel = "Clientes")
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainError("El nombre del contacto no puede ser vacio.");
@@ -80,8 +78,11 @@ public sealed class Contact
             throw new DomainError("El nombre no puede superar 200 caracteres.");
 
         var now = DateTime.UtcNow;
+        ValidateStatus(customerStatus);
+        customerFunnel = ValidateFunnel(customerFunnel);
         return new Contact(Guid.NewGuid(), name.Trim(), null, email.Value, phone, null, false,
-            null, "Nuevo", null, "Colombia", null, null, now, now, true);
+            null, customerStatus.Trim(), null, "Colombia", null, null, now, now, true,
+            customerFunnel: customerFunnel);
     }
 
     public static Contact CreateImported(string name, string? surname, string? email, Telefono? phone,
@@ -212,8 +213,8 @@ public sealed class Contact
 
     private static void ValidateStatus(string value)
     {
-        if (!CustomerStatuses.Contains(value))
-            throw new DomainError("El estado del cliente no es valido.");
+        if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > 100)
+            throw new DomainError("La etapa del cliente es obligatoria y no puede superar 100 caracteres.");
     }
 
     private static string ValidateFunnel(string? value)

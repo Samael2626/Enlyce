@@ -58,10 +58,14 @@ function MultiValuePicker({ id, selectionLabel, placeholder, value, options, onC
 
 export function ContactsPage() {
   const customerCatalogsQuery = useQuery({ queryKey: ["customer-catalogs"], queryFn: () => api.getCustomerCatalogs() })
+  const customerFunnelStagesQuery = useQuery({ queryKey: ["customer-funnel-stages"], queryFn: () => api.getCustomerFunnelStages() })
   const customerCatalogs = customerCatalogsQuery.data
   const customerTypeOptions = customerCatalogs?.types ?? DEFAULT_CUSTOMER_TYPES
   const customerLabelOptions = customerCatalogs?.labels ?? []
-  const customerFunnelOptions = customerCatalogs?.funnels ?? ["Clientes"]
+  const customerFunnelStages = customerFunnelStagesQuery.data?.stages ?? []
+  const customerFunnelOptions = [...new Set([...(customerCatalogs?.funnels ?? ["Clientes"]),
+    ...customerFunnelStages.map((stage) => stage.funnelName)])]
+  const customerStatusOptions = [...new Set(customerFunnelStages.map((stage) => stage.name))]
   const acquisitionMediumOptions = customerCatalogs?.acquisitionMedia ?? []
   const createContact = useCreateContact()
   const [showCreateContact, setShowCreateContact] = useState(false)
@@ -70,7 +74,7 @@ export function ContactsPage() {
   const [newContact, setNewContact] = useState({ name: "", surname: "", email: "", phone: "", landline: "",
     customerTypes: [] as string[], customerLabels: [] as string[], address: "", country: "Colombia", department: "", city: "", dateOfBirth: "",
     identificationNumber: "", referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "",
-    customerFunnel: "Clientes" })
+    customerFunnel: "Clientes", customerStatus: "Nuevo" })
   const pageSize = 20
   const [selectedId, setSelectedId] = useState("")
   const [pinnedImportedContactId, setPinnedImportedContactId] = useState("")
@@ -146,6 +150,8 @@ export function ContactsPage() {
   const [customerLabels, setCustomerLabels] = useState<string[]>([])
   const [customerStatus, setCustomerStatus] = useState("Nuevo")
   const [customerFunnel, setCustomerFunnel] = useState("Clientes")
+  const createStageOptions = customerFunnelStages.filter((stage) => stage.funnelName === newContact.customerFunnel)
+  const editStageOptions = customerFunnelStages.filter((stage) => stage.funnelName === customerFunnel)
   const [address, setAddress] = useState("")
   const [country, setCountry] = useState("Colombia")
   const [department, setDepartment] = useState("")
@@ -342,7 +348,7 @@ export function ContactsPage() {
         event.preventDefault()
         setInitialDemandError("")
         try {
-          const created = await createContact.mutateAsync({ ...newContact, advisorId: newContact.advisorId || undefined, customerStatus: "Nuevo" })
+          const created = await createContact.mutateAsync({ ...newContact, advisorId: newContact.advisorId || undefined })
           setSearch(created.name)
           setCreatedFrom(""); setCreatedTo(""); setCustomerTypeFilter(""); setCustomerStatusFilter(""); setAdvisorFilter(""); setPage(1)
           setSelectedId(created.id)
@@ -368,7 +374,7 @@ export function ContactsPage() {
           }
             setNewContact({ name: "", surname: "", email: "", phone: "", landline: "", customerTypes: [], customerLabels: [],
               address: "", country: "Colombia", department: "", city: "", dateOfBirth: "", identificationNumber: "",
-              referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "", customerFunnel: "Clientes" })
+              referredBy: "", acquisitionMedium: "", additionalData: "", advisorId: "", customerFunnel: "Clientes", customerStatus: "Nuevo" })
             setShowCreateContact(false)
             setIncludeInitialDemand(false)
         } catch {
@@ -396,8 +402,20 @@ export function ContactsPage() {
             value={newContact[key]} onChange={(event) => setNewContact((value) => ({ ...value, [key]: event.target.value }))} />}
         </label>)}
         <label className="text-xs text-muted-foreground">Embudo
-          <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.customerFunnel} onChange={(event) => setNewContact((value) => ({ ...value, customerFunnel: event.target.value }))}>
+          <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.customerFunnel} onChange={(event) => {
+            const funnelName = event.target.value
+            const stages = customerFunnelStages.filter((stage) => stage.funnelName === funnelName)
+            setNewContact((value) => ({ ...value, customerFunnel: funnelName,
+              customerStatus: stages.find((stage) => stage.isDefaultForInbound)?.name ?? stages[0]?.name ?? "Nuevo" }))
+          }}>
             {customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+        </label>
+        <label className="text-xs text-muted-foreground">Etapa
+          <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={newContact.customerStatus}
+            onChange={(event) => setNewContact((value) => ({ ...value, customerStatus: event.target.value }))}>
+            {createStageOptions.map((stage) => <option key={stage.id} value={stage.name}>{stage.name}</option>)}
+            {!createStageOptions.some((stage) => stage.name === newContact.customerStatus) && <option value={newContact.customerStatus}>{newContact.customerStatus}</option>}
           </select>
         </label>
         {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asesor encargado
@@ -436,7 +454,7 @@ export function ContactsPage() {
         <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(event) => { event.preventDefault(); setCrossPage(1); setCrossSearched(true) }}>
           <label className="text-xs text-muted-foreground">Nombre del cliente<input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.q} onChange={(event) => setCrossFilters((value) => ({ ...value, q: event.target.value }))} /></label>
           <label className="text-xs text-muted-foreground">Tipo de cliente<input list="customer-type-options" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" placeholder="Cualquiera o personalizado" value={crossFilters.customerType} onChange={(event) => setCrossFilters((value) => ({ ...value, customerType: event.target.value }))} /></label>
-          <label className="text-xs text-muted-foreground">Estado del cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerStatus} onChange={(event) => setCrossFilters((value) => ({ ...value, customerStatus: event.target.value }))}><option value="">Todos</option><option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option></select></label>
+          <label className="text-xs text-muted-foreground">Estado del cliente<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerStatus} onChange={(event) => setCrossFilters((value) => ({ ...value, customerStatus: event.target.value }))}><option value="">Todos</option>{customerStatusOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
           <label className="text-xs text-muted-foreground">Embudo<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.customerFunnel} onChange={(event) => setCrossFilters((value) => ({ ...value, customerFunnel: event.target.value }))}><option value="">Todos</option>{customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
           {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Usuario encargado<select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters.advisorId} onChange={(event) => setCrossFilters((value) => ({ ...value, advisorId: event.target.value }))}><option value="">Todos</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>}
           {(["contactFrom", "contactTo", "demandFrom", "demandTo"] as const).map((key) => <label key={key} className="text-xs text-muted-foreground">{key === "contactFrom" ? "Cliente desde" : key === "contactTo" ? "Cliente hasta" : key === "demandFrom" ? "Demanda desde" : "Demanda hasta"}<input type="date" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={crossFilters[key]} onChange={(event) => setCrossFilters((value) => ({ ...value, [key]: event.target.value }))} /></label>)}
@@ -722,11 +740,7 @@ export function ContactsPage() {
             <label className="block text-xs text-muted-foreground">Estado del cliente
               <select value={customerStatusFilter} onChange={(event) => { setCustomerStatusFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
                 <option value="">Todos</option>
-                <option value="Nuevo">Nuevo</option>
-                <option value="EnProceso">En proceso</option>
-                <option value="Convertido">Convertido</option>
-                <option value="Recuperado">Recuperado</option>
-                <option value="Perdido">Perdido</option>
+                {customerStatusOptions.map((value) => <option key={value} value={value}>{value}</option>)}
               </select>
             </label>
             <label className="block text-xs text-muted-foreground">Embudo
@@ -856,11 +870,17 @@ export function ContactsPage() {
                     </label>
                     <label className="text-xs text-muted-foreground">Estado
                       <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerStatus} onChange={(event) => setCustomerStatus(event.target.value)}>
-                        <option value="Nuevo">Nuevo</option><option value="EnProceso">En proceso</option><option value="Convertido">Convertido</option><option value="Recuperado">Recuperado</option><option value="Perdido">Perdido</option>
+                        {editStageOptions.map((stage) => <option key={stage.id} value={stage.name}>{stage.name}</option>)}
+                        {!editStageOptions.some((stage) => stage.name === customerStatus) && <option value={customerStatus}>{customerStatus}</option>}
                       </select>
                     </label>
                     <label className="text-xs text-muted-foreground">Embudo
-                      <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerFunnel} onChange={(event) => setCustomerFunnel(event.target.value)}>
+                      <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerFunnel} onChange={(event) => {
+                        const funnelName = event.target.value
+                        const stages = customerFunnelStages.filter((stage) => stage.funnelName === funnelName)
+                        setCustomerFunnel(funnelName)
+                        setCustomerStatus(stages.find((stage) => stage.isDefaultForInbound)?.name ?? stages[0]?.name ?? "Nuevo")
+                      }}>
                         {!customerFunnelOptions.includes(customerFunnel) && <option value={customerFunnel}>{customerFunnel}</option>}
                         {customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}
                       </select>

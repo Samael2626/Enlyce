@@ -41,6 +41,7 @@ public static class ClientImportModule
             HttpContext http,
             IClientImportTableReader reader,
             IContactRepository contacts,
+            ICustomerFunnelStageRepository funnelStages,
             ILeadRepository leads,
             CancellationToken ct) =>
         {
@@ -126,6 +127,8 @@ public static class ClientImportModule
             var visibleIds = await EndpointAccess.VisibleContactIdsAsync(http.User, leads, contacts, ct);
             var existing = new HashSet<string>(await contacts.GetExistingEmailsAsync(candidateEmails, visibleIds, ct),
                 StringComparer.OrdinalIgnoreCase);
+            var stages = await funnelStages.GetAllAsync(ct);
+            var validStages = new HashSet<string>(stages.Select(stage => StageKey(stage.FunnelName, stage.Name)), StringComparer.Ordinal);
             var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var responseRows = new List<ClientImportPreviewRow>(Math.Min(table.Rows.Count, MaxPreviewRows));
@@ -146,12 +149,16 @@ public static class ClientImportModule
                 var acquisitionMedium = acquisitionMediumIndex < 0 ? null : Cell(row, acquisitionMediumIndex);
                 var additionalData = additionalDataIndex < 0 ? null : Cell(row, additionalDataIndex);
                 var labels = customerLabelsIndex < 0 ? [] : ParseCustomerLabels(Cell(row, customerLabelsIndex));
-                var funnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex) ?? "Clientes";
+                var funnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex)?.Trim();
+                if (string.IsNullOrWhiteSpace(funnel)) funnel = "Clientes";
                 var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
                     ParseConsent(Cell(row, canReceiveEmailIndex));
                 var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
                 var customerType = customerTypes.FirstOrDefault();
-                var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";
+                var rawCustomerStatus = customerStatusIndex < 0 ? null : Cell(row, customerStatusIndex);
+                var customerStatus = string.IsNullOrWhiteSpace(rawCustomerStatus)
+                    ? DefaultStageForFunnel(funnel, stages)
+                    : CanonicalStageName(funnel, rawCustomerStatus, stages);
                 customerType = NormalizeCustomerType(customerType);
                 customerStatus = NormalizeCustomerStatus(customerStatus);
                 var address = addressIndex < 0 ? null : Cell(row, addressIndex);
@@ -163,7 +170,7 @@ public static class ClientImportModule
                 var error = ValidateRow(name, surname, emailText, email, phone, parsedPhone,
                     customerTypes, customerStatus, address, country, department, city,
                     landline, TryPhone(landline), dateOfBirth, TryDateOfBirth(dateOfBirth),
-                    identificationNumber, referredBy, acquisitionMedium, additionalData, labels, funnel);
+                    identificationNumber, referredBy, acquisitionMedium, additionalData, labels, funnel, validStages);
                 var duplicate = error is null && email is not null &&
                     (existing.Contains(email.Value) || !seenInFile.Add(email.Value));
                 if (duplicate)
@@ -215,6 +222,7 @@ public static class ClientImportModule
         HttpContext http,
         IClientImportTableReader reader,
         IContactRepository contacts,
+        ICustomerFunnelStageRepository funnelStages,
         IAsesorRepository advisors,
         ILeadRepository leads,
         CancellationToken ct)
@@ -321,6 +329,8 @@ public static class ClientImportModule
         var visibleIds = await EndpointAccess.VisibleContactIdsAsync(http.User, leads, contacts, ct);
         var existing = new HashSet<string>(await contacts.GetExistingEmailsAsync(candidateEmails, visibleIds, ct),
             StringComparer.OrdinalIgnoreCase);
+        var stages = await funnelStages.GetAllAsync(ct);
+        var validStages = new HashSet<string>(stages.Select(stage => StageKey(stage.FunnelName, stage.Name)), StringComparer.Ordinal);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var newContacts = new List<Contact>();
         var importedContactLinks = new List<ClientImportContactLink>(table.Rows.Count);
@@ -343,12 +353,16 @@ public static class ClientImportModule
             var acquisitionMedium = acquisitionMediumIndex < 0 ? null : Cell(row, acquisitionMediumIndex);
             var additionalData = additionalDataIndex < 0 ? null : Cell(row, additionalDataIndex);
             var customerLabels = customerLabelsIndex < 0 ? [] : ParseCustomerLabels(Cell(row, customerLabelsIndex));
-            var customerFunnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex) ?? "Clientes";
+            var customerFunnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex)?.Trim();
+            if (string.IsNullOrWhiteSpace(customerFunnel)) customerFunnel = "Clientes";
             // Un indicador afirmativo del archivo no es evidencia auditable del consentimiento.
             var canReceiveAutomatedEmail = false;
             var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
             var customerType = customerTypes.FirstOrDefault();
-            var customerStatus = customerStatusIndex < 0 ? "Nuevo" : Cell(row, customerStatusIndex) ?? "Nuevo";
+            var rawCustomerStatus = customerStatusIndex < 0 ? null : Cell(row, customerStatusIndex);
+            var customerStatus = string.IsNullOrWhiteSpace(rawCustomerStatus)
+                ? DefaultStageForFunnel(customerFunnel, stages)
+                : CanonicalStageName(customerFunnel, rawCustomerStatus, stages);
             customerType = NormalizeCustomerType(customerType);
             customerStatus = NormalizeCustomerStatus(customerStatus);
             var address = addressIndex < 0 ? null : Cell(row, addressIndex);
@@ -362,7 +376,7 @@ public static class ClientImportModule
             var error = ValidateRow(name, surname, emailText, email, phoneText, phone,
                 customerTypes, customerStatus, address, country, department, city,
                 landlineText, landline, dateOfBirthText, dateOfBirth, identificationNumber,
-                referredBy, acquisitionMedium, additionalData, customerLabels, customerFunnel);
+                referredBy, acquisitionMedium, additionalData, customerLabels, customerFunnel, validStages);
             var duplicate = error is null && email is not null &&
                 (existing.Contains(email.Value) || !seen.Add(email.Value));
             if (error is not null)
@@ -609,12 +623,28 @@ public static class ClientImportModule
         _ => value.Trim()
     };
 
+    private static string DefaultStageForFunnel(string funnelName, IReadOnlyList<CustomerFunnelStage> stages) =>
+        stages.Where(stage => string.Equals(stage.FunnelName, funnelName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(stage => stage.IsDefaultForInbound)
+            .ThenBy(stage => stage.SortOrder)
+            .Select(stage => stage.Name)
+            .FirstOrDefault() ?? "Nuevo";
+
+    private static string CanonicalStageName(string funnelName, string stageName,
+        IReadOnlyList<CustomerFunnelStage> stages)
+    {
+        var normalized = NormalizeCustomerStatus(stageName);
+        return stages.FirstOrDefault(stage =>
+            string.Equals(stage.FunnelName, funnelName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(stage.Name, normalized, StringComparison.OrdinalIgnoreCase))?.Name ?? normalized;
+    }
+
     private static string? ValidateRow(string? name, string? surname, string? emailText, Email? email,
         string? phoneText, Telefono? phone, string[] customerTypes, string customerStatus,
         string? address, string country, string? department, string? city,
         string? landlineText, Telefono? landline, string? dateOfBirthText, DateOnly? dateOfBirth,
         string? identificationNumber, string? referredBy, string? acquisitionMedium,
-        string? additionalData, string[] customerLabels, string customerFunnel)
+        string? additionalData, string[] customerLabels, string customerFunnel, ISet<string> validStages)
     {
         if (string.IsNullOrWhiteSpace(name))
             return "Falta el nombre.";
@@ -634,8 +664,8 @@ public static class ClientImportModule
             return "La fecha de nacimiento no puede estar en el futuro.";
         if (customerTypes.Length > 10 || customerTypes.Any(type => type.Length > 30))
             return "Cada cliente admite hasta 10 tipos de máximo 30 caracteres.";
-        if (customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
-            return "El estado del cliente no es valido.";
+        if (customerStatus.Length > 100 || !validStages.Contains(StageKey(customerFunnel, customerStatus)))
+            return "La etapa no existe en el embudo seleccionado.";
         if (customerLabels.Length > 20 || customerLabels.Any(label => label.Length > 50))
             return "Cada cliente admite hasta 20 etiquetas de maximo 50 caracteres.";
         if (string.IsNullOrWhiteSpace(customerFunnel) || customerFunnel.Length > 100)
@@ -646,6 +676,9 @@ public static class ClientImportModule
             return "Uno de los campos del cliente supera la longitud permitida.";
         return null;
     }
+
+    private static string StageKey(string funnel, string stage) =>
+        $"{funnel.Trim().ToUpperInvariant()}\0{stage.Trim().ToUpperInvariant()}";
 }
 
 public sealed record ClientImportConfirmationResponse(

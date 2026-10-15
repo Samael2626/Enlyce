@@ -16,7 +16,7 @@ public sealed class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.Property(contact => contact.CustomerType).HasMaxLength(30);
         builder.Property(contact => contact.CustomerTypes).HasColumnType("text[]").HasDefaultValueSql("ARRAY[]::text[]").IsRequired();
         builder.Property(contact => contact.CustomerLabels).HasColumnType("text[]").HasDefaultValueSql("ARRAY[]::text[]").IsRequired();
-        builder.Property(contact => contact.CustomerStatus).HasMaxLength(20).IsRequired();
+        builder.Property(contact => contact.CustomerStatus).HasMaxLength(100).IsRequired();
         builder.Property(contact => contact.CustomerFunnel).HasMaxLength(100).HasDefaultValue("Clientes").IsRequired();
         builder.Property(contact => contact.Email).HasMaxLength(320);
         builder.Property(contact => contact.Address).HasMaxLength(500);

@@ -62,9 +62,8 @@ public static class DemandsModule
                 return Results.BadRequest(new { error = "El rango de fechas no es valido." });
             if (customerType?.Length > 30)
                 return Results.BadRequest(new { error = "El tipo de cliente no puede superar 30 caracteres." });
-            if (!string.IsNullOrWhiteSpace(customerStatus) &&
-                customerStatus is not ("Nuevo" or "EnProceso" or "Convertido" or "Recuperado" or "Perdido"))
-                return Results.BadRequest(new { error = "El estado del cliente no es valido." });
+            if (customerStatus?.Length > 100)
+                return Results.BadRequest(new { error = "La etapa del cliente no puede superar 100 caracteres." });
             if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
                 return Results.BadRequest(new { error = "El embudo del cliente no puede superar 100 caracteres." });
             if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
