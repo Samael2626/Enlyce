@@ -644,7 +644,7 @@ export function ContactsPage() {
 
       <section className="crm-panel p-5">
         <h2 className="font-display text-xl text-foreground">Importar clientes</h2>
-        <p className="mt-1 text-sm text-muted-foreground">CSV, XLS o XLSX. Hasta 10 MB. La vista previa valida nombre, email y teléfono antes de guardar.</p>
+        <p className="mt-1 text-sm text-muted-foreground">CSV, XLS o XLSX. Hasta 10 MB. El nombre es obligatorio; email y teléfono son opcionales y se valida su formato cuando se informan.</p>
         <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={async (event) => {
           event.preventDefault()
           if (!importFile) return
@@ -745,8 +745,8 @@ export function ContactsPage() {
             <fieldset disabled={importing} className="contents">
             <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setNameColumn, value)} />
             <ImportColumnSelect label="Apellidos" value={surnameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setSurnameColumn, value)} optional />
-            <ImportColumnSelect label="Email" value={emailColumn} columns={importColumns} onChange={(value) => updateImportMapping(setEmailColumn, value)} optional />
-            <ImportColumnSelect label="Teléfono" value={phoneColumn} columns={importColumns} onChange={(value) => updateImportMapping(setPhoneColumn, value)} optional />
+            <ImportColumnSelect label="Email (opcional)" value={emailColumn} columns={importColumns} onChange={(value) => updateImportMapping(setEmailColumn, value)} optional />
+            <ImportColumnSelect label="Teléfono (opcional)" value={phoneColumn} columns={importColumns} onChange={(value) => updateImportMapping(setPhoneColumn, value)} optional />
             <ImportColumnSelect label="Recibe correo" value={canReceiveEmailColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCanReceiveEmailColumn, value)} optional />
             <ImportColumnSelect label="Tipo de cliente" value={customerTypeColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCustomerTypeColumn, value)} optional />
             <ImportColumnSelect label="Etiquetas" value={customerLabelsColumn} columns={importColumns} onChange={(value) => updateImportMapping(setCustomerLabelsColumn, value)} optional />
