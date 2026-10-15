@@ -69,7 +69,7 @@ export default async function ContactoPage({ searchParams }: PageProps) {
       )}
 
       <ContactForm
-        publicationId={property?.id}
+        publicationId={property?.publicationId ?? undefined}
         propertySlug={property?.slug}
         propertyTitle={property?.publicTitle}
         isOwnerInquiry={isOwnerInquiry}

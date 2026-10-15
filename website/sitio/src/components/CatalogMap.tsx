@@ -14,8 +14,8 @@ export type CatalogMapItem = {
   title: string;
   municipality: string;
   neighborhood: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
 };
 type MappedProperty = CatalogMapItem & { location: ApproximateLocation };
 type Props = {

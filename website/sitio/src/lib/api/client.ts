@@ -5,6 +5,13 @@ type Schemas = components["schemas"];
 // Swashbuckle genera todo opcional y anulable. Strict deja los campos
 // obligatorios y sin null para que las paginas no vayan sembradas de guardas.
 type Strict<T> = { [K in keyof T]-?: NonNullable<T[K]> };
+type PublicLocation = Strict<Omit<
+  Schemas["PublicLocationResponse"],
+  "approximateLatitude" | "approximateLongitude"
+>> & {
+  approximateLatitude?: number | null;
+  approximateLongitude?: number | null;
+};
 
 // Las respuestas generadas desde Swashbuckle llegan con todo opcional. Se
 // estrechan aqui una sola vez para que las paginas trabajen con datos firmes.
@@ -24,7 +31,7 @@ export type PropertyListItem = Strict<
   >
 > & {
   price: Strict<Schemas["PublicMoneyResponse"]>;
-  location: Strict<Schemas["PublicLocationResponse"]>;
+  location: PublicLocation;
   coverPhoto?: Strict<Schemas["PublicCoverPhotoResponse"]> | null;
 };
 
@@ -45,14 +52,15 @@ export type PropertyDetail = Strict<
 > & {
   price: Strict<Schemas["PublicMoneyResponse"]>;
   administrationFee?: Strict<Schemas["PublicMoneyResponse"]> | null;
-  location: Strict<Schemas["PublicLocationResponse"]>;
+  location: PublicLocation;
   features: Strict<Omit<Schemas["PublicPropertyFeaturesResponse"], "stratum">> & {
     stratum?: number | null;
   };
   photos: PropertyPhoto[];
-  advisor: Strict<Omit<Schemas["PublicAdvisorResponse"], "publicPhone">> & {
+  publicationId?: string | null;
+  advisor: (Strict<Omit<Schemas["PublicAdvisorResponse"], "publicPhone">> & {
     publicPhone?: string | null;
-  };
+  }) | null;
 };
 
 export class ApiError extends Error {

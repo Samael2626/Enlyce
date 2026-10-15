@@ -45,7 +45,10 @@ public sealed class GetPublicPropertyBySlugHandler
                 null,
                 []),
             item.Photos.Select(GetPublicPropertiesHandler.MapPhoto).ToList(),
-            new PublicAdvisorResponse(item.AdvisorId, item.AdvisorDisplayName, null),
+            item.AdvisorId.HasValue && item.AdvisorDisplayName is not null
+                ? new PublicAdvisorResponse(item.AdvisorId.Value, item.AdvisorDisplayName, null)
+                : null,
+            item.PublicationId,
             item.PublishedAt);
     }
 }

@@ -65,8 +65,8 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
               title: property.publicTitle,
               municipality: property.location.municipality,
               neighborhood: property.location.neighborhood,
-              latitude: property.location.approximateLatitude,
-              longitude: property.location.approximateLongitude,
+              latitude: property.location.approximateLatitude ?? undefined,
+              longitude: property.location.approximateLongitude ?? undefined,
             }))}
           >
             <ul className="catalog-results" aria-label="Publicaciones de esta página">

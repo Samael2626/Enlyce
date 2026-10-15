@@ -43,8 +43,8 @@ public sealed record PublicPropertyListData(
     string PriceCurrency,
     string Municipality,
     string Neighborhood,
-    decimal ApproximateLatitude,
-    decimal ApproximateLongitude,
+    decimal? ApproximateLatitude,
+    decimal? ApproximateLongitude,
     int AreaSquareMeters,
     int Bedrooms,
     int Bathrooms,
@@ -63,15 +63,16 @@ public sealed record PublicPropertyDetailData(
     string PriceCurrency,
     string Municipality,
     string Neighborhood,
-    decimal ApproximateLatitude,
-    decimal ApproximateLongitude,
+    decimal? ApproximateLatitude,
+    decimal? ApproximateLongitude,
     int AreaSquareMeters,
     int Bedrooms,
     int Bathrooms,
     int ParkingSpaces,
     IReadOnlyList<PublicPhotoData> Photos,
-    Guid AdvisorId,
-    string AdvisorDisplayName,
+    Guid? AdvisorId,
+    string? AdvisorDisplayName,
+    Guid? PublicationId,
     DateTime PublishedAt);
 
 public sealed record PublicPropertyPageData(
@@ -83,8 +84,8 @@ public sealed record PublicMoneyResponse(decimal Amount, string Currency);
 public sealed record PublicLocationResponse(
     string Municipality,
     string Neighborhood,
-    decimal ApproximateLatitude,
-    decimal ApproximateLongitude);
+    decimal? ApproximateLatitude,
+    decimal? ApproximateLongitude);
 
 public sealed record PublicPhotoResponse(
     string Url,
@@ -142,5 +143,6 @@ public sealed record PublicPropertyDetailResponse(
     PublicLocationResponse Location,
     PublicPropertyFeaturesResponse Features,
     IReadOnlyList<PublicPhotoResponse> Photos,
-    PublicAdvisorResponse Advisor,
+    PublicAdvisorResponse? Advisor,
+    Guid? PublicationId,
     DateTime PublishedAt);

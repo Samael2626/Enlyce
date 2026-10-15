@@ -170,3 +170,9 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 - El lector de Excel ahora conserva las posiciones de celdas numéricas enteras con 16 o más dígitos. Si se mapean a teléfono, fijo o identificación, preview y confirmación rechazan esa fila con instrucción de corregir la celda como texto; evita importar el número redondeado silenciosamente.
 - Los números de menos de 16 dígitos pueden haber perdido ceros iniciales si Excel los guardó como valor numérico sin máscara. El lector recupera máscaras simples de ceros (`000...`), pero no puede reconstruir ceros que el archivo ya descartó: importar teléfonos e identificaciones como texto sigue siendo requisito operativo.
+
+## Revisión de importador y vitrina pública (2026-10-15)
+
+- El importador de inmuebles ahora tiene endpoints de vista previa/confirmación y pantalla `/inmuebles/importar`; compilación frontend correcta y `dotnet build` correcto. No equivale a paridad terminada: la importación crea propietario genérico, no descarga URLs de fotos, no publica directamente y el modelo actual no conserva precio de venta y alquiler como dos valores en una ficha. No desplegar sin cerrar esas brechas.
+- El usuario confirmó que todos los inmuebles actuales del CRM son públicos. La vitrina debe leer inmuebles activos directamente; las publicaciones existentes solo aportan contenido público, fotos y coordenadas aproximadas cuando están publicadas. No exponer calle ni datos de propietario; fichas sin publicación no dibujan mapa ni atribuyen asesor.
+- La importación de clientes sigue siendo la primera entrega acordada; sus brechas pendientes están anotadas arriba (duplicados en Wasi sin evidencia, sin ID Wasi ni conciliación crear/actualizar/omitir, topología de réplicas y campos desconocidos). Una carga real controlada en Wasi sigue siendo evidencia necesaria para cerrar reglas de importación.

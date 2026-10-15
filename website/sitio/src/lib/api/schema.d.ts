@@ -689,9 +689,9 @@ export interface components {
             municipality?: string | null;
             neighborhood?: string | null;
             /** Format: double */
-            approximateLatitude?: number;
+            approximateLatitude?: number | null;
             /** Format: double */
-            approximateLongitude?: number;
+            approximateLongitude?: number | null;
         };
         PublicMoneyResponse: {
             /** Format: double */
@@ -718,7 +718,9 @@ export interface components {
             location?: components["schemas"]["PublicLocationResponse"];
             features?: components["schemas"]["PublicPropertyFeaturesResponse"];
             photos?: components["schemas"]["PublicPhotoResponse"][] | null;
-            advisor?: components["schemas"]["PublicAdvisorResponse"];
+            advisor?: components["schemas"]["PublicAdvisorResponse"] | null;
+            /** Format: uuid */
+            publicationId?: string | null;
             /** Format: date-time */
             publishedAt?: string;
         };

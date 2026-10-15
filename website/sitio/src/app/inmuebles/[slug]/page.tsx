@@ -166,8 +166,8 @@ export default async function InmueblePage({ params }: PageProps) {
       />
 
       <PropertyLocation
-        latitude={property.location.approximateLatitude}
-        longitude={property.location.approximateLongitude}
+        latitude={property.location.approximateLatitude ?? undefined}
+        longitude={property.location.approximateLongitude ?? undefined}
         municipality={property.location.municipality}
         neighborhood={property.location.neighborhood}
         title={property.publicTitle}
@@ -176,7 +176,7 @@ export default async function InmueblePage({ params }: PageProps) {
       <section aria-labelledby="contacto" className="rounded-sheet bg-surface p-6 shadow-card">
         <h2 id="contacto" className="mb-2 text-2xl">¿Quieres verlo?</h2>
         <p className="mb-4 text-muted">
-          Te acompaña {property.advisor.displayName}. Agenda una visita sin costo.
+          Te acompaña {property.advisor?.displayName ?? "un asesor"}. Agenda una visita sin costo.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <Link

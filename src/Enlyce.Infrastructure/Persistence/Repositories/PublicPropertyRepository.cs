@@ -4,179 +4,151 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Enlyce.Infrastructure.Persistence.Repositories;
 
-public sealed class PublicPropertyRepository : IPublicPropertyReadRepository
+public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicPropertyReadRepository
 {
-    private readonly EnlyceDbContext _context;
-
-    public PublicPropertyRepository(EnlyceDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<PublicPropertyPageData> SearchAsync(
         PublicPropertySearchCriteria criteria,
         CancellationToken ct = default)
     {
-        var query =
-            from publication in _context.PropertyPublications.AsNoTracking()
-            join property in _context.Inmuebles.AsNoTracking()
-                on publication.PropertyId equals property.Id
-            where publication.Status == PublicationStatus.Published
-            select new { Publication = publication, Property = property };
+        var properties = context.Inmuebles.AsNoTracking().Where(property => property.Activo);
 
         if (criteria.Operation.HasValue)
-            query = query.Where(item => item.Property.Modalidad == criteria.Operation.Value);
-
+            properties = properties.Where(property => property.Modalidad == criteria.Operation.Value);
         if (criteria.PropertyType.HasValue)
-            query = query.Where(item => item.Property.Tipo == criteria.PropertyType.Value);
-
+            properties = properties.Where(property => property.Tipo == criteria.PropertyType.Value);
         if (criteria.Municipality is not null)
         {
             var municipality = criteria.Municipality.ToLower();
-            query = query.Where(item =>
-                item.Publication.Municipality != null &&
-                item.Publication.Municipality.ToLower() == municipality);
+            properties = properties.Where(property => property.Direccion.Ciudad.ToLower() == municipality);
         }
-
         if (criteria.Neighborhood is not null)
         {
             var neighborhood = criteria.Neighborhood.ToLower();
-            query = query.Where(item =>
-                item.Publication.Neighborhood != null &&
-                item.Publication.Neighborhood.ToLower() == neighborhood);
+            properties = properties.Where(property =>
+                (property.Direccion.Barrio ?? property.Direccion.Ciudad).ToLower() == neighborhood);
         }
-
         if (criteria.MinPrice.HasValue)
-            query = query.Where(item => item.Publication.PublicPriceAmount >= criteria.MinPrice.Value);
-
+            properties = properties.Where(property => property.Precio.Monto >= criteria.MinPrice.Value);
         if (criteria.MaxPrice.HasValue)
-            query = query.Where(item => item.Publication.PublicPriceAmount <= criteria.MaxPrice.Value);
-
+            properties = properties.Where(property => property.Precio.Monto <= criteria.MaxPrice.Value);
         if (criteria.MinArea.HasValue)
-            query = query.Where(item => item.Property.MetrosCuadrados >= criteria.MinArea.Value);
-
+            properties = properties.Where(property => property.MetrosCuadrados >= criteria.MinArea.Value);
         if (criteria.MaxArea.HasValue)
-            query = query.Where(item => item.Property.MetrosCuadrados <= criteria.MaxArea.Value);
-
+            properties = properties.Where(property => property.MetrosCuadrados <= criteria.MaxArea.Value);
         if (criteria.MinBedrooms.HasValue)
-            query = query.Where(item => item.Property.Habitaciones >= criteria.MinBedrooms.Value);
-
+            properties = properties.Where(property => property.Habitaciones >= criteria.MinBedrooms.Value);
         if (criteria.MinBathrooms.HasValue)
-            query = query.Where(item => item.Property.Banos >= criteria.MinBathrooms.Value);
-
+            properties = properties.Where(property => property.Banos >= criteria.MinBathrooms.Value);
         if (criteria.MinParkingSpaces.HasValue)
-            query = query.Where(item => item.Property.Parqueaderos >= criteria.MinParkingSpaces.Value);
+            properties = properties.Where(property => property.Parqueaderos >= criteria.MinParkingSpaces.Value);
 
-        var total = await query.CountAsync(ct);
-        query = criteria.Sort switch
+        var total = await properties.CountAsync(ct);
+        var ordered = criteria.Sort switch
         {
-            PublicPropertySort.PriceAscending => query
-                .OrderBy(item => (double)(item.Publication.PublicPriceAmount ?? 0))
-                .ThenBy(item => item.Publication.Id),
-            PublicPropertySort.PriceDescending => query
-                .OrderByDescending(item => (double)(item.Publication.PublicPriceAmount ?? 0))
-                .ThenBy(item => item.Publication.Id),
-            _ => query
-                .OrderByDescending(item => item.Publication.PublishedAt)
-                .ThenBy(item => item.Publication.Id)
+            PublicPropertySort.PriceAscending => properties.OrderBy(property => property.Precio.Monto)
+                .ThenBy(property => property.Id),
+            PublicPropertySort.PriceDescending => properties.OrderByDescending(property => property.Precio.Monto)
+                .ThenBy(property => property.Id),
+            _ => properties.OrderByDescending(property => property.FechaCreacion).ThenBy(property => property.Id)
         };
+        var page = await ordered.Skip((criteria.Page - 1) * criteria.PageSize)
+            .Take(criteria.PageSize).ToListAsync(ct);
+        if (page.Count == 0)
+            return new PublicPropertyPageData(total, []);
 
-        var items = await query
-            .Skip((criteria.Page - 1) * criteria.PageSize)
-            .Take(criteria.PageSize)
-            .Select(item => new PublicPropertyListData(
-                item.Publication.Id,
-                item.Publication.Slug,
-                item.Publication.PublicTitle,
-                item.Property.Tipo,
-                item.Property.Modalidad,
-                item.Publication.PublicPriceAmount!.Value,
-                item.Publication.PublicPriceCurrency!,
-                item.Publication.Municipality!,
-                item.Publication.Neighborhood!,
-                item.Publication.ApproximateLatitude!.Value,
-                item.Publication.ApproximateLongitude!.Value,
-                item.Property.MetrosCuadrados,
-                item.Property.Habitaciones,
-                item.Property.Banos,
-                item.Property.Parqueaderos,
-                null,
-                item.Publication.PublishedAt!.Value))
-            .ToListAsync(ct);
-
-        if (items.Count == 0)
-            return new PublicPropertyPageData(total, items);
-
-        var publicationIds = items.Select(item => item.Id).ToArray();
-        var coverRows = await _context.PropertyPhotos
-            .AsNoTracking()
+        var ids = page.Select(property => property.Id).ToArray();
+        var publications = await context.PropertyPublications.AsNoTracking()
+            .Where(publication => ids.Contains(publication.PropertyId) && publication.Status == PublicationStatus.Published)
+            .ToDictionaryAsync(publication => publication.PropertyId, ct);
+        var publicationIds = publications.Values.Select(publication => publication.Id).ToArray();
+        var covers = await context.PropertyPhotos.AsNoTracking()
             .Where(photo => publicationIds.Contains(photo.PublicationId) && photo.IsCover)
-            .Select(photo => new
-            {
-                photo.PublicationId,
-                Photo = new PublicPhotoData(photo.Url, photo.AltText, photo.Order, photo.IsCover)
-            })
-            .ToListAsync(ct);
-        var covers = coverRows.ToDictionary(row => row.PublicationId, row => row.Photo);
-        var mappedItems = items
-            .Select(item => item with
-            {
-                CoverPhoto = covers.GetValueOrDefault(item.Id)
-            })
-            .ToList();
+            .ToDictionaryAsync(photo => photo.PublicationId,
+                photo => new PublicPhotoData(photo.Url, photo.AltText, photo.Order, photo.IsCover), ct);
 
-        return new PublicPropertyPageData(total, mappedItems);
-    }
-
-    public async Task<PublicPropertyDetailData?> GetBySlugAsync(
-        string slug,
-        CancellationToken ct = default)
-    {
-        var detail = await (
-            from publication in _context.PropertyPublications.AsNoTracking()
-            join property in _context.Inmuebles.AsNoTracking()
-                on publication.PropertyId equals property.Id
-            join advisor in _context.Asesores.AsNoTracking()
-                on publication.AdvisorId equals advisor.Id
-            where publication.Status == PublicationStatus.Published &&
-                  publication.Slug == slug
-            select new PublicPropertyDetailData(
-                publication.Id,
-                publication.Slug,
-                publication.PublicTitle,
-                publication.PublicDescription,
+        var items = page.Select(property =>
+        {
+            publications.TryGetValue(property.Id, out var publication);
+            return new PublicPropertyListData(
+                property.Id,
+                publication?.Slug ?? BuildCrmSlug(property.Id),
+                publication?.PublicTitle ?? property.Nombre,
                 property.Tipo,
                 property.Modalidad,
-                publication.PublicPriceAmount!.Value,
-                publication.PublicPriceCurrency!,
-                publication.Municipality!,
-                publication.Neighborhood!,
-                publication.ApproximateLatitude!.Value,
-                publication.ApproximateLongitude!.Value,
+                publication?.PublicPriceAmount ?? property.Precio.Monto,
+                publication?.PublicPriceCurrency ?? property.Precio.Moneda,
+                publication?.Municipality ?? property.Direccion.Ciudad,
+                publication?.Neighborhood ?? property.Direccion.Barrio ?? property.Direccion.Ciudad,
+                publication?.ApproximateLatitude,
+                publication?.ApproximateLongitude,
                 property.MetrosCuadrados,
                 property.Habitaciones,
                 property.Banos,
                 property.Parqueaderos,
-                Array.Empty<PublicPhotoData>(),
-                advisor.Id,
-                advisor.Nombre,
-                publication.PublishedAt!.Value))
+                publication is not null ? covers.GetValueOrDefault(publication.Id) : null,
+                publication?.PublishedAt ?? property.FechaCreacion);
+        }).ToList();
+
+        return new PublicPropertyPageData(total, items);
+    }
+
+    public async Task<PublicPropertyDetailData?> GetBySlugAsync(string slug, CancellationToken ct = default)
+    {
+        var published = await (
+            from publication in context.PropertyPublications.AsNoTracking()
+            join property in context.Inmuebles.AsNoTracking() on publication.PropertyId equals property.Id
+            join advisor in context.Asesores.AsNoTracking() on publication.AdvisorId equals advisor.Id into advisors
+            from advisor in advisors.DefaultIfEmpty()
+            where publication.Status == PublicationStatus.Published && publication.Slug == slug && property.Activo
+            select new PublicPropertyDetailData(
+                property.Id, publication.Slug, publication.PublicTitle, publication.PublicDescription,
+                property.Tipo, property.Modalidad, publication.PublicPriceAmount!.Value,
+                publication.PublicPriceCurrency!, publication.Municipality!, publication.Neighborhood!,
+                publication.ApproximateLatitude, publication.ApproximateLongitude,
+                property.MetrosCuadrados, property.Habitaciones, property.Banos, property.Parqueaderos,
+                Array.Empty<PublicPhotoData>(), advisor == null ? null : advisor.Id,
+                advisor == null ? null : advisor.Nombre, publication.Id, publication.PublishedAt!.Value))
             .SingleOrDefaultAsync(ct);
 
-        if (detail is null)
+        if (published is not null)
+            return await AddPhotosAsync(published, published.PublicationId!.Value, ct);
+
+        if (!TryParseCrmSlug(slug, out var propertyId))
             return null;
 
-        var photos = await _context.PropertyPhotos
-            .AsNoTracking()
-            .Where(photo => photo.PublicationId == detail.Id)
-            .OrderBy(photo => photo.Order)
-            .Select(photo => new PublicPhotoData(
-                photo.Url,
-                photo.AltText,
-                photo.Order,
-                photo.IsCover))
-            .ToListAsync(ct);
+        var propertyRecord = await context.Inmuebles.AsNoTracking()
+            .SingleOrDefaultAsync(property => property.Id == propertyId && property.Activo, ct);
+        if (propertyRecord is null)
+            return null;
 
+        var detail = new PublicPropertyDetailData(
+            propertyRecord.Id, slug, propertyRecord.Nombre, propertyRecord.Descripcion,
+            propertyRecord.Tipo, propertyRecord.Modalidad, propertyRecord.Precio.Monto,
+            propertyRecord.Precio.Moneda, propertyRecord.Direccion.Ciudad,
+            propertyRecord.Direccion.Barrio ?? propertyRecord.Direccion.Ciudad,
+            null, null, propertyRecord.MetrosCuadrados, propertyRecord.Habitaciones,
+            propertyRecord.Banos, propertyRecord.Parqueaderos, [], null, null, null,
+            propertyRecord.FechaCreacion);
+        return detail;
+    }
+
+    private async Task<PublicPropertyDetailData> AddPhotosAsync(
+        PublicPropertyDetailData detail, Guid publicationId, CancellationToken ct)
+    {
+        var photos = await context.PropertyPhotos.AsNoTracking()
+            .Where(photo => photo.PublicationId == publicationId)
+            .OrderBy(photo => photo.Order)
+            .Select(photo => new PublicPhotoData(photo.Url, photo.AltText, photo.Order, photo.IsCover))
+            .ToListAsync(ct);
         return detail with { Photos = photos };
+    }
+
+    private static string BuildCrmSlug(Guid id) => $"crm-{id:N}";
+
+    private static bool TryParseCrmSlug(string slug, out Guid id)
+    {
+        id = Guid.Empty;
+        return slug.StartsWith("crm-", StringComparison.Ordinal) &&
+               Guid.TryParseExact(slug.AsSpan(4), "N", out id);
     }
 }
