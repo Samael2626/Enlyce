@@ -825,7 +825,7 @@ export function ContactsPage() {
             } finally {
               setImporting(false)
             }
-          }}>{importing ? "Importando…" : `Importar ${importPreview.validRows - importPreview.duplicateRows} clientes`}</button>
+          }}>{importing ? "Importando…" : `Importar ${importPreview.validRows} clientes`}</button>
         </div>}
         {importResult && <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
           <p role="status" className="text-emerald-700">Importados: {importResult.importedRows} · con errores: {importResult.invalidRows} · duplicados: {importResult.duplicateRows}</p>
