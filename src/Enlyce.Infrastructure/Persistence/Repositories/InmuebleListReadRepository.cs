@@ -7,7 +7,7 @@ public sealed class InmuebleListReadRepository(EnlyceDbContext context) : IInmue
 {
     public async Task<ListInmueblesResponse> ListAsync(ListInmueblesQuery query, CancellationToken ct)
     {
-        var items = context.Inmuebles.AsNoTracking().Where(x => x.Activo);
+        var items = context.Inmuebles.AsNoTracking().Where(x => x.Activo != query.Papelera);
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var search = query.Search.Trim().ToLower();

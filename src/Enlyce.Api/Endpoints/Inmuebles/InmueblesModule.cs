@@ -3,6 +3,7 @@ using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.GetInmuebleById;
 using Enlyce.Application.UseCases.ListInmuebles;
 using Enlyce.Application.UseCases.UpdateInmueble;
+using Enlyce.Application.UseCases.ManageInmuebleTrash;
 using Enlyce.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +19,7 @@ public static class InmueblesModule
         group.MapGet("/", async (int? page, int? pageSize, string? search, string? modalidad, string? estado,
             string? tipo, string? pais, string? departamento, string? ciudad, string? barrio, string? moneda,
             decimal? precioDesde, decimal? precioHasta, int? areaDesde, int? areaHasta,
-            int? habitaciones, int? banos, int? parqueaderos, string? orden,
+            int? habitaciones, int? banos, int? parqueaderos, string? orden, bool? papelera,
             IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, CancellationToken ct) =>
         {
             if (page is < 1 || pageSize is < 1 or > 100 || search?.Length > 200 ||
@@ -33,7 +34,7 @@ public static class InmueblesModule
             return Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(
                 page ?? 1, pageSize ?? 20, search, modalidad, estado, tipo, pais, departamento, ciudad, barrio,
                 moneda?.ToUpperInvariant(), precioDesde, precioHasta, areaDesde, areaHasta,
-                habitaciones, banos, parqueaderos, orden ?? "recent"), ct));
+                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false), ct));
         })
             .WithName("ListInmuebles");
 
@@ -87,7 +88,24 @@ public static class InmueblesModule
         .Produces<CreateInmuebleResponse>()
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{id:guid}/papelera", ChangeTrashStateAsync(false))
+            .WithName("MoveInmuebleToTrash")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{id:guid}/restaurar", ChangeTrashStateAsync(true))
+            .WithName("RestoreInmuebleFromTrash")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
+
+    private static Func<Guid, ICommandHandler<ChangeInmuebleTrashStateCommand, bool>, CancellationToken, Task<IResult>>
+        ChangeTrashStateAsync(bool restore) => async (id, handler, ct) =>
+    {
+        var changed = await handler.HandleAsync(new ChangeInmuebleTrashStateCommand(id, restore), ct);
+        return changed ? Results.NoContent() : Results.NotFound();
+    };
 
     private static bool ValidEnum<T>(string? value) where T : struct, Enum =>
         string.IsNullOrWhiteSpace(value) || Enum.TryParse<T>(value, true, out var parsed) && Enum.IsDefined(parsed);

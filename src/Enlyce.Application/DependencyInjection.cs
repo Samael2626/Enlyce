@@ -13,6 +13,7 @@ using Enlyce.Application.PublicCatalog;
 using Enlyce.Application.Publications;
 using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.UpdateInmueble;
+using Enlyce.Application.UseCases.ManageInmuebleTrash;
 using Enlyce.Application.UseCases.CreateLead;
 using Enlyce.Application.UseCases.EnrichOwnerInquiry;
 using Enlyce.Application.UseCases.GetInmuebleById;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<ImportExternalListingsCommand, ImportExternalListingsResponse>, ImportExternalListingsHandler>();
         services.AddScoped<ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse>, CreateInmuebleHandler>();
         services.AddScoped<ICommandHandler<UpdateInmuebleCommand, CreateInmuebleResponse?>, UpdateInmuebleHandler>();
+        services.AddScoped<ICommandHandler<ChangeInmuebleTrashStateCommand, bool>, ChangeInmuebleTrashStateHandler>();
         services.AddScoped<ICommandHandler<UploadPublicationPhotoCommand, UploadPublicationPhotoResponse>, UploadPublicationPhotoHandler>();
         services.AddScoped<IQueryHandler<GetLeadByIdQuery, GetLeadByIdResponse?>, GetLeadByIdHandler>();
         services.AddScoped<IQueryHandler<GetInmuebleByIdQuery, GetInmuebleByIdResponse?>, GetInmuebleByIdHandler>();

@@ -213,4 +213,11 @@ public sealed class Inmueble
     {
         Activo = false;
     }
+
+    public void RestaurarDePapelera()
+    {
+        Activo = true;
+        Estado = EstadoInmueble.Inactivo;
+        FechaVentaArriendo = null;
+    }
 }

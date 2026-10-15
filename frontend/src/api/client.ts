@@ -494,11 +494,15 @@ class ApiClient {
     return this.request<any>(`/api/inmuebles/${id}`, { method: "PUT", body: JSON.stringify(data) })
   }
 
+  async changeInmuebleTrashState(id: string, restore: boolean) {
+    return this.request<void>(`/api/inmuebles/${id}/${restore ? "restaurar" : "papelera"}`, { method: "POST" })
+  }
+
   async getInmuebles(filters: {
     page?: number; pageSize?: number; search?: string; modalidad?: string; estado?: string; tipo?: string;
     pais?: string; departamento?: string; ciudad?: string; barrio?: string; moneda?: string;
     precioDesde?: number; precioHasta?: number; areaDesde?: number; areaHasta?: number;
-    habitaciones?: number; banos?: number; parqueaderos?: number; orden?: string;
+    habitaciones?: number; banos?: number; parqueaderos?: number; orden?: string; papelera?: boolean;
   } = {}) {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "") params.set(key, String(value)) })
