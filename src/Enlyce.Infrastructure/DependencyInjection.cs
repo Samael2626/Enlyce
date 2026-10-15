@@ -61,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IWebPropertyVisitsReportReadRepository, WebPropertyVisitsReportReadRepository>();
         services.AddScoped<Enlyce.Application.Imports.IImportedListingsReadRepository, ImportedListingsReadRepository>();
         services.AddSingleton<IClientImportTableReader, ClientImportTableReader>();
+        services.AddSingleton<IPropertyImportTableReader, PropertyImportTableReader>();
         services.AddScoped<IPropertyPublicationAdminReadRepository, PropertyPublicationAdminReadRepository>();
         services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
         services.AddSingleton<ImageVariantProcessor>();
