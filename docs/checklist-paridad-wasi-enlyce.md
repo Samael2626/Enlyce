@@ -100,6 +100,14 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - [ ] Migraciones revisadas con respaldo y restore de la base objetivo antes de producción.
 - [ ] Captura visual y diferencias restantes anotadas aquí.
 
+## Gate operativo para migraciones
+
+- `tools/backup/Backup-Enlyce.ps1` sube dumps PostgreSQL custom a un bucket privado y conserva siete días localmente; el almacenamiento remoto se acumula sin borrado automático.
+- La verificación automática comprueba firma `PGDMP` y tamaño. El README exige `pg_restore --list` y una restauración de ensayo en una base vacía compatible; no encontré evidencia de que esa restauración se haya ejecutado sobre una copia exacta de la base objetivo.
+- No hay alerta externa de fallos. Revisar el log local y la fecha del último objeto no equivale a una alerta operativa.
+- Por tanto, las migraciones de paridad siguen preparadas pero no aplicadas a producción hasta registrar el ensayo de restauración y acordar retención remota y alerta de fallo.
+- Fuente de estado: [procedimiento de backups](../tools/backup/README.md).
+
 ## Límites de la evidencia actual
 
 - Los JSON muestran rutas, etiquetas, tipos de control y encabezados; no revelan de forma fiable validaciones, reglas del servidor ni resultados de acciones.
