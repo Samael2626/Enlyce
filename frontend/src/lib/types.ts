@@ -659,6 +659,29 @@ export interface RealizedDealReportPage {
   }[]
 }
 
+export interface AdvisorPerformanceReport {
+  from: string
+  through: string
+  previousFrom: string
+  previousThrough: string
+  advisors: {
+    advisorId: string
+    advisorName: string
+    interactions: number
+    previousInteractions: number
+    visits: number
+    previousVisits: number
+    sales: number
+    previousSales: number
+    rentals: number
+    previousRentals: number
+    newClients: number
+    previousNewClients: number
+    newProperties: number
+    previousNewProperties: number
+  }[]
+}
+
 export interface CreateRealizedDealInput {
   propertyId: string
   contactId: string

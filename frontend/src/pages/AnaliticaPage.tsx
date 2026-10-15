@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
 import { api } from "@/api/client"
-import { useAdvisors, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useRealizedDealsReport } from "@/hooks/useApi"
+import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useRealizedDealsReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const labels: Record<string, string> = {
@@ -33,6 +33,7 @@ export function AnaliticaPage() {
     from: dealFrom, to: dealTo, advisorId: dealAdvisorId,
     operation: dealOperation, propertyType: dealPropertyType, page: dealPage, pageSize: 10,
   })
+  const advisorReport = useAdvisorPerformanceReport(dealFrom, dealTo)
 
   if (user?.rol !== "Administrador") return <Navigate to="/dashboard" replace />
 
@@ -140,6 +141,8 @@ export function AnaliticaPage() {
         onPageChange={setDealPage}
       />
 
+      <AdvisorPerformanceSection report={advisorReport.data} isLoading={advisorReport.isLoading} isError={advisorReport.isError} />
+
       <section className="space-y-4" aria-labelledby="crm-report-title">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -182,6 +185,64 @@ export function AnaliticaPage() {
         )}
       </section>
     </div>
+  )
+}
+
+function AdvisorPerformanceSection({
+  report,
+  isLoading,
+  isError,
+}: {
+  report?: import("@/lib/types").AdvisorPerformanceReport
+  isLoading: boolean
+  isError: boolean
+}) {
+  const metrics = [
+    ["Interacciones", "interactions", "previousInteractions"],
+    ["Visitas", "visits", "previousVisits"],
+    ["Ventas", "sales", "previousSales"],
+    ["Arriendos", "rentals", "previousRentals"],
+    ["Clientes nuevos", "newClients", "previousNewClients"],
+    ["Inmuebles nuevos", "newProperties", "previousNewProperties"],
+  ] as const
+
+  return (
+    <section className="space-y-4" aria-labelledby="advisor-report-title">
+      <div>
+        <span className="crm-eyebrow">Equipo comercial</span>
+        <h2 id="advisor-report-title" className="mt-2 font-display text-3xl tracking-tight">Rendimiento por usuario encargado</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Compara el rango del reporte de negocios con el periodo anterior de igual duración. Clientes e inmuebles se atribuyen al encargado actual.</p>
+      </div>
+      {isLoading ? (
+        <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando rendimiento por asesor…</div>
+      ) : isError ? (
+        <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el reporte por asesor.</div>
+      ) : (
+        <div className="crm-panel overflow-x-auto">
+          <p className="border-b border-border px-5 py-3 text-xs text-muted-foreground">
+            Periodo {report?.from} a {report?.through} · comparación {report?.previousFrom} a {report?.previousThrough}. Interacciones son registros del CRM; visitas son citas no canceladas por fecha programada.
+          </p>
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="bg-muted/50 text-xs text-muted-foreground">
+              <tr><th className="px-4 py-3">Usuario encargado</th>{metrics.map(([label]) => <th key={label} className="px-3 py-3">{label}</th>)}</tr>
+            </thead>
+            <tbody>
+              {(report?.advisors ?? []).map((advisor) => (
+                <tr key={advisor.advisorId} className="border-t border-border">
+                  <th scope="row" className="px-4 py-3 font-medium">{advisor.advisorName}</th>
+                  {metrics.map(([label, currentKey, previousKey]) => {
+                    const current = advisor[currentKey]
+                    const difference = current - advisor[previousKey]
+                    return <td key={label} className="px-3 py-3 tabular-nums">{current} <span className="text-xs text-muted-foreground">{difference > 0 ? `↑ ${difference}` : difference < 0 ? `↓ ${Math.abs(difference)}` : "→ 0"}</span></td>
+                  })}
+                </tr>
+              ))}
+              {report?.advisors.length === 0 && <tr><td colSpan={metrics.length + 1} className="px-4 py-8 text-center text-muted-foreground">No hay usuarios encargados para mostrar.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   )
 }
 

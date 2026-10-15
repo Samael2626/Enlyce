@@ -87,6 +87,13 @@ export function useRealizedDealsReport(filters: Parameters<typeof api.getRealize
   })
 }
 
+export function useAdvisorPerformanceReport(from: string, to: string) {
+  return useQuery({
+    queryKey: ["analytics", "advisors", from, to],
+    queryFn: () => api.getAdvisorPerformanceReport(from, to),
+  })
+}
+
 export function useCreateRealizedDeal() {
   const queryClient = useQueryClient()
   return useMutation({
