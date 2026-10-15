@@ -163,6 +163,7 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 ## Cobertura automatizada del importador de clientes (2026-10-15)
 
+- Confirmacion del importador usa un advisory lock transaccional de PostgreSQL compartido entre instancias y vuelve a revisar la clave idempotente dentro del bloqueo; serializa importaciones entre si. No coordina altas manuales de contactos, por lo que la deduplicacion sigue limitada al alcance consultado antes de persistir. Compila, pero falta prueba concurrente con PostgreSQL antes de cerrar atomicidad y reintentos.
 - Búsqueda en `tests/` no encontró pruebas dedicadas a `ClientImportModule`, `ContactImportBatch` ni al lector de importación de clientes. La suite general no acredita mapeo, errores por fila, duplicados por alcance, reintento con misma/otra carga, ni atomicidad entre contactos y lote. Añadir esa cobertura antes de marcar cerrado el módulo.
 
 - La deduplicacion actual solo identifica filas con email valido; filas sin email pueden volver a importarse. El aviso se muestra junto al selector del archivo. La regla equivalente de Wasi sigue sin evidencia.
