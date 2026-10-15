@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
 import { api } from "@/api/client"
-import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useRealizedDealsReport } from "@/hooks/useApi"
+import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const labels: Record<string, string> = {
@@ -34,6 +34,7 @@ export function AnaliticaPage() {
     operation: dealOperation, propertyType: dealPropertyType, page: dealPage, pageSize: 10,
   })
   const advisorReport = useAdvisorPerformanceReport(dealFrom, dealTo)
+  const ownerReport = useOwnerPerformanceReport(dealFrom, dealTo)
 
   if (user?.rol !== "Administrador") return <Navigate to="/dashboard" replace />
 
@@ -142,6 +143,7 @@ export function AnaliticaPage() {
       />
 
       <AdvisorPerformanceSection report={advisorReport.data} isLoading={advisorReport.isLoading} isError={advisorReport.isError} />
+      <OwnerPerformanceSection report={ownerReport.data} from={dealFrom} to={dealTo} isLoading={ownerReport.isLoading} isError={ownerReport.isError} />
 
       <section className="space-y-4" aria-labelledby="crm-report-title">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -240,6 +242,62 @@ function AdvisorPerformanceSection({
               {report?.advisors.length === 0 && <tr><td colSpan={metrics.length + 1} className="px-4 py-8 text-center text-muted-foreground">No hay usuarios encargados para mostrar.</td></tr>}
             </tbody>
           </table>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function OwnerPerformanceSection({
+  report,
+  from,
+  to,
+  isLoading,
+  isError,
+}: {
+  report?: import("@/lib/types").OwnerPerformanceReport
+  from: string
+  to: string
+  isLoading: boolean
+  isError: boolean
+}) {
+  const columns = [
+    ["Visitas en página", "pageVisits"],
+    ["Llamadas", "calls"],
+    ["Correos", "emails"],
+    ["Eventos", "events"],
+    ["Visitas", "visits"],
+    ["Contactos recibidos", "receivedContacts"],
+  ] as const
+
+  return (
+    <section className="space-y-4" aria-labelledby="owner-report-title">
+      <div>
+        <span className="crm-eyebrow">Propietarios</span>
+        <h2 id="owner-report-title" className="mt-2 font-display text-3xl tracking-tight">Actividad por propietario</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Periodo {report?.from ?? from} a {report?.through ?? to}. Actividad asociada a consultas de publicaciones de sus inmuebles.</p>
+      </div>
+      {isLoading ? (
+        <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando actividad de propietarios…</div>
+      ) : isError ? (
+        <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el reporte de propietarios.</div>
+      ) : (
+        <div className="crm-panel overflow-x-auto">
+          <table className="w-full min-w-[880px] text-left text-sm">
+            <thead className="bg-muted/50 text-xs text-muted-foreground">
+              <tr><th className="px-4 py-3">Propietario</th>{columns.map(([label]) => <th key={label} className="px-3 py-3">{label}</th>)}</tr>
+            </thead>
+            <tbody>
+              {(report?.owners ?? []).map((owner) => (
+                <tr key={owner.ownerId} className="border-t border-border">
+                  <th scope="row" className="px-4 py-3 font-medium">{owner.ownerName}</th>
+                  {columns.map(([label, key]) => <td key={label} className="px-3 py-3 tabular-nums">{owner[key]}</td>)}
+                </tr>
+              ))}
+              {report?.owners.length === 0 && <tr><td colSpan={columns.length + 1} className="px-4 py-8 text-center text-muted-foreground">No hay propietarios registrados.</td></tr>}
+            </tbody>
+          </table>
+          <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">Visitas en página cuenta eventos de página de inmuebles publicados. Llamadas, correos y eventos cuentan interacciones registradas; visitas cuenta citas no canceladas. Los contactos recibidos son leads vinculados a una publicación.</p>
         </div>
       )}
     </section>

@@ -94,6 +94,13 @@ export function useAdvisorPerformanceReport(from: string, to: string) {
   })
 }
 
+export function useOwnerPerformanceReport(from: string, to: string) {
+  return useQuery({
+    queryKey: ["analytics", "owners", from, to],
+    queryFn: () => api.getOwnerPerformanceReport(from, to),
+  })
+}
+
 export function useCreateRealizedDeal() {
   const queryClient = useQueryClient()
   return useMutation({

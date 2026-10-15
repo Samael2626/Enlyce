@@ -395,6 +395,11 @@ class ApiClient {
     return this.request<import("@/lib/types").AdvisorPerformanceReport>(`/api/analytics/advisors?${query}`)
   }
 
+  async getOwnerPerformanceReport(from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    return this.request<import("@/lib/types").OwnerPerformanceReport>(`/api/analytics/owners?${query}`)
+  }
+
   async downloadRealizedDealsXlsx(filters: { from?: string; to?: string; advisorId?: string; operation?: string; propertyType?: string }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {

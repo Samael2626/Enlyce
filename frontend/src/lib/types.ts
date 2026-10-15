@@ -682,6 +682,21 @@ export interface AdvisorPerformanceReport {
   }[]
 }
 
+export interface OwnerPerformanceReport {
+  from: string
+  through: string
+  owners: {
+    ownerId: string
+    ownerName: string
+    pageVisits: number
+    calls: number
+    emails: number
+    events: number
+    visits: number
+    receivedContacts: number
+  }[]
+}
+
 export interface CreateRealizedDealInput {
   propertyId: string
   contactId: string
