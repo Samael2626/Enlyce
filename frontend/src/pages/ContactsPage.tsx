@@ -8,31 +8,33 @@ import { useAuthStore } from "@/stores/authStore"
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
 const DEFAULT_CUSTOMER_TYPES = ["Comprador", "Vendedor", "Arrendador", "Arrendatario"]
 
-function CustomerTypePicker({ id, value, options, onChange }: {
+function MultiValuePicker({ id, selectionLabel, placeholder, value, options, onChange }: {
   id: string
+  selectionLabel: string
+  placeholder: string
   value: string[]
   options: string[]
   onChange: (value: string[]) => void
 }) {
-  const [pendingType, setPendingType] = useState("")
-  const addType = () => {
-    const type = pendingType.trim()
-    if (type && !value.some((item) => item.toLocaleLowerCase() === type.toLocaleLowerCase()))
-      onChange([...value, type])
-    setPendingType("")
+  const [pendingValue, setPendingValue] = useState("")
+  const addValue = () => {
+    const nextValue = pendingValue.trim()
+    if (nextValue && !value.some((item) => item.toLocaleLowerCase() === nextValue.toLocaleLowerCase()))
+      onChange([...value, nextValue])
+    setPendingValue("")
   }
 
   return <div className="mt-1 grid gap-2">
-    <div className="flex flex-wrap gap-1" aria-label="Tipos seleccionados">
-      {value.map((type) => <span key={type} className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs text-foreground">
-        {type}<button type="button" aria-label={`Quitar ${type}`} className="font-bold" onClick={() => onChange(value.filter((item) => item !== type))}>×</button>
+    <div className="flex flex-wrap gap-1" aria-label={selectionLabel}>
+      {value.map((item) => <span key={item} className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs text-foreground">
+        {item}<button type="button" aria-label={`Quitar ${item}`} className="font-bold" onClick={() => onChange(value.filter((selected) => selected !== item))}>×</button>
       </span>)}
     </div>
     <div className="flex gap-1">
       <input list={id} className="min-w-36 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-        placeholder="Selecciona o escribe" value={pendingType} onChange={(event) => setPendingType(event.target.value)}
-        onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addType() } }} />
-      <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={addType} disabled={!pendingType.trim()}>Agregar</button>
+        placeholder={placeholder} value={pendingValue} onChange={(event) => setPendingValue(event.target.value)}
+        onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addValue() } }} />
+      <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={addValue} disabled={!pendingValue.trim()}>Agregar</button>
     </div>
     <datalist id={id}>{options.map((option) => <option key={option} value={option} />)}</datalist>
   </div>
@@ -361,11 +363,10 @@ export function ContactsPage() {
           ["referredBy", "Referido por"], ["acquisitionMedium", "Medio de captación"], ["country", "País"],
           ["department", "Departamento"], ["city", "Ciudad"], ["address", "Dirección"],
         ] as const).map(([key, label, required, type]) => <label key={key} className="text-xs text-muted-foreground">{label}
-          {key === "customerTypes" ? <CustomerTypePicker id="new-customer-types" value={newContact.customerTypes} options={customerTypeOptions}
+          {key === "customerTypes" ? <MultiValuePicker id="new-customer-types" selectionLabel="Tipos seleccionados" placeholder="Selecciona o escribe" value={newContact.customerTypes} options={customerTypeOptions}
             onChange={(customerTypes) => setNewContact((value) => ({ ...value, customerTypes }))} /> :
-          key === "customerLabels" ? <input type="text" list="customer-label-options" placeholder="VIP, Seguimiento" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-            value={newContact.customerLabels.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
-              customerLabels: event.target.value.split(",").map((label) => label.trim()).filter(Boolean) }))} /> :
+          key === "customerLabels" ? <MultiValuePicker id="new-customer-labels" selectionLabel="Etiquetas seleccionadas" placeholder="Selecciona o escribe" value={newContact.customerLabels} options={customerLabelOptions}
+            onChange={(customerLabels) => setNewContact((value) => ({ ...value, customerLabels }))} /> :
           <input type={type ?? "text"} required={required} maxLength={key === "address" ? 500 : 200}
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             list={key === "acquisitionMedium" ? "customer-acquisition-options" : undefined}
@@ -823,11 +824,10 @@ export function ContactsPage() {
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={surname} onChange={(event) => setSurname(event.target.value)} maxLength={200} />
                     </label>
                     <label className="text-xs text-muted-foreground">Tipos de cliente
-                      <CustomerTypePicker id="edit-customer-types" value={customerTypes} options={customerTypeOptions} onChange={setCustomerTypes} />
+                      <MultiValuePicker id="edit-customer-types" selectionLabel="Tipos seleccionados" placeholder="Selecciona o escribe" value={customerTypes} options={customerTypeOptions} onChange={setCustomerTypes} />
                     </label>
-                    <label className="text-xs text-muted-foreground">Etiquetas (separa con coma)
-                      <input list="customer-label-options" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerLabels.join(", ")}
-                        onChange={(event) => setCustomerLabels(event.target.value.split(",").map((label) => label.trim()).filter(Boolean))} />
+                    <label className="text-xs text-muted-foreground">Etiquetas
+                      <MultiValuePicker id="edit-customer-labels" selectionLabel="Etiquetas seleccionadas" placeholder="Selecciona o escribe" value={customerLabels} options={customerLabelOptions} onChange={setCustomerLabels} />
                     </label>
                     <label className="text-xs text-muted-foreground">Estado
                       <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerStatus} onChange={(event) => setCustomerStatus(event.target.value)}>
