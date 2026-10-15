@@ -131,6 +131,11 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - La importación no crea eventos de permiso a partir de «Recibe correo». Cuando un administrador concede permiso desde la ficha, la bitácora registra fuente, referencia de evidencia, actor y fecha de registro. La fecha original no se reconstruye; contactos previos a la migración no reciben eventos inventados.
 - Migraciones preparadas, no aplicadas. Contactos existentes quedan con `CanReceiveAutomatedEmail=false`; verificar evidencia real antes de habilitar envíos.
 
+### Verificación de importación Wasi (15 oct 2026)
+
+- La guía oficial actual confirma los formatos XLS/XLSX/CSV, el mapeo de nombre/apellidos/email/teléfono, la opción de ignorar columnas y que nombre es obligatorio. Al terminar, Wasi muestra un enlace para consultar el cliente importado. Enlyce presenta enlaces para abrir los contactos importados por fila; este comportamiento sí tiene paridad observable.
+- La guía no aclara si email/teléfono son obligatorios ni qué hace el importador con filas duplicadas. La captura compartida solo muestra el selector de archivo; no prueba el resultado de una importación real. Mantener estas reglas como pendientes hasta observar una carga controlada en Wasi.
+
 ## Caracteristicas de inmuebles y demandas
 
 - Las capturas de Wasi muestran selectores multiples separados para caracteristicas internas y externas en el alta de inmuebles y en el registro de demanda. El JSON de interfaz confirma `select-multiple` en ambos campos; no trae el catalogo de opciones ni reglas de seleccion.
