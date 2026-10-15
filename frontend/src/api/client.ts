@@ -110,7 +110,8 @@ class ApiClient {
       page: number
       pageSize: number
       rows: Array<{ rowNumber: number; name: string | null; surname: string | null; email: string | null;
-        phone: string | null; canReceiveAutomatedEmail: boolean; mappedValues: Record<string, string | null>;
+        phone: string | null; canReceiveAutomatedEmail: boolean; sourceIndicatesEmailPermission: boolean;
+        mappedValues: Record<string, string | null>;
         error: string | null; duplicate: boolean }>
     }>("/api/import/clientes/previsualizar", { method: "POST", body })
   }
@@ -151,7 +152,8 @@ class ApiClient {
       invalidRows: number
       duplicateRows: number
       rows: Array<{ rowNumber: number; name: string | null; surname: string | null; email: string | null;
-        phone: string | null; canReceiveAutomatedEmail: boolean; error: string | null; duplicate: boolean }>
+        phone: string | null; canReceiveAutomatedEmail: boolean; sourceIndicatesEmailPermission: boolean;
+        error: string | null; duplicate: boolean }>
       errors: Array<{ rowNumber: number; error: string }>
       importedContacts: Array<{ rowNumber: number; contactId: string }>
     }>("/api/import/clientes/confirmar", { method: "POST", body })
