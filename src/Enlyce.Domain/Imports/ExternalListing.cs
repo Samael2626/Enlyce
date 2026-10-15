@@ -38,4 +38,5 @@ public sealed record ExternalListing(
     int Garages,
     int? Stratum,
     ExternalAvailability Availability,
-    IReadOnlyList<ExternalPhoto> Photos);
+    IReadOnlyList<ExternalPhoto> Photos,
+    bool ForTransfer = false);

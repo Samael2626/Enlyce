@@ -12,6 +12,8 @@ export function CostCalculator({ operation, price, administration = 0 }: Props) 
   const [rate, setRate] = useState(12);
   const [years, setYears] = useState(20);
 
+  if (operation === "Permuta") return null;
+
   if (operation === "Arriendo") {
     return (
       <section aria-labelledby={`${id}-t`} className="cost-calculator">

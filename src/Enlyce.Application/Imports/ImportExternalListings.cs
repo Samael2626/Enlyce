@@ -84,7 +84,7 @@ public sealed class ImportExternalListingsHandler
 
         var listings = await _source.GetListingsAsync(ct);
 
-        // Venta y arriendo son negocios distintos: cada operacion es un inmueble propio.
+        // Cada negocio se importa por separado para mantener precio y referencia propios.
         var units = listings.SelectMany(Split).ToList();
         var existing = (await _properties.GetByExternalRefsAsync(
                 units.Select(unit => unit.ExternalRef).ToList()))
@@ -161,10 +161,14 @@ public sealed class ImportExternalListingsHandler
         }
 
         var plannedPhotos = OrderedPhotos(listing).Count;
+        var noPriceReason = unit.Modalidad == ModalidadInmueble.Permuta && unit.Price == 0
+            ? "Wasi no informa precio para permuta; se importa el inmueble sin publicacion hasta definirlo."
+            : null;
         if (command.DryRun)
         {
-            var photos = outcome == ImportOutcome.Creado ? plannedPhotos : 0;
-            return new(unit.ExternalRef, property.Nombre, unit.Modalidad.ToString(), outcome, null, photos);
+            var photos = outcome == ImportOutcome.Creado && noPriceReason is null ? plannedPhotos : 0;
+            return new(unit.ExternalRef, property.Nombre, unit.Modalidad.ToString(), outcome, null, photos,
+                MotivoBorrador: noPriceReason);
         }
 
         await _properties.SaveAsync(property);
@@ -173,6 +177,10 @@ public sealed class ImportExternalListingsHandler
         // fotos ni textos que un asesor ya haya curado.
         if (await _publications.ExistsForPropertyAsync(property.Id, ct))
             return new(unit.ExternalRef, property.Nombre, unit.Modalidad.ToString(), outcome, null);
+
+        if (noPriceReason is not null)
+            return new(unit.ExternalRef, property.Nombre, unit.Modalidad.ToString(), outcome, null,
+                MotivoBorrador: noPriceReason);
 
         var draft = await CreatePublicationAsync(unit, property, command, ct);
         return new(unit.ExternalRef, property.Nombre, unit.Modalidad.ToString(), outcome, null,
@@ -297,6 +305,13 @@ public sealed class ImportExternalListingsHandler
         {
             emitted = true;
             yield return new(listing, $"{baseRef}:arriendo", ModalidadInmueble.Arriendo, listing.RentPrice.Value);
+        }
+
+        if (listing.ForTransfer)
+        {
+            emitted = true;
+            // Wasi no expone un precio de permuta: no reutilizar el precio de venta/arriendo.
+            yield return new(listing, $"{baseRef}:permuta", ModalidadInmueble.Permuta, 0m);
         }
 
         // Sin precio no se crea nada, pero el reporte debe mostrarlo.

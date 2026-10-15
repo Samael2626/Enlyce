@@ -9,7 +9,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { PropertyLocation } from "@/components/PropertyLocation";
 import { getProperties, getPropertyBySlug } from "@/lib/api/catalog";
 import type { PropertyListItem } from "@/lib/api/client";
-import { formatArea, formatOperation, formatPrice } from "@/lib/format";
+import { formatArea, formatOperation, formatPrice, formatPropertyPrice } from "@/lib/format";
 import { serializeJsonLd } from "@/lib/seo/json-ld";
 import { whatsappLink } from "@/lib/contact";
 
@@ -117,7 +117,7 @@ export default async function InmueblePage({ params }: PageProps) {
           {property.location.neighborhood}, {property.location.municipality}
         </p>
         <p className="font-display text-3xl text-accent-strong">
-          {formatPrice(property.price.amount, property.price.currency)}
+          {formatPropertyPrice(property.price.amount, property.price.currency, property.operation)}
         </p>
         {property.administrationFee && (
           <p className="text-sm text-muted">
@@ -211,7 +211,7 @@ export default async function InmueblePage({ params }: PageProps) {
       {/* Barra fija en movil: la accion siempre a un toque, sin volver al final. */}
       <div className="property-sticky-cta">
         <div>
-          <strong>{formatPrice(property.price.amount, property.price.currency)}</strong>
+          <strong>{formatPropertyPrice(property.price.amount, property.price.currency, property.operation)}</strong>
           <span>{property.location.neighborhood}</span>
         </div>
         <a

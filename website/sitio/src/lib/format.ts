@@ -11,6 +11,11 @@ export function formatPrice(amount: number, currency = "COP"): string {
   return priceFormatter.format(amount);
 }
 
+export function formatPropertyPrice(amount: number, currency: string, operation: string): string {
+  if (operation === "Permuta" && amount === 0) return "Valor por definir";
+  return formatPrice(amount, currency);
+}
+
 export function formatArea(squareMeters: number): string {
   return `${numberFormatter.format(squareMeters)} m²`;
 }

@@ -245,7 +245,8 @@ public sealed partial class WasiListingSource : IExternalListingSource
                 "rented" or "arrendado" or "arrendada" => ExternalAvailability.Arrendado,
                 _ => ExternalAvailability.Desconocido
             },
-            Photos: ReadPhotos(item));
+            Photos: ReadPhotos(item),
+            ForTransfer: ReadBool(item, "for_transfer"));
     }
 
     // Wasi entrega colecciones como objeto con claves "0", "1", ... junto a total/status.

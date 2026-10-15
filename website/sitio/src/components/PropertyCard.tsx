@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { PropertyListItem } from "@/lib/api/client";
-import { formatArea, formatOperation, formatPrice, propertyPath } from "@/lib/format";
+import { formatArea, formatOperation, formatPropertyPrice, propertyPath } from "@/lib/format";
 import { FavoriteToggle } from "./FavoriteToggle";
 
 export function PropertyCard({ property }: { property: PropertyListItem }) {
@@ -38,7 +38,7 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
           {property.location.neighborhood}, {property.location.municipality}
         </p>
         <p className="property-card-price">
-          {formatPrice(property.price.amount, property.price.currency)}
+          {formatPropertyPrice(property.price.amount, property.price.currency, property.operation)}
         </p>
         <dl className="property-card-features">
           <div className="flex gap-1">

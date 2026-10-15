@@ -103,7 +103,7 @@ public sealed class Inmueble
         int? anioConstruccion = null, string? estadoFisico = null, string[]? etiquetas = null,
         Guid? asesorResponsableId = null)
     {
-        ValidarDatos(nombre, precio, metrosCuadrados, anioConstruccion, estadoFisico);
+        ValidarDatos(nombre, modalidad, precio, metrosCuadrados, anioConstruccion, estadoFisico);
 
         return new Inmueble(
             Guid.NewGuid(),
@@ -172,7 +172,7 @@ public sealed class Inmueble
         string[]? internalFeatures = null, string[]? externalFeatures = null,
         int? anioConstruccion = null, string? estadoFisico = null, string[]? etiquetas = null)
     {
-        ValidarDatos(nombre, precio, metrosCuadrados, anioConstruccion, estadoFisico);
+        ValidarDatos(nombre, modalidad, precio, metrosCuadrados, anioConstruccion, estadoFisico);
 
         Nombre = nombre.Trim();
         Descripcion = descripcion?.Trim() ?? string.Empty;
@@ -191,13 +191,14 @@ public sealed class Inmueble
         if (etiquetas is not null) Etiquetas = NormalizeLabels(etiquetas);
     }
 
-    private static void ValidarDatos(string nombre, Dinero precio, int metrosCuadrados, int? anioConstruccion, string? estadoFisico)
+    private static void ValidarDatos(string nombre, ModalidadInmueble modalidad, Dinero precio,
+        int metrosCuadrados, int? anioConstruccion, string? estadoFisico)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del inmueble no puede ser vacio.");
 
-        if (precio.Monto <= 0)
-            throw new DomainError("El precio debe ser mayor a 0.");
+        if (precio.Monto < 0 || precio.Monto == 0 && modalidad != ModalidadInmueble.Permuta)
+            throw new DomainError("El precio debe ser mayor a 0, salvo en permuta.");
 
         if (metrosCuadrados <= 0)
             throw new DomainError("Los metros cuadrados deben ser mayores a 0.");
