@@ -55,6 +55,8 @@
 
 La fila «Alta, lista y ficha de clientes» y el punto 2 del orden de trabajo quedaron parcialmente desactualizados: Enlyce ya admite varios tipos por cliente y tipos personalizados en alta, edición e importación; el filtro del directorio y el cruce buscan tipos personalizados. Se almacenan hasta 10 valores de 30 caracteres, separados por coma o punto y coma al importar.
 
+La guía oficial de Wasi confirma que las etiquetas y medios de captación se crean desde el flujo del cliente; los tipos pueden ser múltiples, predeterminados o personalizados; y los clientes se asignan a un embudo y una etapa. No explica el alcance de edición/eliminación de cada catálogo, permisos por rol, ni qué pasa con los clientes existentes al renombrar o retirar una opción. Enlyce aún usa texto libre para esos campos y no ofrece un administrador de catálogos. No borrar ni renombrar valores en masa por inferencia; documentar reglas de conservación antes de implementar esas operaciones.
+
 Sigue faltando un catálogo administrable para gestionar tipos, etiquetas, embudos/etapas y medios de captación. La migración `20261014170000_AddMultipleCustomerTypes` está preparada y copia el tipo legado a la nueva columna; no se ha aplicado. No desplegar hasta validar migraciones pendientes y el procedimiento de respaldo/restauración de la base objetivo.
 
 Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, y se incluyen en el CSV exportado. Todavía falta un catálogo global para reutilizar y administrar etiquetas, colores y opciones; la migración 20261014180000_AddCustomerLabels está preparada, no aplicada.
