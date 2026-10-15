@@ -2,6 +2,7 @@ using Enlyce.Domain.Entities;
 using Enlyce.Domain.Ports;
 using EmailAddress = Enlyce.Domain.ValueObjects.Email;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Enlyce.Infrastructure.Persistence.Repositories;
 
@@ -57,6 +58,21 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
     public Task<ContactImportBatch?> GetImportBatchAsync(string actorId, Guid requestId, CancellationToken ct = default) =>
         context.ContactImportBatches.AsNoTracking()
             .SingleOrDefaultAsync(batch => batch.ActorId == actorId && batch.RequestId == requestId, ct);
+
+    public async Task<IContactImportLock> AcquireClientImportLockAsync(CancellationToken ct = default)
+    {
+        var transaction = await context.Database.BeginTransactionAsync(ct);
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(20261015, 1)", ct);
+            return new ContactImportLock(transaction);
+        }
+        catch
+        {
+            await transaction.DisposeAsync();
+            throw;
+        }
+    }
 
     public async Task AddImportedAsync(IReadOnlyCollection<Contact> contacts, ContactImportBatch batch, CancellationToken ct = default)
     {
@@ -168,5 +184,12 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
     {
         context.Contacts.Update(contact);
         await context.SaveChangesAsync(ct);
+    }
+
+    private sealed class ContactImportLock(IDbContextTransaction transaction) : IContactImportLock
+    {
+        public Task CommitAsync(CancellationToken ct = default) => transaction.CommitAsync(ct);
+
+        public ValueTask DisposeAsync() => transaction.DisposeAsync();
     }
 }

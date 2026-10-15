@@ -316,6 +316,14 @@ public static class ClientImportModule
             return Results.Ok(ToResponse(previousBatch));
         }
 
+        await using var importLock = await contacts.AcquireClientImportLockAsync(ct);
+        if (await contacts.GetImportBatchAsync(actorId, importRequestId, ct) is { } concurrentBatch)
+        {
+            if (!string.Equals(concurrentBatch.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase))
+                return Results.Conflict(new { error = "La clave de reintento ya se uso con otro archivo o mapeo. Inicia una importacion nueva." });
+            return Results.Ok(ToResponse(concurrentBatch));
+        }
+
         var nameIndex = nameColumn!.Value;
         var surnameIndex = surnameColumn ?? -1;
         var emailIndex = emailColumn ?? -1;
@@ -431,13 +439,11 @@ public static class ClientImportModule
                 System.Text.Json.JsonSerializer.Serialize(new ClientImportStoredResult(
                     response.Errors, response.ImportedContacts)));
             await contacts.AddImportedAsync(newContacts, batch, ct);
+            await importLock.CommitAsync(ct);
             return Results.Ok(response);
         }
         catch (DbUpdateException)
         {
-            if (await contacts.GetImportBatchAsync(actorId, importRequestId, ct) is { } winningBatch &&
-                string.Equals(winningBatch.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase))
-                return Results.Ok(ToResponse(winningBatch));
             return Results.Conflict(new { error = "No se pudo completar la importacion. Revisa el archivo y vuelve a previsualizar." });
         }
     }
