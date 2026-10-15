@@ -25,7 +25,7 @@
 
 **Editar inmueble:** encargado, título, publicación, tipo/negocio, precios y monedas, estado físico, año, habitaciones, baños, garaje, estrato, piso y áreas, video, matrícula, disposición/orientación/balcón, pisos del edificio, publicación/red, ubicación, dirección privada, características internas/externas, datos del propietario y opciones de comisión/exclusividad.
 
-**Otros formularios:** alianzas y alianzas de propietarios muestran nombre y ubicación; la búsqueda de gestiones muestra tipo, nombre de cliente y usuario encargado.
+**Otros formularios:** alianzas y alianzas de propietarios muestran nombre y ubicación; la búsqueda de gestiones muestra tipo, nombre de cliente y usuario encargado. En la lista/ficha de clientes se ve «Calificación» con estrellas. La [guía oficial sobre calificaciones](https://ayuda.wasi.co/es/article/como-recibir-calificacion-de-clientes-) aclara que Wasi solicita opiniones del servicio después de una venta/alquiler o visita y las muestra en el perfil del equipo; no es un campo manual del contacto. El scrape no captura el flujo para enviar la solicitud ni el detalle de las opiniones.
 
 ## Límites de la evidencia
 
