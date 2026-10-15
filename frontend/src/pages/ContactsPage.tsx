@@ -8,15 +8,18 @@ import { useAuthStore } from "@/stores/authStore"
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
 const DEFAULT_CUSTOMER_TYPES = ["Comprador", "Vendedor", "Arrendador", "Arrendatario"]
 
-function MultiValuePicker({ id, selectionLabel, placeholder, value, options, onChange }: {
+function MultiValuePicker({ id, selectionLabel, placeholder, value, options, onChange,
+  onCreateCatalogValue }: {
   id: string
   selectionLabel: string
   placeholder: string
   value: string[]
   options: string[]
   onChange: (value: string[]) => void
+  onCreateCatalogValue?: (value: string) => Promise<void>
 }) {
   const [pendingValue, setPendingValue] = useState("")
+  const [catalogError, setCatalogError] = useState("")
   const addValue = () => {
     const nextValue = pendingValue.trim()
     if (nextValue && !value.some((item) => item.toLocaleLowerCase() === nextValue.toLocaleLowerCase()))
@@ -30,12 +33,25 @@ function MultiValuePicker({ id, selectionLabel, placeholder, value, options, onC
         {item}<button type="button" aria-label={`Quitar ${item}`} className="font-bold" onClick={() => onChange(value.filter((selected) => selected !== item))}>×</button>
       </span>)}
     </div>
-    <div className="flex gap-1">
+    <div className="flex flex-wrap gap-1">
       <input list={id} className="min-w-36 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
         placeholder={placeholder} value={pendingValue} onChange={(event) => setPendingValue(event.target.value)}
         onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addValue() } }} />
       <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={addValue} disabled={!pendingValue.trim()}>Agregar</button>
+      {onCreateCatalogValue && pendingValue.trim() && !options.some((item) => item.toLocaleLowerCase() === pendingValue.trim().toLocaleLowerCase()) &&
+        <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={async () => {
+          const catalogValue = pendingValue.trim()
+          try {
+            await onCreateCatalogValue(catalogValue)
+            onChange([...value, catalogValue])
+            setPendingValue("")
+            setCatalogError("")
+          } catch (error) {
+            setCatalogError(error instanceof Error ? error.message : "No se pudo crear la opción del catálogo.")
+          }
+        }}>Crear opción</button>}
     </div>
+    {catalogError && <p role="alert" className="text-xs text-destructive">{catalogError}</p>}
     <datalist id={id}>{options.map((option) => <option key={option} value={option} />)}</datalist>
   </div>
 }
@@ -97,6 +113,11 @@ export function ContactsPage() {
   const detailQuery = useContact(selectedId)
   const contact = detailQuery.data?.contact
   const user = useAuthStore((state) => state.user)
+  const canManageCustomerCatalog = user?.rol === "Administrador"
+  const addCustomerCatalogValue = async (catalog: string, name: string) => {
+    await api.addCustomerCatalogItem(catalog, name)
+    await customerCatalogsQuery.refetch()
+  }
   const [emailPermissionHistory, setEmailPermissionHistory] = useState<Awaited<ReturnType<typeof api.getContactEmailPermissionHistory>>>([])
   const updateContact = useUpdateContact()
   const setEmailPermission = useSetContactEmailPermission()
@@ -364,8 +385,10 @@ export function ContactsPage() {
           ["department", "Departamento"], ["city", "Ciudad"], ["address", "Dirección"],
         ] as const).map(([key, label, required, type]) => <label key={key} className="text-xs text-muted-foreground">{label}
           {key === "customerTypes" ? <MultiValuePicker id="new-customer-types" selectionLabel="Tipos seleccionados" placeholder="Selecciona o escribe" value={newContact.customerTypes} options={customerTypeOptions}
+            onCreateCatalogValue={canManageCustomerCatalog ? (name) => addCustomerCatalogValue("CustomerType", name) : undefined}
             onChange={(customerTypes) => setNewContact((value) => ({ ...value, customerTypes }))} /> :
           key === "customerLabels" ? <MultiValuePicker id="new-customer-labels" selectionLabel="Etiquetas seleccionadas" placeholder="Selecciona o escribe" value={newContact.customerLabels} options={customerLabelOptions}
+            onCreateCatalogValue={canManageCustomerCatalog ? (name) => addCustomerCatalogValue("CustomerLabel", name) : undefined}
             onChange={(customerLabels) => setNewContact((value) => ({ ...value, customerLabels }))} /> :
           <input type={type ?? "text"} required={required} maxLength={key === "address" ? 500 : 200}
             className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
@@ -824,10 +847,12 @@ export function ContactsPage() {
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={surname} onChange={(event) => setSurname(event.target.value)} maxLength={200} />
                     </label>
                     <label className="text-xs text-muted-foreground">Tipos de cliente
-                      <MultiValuePicker id="edit-customer-types" selectionLabel="Tipos seleccionados" placeholder="Selecciona o escribe" value={customerTypes} options={customerTypeOptions} onChange={setCustomerTypes} />
+                      <MultiValuePicker id="edit-customer-types" selectionLabel="Tipos seleccionados" placeholder="Selecciona o escribe" value={customerTypes} options={customerTypeOptions}
+                        onCreateCatalogValue={canManageCustomerCatalog ? (name) => addCustomerCatalogValue("CustomerType", name) : undefined} onChange={setCustomerTypes} />
                     </label>
                     <label className="text-xs text-muted-foreground">Etiquetas
-                      <MultiValuePicker id="edit-customer-labels" selectionLabel="Etiquetas seleccionadas" placeholder="Selecciona o escribe" value={customerLabels} options={customerLabelOptions} onChange={setCustomerLabels} />
+                      <MultiValuePicker id="edit-customer-labels" selectionLabel="Etiquetas seleccionadas" placeholder="Selecciona o escribe" value={customerLabels} options={customerLabelOptions}
+                        onCreateCatalogValue={canManageCustomerCatalog ? (name) => addCustomerCatalogValue("CustomerLabel", name) : undefined} onChange={setCustomerLabels} />
                     </label>
                     <label className="text-xs text-muted-foreground">Estado
                       <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerStatus} onChange={(event) => setCustomerStatus(event.target.value)}>
