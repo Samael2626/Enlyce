@@ -158,7 +158,7 @@ public static class ClientImportModule
                 var labels = customerLabelsIndex < 0 ? [] : ParseCustomerLabels(Cell(row, customerLabelsIndex));
                 var funnel = customerFunnelIndex < 0 ? "Clientes" : Cell(row, customerFunnelIndex)?.Trim();
                 if (string.IsNullOrWhiteSpace(funnel)) funnel = "Clientes";
-                var canReceiveAutomatedEmail = canReceiveEmailIndex >= 0 &&
+                var sourceIndicatesEmailPermission = canReceiveEmailIndex >= 0 &&
                     ParseConsent(Cell(row, canReceiveEmailIndex));
                 var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
                 var customerType = customerTypes.FirstOrDefault();
@@ -191,7 +191,10 @@ public static class ClientImportModule
 
                 if (index >= firstPreviewRow && responseRows.Count < previewPageSize)
                     responseRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phone,
-                        canReceiveAutomatedEmail, GetMappedValues(row, mapping), error, duplicate));
+                        false, GetMappedValues(row, mapping), error, duplicate)
+                    {
+                        SourceIndicatesEmailPermission = sourceIndicatesEmailPermission
+                    });
             }
 
             return Results.Ok(new ClientImportPreviewResponse(
@@ -366,6 +369,8 @@ public static class ClientImportModule
             if (string.IsNullOrWhiteSpace(customerFunnel)) customerFunnel = "Clientes";
             // Un indicador afirmativo del archivo no es evidencia auditable del consentimiento.
             var canReceiveAutomatedEmail = false;
+            var sourceIndicatesEmailPermission = canReceiveEmailIndex >= 0 &&
+                ParseConsent(Cell(row, canReceiveEmailIndex));
             var customerTypes = customerTypeIndex < 0 ? [] : ParseCustomerTypes(Cell(row, customerTypeIndex));
             var customerType = customerTypes.FirstOrDefault();
             var rawCustomerStatus = customerStatusIndex < 0 ? null : Cell(row, customerStatusIndex);
@@ -411,7 +416,10 @@ public static class ClientImportModule
             if (resultRows.Count < MaxPreviewRows)
                 resultRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phoneText,
                     canReceiveAutomatedEmail, GetMappedValues(row, mapping),
-                    error ?? (duplicate ? "Email duplicado." : null), duplicate));
+                    error ?? (duplicate ? "Email duplicado." : null), duplicate)
+                {
+                    SourceIndicatesEmailPermission = sourceIndicatesEmailPermission
+                });
         }
 
         try

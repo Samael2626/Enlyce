@@ -32,7 +32,10 @@ public sealed record ClientImportPreviewRow(
     bool CanReceiveAutomatedEmail,
     IReadOnlyDictionary<string, string?> MappedValues,
     string? Error,
-    bool Duplicate);
+    bool Duplicate)
+{
+    public bool SourceIndicatesEmailPermission { get; init; }
+}
 
 public static class ClientImportFields
 {
