@@ -36,6 +36,32 @@ public static class AnalyticsModule
         .WithName("GetInventoryAnalytics")
         .Produces<InventoryAnalyticsResponse>();
 
+        app.MapGet("/api/analytics/realized-deals", async (
+            DateOnly? from,
+            DateOnly? to,
+            Guid? advisorId,
+            string? operation,
+            string? propertyType,
+            int? page,
+            int? pageSize,
+            IRealizedDealsReportReadRepository deals,
+            CancellationToken ct) =>
+        {
+            if (from.HasValue && to.HasValue && from > to || page is < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Revise el rango de fechas y la paginacion." });
+            if (!TryParseOptional(operation, out RealizedDealOperation? parsedOperation) ||
+                !TryParseOptional(propertyType, out TipoInmueble? parsedPropertyType))
+                return Results.BadRequest(new { error = "El tipo de operacion o inmueble no es valido." });
+
+            var result = await deals.GetAsync(new RealizedDealsReportFilter(
+                from, to, advisorId, parsedOperation, parsedPropertyType, page ?? 1, pageSize ?? 10), ct);
+            return Results.Ok(result);
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetRealizedDealsReport")
+        .Produces<RealizedDealsReportPage>()
+        .ProducesProblem(StatusCodes.Status400BadRequest);
+
         app.MapPost("/api/public/analytics/events", async (
             [FromBody] RecordWebAnalyticsEventRequest request,
             ICommandHandler<RecordWebAnalyticsEventCommand> handler,
@@ -122,6 +148,17 @@ public static class AnalyticsModule
         DateTimeKind.Local => value.ToUniversalTime(),
         _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
     };
+
+    private static bool TryParseOptional<TEnum>(string? value, out TEnum? result) where TEnum : struct, Enum
+    {
+        result = null;
+        if (string.IsNullOrWhiteSpace(value))
+            return true;
+        if (!Enum.TryParse<TEnum>(value, true, out var parsed) || !Enum.IsDefined(parsed))
+            return false;
+        result = parsed;
+        return true;
+    }
 }
 
 public sealed record InventoryAnalyticsResponse(

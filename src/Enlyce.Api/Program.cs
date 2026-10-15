@@ -29,6 +29,7 @@ using Enlyce.Api.Endpoints.PublicationMedia;
 using Enlyce.Api.Endpoints.Media;
 using Enlyce.Api.Endpoints.Publications;
 using Enlyce.Api.Endpoints.PublicCatalog;
+using Enlyce.Api.Endpoints.RealizedDeals;
 using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
 using Enlyce.Api.Security;
@@ -363,6 +364,7 @@ if (!app.Configuration.GetValue<bool>("MediaStorage:DisableUploads"))
 app.MapPropertyPublications();
 app.MapBilling();
 app.MapAnalytics();
+app.MapRealizedDeals();
 
 var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 if (File.Exists(Path.Combine(webRoot, "index.html")))

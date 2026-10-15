@@ -382,6 +382,21 @@ class ApiClient {
     return this.request<import("@/lib/types").InventoryAnalytics>("/api/analytics/inventory")
   }
 
+  async getRealizedDealsReport(filters: { from?: string; to?: string; advisorId?: string; operation?: string; propertyType?: string; page?: number; pageSize?: number }) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, String(value))
+    })
+    return this.request<import("@/lib/types").RealizedDealReportPage>(`/api/analytics/realized-deals?${query}`)
+  }
+
+  async createRealizedDeal(input: import("@/lib/types").CreateRealizedDealInput) {
+    return this.request<{ id: string }>("/api/realized-deals", {
+      method: "POST",
+      body: JSON.stringify(input),
+    })
+  }
+
   async downloadOpportunitiesCsv(from: string, to: string): Promise<Blob> {
     const query = new URLSearchParams({ from, to })
     const response = await fetch(`${this.baseUrl}/api/opportunities/export.csv?${query}`, {

@@ -80,6 +80,25 @@ export function useInventoryAnalytics() {
   })
 }
 
+export function useRealizedDealsReport(filters: Parameters<typeof api.getRealizedDealsReport>[0]) {
+  return useQuery({
+    queryKey: ["analytics", "realized-deals", filters],
+    queryFn: () => api.getRealizedDealsReport(filters),
+  })
+}
+
+export function useCreateRealizedDeal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.createRealizedDeal.bind(api),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics", "realized-deals"] })
+      queryClient.invalidateQueries({ queryKey: ["analytics", "inventory"] })
+      queryClient.invalidateQueries({ queryKey: ["inmuebles", "list"] })
+    },
+  })
+}
+
 export function useMoveLeadInPipeline() {
   const queryClient = useQueryClient()
 
@@ -508,7 +527,7 @@ export function useLeadSlaAlerts() {
 
 // Inmuebles
 export function useInmuebles(filters: NonNullable<Parameters<typeof api.getInmuebles>[0]>) {
-  return useQuery({ queryKey: ["inmuebles", "list", filters], queryFn: () => api.getInmuebles({ ...filters, pageSize: 20 }) })
+  return useQuery({ queryKey: ["inmuebles", "list", filters], queryFn: () => api.getInmuebles({ ...filters, pageSize: filters.pageSize ?? 20 }) })
 }
 
 export function useInmueble(id: string) {

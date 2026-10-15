@@ -4,6 +4,7 @@ using Enlyce.Application.Billing;
 using Enlyce.Application.PublicCatalog;
 using Enlyce.Application.Publications;
 using Enlyce.Domain.Ports;
+using Enlyce.Application.Analytics;
 using Enlyce.Application.Media;
 using Enlyce.Infrastructure.Auth;
 using Enlyce.Infrastructure.Billing;
@@ -52,6 +53,8 @@ public static class DependencyInjection
         services.AddScoped<IPaymentOrderRepository, PaymentOrderRepository>();
         services.AddScoped<IPublicPropertyReadRepository, PublicPropertyRepository>();
         services.AddScoped<IWebAnalyticsRepository, WebAnalyticsRepository>();
+        services.AddScoped<IRealizedDealRepository, RealizedDealRepository>();
+        services.AddScoped<IRealizedDealsReportReadRepository, RealizedDealsReportReadRepository>();
         services.AddScoped<Enlyce.Application.Imports.IImportedListingsReadRepository, ImportedListingsReadRepository>();
         services.AddSingleton<IClientImportTableReader, ClientImportTableReader>();
         services.AddScoped<IPropertyPublicationAdminReadRepository, PropertyPublicationAdminReadRepository>();

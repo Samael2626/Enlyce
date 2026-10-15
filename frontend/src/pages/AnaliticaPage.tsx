@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
-import { useAnalyticsFunnel, useCrmReportMetrics, useFirstResponseMetrics, useInventoryAnalytics } from "@/hooks/useApi"
+import { useAdvisors, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useRealizedDealsReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const labels: Record<string, string> = {
@@ -16,11 +16,22 @@ export function AnaliticaPage() {
   const [days, setDays] = useState(30)
   const [crmFrom, setCrmFrom] = useState(() => dateOffset(-29))
   const [crmTo, setCrmTo] = useState(() => dateOffset(0))
+  const [dealFrom, setDealFrom] = useState(() => dateOffset(-29))
+  const [dealTo, setDealTo] = useState(() => dateOffset(0))
+  const [dealAdvisorId, setDealAdvisorId] = useState("")
+  const [dealOperation, setDealOperation] = useState("")
+  const [dealPropertyType, setDealPropertyType] = useState("")
+  const [dealPage, setDealPage] = useState(1)
   const user = useAuthStore((state) => state.user)
   const funnel = useAnalyticsFunnel(days)
   const crmReport = useCrmReportMetrics(crmFrom, crmTo)
   const responseMetrics = useFirstResponseMetrics(crmFrom, crmTo)
   const inventory = useInventoryAnalytics()
+  const advisors = useAdvisors()
+  const dealReport = useRealizedDealsReport({
+    from: dealFrom, to: dealTo, advisorId: dealAdvisorId,
+    operation: dealOperation, propertyType: dealPropertyType, page: dealPage, pageSize: 10,
+  })
 
   if (user?.rol !== "Administrador") return <Navigate to="/dashboard" replace />
 
@@ -107,6 +118,27 @@ export function AnaliticaPage() {
         )}
       </section>
 
+      <RealizedDealsSection
+        report={dealReport.data}
+        isLoading={dealReport.isLoading}
+        isError={dealReport.isError}
+        advisors={advisors.data ?? []}
+        filters={{
+          from: dealFrom, to: dealTo, advisorId: dealAdvisorId,
+          operation: dealOperation, propertyType: dealPropertyType,
+        }}
+        onFilterChange={(key, value) => {
+          setDealPage(1)
+          if (key === "from") setDealFrom(value)
+          if (key === "to") setDealTo(value)
+          if (key === "advisorId") setDealAdvisorId(value)
+          if (key === "operation") setDealOperation(value)
+          if (key === "propertyType") setDealPropertyType(value)
+        }}
+        page={dealPage}
+        onPageChange={setDealPage}
+      />
+
       <section className="space-y-4" aria-labelledby="crm-report-title">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -150,6 +182,155 @@ export function AnaliticaPage() {
       </section>
     </div>
   )
+}
+
+function RealizedDealsSection({
+  report,
+  isLoading,
+  isError,
+  advisors,
+  filters,
+  onFilterChange,
+  page,
+  onPageChange,
+}: {
+  report?: import("@/lib/types").RealizedDealReportPage
+  isLoading: boolean
+  isError: boolean
+  advisors: { id: string; name: string }[]
+  filters: { from: string; to: string; advisorId: string; operation: string; propertyType: string }
+  onFilterChange: (key: "from" | "to" | "advisorId" | "operation" | "propertyType", value: string) => void
+  page: number
+  onPageChange: (page: number) => void
+}) {
+  const [showForm, setShowForm] = useState(false)
+  const maxPage = Math.max(1, Math.ceil((report?.total ?? 0) / (report?.pageSize ?? 10)))
+  return (
+    <section className="space-y-4" aria-labelledby="realized-deals-title">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="crm-eyebrow">Negocios realizados</span>
+          <h2 id="realized-deals-title" className="mt-2 font-display text-3xl tracking-tight">Cierres, valor y comisión</h2>
+        </div>
+        <button type="button" className="rounded-sm bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => setShowForm((value) => !value)}>
+          {showForm ? "Cerrar formulario" : "Registrar negocio"}
+        </button>
+      </div>
+      {showForm && <RealizedDealForm advisors={advisors} />}
+
+      <div className="crm-panel grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-5">
+        <label className="text-xs font-bold text-muted-foreground">Desde<input aria-label="Desde cierre" type="date" value={filters.from} max={filters.to} onChange={(event) => onFilterChange("from", event.target.value)} className="mt-1 block w-full rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+        <label className="text-xs font-bold text-muted-foreground">Hasta<input aria-label="Hasta cierre" type="date" value={filters.to} min={filters.from} onChange={(event) => onFilterChange("to", event.target.value)} className="mt-1 block w-full rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+        <label className="text-xs font-bold text-muted-foreground">Asesor<select value={filters.advisorId} onChange={(event) => onFilterChange("advisorId", event.target.value)} className="mt-1 block w-full rounded-sm border border-input bg-card px-2 py-2 text-foreground"><option value="">Todos</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>
+        <label className="text-xs font-bold text-muted-foreground">Negocio<select value={filters.operation} onChange={(event) => onFilterChange("operation", event.target.value)} className="mt-1 block w-full rounded-sm border border-input bg-card px-2 py-2 text-foreground"><option value="">Todos</option><option value="Sale">Venta</option><option value="Rent">Arriendo</option></select></label>
+        <label className="text-xs font-bold text-muted-foreground">Tipo de inmueble<select value={filters.propertyType} onChange={(event) => onFilterChange("propertyType", event.target.value)} className="mt-1 block w-full rounded-sm border border-input bg-card px-2 py-2 text-foreground"><option value="">Todos</option>{["Apartamento", "Casa", "Local", "Lote", "Oficina", "Bodega", "Finca"].map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+      </div>
+
+      {isLoading ? <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando negocios…</div> : isError ? (
+        <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el reporte de negocios.</div>
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(report?.totalsByCurrency ?? []).map((total) => (
+              <div key={total.currency} className="crm-panel grid grid-cols-3 gap-3 p-5">
+                <ReportTotal label={`Negocios (${total.currency})`} value={total.count} />
+                <ReportTotal label="Total bruto" value={formatMoney(total.grossAmount, total.currency)} />
+                <ReportTotal label="Comisión" value={formatMoney(total.commissionAmount, total.currency)} />
+              </div>
+            ))}
+          </div>
+          <div className="crm-panel overflow-x-auto">
+            <table className="w-full min-w-[850px] text-left text-sm">
+              <thead className="border-b border-border bg-muted/50 text-muted-foreground"><tr>{["Inmueble", "Negocio", "Fecha", "Encargado", "Cliente", "Total bruto", "Comisión"].map((heading) => <th key={heading} className="px-4 py-3 font-semibold">{heading}</th>)}</tr></thead>
+              <tbody className="divide-y divide-border">{(report?.items ?? []).map((item) => <tr key={item.id}>
+                <td className="px-4 py-3">{item.propertyName}<small className="block text-muted-foreground">{item.propertyType}</small></td>
+                <td className="px-4 py-3">{item.operation === "Sale" ? "Venta" : "Arriendo"}</td>
+                <td className="px-4 py-3">{item.closedOn}</td>
+                <td className="px-4 py-3">{item.advisorName}</td>
+                <td className="px-4 py-3">{item.clientName}</td>
+                <td className="px-4 py-3">{formatMoney(item.grossAmount, item.currency)}</td>
+                <td className="px-4 py-3">{formatMoney(item.commissionAmount, item.currency)}</td>
+              </tr>)}</tbody>
+            </table>
+            {report?.items.length === 0 && <p className="p-6 text-sm text-muted-foreground">No hay negocios en este periodo.</p>}
+            <div className="flex items-center justify-between border-t border-border p-4 text-sm text-muted-foreground">
+              <span>{report?.total ?? 0} negocios · página {page} de {maxPage}</span>
+              <div className="flex gap-2"><button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="rounded-sm border border-border px-3 py-1 disabled:opacity-40">Anterior</button><button type="button" disabled={page >= maxPage} onClick={() => onPageChange(page + 1)} className="rounded-sm border border-border px-3 py-1 disabled:opacity-40">Siguiente</button></div>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
+function RealizedDealForm({ advisors }: { advisors: { id: string; name: string }[] }) {
+  const [contactSearch, setContactSearch] = useState("")
+  const [propertySearch, setPropertySearch] = useState("")
+  const [operation, setOperation] = useState<"Sale" | "Rent">("Sale")
+  const [errorMessage, setErrorMessage] = useState("")
+  const contacts = useContacts({ q: contactSearch, page: 1, pageSize: 50 })
+  const properties = useInmuebles({ search: propertySearch, page: 1, pageSize: 50 })
+  const createDeal = useCreateRealizedDeal()
+  const user = useAuthStore((state) => state.user)
+  const isAdmin = user?.rol === "Administrador"
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formElement = event.currentTarget
+    setErrorMessage("")
+    const form = new FormData(formElement)
+    const grossAmount = Number(form.get("grossAmount"))
+    const commissionAmount = Number(form.get("commissionAmount"))
+    if (!Number.isFinite(grossAmount) || !Number.isFinite(commissionAmount)) {
+      setErrorMessage("Ingresa valores numéricos válidos.")
+      return
+    }
+    try {
+      await createDeal.mutateAsync({
+        propertyId: String(form.get("propertyId")),
+        contactId: String(form.get("contactId")),
+        advisorId: isAdmin ? String(form.get("advisorId")) : null,
+        operation,
+        grossAmount,
+        commissionAmount,
+        currency: String(form.get("currency")),
+        closedOn: String(form.get("closedOn")),
+      })
+      formElement.reset()
+      setPropertySearch("")
+      setContactSearch("")
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "No se pudo registrar el negocio.")
+    }
+  }
+
+  const availableProperties = (properties.data?.items ?? []).filter((property) =>
+    ["Disponible", "Reservado"].includes(property.estado) &&
+    (operation === "Sale" ? ["Venta", "VentaYArriendo"].includes(property.modalidad) : ["Arriendo", "VentaYArriendo"].includes(property.modalidad)),
+  )
+
+  return (
+    <form onSubmit={submit} className="crm-panel grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-4">
+      <label className="text-xs font-bold text-muted-foreground">Tipo de negocio<select value={operation} onChange={(event) => setOperation(event.target.value as "Sale" | "Rent")} className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground"><option value="Sale">Venta</option><option value="Rent">Arriendo</option></select></label>
+      <label className="text-xs font-bold text-muted-foreground">Buscar inmueble<input value={propertySearch} onChange={(event) => setPropertySearch(event.target.value)} className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground" /></label>
+      <label className="text-xs font-bold text-muted-foreground">Inmueble<select name="propertyId" required defaultValue="" className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground"><option value="" disabled>Selecciona</option>{availableProperties.map((property) => <option key={property.id} value={property.id}>{property.nombre} · {property.ciudad}</option>)}</select></label>
+      <label className="text-xs font-bold text-muted-foreground">Buscar cliente<input value={contactSearch} onChange={(event) => setContactSearch(event.target.value)} className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground" /></label>
+      <label className="text-xs font-bold text-muted-foreground">Cliente<select name="contactId" required defaultValue="" className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground"><option value="" disabled>Selecciona</option>{(contacts.data?.items ?? []).map((contact) => <option key={contact.id} value={contact.id}>{contact.name} {contact.surname ?? ""}</option>)}</select></label>
+      {isAdmin && <label className="text-xs font-bold text-muted-foreground">Asesor<select name="advisorId" required defaultValue="" className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground"><option value="" disabled>Selecciona</option>{advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select></label>}
+      <label className="text-xs font-bold text-muted-foreground">Fecha de cierre<input name="closedOn" type="date" required defaultValue={dateOffset(0)} className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground" /></label>
+      <label className="text-xs font-bold text-muted-foreground">Valor bruto<input name="grossAmount" type="number" min="0.01" step="0.01" required className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground" /></label>
+      <label className="text-xs font-bold text-muted-foreground">Comisión<input name="commissionAmount" type="number" min="0" step="0.01" required className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-foreground" /></label>
+      <label className="text-xs font-bold text-muted-foreground">Moneda<input name="currency" required minLength={3} maxLength={3} defaultValue="COP" className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 uppercase text-foreground" /></label>
+      <div className="flex items-end"><button type="submit" disabled={createDeal.isPending} className="rounded-sm bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{createDeal.isPending ? "Guardando…" : "Guardar cierre"}</button></div>
+      {errorMessage && <p role="alert" className="text-sm text-destructive md:col-span-2 lg:col-span-4">{errorMessage}</p>}
+      {createDeal.isSuccess && <p role="status" className="text-sm text-green-700 md:col-span-2 lg:col-span-4">Negocio registrado; el inmueble ya no aparece como disponible.</p>}
+    </form>
+  )
+}
+
+function formatMoney(amount: number, currency: string) {
+  return new Intl.NumberFormat("es-CO", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount)
 }
 
 function dateOffset(days: number) {

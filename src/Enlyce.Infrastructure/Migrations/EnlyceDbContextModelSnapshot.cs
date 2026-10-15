@@ -1433,6 +1433,72 @@ namespace Enlyce.Infrastructure.Migrations
                     b.ToTable("Propietarios", (string)null);
                 });
 
+            modelBuilder.Entity("Enlyce.Domain.Entities.RealizedDeal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AdvisorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("ClosedOn")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("CommissionAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("GrossAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("LeadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("RecordedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdvisorId");
+
+                    b.HasIndex("ClosedOn");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("LeadId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("RealizedDeals", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RealizedDeals_CommissionAmount", "\"CommissionAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_RealizedDeals_Currency", "char_length(\"Currency\") = 3");
+
+                            t.HasCheckConstraint("CK_RealizedDeals_GrossAmount", "\"GrossAmount\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.Visita", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1692,6 +1758,32 @@ namespace Enlyce.Infrastructure.Migrations
                     b.HasOne("Enlyce.Domain.Entities.Inmueble", null)
                         .WithOne()
                         .HasForeignKey("Enlyce.Domain.Entities.PropertyPublication", "PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.RealizedDeal", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("AdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Contact", null)
+                        .WithMany()
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enlyce.Domain.Entities.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("LeadId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enlyce.Domain.Entities.Inmueble", null)
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

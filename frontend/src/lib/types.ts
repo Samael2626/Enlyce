@@ -640,6 +640,37 @@ export interface InventoryAnalytics {
   byOperation: { name: string; count: number }[]
 }
 
+export interface RealizedDealReportPage {
+  total: number
+  page: number
+  pageSize: number
+  totalsByCurrency: { currency: string; count: number; grossAmount: number; commissionAmount: number }[]
+  items: {
+    id: string
+    propertyName: string
+    propertyType: string
+    operation: "Sale" | "Rent"
+    closedOn: string
+    advisorName: string
+    clientName: string
+    grossAmount: number
+    commissionAmount: number
+    currency: string
+  }[]
+}
+
+export interface CreateRealizedDealInput {
+  propertyId: string
+  contactId: string
+  leadId?: string | null
+  advisorId?: string | null
+  operation: "Sale" | "Rent"
+  grossAmount: number
+  commissionAmount: number
+  currency: string
+  closedOn: string
+}
+
 export type LeadDistributionRule = "LeastOpenLeads" | "RoundRobin"
 
 export interface LeadSlaRule {
