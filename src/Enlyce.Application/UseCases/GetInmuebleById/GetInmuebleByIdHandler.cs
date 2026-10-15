@@ -42,6 +42,7 @@ public class GetInmuebleByIdHandler : IQueryHandler<GetInmuebleByIdQuery, GetInm
             inmueble.FechaCreacion,
             inmueble.Activo,
             inmueble.AnioConstruccion,
-            inmueble.EstadoFisico);
+            inmueble.EstadoFisico,
+            inmueble.Etiquetas);
     }
 }

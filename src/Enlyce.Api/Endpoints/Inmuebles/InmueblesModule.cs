@@ -20,7 +20,7 @@ public static class InmueblesModule
             string? tipo, string? pais, string? departamento, string? ciudad, string? barrio, string? moneda,
             decimal? precioDesde, decimal? precioHasta, int? areaDesde, int? areaHasta,
             int? habitaciones, int? banos, int? parqueaderos, string? orden, bool? papelera, string? codigoWasi,
-            int? construidoDesde,
+            int? construidoDesde, string? etiqueta,
             IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, CancellationToken ct) =>
         {
             if (page is < 1 || pageSize is < 1 or > 100 || search?.Length > 200 ||
@@ -28,7 +28,7 @@ public static class InmueblesModule
                 !ValidEnum<TipoInmueble>(tipo) || !ValidRange(precioDesde, precioHasta) ||
                 !ValidRange(areaDesde, areaHasta) || habitaciones < 0 || banos < 0 || parqueaderos < 0 ||
                 new[] { pais, departamento, ciudad, barrio }.Any(value => value?.Length > 100) ||
-                moneda?.Length > 3 || codigoWasi?.Length > 100 || construidoDesde is < 1 or > 9999 ||
+                moneda?.Length > 3 || codigoWasi?.Length > 100 || construidoDesde is < 1 or > 9999 || etiqueta?.Length > 50 ||
                 ((precioDesde.HasValue || precioHasta.HasValue) && string.IsNullOrWhiteSpace(moneda)) ||
                 orden is not (null or "recent" or "oldest" or "priceAsc" or "priceDesc"))
                 return Results.BadRequest(new { error = "Los filtros del inventario no son validos." });
@@ -36,7 +36,7 @@ public static class InmueblesModule
             return Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(
                 page ?? 1, pageSize ?? 20, search, modalidad, estado, tipo, pais, departamento, ciudad, barrio,
                 moneda?.ToUpperInvariant(), precioDesde, precioHasta, areaDesde, areaHasta,
-                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false, codigoWasi, construidoDesde), ct));
+                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false, codigoWasi, construidoDesde, etiqueta), ct));
         })
             .WithName("ListInmuebles");
 
@@ -65,7 +65,7 @@ public static class InmueblesModule
                 request.MetrosCuadrados, request.Habitaciones,
                 request.Banos, request.Parqueaderos, request.PropietarioId, request.Pais, request.Departamento,
                 request.CaracteristicasInternas, request.CaracteristicasExternas, request.AnioConstruccion,
-                request.EstadoFisico);
+                request.EstadoFisico, request.Etiquetas);
 
             var result = await handler.HandleAsync(command);
             return Results.Created($"/api/inmuebles/{result.Id}", result);
@@ -86,7 +86,7 @@ public static class InmueblesModule
                 request.Moneda, request.MetrosCuadrados, request.Habitaciones, request.Banos,
                 request.Parqueaderos, request.Pais, request.Departamento,
                 request.CaracteristicasInternas, request.CaracteristicasExternas, request.AnioConstruccion,
-                request.EstadoFisico);
+                request.EstadoFisico, request.Etiquetas);
             try
             {
                 var result = await handler.HandleAsync(command, ct);
@@ -168,7 +168,7 @@ public record CreateInmuebleRequest(
     string[]? CaracteristicasInternas = null,
     string[]? CaracteristicasExternas = null,
     int? AnioConstruccion = null,
-    string? EstadoFisico = null);
+    string? EstadoFisico = null, string[]? Etiquetas = null);
 
 public record UpdateInmuebleRequest(
     string Nombre, string? Descripcion, TipoInmueble Tipo, ModalidadInmueble Modalidad,
@@ -176,6 +176,6 @@ public record UpdateInmuebleRequest(
     int MetrosCuadrados, int Habitaciones, int Banos, int Parqueaderos,
     string Pais = "Colombia", string? Departamento = null,
     string[]? CaracteristicasInternas = null, string[]? CaracteristicasExternas = null,
-    int? AnioConstruccion = null, string? EstadoFisico = null);
+    int? AnioConstruccion = null, string? EstadoFisico = null, string[]? Etiquetas = null);
 
 public record BatchInmuebleTrashRequest(Guid[]? Ids);

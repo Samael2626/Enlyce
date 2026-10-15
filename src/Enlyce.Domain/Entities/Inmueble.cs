@@ -56,6 +56,7 @@ public sealed class Inmueble
     public string? ExternalRef { get; private set; }
     public string[] InternalFeatures { get; private set; } = [];
     public string[] ExternalFeatures { get; private set; } = [];
+    public string[] Etiquetas { get; private set; } = [];
 
     // EF Core constructor
     private Inmueble() { }
@@ -65,7 +66,7 @@ public sealed class Inmueble
         Dinero precio, int metrosCuadrados, int habitaciones, int banos,
         int parqueaderos, int? anioConstruccion, string? estadoFisico, int fotosCount, Guid propietarioId,
         DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
-        string[]? internalFeatures = null, string[]? externalFeatures = null)
+        string[]? internalFeatures = null, string[]? externalFeatures = null, string[]? etiquetas = null)
     {
         Id = id;
         Nombre = nombre;
@@ -88,13 +89,14 @@ public sealed class Inmueble
         Activo = activo;
         InternalFeatures = NormalizeFeatures(internalFeatures);
         ExternalFeatures = NormalizeFeatures(externalFeatures);
+        Etiquetas = NormalizeLabels(etiquetas);
     }
 
     public static Inmueble Crear(string nombre, string descripcion, TipoInmueble tipo,
         ModalidadInmueble modalidad, Direccion direccion, Dinero precio,
         int metrosCuadrados, int habitaciones, int banos, int parqueaderos,
         Guid propietarioId, string[]? internalFeatures = null, string[]? externalFeatures = null,
-        int? anioConstruccion = null, string? estadoFisico = null)
+        int? anioConstruccion = null, string? estadoFisico = null, string[]? etiquetas = null)
     {
         ValidarDatos(nombre, precio, metrosCuadrados, anioConstruccion, estadoFisico);
 
@@ -119,7 +121,8 @@ public sealed class Inmueble
             null,
             true,
             internalFeatures,
-            externalFeatures);
+            externalFeatures,
+            etiquetas);
     }
 
     public static Inmueble Reconstituir(Guid id, string nombre, string descripcion,
@@ -128,12 +131,13 @@ public sealed class Inmueble
         int banos, int parqueaderos, int fotosCount, Guid propietarioId,
         DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
         string? externalRef = null, string[]? internalFeatures = null,
-        string[]? externalFeatures = null, int? anioConstruccion = null, string? estadoFisico = null)
+        string[]? externalFeatures = null, int? anioConstruccion = null, string? estadoFisico = null,
+        string[]? etiquetas = null)
     {
         return new Inmueble(id, nombre, descripcion, tipo, modalidad, estado,
             direccion, precio, metrosCuadrados, habitaciones, banos, parqueaderos,
             anioConstruccion, estadoFisico, fotosCount, propietarioId, fechaCreacion, fechaVentaArriendo, activo,
-            internalFeatures, externalFeatures)
+            internalFeatures, externalFeatures, etiquetas)
         {
             ExternalRef = externalRef
         };
@@ -160,7 +164,7 @@ public sealed class Inmueble
         ModalidadInmueble modalidad, Direccion direccion, Dinero precio,
         int metrosCuadrados, int habitaciones, int banos, int parqueaderos,
         string[]? internalFeatures = null, string[]? externalFeatures = null,
-        int? anioConstruccion = null, string? estadoFisico = null)
+        int? anioConstruccion = null, string? estadoFisico = null, string[]? etiquetas = null)
     {
         ValidarDatos(nombre, precio, metrosCuadrados, anioConstruccion, estadoFisico);
 
@@ -178,6 +182,7 @@ public sealed class Inmueble
         EstadoFisico = NormalizeEstadoFisico(estadoFisico);
         if (internalFeatures is not null) InternalFeatures = NormalizeFeatures(internalFeatures);
         if (externalFeatures is not null) ExternalFeatures = NormalizeFeatures(externalFeatures);
+        if (etiquetas is not null) Etiquetas = NormalizeLabels(etiquetas);
     }
 
     private static void ValidarDatos(string nombre, Dinero precio, int metrosCuadrados, int? anioConstruccion, string? estadoFisico)
@@ -208,6 +213,15 @@ public sealed class Inmueble
         if (normalized.Length > 30 || normalized.Any(value => value.Length > 50))
             throw new DomainError("Se permiten hasta 30 caracteristicas de 50 caracteres cada una.");
         return normalized;
+    }
+
+    private static string[] NormalizeLabels(string[]? values)
+    {
+        var labels = (values ?? []).Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (labels.Length > 30 || labels.Any(value => value.Length > 50))
+            throw new DomainError("Se permiten hasta 30 etiquetas de 50 caracteres cada una.");
+        return labels;
     }
 
     public void MarcarVendido()

@@ -141,7 +141,7 @@ public sealed class ImportExternalListingsHandler
                 property.ActualizarDatos(nombre, descripcion, tipo, unit.Modalidad, direccion, precio,
                     metros, listing.Bedrooms, listing.Bathrooms, listing.Garages,
                     property.InternalFeatures, property.ExternalFeatures, property.AnioConstruccion,
-                    property.EstadoFisico);
+                    property.EstadoFisico, property.Etiquetas);
                 outcome = ImportOutcome.Actualizado;
             }
             else

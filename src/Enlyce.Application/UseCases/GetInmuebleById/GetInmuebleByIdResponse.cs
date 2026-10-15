@@ -25,4 +25,5 @@ public record GetInmuebleByIdResponse(
     DateTime FechaCreacion,
     bool Activo,
     int? AnioConstruccion = null,
-    string? EstadoFisico = null);
+    string? EstadoFisico = null,
+    IReadOnlyList<string>? Etiquetas = null);

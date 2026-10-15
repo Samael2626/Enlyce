@@ -629,6 +629,12 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.PrimitiveCollection<string[]>("Etiquetas")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
+
                     b.PrimitiveCollection<string[]>("ExternalFeatures")
                         .IsRequired()
                         .ValueGeneratedOnAdd()

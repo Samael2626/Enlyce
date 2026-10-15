@@ -22,4 +22,5 @@ public record CreateInmuebleCommand(
     string[]? CaracteristicasInternas = null,
     string[]? CaracteristicasExternas = null,
     int? AnioConstruccion = null,
-    string? EstadoFisico = null);
+    string? EstadoFisico = null,
+    string[]? Etiquetas = null);
