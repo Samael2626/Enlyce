@@ -490,6 +490,10 @@ class ApiClient {
     })
   }
 
+  async updateInmueble(id: string, data: any) {
+    return this.request<any>(`/api/inmuebles/${id}`, { method: "PUT", body: JSON.stringify(data) })
+  }
+
   async getInmuebles(filters: {
     page?: number; pageSize?: number; search?: string; modalidad?: string; estado?: string; tipo?: string;
     pais?: string; departamento?: string; ciudad?: string; barrio?: string; moneda?: string;

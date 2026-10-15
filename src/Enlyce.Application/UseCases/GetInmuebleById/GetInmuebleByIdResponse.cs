@@ -8,6 +8,9 @@ public record GetInmuebleByIdResponse(
     string Modalidad,
     string Estado,
     string Direccion,
+    string Calle,
+    string Ciudad,
+    string? Barrio,
     string Pais,
     string? Departamento,
     decimal Precio,
@@ -16,6 +19,8 @@ public record GetInmuebleByIdResponse(
     int Habitaciones,
     int Banos,
     int Parqueaderos,
+    IReadOnlyList<string> CaracteristicasInternas,
+    IReadOnlyList<string> CaracteristicasExternas,
     Guid PropietarioId,
     DateTime FechaCreacion,
     bool Activo);

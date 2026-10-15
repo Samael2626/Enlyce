@@ -25,6 +25,9 @@ public class GetInmuebleByIdHandler : IQueryHandler<GetInmuebleByIdQuery, GetInm
             inmueble.Modalidad.ToString(),
             inmueble.Estado.ToString(),
             inmueble.Direccion.ToString(),
+            inmueble.Direccion.Calle,
+            inmueble.Direccion.Ciudad,
+            inmueble.Direccion.Barrio,
             inmueble.Direccion.Pais,
             inmueble.Direccion.Departamento,
             inmueble.Precio.Monto,
@@ -33,6 +36,8 @@ public class GetInmuebleByIdHandler : IQueryHandler<GetInmuebleByIdQuery, GetInm
             inmueble.Habitaciones,
             inmueble.Banos,
             inmueble.Parqueaderos,
+            inmueble.InternalFeatures,
+            inmueble.ExternalFeatures,
             inmueble.PropietarioId,
             inmueble.FechaCreacion,
             inmueble.Activo);

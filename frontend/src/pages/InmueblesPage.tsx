@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useCreateInmueble, useInmuebles, usePropertyDemandCounts } from "@/hooks/useApi"
+import { useEffect, useState } from "react"
+import { useCreateInmueble, useInmueble, useInmuebles, usePropertyDemandCounts, useUpdateInmueble } from "@/hooks/useApi"
 import { PropertyDemandsPanel } from "@/components/PropertyDemandsPanel"
 import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE } from "@/lib/constants"
 import { api } from "@/api/client"
@@ -17,6 +17,7 @@ const splitFeatures = (value: string) => value.split(",").map((item) => item.tri
 export function InmueblesPage() {
   const [showForm, setShowForm] = useState(false)
   const [page, setPage] = useState(1)
+  const [editingId, setEditingId] = useState("")
   const [draftFilters, setDraftFilters] = useState({
     search: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "",
     moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "",
@@ -38,6 +39,21 @@ export function InmueblesPage() {
   })
   const demandCounts = usePropertyDemandCounts(inventory.data?.items.map((item) => item.id) ?? [])
   const createInmueble = useCreateInmueble()
+  const updateInmueble = useUpdateInmueble()
+  const editingProperty = useInmueble(editingId)
+
+  useEffect(() => {
+    const property = editingProperty.data
+    if (!editingId || !property) return
+    setForm({
+      nombre: property.nombre, descripcion: property.descripcion, tipo: property.tipo, modalidad: property.modalidad,
+      calle: property.calle, ciudad: property.ciudad, barrio: property.barrio ?? "", precio: String(property.precio),
+      moneda: property.moneda, metrosCuadrados: String(property.metrosCuadrados), habitaciones: String(property.habitaciones),
+      banos: String(property.banos), parqueaderos: String(property.parqueaderos), propietarioId: property.propietarioId,
+      caracteristicasInternas: property.caracteristicasInternas.join(", "),
+      caracteristicasExternas: property.caracteristicasExternas.join(", "),
+    })
+  }, [editingId, editingProperty.data])
 
   const [form, setForm] = useState({
     nombre: "",
@@ -60,8 +76,7 @@ export function InmueblesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    createInmueble.mutate(
-      {
+    const data = {
         ...form,
         precio: parseFloat(form.precio) || 0,
         metrosCuadrados: parseFloat(form.metrosCuadrados) || 0,
@@ -70,31 +85,26 @@ export function InmueblesPage() {
         parqueaderos: parseInt(form.parqueaderos) || 0,
         caracteristicasInternas: splitFeatures(form.caracteristicasInternas),
         caracteristicasExternas: splitFeatures(form.caracteristicasExternas),
-      },
-      {
-        onSuccess: () => {
-          setShowForm(false)
-          setForm({
-            nombre: "",
-            descripcion: "",
-            tipo: "Apartamento",
-            modalidad: "Venta",
-            calle: "",
-            ciudad: "",
-            barrio: "",
-            precio: "",
-            moneda: "COP",
-            metrosCuadrados: "",
-            habitaciones: "",
-            banos: "",
-            parqueaderos: "",
-            propietarioId: "",
-            caracteristicasInternas: "",
-            caracteristicasExternas: "",
-          })
-        },
       }
-    )
+    const onSuccess = () => {
+      setShowForm(false)
+      setEditingId("")
+      setForm({ nombre: "", descripcion: "", tipo: "Apartamento", modalidad: "Venta", calle: "", ciudad: "", barrio: "", precio: "", moneda: "COP", metrosCuadrados: "", habitaciones: "", banos: "", parqueaderos: "", propietarioId: "", caracteristicasInternas: "", caracteristicasExternas: "" })
+    }
+    if (editingId) {
+      updateInmueble.mutate({ id: editingId, data }, { onSuccess })
+    } else {
+      createInmueble.mutate(data, {
+        onSuccess: () => {
+          onSuccess()
+        },
+      })
+    }
+  }
+
+  const beginEditing = async (id: string) => {
+    setEditingId(id)
+    setShowForm(true)
   }
 
   return (
@@ -128,7 +138,7 @@ export function InmueblesPage() {
             <Mail className="h-4 w-4" />
             {emailingInventory ? "Enviando…" : "Enviar inventario a mi correo"}
           </button>
-          <button onClick={() => setShowForm(true)} className="crm-button">
+          <button onClick={() => { setEditingId(""); setShowForm(true) }} className="crm-button">
             <Plus className="h-4 w-4" />
             Nuevo Inmueble
           </button>
@@ -164,10 +174,10 @@ export function InmueblesPage() {
           <div className="crm-panel max-h-[90vh] w-full max-w-2xl overflow-y-auto border-t-4 border-t-accent">
             <div className="flex items-center justify-between border-b border-border p-5">
               <h2 className="font-display text-2xl text-foreground">
-                Nuevo Inmueble
+                {editingId ? "Editar inmueble" : "Nuevo Inmueble"}
               </h2>
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => { setEditingId(""); setShowForm(false) }}
                 className="rounded-sm p-2 hover:bg-muted"
                 aria-label="Cerrar formulario"
               >
@@ -177,6 +187,7 @@ export function InmueblesPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5 p-5 md:p-7">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {editingProperty.isError && editingId && <p role="alert" className="text-sm text-destructive sm:col-span-2">No se pudo cargar el inmueble para editar.</p>}
                 <div className="sm:col-span-2">
                   <label className="text-sm font-medium">Nombre</label>
                   <input
@@ -189,6 +200,10 @@ export function InmueblesPage() {
                     required
                   />
                 </div>
+
+                <label className="text-sm font-medium sm:col-span-2">Descripción
+                  <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="mt-1 w-full rounded-md border bg-background px-3 py-2" rows={4} />
+                </label>
 
                 <div>
                   <label className="text-sm font-medium">Tipo</label>
@@ -331,20 +346,20 @@ export function InmueblesPage() {
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => { setEditingId(""); setShowForm(false) }}
                   className="px-4 py-2 text-sm border rounded-md hover:bg-accent"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  disabled={createInmueble.isPending}
+                  disabled={createInmueble.isPending || updateInmueble.isPending || (Boolean(editingId) && (editingProperty.isLoading || editingProperty.isError))}
                   className="crm-button"
                 >
                   {createInmueble.isPending && (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   )}
-                  Guardar
+                  {editingId ? "Guardar cambios" : "Guardar"}
                 </button>
               </div>
             </form>
@@ -362,7 +377,7 @@ export function InmueblesPage() {
         <div className="crm-panel overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead><tr className="border-b text-muted-foreground"><th className="p-4">Nombre</th><th className="p-4">Ubicación</th><th className="p-4">Precio</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th><th className="p-4"><span className="sr-only">Acciones</span></th></tr></thead>
-            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4 font-medium">{item.nombre}</td><td className="p-4">{[item.barrio, item.ciudad].filter(Boolean).join(", ")}</td><td className="p-4">{new Intl.NumberFormat("es-CO", { style: "currency", currency: item.moneda }).format(item.precio)}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="p-4"><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></td></tr>)}</tbody>
+            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4 font-medium">{item.nombre}</td><td className="p-4">{[item.barrio, item.ciudad].filter(Boolean).join(", ")}</td><td className="p-4">{new Intl.NumberFormat("es-CO", { style: "currency", currency: item.moneda }).format(item.precio)}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="space-y-2 p-4"><button className="rounded border px-3 py-1" onClick={() => void beginEditing(item.id)}>Editar</button><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></td></tr>)}</tbody>
           </table>
           <div className="flex items-center justify-between p-4"><span className="text-sm text-muted-foreground">{inventory.data?.total} inmuebles</span><div className="flex gap-2"><button className="crm-button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button><button className="crm-button" disabled={page * (inventory.data?.pageSize ?? 20) >= (inventory.data?.total ?? 0)} onClick={() => setPage(page + 1)}>Siguiente</button></div></div>
         </div>

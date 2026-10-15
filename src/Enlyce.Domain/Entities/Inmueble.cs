@@ -151,7 +151,8 @@ public sealed class Inmueble
     // Sincroniza los datos descriptivos; estado, propietario y fechas no se tocan aqui.
     public void ActualizarDatos(string nombre, string descripcion, TipoInmueble tipo,
         ModalidadInmueble modalidad, Direccion direccion, Dinero precio,
-        int metrosCuadrados, int habitaciones, int banos, int parqueaderos)
+        int metrosCuadrados, int habitaciones, int banos, int parqueaderos,
+        string[]? internalFeatures = null, string[]? externalFeatures = null)
     {
         ValidarDatos(nombre, precio, metrosCuadrados);
 
@@ -165,6 +166,8 @@ public sealed class Inmueble
         Habitaciones = habitaciones;
         Banos = banos;
         Parqueaderos = parqueaderos;
+        if (internalFeatures is not null) InternalFeatures = NormalizeFeatures(internalFeatures);
+        if (externalFeatures is not null) ExternalFeatures = NormalizeFeatures(externalFeatures);
     }
 
     private static void ValidarDatos(string nombre, Dinero precio, int metrosCuadrados)

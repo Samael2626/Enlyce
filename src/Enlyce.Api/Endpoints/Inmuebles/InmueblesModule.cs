@@ -2,6 +2,7 @@ using Enlyce.Application.Abstractions;
 using Enlyce.Application.UseCases.CreateInmueble;
 using Enlyce.Application.UseCases.GetInmuebleById;
 using Enlyce.Application.UseCases.ListInmuebles;
+using Enlyce.Application.UseCases.UpdateInmueble;
 using Enlyce.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -65,6 +66,27 @@ public static class InmueblesModule
         .WithName("CreateInmueble")
         .Produces<CreateInmuebleResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapPut("/{id:guid}", async (
+            Guid id, [FromBody] UpdateInmuebleRequest request,
+            ICommandHandler<UpdateInmuebleCommand, CreateInmuebleResponse?> handler, CancellationToken ct) =>
+        {
+            var command = new UpdateInmuebleCommand(id, request.Nombre, request.Descripcion, request.Tipo,
+                request.Modalidad, request.Calle, request.Ciudad, request.Barrio, request.Precio,
+                request.Moneda, request.MetrosCuadrados, request.Habitaciones, request.Banos,
+                request.Parqueaderos, request.Pais, request.Departamento,
+                request.CaracteristicasInternas, request.CaracteristicasExternas);
+            try
+            {
+                var result = await handler.HandleAsync(command, ct);
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            }
+            catch (Enlyce.Domain.Errors.DomainError error) { return Results.BadRequest(new { error = error.Message }); }
+        })
+        .WithName("UpdateInmueble")
+        .Produces<CreateInmuebleResponse>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static bool ValidEnum<T>(string? value) where T : struct, Enum =>
@@ -95,3 +117,10 @@ public record CreateInmuebleRequest(
     string? Departamento = null,
     string[]? CaracteristicasInternas = null,
     string[]? CaracteristicasExternas = null);
+
+public record UpdateInmuebleRequest(
+    string Nombre, string? Descripcion, TipoInmueble Tipo, ModalidadInmueble Modalidad,
+    string Calle, string Ciudad, string? Barrio, decimal Precio, string Moneda,
+    int MetrosCuadrados, int Habitaciones, int Banos, int Parqueaderos,
+    string Pais = "Colombia", string? Departamento = null,
+    string[]? CaracteristicasInternas = null, string[]? CaracteristicasExternas = null);

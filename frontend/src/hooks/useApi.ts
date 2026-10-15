@@ -523,6 +523,14 @@ export function useCreateInmueble() {
   })
 }
 
+export function useUpdateInmueble() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => api.updateInmueble(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["inmuebles"] }),
+  })
+}
+
 // Publicaciones
 export function usePublications() {
   return useQuery({
