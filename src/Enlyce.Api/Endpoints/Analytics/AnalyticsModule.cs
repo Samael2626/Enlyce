@@ -208,6 +208,28 @@ public static class AnalyticsModule
         .Produces<AdvisorPerformanceReport>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        app.MapGet("/api/analytics/advisors/{advisorId:guid}/detail", async (
+            Guid advisorId,
+            DateOnly? from,
+            DateOnly? to,
+            IAdvisorPerformanceReportReadRepository report,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-29);
+            if (!ValidAdvisorReportRange(since, through))
+                return Results.BadRequest(new { error = "El rango debe ser valido y no superar 366 dias." });
+
+            var detail = await report.GetDetailAsync(advisorId, since, through, ct);
+            return detail is null ? Results.NotFound() : Results.Ok(detail);
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetAdvisorActivityDetail")
+        .Produces<AdvisorActivityDetailReport>()
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
         app.MapGet("/api/analytics/advisors/{advisorId:guid}.xlsx", async (
             Guid advisorId,
             DateOnly? from,

@@ -7,6 +7,50 @@ namespace Enlyce.Infrastructure.Persistence.Repositories;
 public sealed class AdvisorPerformanceReportReadRepository(EnlyceDbContext context)
     : IAdvisorPerformanceReportReadRepository
 {
+    public async Task<AdvisorActivityDetailReport?> GetDetailAsync(Guid advisorId, DateOnly since, DateOnly through, CancellationToken ct = default)
+    {
+        var exists = await context.Asesores.AsNoTracking()
+            .AnyAsync(advisor => advisor.Id == advisorId && advisor.Rol == "Asesor", ct);
+        if (!exists)
+            return null;
+
+        var start = since.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var end = through.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var interactions = await (
+            from item in context.Interacciones.AsNoTracking()
+            join lead in context.Leads.AsNoTracking() on item.LeadId equals lead.Id
+            where item.AsesorId == advisorId && item.Fecha >= start && item.Fecha < end
+            orderby item.Fecha descending
+            select new AdvisorInteractionDetail(item.Fecha, item.Tipo, item.Resumen, lead.Nombre))
+            .ToArrayAsync(ct);
+
+        var visits = await (
+            from item in context.Visitas.AsNoTracking()
+            join lead in context.Leads.AsNoTracking() on item.LeadId equals lead.Id
+            join property in context.Inmuebles.AsNoTracking() on item.InmuebleId equals property.Id
+            where item.AsesorId == advisorId && item.Estado != "Cancelada" &&
+                  item.FechaProgramada >= start && item.FechaProgramada < end
+            orderby item.FechaProgramada descending
+            select new AdvisorVisitDetail(item.FechaProgramada, item.FechaRealizada, item.Estado,
+                item.Feedback, lead.Nombre, property.Nombre))
+            .ToArrayAsync(ct);
+
+        var deals = await (
+            from item in context.RealizedDeals.AsNoTracking()
+            join contact in context.Contacts.AsNoTracking() on item.ContactId equals contact.Id
+            join property in context.Inmuebles.AsNoTracking() on item.PropertyId equals property.Id
+            where item.AdvisorId == advisorId && item.ClosedOn >= since && item.ClosedOn <= through
+            orderby item.ClosedOn descending
+            select new { item.ClosedOn, item.Operation, PropertyName = property.Nombre,
+                ClientName = contact.Name + (contact.Surname == null ? "" : " " + contact.Surname),
+                item.GrossAmount, item.CommissionAmount, item.Currency })
+            .ToArrayAsync(ct);
+
+        return new AdvisorActivityDetailReport(advisorId, since, through, interactions, visits,
+            deals.Select(item => new AdvisorDealDetail(item.ClosedOn, item.Operation.ToString(), item.PropertyName,
+                item.ClientName, item.GrossAmount, item.CommissionAmount, item.Currency)).ToArray());
+    }
+
     public async Task<AdvisorPerformanceReport> GetAsync(DateOnly from, DateOnly through, CancellationToken ct = default)
     {
         var length = through.DayNumber - from.DayNumber + 1;

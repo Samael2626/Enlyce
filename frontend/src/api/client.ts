@@ -395,6 +395,11 @@ class ApiClient {
     return this.request<import("@/lib/types").AdvisorPerformanceReport>(`/api/analytics/advisors?${query}`)
   }
 
+  async getAdvisorActivityDetail(advisorId: string, from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    return this.request<import("@/lib/types").AdvisorActivityDetail>(`/api/analytics/advisors/${advisorId}/detail?${query}`)
+  }
+
   async downloadAdvisorReportXlsx(advisorId: string, from: string, to: string) {
     const query = new URLSearchParams({ from, to })
     const response = await fetch(`${this.baseUrl}/api/analytics/advisors/${advisorId}.xlsx?${query}`, { credentials: "include" })

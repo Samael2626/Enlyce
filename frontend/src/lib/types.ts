@@ -682,6 +682,15 @@ export interface AdvisorPerformanceReport {
   }[]
 }
 
+export interface AdvisorActivityDetail {
+  advisorId: string
+  from: string
+  through: string
+  interactions: { date: string; type: string; summary?: string | null; clientName: string }[]
+  visits: { scheduledAt: string; completedAt?: string | null; status: string; feedback?: string | null; clientName: string; propertyName: string }[]
+  deals: { closedOn: string; operation: string; propertyName: string; clientName: string; grossAmount: number; commissionAmount: number; currency: string }[]
+}
+
 export interface OwnerPerformanceReport {
   from: string
   through: string

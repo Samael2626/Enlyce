@@ -236,6 +236,9 @@ function AdvisorPerformanceSection({
   const [sendingEmail, setSendingEmail] = useState(false)
   const [emailMessage, setEmailMessage] = useState("")
   const [actionError, setActionError] = useState("")
+  const [detailAdvisorId, setDetailAdvisorId] = useState("")
+  const [activityDetails, setActivityDetails] = useState<Record<string, import("@/lib/types").AdvisorActivityDetail>>({})
+  const [loadingDetailId, setLoadingDetailId] = useState("")
   const metrics = [
     ["Interacciones", "interactions", "previousInteractions"],
     ["Visitas", "visits", "previousVisits"],
@@ -295,6 +298,26 @@ function AdvisorPerformanceSection({
     }
   }
 
+  async function toggleDetail(advisorId: string) {
+    if (detailAdvisorId === advisorId) {
+      setDetailAdvisorId("")
+      return
+    }
+    setDetailAdvisorId(advisorId)
+    if (activityDetails[advisorId]) return
+    setLoadingDetailId(advisorId)
+    setActionError("")
+    try {
+      const detail = await api.getAdvisorActivityDetail(advisorId, from, to)
+      setActivityDetails((current) => ({ ...current, [advisorId]: detail }))
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "No se pudo cargar el detalle del asesor.")
+      setDetailAdvisorId("")
+    } finally {
+      setLoadingDetailId("")
+    }
+  }
+
   return (
     <section className="space-y-4" aria-labelledby="advisor-report-title">
       <div>
@@ -327,8 +350,9 @@ function AdvisorPerformanceSection({
                       const difference = current - advisor[previousKey]
                       return <td key={label} className="px-3 py-3 tabular-nums">{current} <span className="text-xs text-muted-foreground">{difference > 0 ? `↑ ${difference}` : difference < 0 ? `↓ ${Math.abs(difference)}` : "→ 0"}</span></td>
                     })}
-                    <td className="px-3 py-2"><div className="flex flex-wrap gap-1"><button type="button" disabled={Boolean(exportingId)} className="rounded border px-2 py-1 text-xs disabled:opacity-50" onClick={() => void exportXlsx(advisor)}>{exportingId === advisor.advisorId ? "Preparando…" : "Excel"}</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => exportPdf(advisor)}>PDF</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => { setEmailAdvisorId((current) => current === advisor.advisorId ? "" : advisor.advisorId); setRecipientEmail(""); setEmailMessage(""); setActionError("") }}>Enviar</button></div></td>
+                    <td className="px-3 py-2"><div className="flex flex-wrap gap-1"><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => void toggleDetail(advisor.advisorId)}>{loadingDetailId === advisor.advisorId ? "Cargando…" : detailAdvisorId === advisor.advisorId ? "Ocultar detalle" : "Detalle"}</button><button type="button" disabled={Boolean(exportingId)} className="rounded border px-2 py-1 text-xs disabled:opacity-50" onClick={() => void exportXlsx(advisor)}>{exportingId === advisor.advisorId ? "Preparando…" : "Excel"}</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => exportPdf(advisor)}>PDF</button><button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => { setEmailAdvisorId((current) => current === advisor.advisorId ? "" : advisor.advisorId); setRecipientEmail(""); setEmailMessage(""); setActionError("") }}>Enviar</button></div></td>
                   </tr>
+                  {detailAdvisorId === advisor.advisorId && <tr className="border-t border-border bg-muted/10"><td colSpan={metrics.length + 2} className="space-y-5 px-4 py-4"><AdvisorActivityDetailView detail={activityDetails[advisor.advisorId]} loading={loadingDetailId === advisor.advisorId} /></td></tr>}
                   {emailAdvisorId === advisor.advisorId && <tr key={`${advisor.advisorId}-email`} className="border-t border-border bg-muted/20"><td colSpan={metrics.length + 2} className="px-4 py-3"><form className="flex flex-wrap items-end gap-2" onSubmit={(event) => { event.preventDefault(); void sendEmail(advisor.advisorId) }}><label className="min-w-64 flex-1 text-xs font-semibold text-muted-foreground">Correo destinatario<input type="email" value={recipientEmail} onChange={(event) => setRecipientEmail(event.target.value)} placeholder="Vacío: correo del asesor" className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-sm text-foreground" /></label><button type="submit" disabled={sendingEmail} className="crm-button disabled:opacity-50">{sendingEmail ? "Enviando…" : "Enviar reporte ZIP"}</button><button type="button" disabled={sendingEmail} className="rounded border px-3 py-2 text-sm" onClick={() => setEmailAdvisorId("")}>Cancelar</button></form></td></tr>}
                 </Fragment>
               ))}
@@ -339,6 +363,16 @@ function AdvisorPerformanceSection({
       )}
     </section>
   )
+}
+
+function AdvisorActivityDetailView({ detail, loading }: { detail?: import("@/lib/types").AdvisorActivityDetail; loading: boolean }) {
+  if (loading || !detail) return <p className="text-sm text-muted-foreground">{loading ? "Cargando registros del periodo…" : "Sin detalle cargado."}</p>
+  const date = (value: string) => new Date(value).toLocaleString("es-CO")
+  return <div className="grid gap-5 xl:grid-cols-3">
+    <section><h3 className="mb-2 font-semibold">Interacciones ({detail.interactions.length})</h3><div className="max-h-72 overflow-auto rounded border border-border"><table className="w-full text-left text-xs"><thead className="sticky top-0 bg-muted"><tr><th className="p-2">Fecha</th><th className="p-2">Tipo / cliente</th><th className="p-2">Resumen</th></tr></thead><tbody>{detail.interactions.map((item, index) => <tr key={`${item.date}-${index}`} className="border-t border-border"><td className="p-2 whitespace-nowrap">{date(item.date)}</td><td className="p-2">{item.type}<br />{item.clientName}</td><td className="p-2">{item.summary || "—"}</td></tr>)}</tbody></table>{detail.interactions.length === 0 && <p className="p-3 text-muted-foreground">Sin registros.</p>}</div></section>
+    <section><h3 className="mb-2 font-semibold">Visitas ({detail.visits.length})</h3><div className="max-h-72 overflow-auto rounded border border-border"><table className="w-full text-left text-xs"><thead className="sticky top-0 bg-muted"><tr><th className="p-2">Fecha</th><th className="p-2">Cliente / inmueble</th><th className="p-2">Estado / feedback</th></tr></thead><tbody>{detail.visits.map((item, index) => <tr key={`${item.scheduledAt}-${index}`} className="border-t border-border"><td className="p-2 whitespace-nowrap">{date(item.scheduledAt)}</td><td className="p-2">{item.clientName}<br />{item.propertyName}</td><td className="p-2">{item.status}{item.feedback && <><br />{item.feedback}</>}</td></tr>)}</tbody></table>{detail.visits.length === 0 && <p className="p-3 text-muted-foreground">Sin registros.</p>}</div></section>
+    <section><h3 className="mb-2 font-semibold">Ventas y arriendos ({detail.deals.length})</h3><div className="max-h-72 overflow-auto rounded border border-border"><table className="w-full text-left text-xs"><thead className="sticky top-0 bg-muted"><tr><th className="p-2">Fecha / operación</th><th className="p-2">Cliente / inmueble</th><th className="p-2">Valor / comisión</th></tr></thead><tbody>{detail.deals.map((item, index) => <tr key={`${item.closedOn}-${index}`} className="border-t border-border"><td className="p-2">{item.closedOn}<br />{item.operation}</td><td className="p-2">{item.clientName}<br />{item.propertyName}</td><td className="p-2">{item.grossAmount.toLocaleString("es-CO")} {item.currency}<br />{item.commissionAmount.toLocaleString("es-CO")} {item.currency}</td></tr>)}</tbody></table>{detail.deals.length === 0 && <p className="p-3 text-muted-foreground">Sin registros.</p>}</div></section>
+  </div>
 }
 
 function OwnerPerformanceSection({
