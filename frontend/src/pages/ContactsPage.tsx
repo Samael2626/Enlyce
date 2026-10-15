@@ -8,6 +8,36 @@ import { useAuthStore } from "@/stores/authStore"
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
 const DEFAULT_CUSTOMER_TYPES = ["Comprador", "Vendedor", "Arrendador", "Arrendatario"]
 
+function CustomerTypePicker({ id, value, options, onChange }: {
+  id: string
+  value: string[]
+  options: string[]
+  onChange: (value: string[]) => void
+}) {
+  const [pendingType, setPendingType] = useState("")
+  const addType = () => {
+    const type = pendingType.trim()
+    if (type && !value.some((item) => item.toLocaleLowerCase() === type.toLocaleLowerCase()))
+      onChange([...value, type])
+    setPendingType("")
+  }
+
+  return <div className="mt-1 grid gap-2">
+    <div className="flex flex-wrap gap-1" aria-label="Tipos seleccionados">
+      {value.map((type) => <span key={type} className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs text-foreground">
+        {type}<button type="button" aria-label={`Quitar ${type}`} className="font-bold" onClick={() => onChange(value.filter((item) => item !== type))}>×</button>
+      </span>)}
+    </div>
+    <div className="flex gap-1">
+      <input list={id} className="min-w-36 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+        placeholder="Selecciona o escribe" value={pendingType} onChange={(event) => setPendingType(event.target.value)}
+        onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addType() } }} />
+      <button type="button" className="rounded-md border border-border px-3 py-2 text-sm" onClick={addType} disabled={!pendingType.trim()}>Agregar</button>
+    </div>
+    <datalist id={id}>{options.map((option) => <option key={option} value={option} />)}</datalist>
+  </div>
+}
+
 export function ContactsPage() {
   const customerCatalogsQuery = useQuery({ queryKey: ["customer-catalogs"], queryFn: () => api.getCustomerCatalogs() })
   const customerCatalogs = customerCatalogsQuery.data
@@ -263,7 +293,6 @@ export function ContactsPage() {
 
   return (
     <div className="space-y-6">
-      <datalist id="customer-type-options">{customerTypeOptions.map((value) => <option key={value} value={value} />)}</datalist>
       <datalist id="customer-label-options">{customerLabelOptions.map((value) => <option key={value} value={value} />)}</datalist>
       <datalist id="customer-acquisition-options">{acquisitionMediumOptions.map((value) => <option key={value} value={value} />)}</datalist>
       <header>
@@ -332,9 +361,8 @@ export function ContactsPage() {
           ["referredBy", "Referido por"], ["acquisitionMedium", "Medio de captación"], ["country", "País"],
           ["department", "Departamento"], ["city", "Ciudad"], ["address", "Dirección"],
         ] as const).map(([key, label, required, type]) => <label key={key} className="text-xs text-muted-foreground">{label}
-          {key === "customerTypes" ? <input type="text" list="customer-type-options" placeholder="Comprador, Propietario" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-            value={newContact.customerTypes.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
-              customerTypes: event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean) }))} /> :
+          {key === "customerTypes" ? <CustomerTypePicker id="new-customer-types" value={newContact.customerTypes} options={customerTypeOptions}
+            onChange={(customerTypes) => setNewContact((value) => ({ ...value, customerTypes }))} /> :
           key === "customerLabels" ? <input type="text" list="customer-label-options" placeholder="VIP, Seguimiento" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             value={newContact.customerLabels.join(", ")} onChange={(event) => setNewContact((value) => ({ ...value,
               customerLabels: event.target.value.split(",").map((label) => label.trim()).filter(Boolean) }))} /> :
@@ -794,9 +822,8 @@ export function ContactsPage() {
                     <label className="text-xs text-muted-foreground">Apellidos
                       <input className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={surname} onChange={(event) => setSurname(event.target.value)} maxLength={200} />
                     </label>
-                    <label className="text-xs text-muted-foreground">Tipos de cliente (separa con coma)
-                      <input list="customer-type-options" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerTypes.join(", ")}
-                        onChange={(event) => setCustomerTypes(event.target.value.split(",").map((customerType) => customerType.trim()).filter(Boolean))} />
+                    <label className="text-xs text-muted-foreground">Tipos de cliente
+                      <CustomerTypePicker id="edit-customer-types" value={customerTypes} options={customerTypeOptions} onChange={setCustomerTypes} />
                     </label>
                     <label className="text-xs text-muted-foreground">Etiquetas (separa con coma)
                       <input list="customer-label-options" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={customerLabels.join(", ")}
