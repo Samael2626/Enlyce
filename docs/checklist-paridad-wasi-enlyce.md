@@ -72,6 +72,10 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 ## Orden de trabajo acordado
 
+### Seguimiento desde ficha de cliente (2026-10-15)
+
+- Wasi ofrece «Nueva tarea» dentro de la ficha. El API de Enlyce ya permite una tarea asociada directamente al contacto sin oportunidad; la ficha ahora deja hacerlo también. Administradores deben escoger el asesor responsable cuando no hay una oportunidad asignada. No requiere migración. El frontend compiló; falta verificar el flujo con cuentas admin/asesor y pruebas automatizadas.
+
 ### Encargado del inmueble (2026-10-15)
 
 - Wasi muestra `Encargado del inmueble`. Enlyce guarda `AsesorResponsableId` separado del asesor que publica; al crear, el asesor conectado queda asignado y el administrador puede elegir o quitar responsable.

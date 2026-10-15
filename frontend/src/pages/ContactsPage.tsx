@@ -283,6 +283,7 @@ export function ContactsPage() {
   const [acquisitionMedium, setAcquisitionMedium] = useState("")
   const [additionalData, setAdditionalData] = useState("")
   const [taskTitle, setTaskTitle] = useState("")
+  const [taskAdvisorId, setTaskAdvisorId] = useState("")
   const [taskDescription, setTaskDescription] = useState("")
   const [taskReminderAt, setTaskReminderAt] = useState("")
   const [taskComment, setTaskComment] = useState("")
@@ -451,6 +452,10 @@ export function ContactsPage() {
     setAcquisitionMedium(detailQuery.data?.acquisitionMedium ?? "")
     setAdditionalData(detailQuery.data?.additionalData ?? "")
   }, [contact?.id, contact?.name, contact?.phone, detailQuery.data?.dateOfBirth])
+
+  useEffect(() => {
+    setTaskAdvisorId("")
+  }, [contact?.id])
 
   useEffect(() => {
     if (!demandsQuery.data?.some((demand) => demand.id === selectedDemandId))
@@ -1120,7 +1125,7 @@ export function ContactsPage() {
                         createTask.mutate({
                           contactId: contact.id,
                           leadId: opportunity?.id,
-                          advisorId: user?.rol === "Administrador" ? opportunity?.advisorId : undefined,
+                          advisorId: user?.rol === "Administrador" ? taskAdvisorId || opportunity?.advisorId : undefined,
                           type: taskType,
                           title: taskTitle,
                           description: taskDescription || undefined,
@@ -1141,6 +1146,12 @@ export function ContactsPage() {
                       <label className="text-xs text-muted-foreground">Fecha
                         <input type="datetime-local" className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskDueAt} onChange={(event) => setTaskDueAt(event.target.value)} required />
                       </label>
+                      {user?.rol === "Administrador" && <label className="text-xs text-muted-foreground">Asesor asignado
+                        <select className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskAdvisorId || detailQuery.data.opportunities[0]?.advisorId || ""} onChange={(event) => setTaskAdvisorId(event.target.value)} required>
+                          <option value="">Selecciona un asesor</option>
+                          {advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
+                        </select>
+                      </label>}
                       <label className="text-xs text-muted-foreground">Recordatorio opcional
                         <input type="datetime-local" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskReminderAt} onChange={(event) => setTaskReminderAt(event.target.value)} />
                       </label>
@@ -1152,13 +1163,13 @@ export function ContactsPage() {
                           <option value="Low">Baja</option><option value="Normal">Normal</option><option value="High">Alta</option><option value="Urgent">Urgente</option>
                         </select>
                       </label>
-                      <button disabled={createTask.isPending || (user?.rol === "Administrador" && !detailQuery.data?.opportunities[0]?.advisorId)} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                      <button disabled={createTask.isPending || (user?.rol === "Administrador" && !(taskAdvisorId || detailQuery.data.opportunities[0]?.advisorId))} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
                         {createTask.isPending ? "Creando…" : "Crear tarea"}
                       </button>
                     </form>
                   </div>
                   {createTask.isError && <p role="alert" className="mt-3 text-sm text-destructive">{createTask.error.message}</p>}
-                  {user?.rol === "Administrador" && !detailQuery.data.opportunities[0]?.advisorId && <p className="mt-3 text-sm text-muted-foreground">Asigna primero una oportunidad a un asesor para crearle una tarea.</p>}
+                  {user?.rol === "Administrador" && !detailQuery.data.opportunities[0]?.advisorId && !taskAdvisorId && <p className="mt-3 text-sm text-muted-foreground">Elige un asesor para asignar una tarea a este cliente.</p>}
                   <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {detailQuery.data.tasks.map((task) => (
                       <article key={task.id} className="rounded-md border border-border p-4">
