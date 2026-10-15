@@ -161,6 +161,10 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - [Propiedades — API Wasi](https://api.wasi.co/docs/guide/fields/property.html): campos `for_sale`, `for_rent` y `for_transfer`; no aparece precio de permuta separado.
 - [Software inmobiliario Wasi](https://wasi.co/softwareinmobiliario/): CRM, web inmobiliaria, red de aliados, portalización, móvil y academia.
 
+## Cobertura automatizada del importador de clientes (2026-10-15)
+
+- Búsqueda en `tests/` no encontró pruebas dedicadas a `ClientImportModule`, `ContactImportBatch` ni al lector de importación de clientes. La suite general no acredita mapeo, errores por fila, duplicados por alcance, reintento con misma/otra carga, ni atomicidad entre contactos y lote. Añadir esa cobertura antes de marcar cerrado el módulo.
+
 ## Detalle del reporte por asesor (2026-10-15)
 
 - La guía oficial de Wasi confirma que al abrir un asesor se ven llamadas, visitas, eventos, correos, ventas y rentas del periodo; también confirma exportar el reporte a PDF/Excel o enviarlo por correo. [Usuarios — Centro de ayuda Wasi](https://ayuda.wasi.co/es/article/usuarios).
