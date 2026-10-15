@@ -15,8 +15,25 @@ public static class InmueblesModule
         var group = app.MapGroup("/api/inmuebles").WithTags("Inmuebles").RequireAuthorization();
 
         group.MapGet("/", async (int? page, int? pageSize, string? search, string? modalidad, string? estado,
+            string? tipo, string? pais, string? departamento, string? ciudad, string? barrio, string? moneda,
+            decimal? precioDesde, decimal? precioHasta, int? areaDesde, int? areaHasta,
+            int? habitaciones, int? banos, int? parqueaderos, string? orden,
             IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, CancellationToken ct) =>
-            Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(page ?? 1, pageSize ?? 20, search, modalidad, estado), ct)))
+        {
+            if (page is < 1 || pageSize is < 1 or > 100 || search?.Length > 200 ||
+                !ValidEnum<ModalidadInmueble>(modalidad) || !ValidEnum<EstadoInmueble>(estado) ||
+                !ValidEnum<TipoInmueble>(tipo) || !ValidRange(precioDesde, precioHasta) ||
+                !ValidRange(areaDesde, areaHasta) || habitaciones < 0 || banos < 0 || parqueaderos < 0 ||
+                new[] { pais, departamento, ciudad, barrio }.Any(value => value?.Length > 100) ||
+                moneda?.Length > 3 || ((precioDesde.HasValue || precioHasta.HasValue) && string.IsNullOrWhiteSpace(moneda)) ||
+                orden is not (null or "recent" or "oldest" or "priceAsc" or "priceDesc"))
+                return Results.BadRequest(new { error = "Los filtros del inventario no son validos." });
+
+            return Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(
+                page ?? 1, pageSize ?? 20, search, modalidad, estado, tipo, pais, departamento, ciudad, barrio,
+                moneda?.ToUpperInvariant(), precioDesde, precioHasta, areaDesde, areaHasta,
+                habitaciones, banos, parqueaderos, orden ?? "recent"), ct));
+        })
             .WithName("ListInmuebles");
 
         group.MapGet("/{id:guid}", async (
@@ -49,6 +66,14 @@ public static class InmueblesModule
         .Produces<CreateInmuebleResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest);
     }
+
+    private static bool ValidEnum<T>(string? value) where T : struct, Enum =>
+        string.IsNullOrWhiteSpace(value) || Enum.TryParse<T>(value, true, out var parsed) && Enum.IsDefined(parsed);
+
+    private static bool ValidRange<T>(T? from, T? to) where T : struct, IComparable<T> =>
+        (!from.HasValue || from.Value.CompareTo(default) >= 0) &&
+        (!to.HasValue || to.Value.CompareTo(default) >= 0) &&
+        (!from.HasValue || !to.HasValue || from.Value.CompareTo(to.Value) <= 0);
 }
 
 public record CreateInmuebleRequest(

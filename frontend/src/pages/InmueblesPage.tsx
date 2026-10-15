@@ -9,6 +9,7 @@ import {
   X,
   Loader2,
   Mail,
+  Search,
 } from "lucide-react"
 
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
@@ -16,10 +17,25 @@ const splitFeatures = (value: string) => value.split(",").map((item) => item.tri
 export function InmueblesPage() {
   const [showForm, setShowForm] = useState(false)
   const [page, setPage] = useState(1)
+  const [draftFilters, setDraftFilters] = useState({
+    search: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "",
+    moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "",
+    habitaciones: "", banos: "", parqueaderos: "", orden: "recent",
+  })
+  const [filters, setFilters] = useState<Record<string, string>>({ orden: "recent" })
   const [crossProperty, setCrossProperty] = useState<{ id: string; name: string } | null>(null)
   const [emailingInventory, setEmailingInventory] = useState(false)
   const [inventoryExportMessage, setInventoryExportMessage] = useState("")
-  const inventory = useInmuebles(page)
+  const inventory = useInmuebles({
+    page, ...filters,
+    precioDesde: filters.precioDesde ? Number(filters.precioDesde) : undefined,
+    precioHasta: filters.precioHasta ? Number(filters.precioHasta) : undefined,
+    areaDesde: filters.areaDesde ? Number(filters.areaDesde) : undefined,
+    areaHasta: filters.areaHasta ? Number(filters.areaHasta) : undefined,
+    habitaciones: filters.habitaciones ? Number(filters.habitaciones) : undefined,
+    banos: filters.banos ? Number(filters.banos) : undefined,
+    parqueaderos: filters.parqueaderos ? Number(filters.parqueaderos) : undefined,
+  })
   const demandCounts = usePropertyDemandCounts(inventory.data?.items.map((item) => item.id) ?? [])
   const createInmueble = useCreateInmueble()
 
@@ -119,6 +135,28 @@ export function InmueblesPage() {
         </div>
       </div>
       {inventoryExportMessage && <p role="status" className="text-sm text-muted-foreground">{inventoryExportMessage}</p>}
+
+      <form onSubmit={(event) => {
+        event.preventDefault()
+        setPage(1)
+        setFilters(Object.fromEntries(Object.entries(draftFilters).filter(([key, value]) => key === "orden" || value !== "")))
+      }} className="crm-panel space-y-4 p-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input aria-label="Buscar inmueble" placeholder="Código, título, dirección o ciudad" value={draftFilters.search} onChange={(e) => setDraftFilters({ ...draftFilters, search: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
+          <select aria-label="Tipo de inmueble" value={draftFilters.tipo} onChange={(e) => setDraftFilters({ ...draftFilters, tipo: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="">Todos los tipos</option>{TIPOS_INMUEBLE.map((value) => <option key={value}>{value}</option>)}</select>
+          <select aria-label="Modalidad" value={draftFilters.modalidad} onChange={(e) => setDraftFilters({ ...draftFilters, modalidad: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="">Todas las modalidades</option>{MODALIDADES_INMUEBLE.map((value) => <option key={value}>{value}</option>)}</select>
+          <select aria-label="Estado" value={draftFilters.estado} onChange={(e) => setDraftFilters({ ...draftFilters, estado: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="">Todos los estados</option>{["Disponible", "Reservado", "Vendido", "Arrendado", "Inactivo"].map((value) => <option key={value}>{value}</option>)}</select>
+          {(["pais", "departamento", "ciudad", "barrio"] as const).map((key) => <input key={key} aria-label={key} placeholder={key[0].toUpperCase() + key.slice(1)} value={draftFilters[key]} onChange={(e) => setDraftFilters({ ...draftFilters, [key]: e.target.value })} className="rounded-md border bg-background px-3 py-2" />)}
+          <input aria-label="Precio mínimo" type="number" min="0" placeholder="Precio desde" value={draftFilters.precioDesde} onChange={(e) => setDraftFilters({ ...draftFilters, precioDesde: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
+          <input aria-label="Precio máximo" type="number" min="0" placeholder="Precio hasta" value={draftFilters.precioHasta} onChange={(e) => setDraftFilters({ ...draftFilters, precioHasta: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
+          <select aria-label="Moneda" value={draftFilters.moneda} onChange={(e) => setDraftFilters({ ...draftFilters, moneda: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="COP">COP</option><option value="USD">USD</option></select>
+          <input aria-label="Área mínima" type="number" min="0" placeholder="Área desde m²" value={draftFilters.areaDesde} onChange={(e) => setDraftFilters({ ...draftFilters, areaDesde: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
+          <input aria-label="Área máxima" type="number" min="0" placeholder="Área hasta m²" value={draftFilters.areaHasta} onChange={(e) => setDraftFilters({ ...draftFilters, areaHasta: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
+          {(["habitaciones", "banos", "parqueaderos"] as const).map((key) => <input key={key} aria-label={key} type="number" min="0" placeholder={`${key[0].toUpperCase()}${key.slice(1)} mín.`} value={draftFilters[key]} onChange={(e) => setDraftFilters({ ...draftFilters, [key]: e.target.value })} className="rounded-md border bg-background px-3 py-2" />)}
+          <select aria-label="Ordenar" value={draftFilters.orden} onChange={(e) => setDraftFilters({ ...draftFilters, orden: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="recent">Más recientes</option><option value="oldest">Más antiguos</option><option value="priceAsc">Menor precio</option><option value="priceDesc">Mayor precio</option></select>
+        </div>
+        <div className="flex gap-2"><button className="crm-button" type="submit"><Search className="h-4 w-4" /> Buscar</button><button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { const empty = { search: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "", habitaciones: "", banos: "", parqueaderos: "", orden: "recent" }; setDraftFilters(empty); setFilters({ orden: "recent" }); setPage(1) }}>Limpiar</button></div>
+      </form>
 
       {/* Form modal */}
       {showForm && (
@@ -323,8 +361,8 @@ export function InmueblesPage() {
       ) : (
         <div className="crm-panel overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead><tr className="border-b text-muted-foreground"><th className="p-4">Nombre</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th><th className="p-4"><span className="sr-only">Acciones</span></th></tr></thead>
-            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4 font-medium">{item.nombre}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="p-4"><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></td></tr>)}</tbody>
+            <thead><tr className="border-b text-muted-foreground"><th className="p-4">Nombre</th><th className="p-4">Ubicación</th><th className="p-4">Precio</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th><th className="p-4"><span className="sr-only">Acciones</span></th></tr></thead>
+            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4 font-medium">{item.nombre}</td><td className="p-4">{[item.barrio, item.ciudad].filter(Boolean).join(", ")}</td><td className="p-4">{new Intl.NumberFormat("es-CO", { style: "currency", currency: item.moneda }).format(item.precio)}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="p-4"><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></td></tr>)}</tbody>
           </table>
           <div className="flex items-center justify-between p-4"><span className="text-sm text-muted-foreground">{inventory.data?.total} inmuebles</span><div className="flex gap-2"><button className="crm-button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button><button className="crm-button" disabled={page * (inventory.data?.pageSize ?? 20) >= (inventory.data?.total ?? 0)} onClick={() => setPage(page + 1)}>Siguiente</button></div></div>
         </div>

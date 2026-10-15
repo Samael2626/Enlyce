@@ -500,8 +500,8 @@ export function useLeadSlaAlerts() {
 }
 
 // Inmuebles
-export function useInmuebles(page: number) {
-  return useQuery({ queryKey: ["inmuebles", "list", page], queryFn: () => api.getInmuebles({ page, pageSize: 20 }) })
+export function useInmuebles(filters: NonNullable<Parameters<typeof api.getInmuebles>[0]>) {
+  return useQuery({ queryKey: ["inmuebles", "list", filters], queryFn: () => api.getInmuebles({ ...filters, pageSize: 20 }) })
 }
 
 export function useInmueble(id: string) {
