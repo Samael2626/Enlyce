@@ -634,6 +634,12 @@ export interface WebAnalyticsFunnel {
   steps: WebAnalyticsStep[]
 }
 
+export interface InventoryAnalytics {
+  totalProperties: number
+  byPropertyType: { name: string; count: number }[]
+  byOperation: { name: string; count: number }[]
+}
+
 export type LeadDistributionRule = "LeastOpenLeads" | "RoundRobin"
 
 export interface LeadSlaRule {

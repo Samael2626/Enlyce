@@ -1,5 +1,7 @@
 using Enlyce.Application.Abstractions;
 using Enlyce.Application.Analytics;
+using Enlyce.Domain.Entities;
+using Enlyce.Domain.Ports;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Enlyce.Api.Endpoints.Analytics;
@@ -8,6 +10,32 @@ public static class AnalyticsModule
 {
     public static void MapAnalytics(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/api/analytics/inventory", async (
+            IInmuebleRepository properties,
+            CancellationToken ct) =>
+        {
+            var activeInventory = (await properties.GetAllAsync())
+                .Where(property => property.Estado is EstadoInmueble.Disponible or EstadoInmueble.Reservado)
+                .ToArray();
+
+            var byType = activeInventory
+                .GroupBy(property => property.Tipo.ToString())
+                .Select(group => new InventoryCount(group.Key, group.Count()))
+                .OrderBy(item => item.Name)
+                .ToArray();
+
+            var byOperation = new[]
+            {
+                new InventoryCount("Venta", activeInventory.Count(property => property.Modalidad is ModalidadInmueble.Venta or ModalidadInmueble.VentaYArriendo)),
+                new InventoryCount("Arriendo", activeInventory.Count(property => property.Modalidad is ModalidadInmueble.Arriendo or ModalidadInmueble.VentaYArriendo))
+            };
+
+            return Results.Ok(new InventoryAnalyticsResponse(activeInventory.Length, byType, byOperation));
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetInventoryAnalytics")
+        .Produces<InventoryAnalyticsResponse>();
+
         app.MapPost("/api/public/analytics/events", async (
             [FromBody] RecordWebAnalyticsEventRequest request,
             ICommandHandler<RecordWebAnalyticsEventCommand> handler,
@@ -95,6 +123,13 @@ public static class AnalyticsModule
         _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
     };
 }
+
+public sealed record InventoryAnalyticsResponse(
+    int TotalProperties,
+    IReadOnlyList<InventoryCount> ByPropertyType,
+    IReadOnlyList<InventoryCount> ByOperation);
+
+public sealed record InventoryCount(string Name, int Count);
 
 public sealed record RecordWebAnalyticsEventRequest(
     string SessionId,

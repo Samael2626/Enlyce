@@ -73,6 +73,13 @@ export function useCrmReportMetrics(from: string, to: string) {
   })
 }
 
+export function useInventoryAnalytics() {
+  return useQuery({
+    queryKey: ["analytics", "inventory"],
+    queryFn: () => api.getInventoryAnalytics(),
+  })
+}
+
 export function useMoveLeadInPipeline() {
   const queryClient = useQueryClient()
 

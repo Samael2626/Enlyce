@@ -378,6 +378,10 @@ class ApiClient {
     return this.request<import("@/lib/types").CrmReportMetrics>(`/api/analytics/crm-report?${query}`)
   }
 
+  async getInventoryAnalytics() {
+    return this.request<import("@/lib/types").InventoryAnalytics>("/api/analytics/inventory")
+  }
+
   async downloadOpportunitiesCsv(from: string, to: string): Promise<Blob> {
     const query = new URLSearchParams({ from, to })
     const response = await fetch(`${this.baseUrl}/api/opportunities/export.csv?${query}`, {

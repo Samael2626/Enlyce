@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
-import { useAnalyticsFunnel, useCrmReportMetrics, useFirstResponseMetrics } from "@/hooks/useApi"
+import { useAnalyticsFunnel, useCrmReportMetrics, useFirstResponseMetrics, useInventoryAnalytics } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const labels: Record<string, string> = {
@@ -20,6 +20,7 @@ export function AnaliticaPage() {
   const funnel = useAnalyticsFunnel(days)
   const crmReport = useCrmReportMetrics(crmFrom, crmTo)
   const responseMetrics = useFirstResponseMetrics(crmFrom, crmTo)
+  const inventory = useInventoryAnalytics()
 
   if (user?.rol !== "Administrador") return <Navigate to="/dashboard" replace />
 
@@ -86,6 +87,25 @@ export function AnaliticaPage() {
           </section>
         </>
       )}
+
+      <section className="space-y-4" aria-labelledby="inventory-report-title">
+        <div>
+          <span className="crm-eyebrow">Inventario</span>
+          <h2 id="inventory-report-title" className="mt-2 font-display text-3xl tracking-tight">Propiedades disponibles</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Cuenta propiedades activas en estado disponible o reservado. Una propiedad en venta y arriendo cuenta en ambas modalidades.</p>
+        </div>
+        {inventory.isLoading ? (
+          <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando inventario…</div>
+        ) : inventory.isError ? (
+          <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el inventario.</div>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="crm-panel p-5"><span className="text-xs text-muted-foreground">Total disponible</span><b className="mt-1 block font-display text-3xl">{inventory.data?.totalProperties ?? 0}</b></div>
+            <InventoryBreakdown title="Por tipo de inmueble" rows={inventory.data?.byPropertyType ?? []} />
+            <InventoryBreakdown title="Por modalidad" rows={inventory.data?.byOperation ?? []} />
+          </div>
+        )}
+      </section>
 
       <section className="space-y-4" aria-labelledby="crm-report-title">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -164,6 +184,17 @@ function CrmBreakdown({ title, rows }: { title: string; rows: { name: string; le
 
 function ReportTotal({ label, value }: { label: string; value: number | string }) {
   return <div><span className="text-xs text-muted-foreground">{label}</span><b className="mt-1 block font-display text-2xl">{value}</b></div>
+}
+
+function InventoryBreakdown({ title, rows }: { title: string; rows: { name: string; count: number }[] }) {
+  return (
+    <section className="crm-panel overflow-hidden" aria-label={title}>
+      <h3 className="border-b border-border p-5 font-display text-xl">{title}</h3>
+      {rows.length === 0 ? <p className="p-5 text-sm text-muted-foreground">Sin propiedades disponibles.</p> : (
+        <ul className="divide-y divide-border">{rows.map((row) => <li key={row.name} className="flex items-center justify-between gap-4 px-5 py-3 text-sm"><span>{row.name}</span><b>{row.count}</b></li>)}</ul>
+      )}
+    </section>
+  )
 }
 
 function Metric({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
