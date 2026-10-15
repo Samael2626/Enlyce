@@ -4,7 +4,7 @@ import { api } from "@/api/client"
 import { TIPOS_INTERACCION } from "@/lib/constants"
 import { useAuthStore } from "@/stores/authStore"
 
-const pageSize = 20
+const pageSize = 10
 
 export function GestionesPage() {
   const user = useAuthStore((state) => state.user)
