@@ -70,6 +70,13 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 ## Orden de trabajo acordado
 
+### Avance de campo de inmuebles: ano de construccion (2026-10-15)
+
+- El formulario Wasi de alta muestra `Año construcción`; Enlyce ahora lo almacena como `AnioConstruccion` nullable, permite capturarlo/editarlo, lo devuelve en la ficha y permite filtrar inventario con `Construido desde el año`.
+- La migracion `20261015043015_AgregarAnioConstruccionInmueble` agrega una columna nullable. Se genero y compilo; no se aplico a ninguna base. Los registros existentes quedan sin año hasta que haya fuente para completarlo.
+- La sincronizacion desde Wasi conserva el año capturado en Enlyce, porque el conector actual no provee ese dato. Falta comprobar si el año está disponible en la API/scrape Wasi y mapearlo si existe.
+- Este avance solo cierra ese campo; no completa el formulario inmobiliario. Asesor, disponibilidad diferenciada, etiquetas y mapa/lista siguen abiertos.
+
 1. **Importar clientes (parcial):** CSV/XLS/XLSX, API de vista previa/confirmación, contactos independientes, asignación privada, campos mapeables, CSV de filas omitidas y reintentos idempotentes por usuario/clave/hash de contenido y mapeo. La guía oficial solo confirma nombre obligatorio, apellidos/email/teléfono mapeables y columnas ignorables; obligatoriedad de email/teléfono y reglas de duplicados faltan por verificar. Enlyce deduplica por email dentro del alcance visible. Consentimiento de datos y permiso de correo no se mezclan. La bitácora registra fuente/actor/fecha de registro; la fecha original del consentimiento no se conoce si el archivo no la trae. La guía no documenta importación de demandas; no inventar ese requisito. Exportación ahora permite correo propio con CSV filtrado; faltan grupos equivalentes e historial de envíos.
 2. **Directorio y ficha de cliente (en curso):** tipo/estado/embudo, apellidos, ubicación y dirección editables; directorio filtra tipo/estado/embudo/asesor/fechas y conserva alcance por asesor. Catálogos para tipos, etiquetas, embudos y medios ya implementados; faltan alta inline, selector múltiple, etapas configurables, confirmar reglas de edición/borrado, aplicar migraciones de campos privados tras validar respaldo/restauración y cerrar paridad de gestiones.
 3. **Cerrar ciclo de importación/exportación:** resultados por fila, errores descargables, reintentos seguros y exportación con filtros/alcances equivalentes.

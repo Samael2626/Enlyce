@@ -20,6 +20,7 @@ public static class InmueblesModule
             string? tipo, string? pais, string? departamento, string? ciudad, string? barrio, string? moneda,
             decimal? precioDesde, decimal? precioHasta, int? areaDesde, int? areaHasta,
             int? habitaciones, int? banos, int? parqueaderos, string? orden, bool? papelera, string? codigoWasi,
+            int? construidoDesde,
             IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, CancellationToken ct) =>
         {
             if (page is < 1 || pageSize is < 1 or > 100 || search?.Length > 200 ||
@@ -27,7 +28,7 @@ public static class InmueblesModule
                 !ValidEnum<TipoInmueble>(tipo) || !ValidRange(precioDesde, precioHasta) ||
                 !ValidRange(areaDesde, areaHasta) || habitaciones < 0 || banos < 0 || parqueaderos < 0 ||
                 new[] { pais, departamento, ciudad, barrio }.Any(value => value?.Length > 100) ||
-                moneda?.Length > 3 || codigoWasi?.Length > 100 ||
+                moneda?.Length > 3 || codigoWasi?.Length > 100 || construidoDesde is < 1 or > 9999 ||
                 ((precioDesde.HasValue || precioHasta.HasValue) && string.IsNullOrWhiteSpace(moneda)) ||
                 orden is not (null or "recent" or "oldest" or "priceAsc" or "priceDesc"))
                 return Results.BadRequest(new { error = "Los filtros del inventario no son validos." });
@@ -35,7 +36,7 @@ public static class InmueblesModule
             return Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(
                 page ?? 1, pageSize ?? 20, search, modalidad, estado, tipo, pais, departamento, ciudad, barrio,
                 moneda?.ToUpperInvariant(), precioDesde, precioHasta, areaDesde, areaHasta,
-                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false, codigoWasi), ct));
+                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false, codigoWasi, construidoDesde), ct));
         })
             .WithName("ListInmuebles");
 
@@ -54,13 +55,16 @@ public static class InmueblesModule
             [FromBody] CreateInmuebleRequest request,
             ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse> handler) =>
         {
+            if (request.AnioConstruccion is < 1 or > 9999)
+                return Results.BadRequest(new { error = "El año de construcción debe estar entre 1 y 9999." });
+
             var command = new CreateInmuebleCommand(
                 request.Nombre, request.Descripcion, request.Tipo,
                 request.Modalidad, request.Calle, request.Ciudad,
                 request.Barrio, request.Precio, request.Moneda,
                 request.MetrosCuadrados, request.Habitaciones,
                 request.Banos, request.Parqueaderos, request.PropietarioId, request.Pais, request.Departamento,
-                request.CaracteristicasInternas, request.CaracteristicasExternas);
+                request.CaracteristicasInternas, request.CaracteristicasExternas, request.AnioConstruccion);
 
             var result = await handler.HandleAsync(command);
             return Results.Created($"/api/inmuebles/{result.Id}", result);
@@ -73,11 +77,14 @@ public static class InmueblesModule
             Guid id, [FromBody] UpdateInmuebleRequest request,
             ICommandHandler<UpdateInmuebleCommand, CreateInmuebleResponse?> handler, CancellationToken ct) =>
         {
+            if (request.AnioConstruccion is < 1 or > 9999)
+                return Results.BadRequest(new { error = "El año de construcción debe estar entre 1 y 9999." });
+
             var command = new UpdateInmuebleCommand(id, request.Nombre, request.Descripcion, request.Tipo,
                 request.Modalidad, request.Calle, request.Ciudad, request.Barrio, request.Precio,
                 request.Moneda, request.MetrosCuadrados, request.Habitaciones, request.Banos,
                 request.Parqueaderos, request.Pais, request.Departamento,
-                request.CaracteristicasInternas, request.CaracteristicasExternas);
+                request.CaracteristicasInternas, request.CaracteristicasExternas, request.AnioConstruccion);
             try
             {
                 var result = await handler.HandleAsync(command, ct);
@@ -157,13 +164,15 @@ public record CreateInmuebleRequest(
     string Pais = "Colombia",
     string? Departamento = null,
     string[]? CaracteristicasInternas = null,
-    string[]? CaracteristicasExternas = null);
+    string[]? CaracteristicasExternas = null,
+    int? AnioConstruccion = null);
 
 public record UpdateInmuebleRequest(
     string Nombre, string? Descripcion, TipoInmueble Tipo, ModalidadInmueble Modalidad,
     string Calle, string Ciudad, string? Barrio, decimal Precio, string Moneda,
     int MetrosCuadrados, int Habitaciones, int Banos, int Parqueaderos,
     string Pais = "Colombia", string? Departamento = null,
-    string[]? CaracteristicasInternas = null, string[]? CaracteristicasExternas = null);
+    string[]? CaracteristicasInternas = null, string[]? CaracteristicasExternas = null,
+    int? AnioConstruccion = null);
 
 public record BatchInmuebleTrashRequest(Guid[]? Ids);

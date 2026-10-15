@@ -23,4 +23,5 @@ public record GetInmuebleByIdResponse(
     IReadOnlyList<string> CaracteristicasExternas,
     Guid PropietarioId,
     DateTime FechaCreacion,
-    bool Activo);
+    bool Activo,
+    int? AnioConstruccion = null);

@@ -19,7 +19,7 @@ public sealed class UpdateInmuebleHandler(IInmuebleRepository properties)
             Direccion.Crear(command.Calle, command.Ciudad, command.Barrio, command.Pais, command.Departamento),
             Dinero.Crear(command.Precio, command.Moneda), command.MetrosCuadrados,
             command.Habitaciones, command.Banos, command.Parqueaderos,
-            command.CaracteristicasInternas, command.CaracteristicasExternas);
+            command.CaracteristicasInternas, command.CaracteristicasExternas, command.AnioConstruccion);
 
         var saved = await properties.SaveAsync(property);
         return new CreateInmuebleResponse(saved.Id, saved.Nombre, saved.Tipo.ToString(),

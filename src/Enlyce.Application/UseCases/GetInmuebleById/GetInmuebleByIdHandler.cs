@@ -40,6 +40,7 @@ public class GetInmuebleByIdHandler : IQueryHandler<GetInmuebleByIdQuery, GetInm
             inmueble.ExternalFeatures,
             inmueble.PropietarioId,
             inmueble.FechaCreacion,
-            inmueble.Activo);
+            inmueble.Activo,
+            inmueble.AnioConstruccion);
     }
 }

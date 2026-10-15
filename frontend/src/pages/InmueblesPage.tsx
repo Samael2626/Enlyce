@@ -23,7 +23,7 @@ export function InmueblesPage() {
   const [draftFilters, setDraftFilters] = useState({
     search: "", codigoWasi: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "",
     moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "",
-    habitaciones: "", banos: "", parqueaderos: "", orden: "recent",
+    habitaciones: "", banos: "", parqueaderos: "", construidoDesde: "", orden: "recent",
   })
   const [filters, setFilters] = useState<Record<string, string>>({ orden: "recent" })
   const [crossProperty, setCrossProperty] = useState<{ id: string; name: string } | null>(null)
@@ -38,6 +38,7 @@ export function InmueblesPage() {
     habitaciones: filters.habitaciones ? Number(filters.habitaciones) : undefined,
     banos: filters.banos ? Number(filters.banos) : undefined,
     parqueaderos: filters.parqueaderos ? Number(filters.parqueaderos) : undefined,
+    construidoDesde: filters.construidoDesde ? Number(filters.construidoDesde) : undefined,
   })
   const demandCounts = usePropertyDemandCounts(showTrash ? [] : inventory.data?.items.map((item) => item.id) ?? [])
   const createInmueble = useCreateInmueble()
@@ -53,7 +54,7 @@ export function InmueblesPage() {
       nombre: property.nombre, descripcion: property.descripcion, tipo: property.tipo, modalidad: property.modalidad,
       calle: property.calle, ciudad: property.ciudad, barrio: property.barrio ?? "", precio: String(property.precio),
       moneda: property.moneda, metrosCuadrados: String(property.metrosCuadrados), habitaciones: String(property.habitaciones),
-      banos: String(property.banos), parqueaderos: String(property.parqueaderos), propietarioId: property.propietarioId,
+      banos: String(property.banos), parqueaderos: String(property.parqueaderos), anioConstruccion: property.anioConstruccion == null ? "" : String(property.anioConstruccion), propietarioId: property.propietarioId,
       caracteristicasInternas: property.caracteristicasInternas.join(", "),
       caracteristicasExternas: property.caracteristicasExternas.join(", "),
     })
@@ -73,6 +74,7 @@ export function InmueblesPage() {
     habitaciones: "",
     banos: "",
     parqueaderos: "",
+    anioConstruccion: "",
     propietarioId: "",
     caracteristicasInternas: "",
     caracteristicasExternas: "",
@@ -87,13 +89,14 @@ export function InmueblesPage() {
         habitaciones: parseInt(form.habitaciones) || 0,
         banos: parseInt(form.banos) || 0,
         parqueaderos: parseInt(form.parqueaderos) || 0,
+        anioConstruccion: form.anioConstruccion ? parseInt(form.anioConstruccion) : null,
         caracteristicasInternas: splitFeatures(form.caracteristicasInternas),
         caracteristicasExternas: splitFeatures(form.caracteristicasExternas),
       }
     const onSuccess = () => {
       setShowForm(false)
       setEditingId("")
-      setForm({ nombre: "", descripcion: "", tipo: "Apartamento", modalidad: "Venta", calle: "", ciudad: "", barrio: "", precio: "", moneda: "COP", metrosCuadrados: "", habitaciones: "", banos: "", parqueaderos: "", propietarioId: "", caracteristicasInternas: "", caracteristicasExternas: "" })
+      setForm({ nombre: "", descripcion: "", tipo: "Apartamento", modalidad: "Venta", calle: "", ciudad: "", barrio: "", precio: "", moneda: "COP", metrosCuadrados: "", habitaciones: "", banos: "", parqueaderos: "", anioConstruccion: "", propietarioId: "", caracteristicasInternas: "", caracteristicasExternas: "" })
     }
     if (editingId) {
       updateInmueble.mutate({ id: editingId, data }, { onSuccess })
@@ -174,9 +177,10 @@ export function InmueblesPage() {
           <input aria-label="Área mínima" type="number" min="0" placeholder="Área desde m²" value={draftFilters.areaDesde} onChange={(e) => setDraftFilters({ ...draftFilters, areaDesde: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
           <input aria-label="Área máxima" type="number" min="0" placeholder="Área hasta m²" value={draftFilters.areaHasta} onChange={(e) => setDraftFilters({ ...draftFilters, areaHasta: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
           {(["habitaciones", "banos", "parqueaderos"] as const).map((key) => <input key={key} aria-label={key} type="number" min="0" placeholder={`${key[0].toUpperCase()}${key.slice(1)} mín.`} value={draftFilters[key]} onChange={(e) => setDraftFilters({ ...draftFilters, [key]: e.target.value })} className="rounded-md border bg-background px-3 py-2" />)}
+          <input aria-label="Construido desde el año" type="number" min="1" max="9999" placeholder="Construido desde el año" value={draftFilters.construidoDesde} onChange={(e) => setDraftFilters({ ...draftFilters, construidoDesde: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
           <select aria-label="Ordenar" value={draftFilters.orden} onChange={(e) => setDraftFilters({ ...draftFilters, orden: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="recent">Más recientes</option><option value="oldest">Más antiguos</option><option value="priceAsc">Menor precio</option><option value="priceDesc">Mayor precio</option></select>
         </div>
-        <div className="flex gap-2"><button className="crm-button" type="submit"><Search className="h-4 w-4" /> Buscar</button><button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { const empty = { search: "", codigoWasi: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "", habitaciones: "", banos: "", parqueaderos: "", orden: "recent" }; setDraftFilters(empty); setFilters({ orden: "recent" }); setSelectedIds([]); setPage(1) }}>Limpiar</button></div>
+        <div className="flex gap-2"><button className="crm-button" type="submit"><Search className="h-4 w-4" /> Buscar</button><button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { const empty = { search: "", codigoWasi: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "", habitaciones: "", banos: "", parqueaderos: "", construidoDesde: "", orden: "recent" }; setDraftFilters(empty); setFilters({ orden: "recent" }); setSelectedIds([]); setPage(1) }}>Limpiar</button></div>
       </form>}
 
       {/* Form modal */}
@@ -309,6 +313,11 @@ export function InmueblesPage() {
                     }
                     className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
                   />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Año de construcción</label>
+                  <input type="number" min="1" max="9999" value={form.anioConstruccion} onChange={(e) => setForm({ ...form, anioConstruccion: e.target.value })} className="mt-1 w-full rounded-md border bg-background px-3 py-2" />
                 </div>
 
                 <div>

@@ -273,30 +273,33 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CustomerFunnel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("Clientes");
+
+                    b.PrimitiveCollection<string[]>("CustomerLabels")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
+
                     b.Property<string>("CustomerStatus")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<string>("CustomerFunnel")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasDefaultValue("Clientes")
-                        .HasColumnType("character varying(100)");
-
                     b.Property<string>("CustomerType")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<string[]>("CustomerTypes")
+                    b.PrimitiveCollection<string[]>("CustomerTypes")
                         .IsRequired()
-                        .HasDefaultValueSql("ARRAY[]::text[]")
-                        .HasColumnType("text[]");
-
-                    b.Property<string[]>("CustomerLabels")
-                        .IsRequired()
-                        .HasDefaultValueSql("ARRAY[]::text[]")
-                        .HasColumnType("text[]");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
 
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
@@ -463,16 +466,11 @@ namespace Enlyce.Infrastructure.Migrations
 
                     b.ToTable("CustomerCatalogItems", (string)null);
                 });
+
             modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
-
-                    b.Property<string[]>("InternalFeatures")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text[]")
-                        .HasDefaultValueSql("ARRAY[]::text[]");
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
@@ -512,7 +510,13 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string[]>("ExternalFeatures")
+                    b.PrimitiveCollection<string[]>("ExternalFeatures")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
+
+                    b.PrimitiveCollection<string[]>("InternalFeatures")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text[]")
@@ -602,14 +606,11 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<string[]>("InternalFeatures")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text[]")
-                        .HasDefaultValueSql("ARRAY[]::text[]");
-
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("AnioConstruccion")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Banos")
                         .HasColumnType("integer");
@@ -624,7 +625,7 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<string[]>("ExternalFeatures")
+                    b.PrimitiveCollection<string[]>("ExternalFeatures")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text[]")
@@ -645,6 +646,12 @@ namespace Enlyce.Infrastructure.Migrations
 
                     b.Property<int>("Habitaciones")
                         .HasColumnType("integer");
+
+                    b.PrimitiveCollection<string[]>("InternalFeatures")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("ARRAY[]::text[]");
 
                     b.Property<int>("MetrosCuadrados")
                         .HasColumnType("integer");
@@ -1509,36 +1516,6 @@ namespace Enlyce.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Enlyce.Domain.Entities.CustomerCatalogItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Catalog")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("NormalizedName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Catalog", "NormalizedName")
-                        .IsUnique();
-
-                    b.ToTable("CustomerCatalogItems", (string)null);
-                });
             modelBuilder.Entity("Enlyce.Domain.Entities.CustomerDemand", b =>
                 {
                     b.HasOne("Enlyce.Domain.Entities.Contact", null)
@@ -1680,4 +1657,3 @@ namespace Enlyce.Infrastructure.Migrations
         }
     }
 }
-

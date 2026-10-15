@@ -20,4 +20,5 @@ public record CreateInmuebleCommand(
     string Pais = "Colombia",
     string? Departamento = null,
     string[]? CaracteristicasInternas = null,
-    string[]? CaracteristicasExternas = null);
+    string[]? CaracteristicasExternas = null,
+    int? AnioConstruccion = null);

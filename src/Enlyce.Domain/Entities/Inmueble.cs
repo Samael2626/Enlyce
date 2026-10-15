@@ -44,6 +44,7 @@ public sealed class Inmueble
     public int Habitaciones { get; private set; }
     public int Banos { get; private set; }
     public int Parqueaderos { get; private set; }
+    public int? AnioConstruccion { get; private set; }
     public int FotosRequeridas { get; } = 3;
     public int FotosCount { get; private set; }
     public Guid PropietarioId { get; private set; }
@@ -61,7 +62,7 @@ public sealed class Inmueble
     private Inmueble(Guid id, string nombre, string descripcion, TipoInmueble tipo,
         ModalidadInmueble modalidad, EstadoInmueble estado, Direccion direccion,
         Dinero precio, int metrosCuadrados, int habitaciones, int banos,
-        int parqueaderos, int fotosCount, Guid propietarioId,
+        int parqueaderos, int? anioConstruccion, int fotosCount, Guid propietarioId,
         DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
         string[]? internalFeatures = null, string[]? externalFeatures = null)
     {
@@ -77,6 +78,7 @@ public sealed class Inmueble
         Habitaciones = habitaciones;
         Banos = banos;
         Parqueaderos = parqueaderos;
+        AnioConstruccion = anioConstruccion;
         FotosCount = fotosCount;
         PropietarioId = propietarioId;
         FechaCreacion = fechaCreacion;
@@ -89,9 +91,10 @@ public sealed class Inmueble
     public static Inmueble Crear(string nombre, string descripcion, TipoInmueble tipo,
         ModalidadInmueble modalidad, Direccion direccion, Dinero precio,
         int metrosCuadrados, int habitaciones, int banos, int parqueaderos,
-        Guid propietarioId, string[]? internalFeatures = null, string[]? externalFeatures = null)
+        Guid propietarioId, string[]? internalFeatures = null, string[]? externalFeatures = null,
+        int? anioConstruccion = null)
     {
-        ValidarDatos(nombre, precio, metrosCuadrados);
+        ValidarDatos(nombre, precio, metrosCuadrados, anioConstruccion);
 
         return new Inmueble(
             Guid.NewGuid(),
@@ -106,6 +109,7 @@ public sealed class Inmueble
             habitaciones,
             banos,
             parqueaderos,
+            anioConstruccion,
             0,
             propietarioId,
             DateTime.UtcNow,
@@ -121,11 +125,11 @@ public sealed class Inmueble
         int banos, int parqueaderos, int fotosCount, Guid propietarioId,
         DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
         string? externalRef = null, string[]? internalFeatures = null,
-        string[]? externalFeatures = null)
+        string[]? externalFeatures = null, int? anioConstruccion = null)
     {
         return new Inmueble(id, nombre, descripcion, tipo, modalidad, estado,
             direccion, precio, metrosCuadrados, habitaciones, banos, parqueaderos,
-            fotosCount, propietarioId, fechaCreacion, fechaVentaArriendo, activo,
+            anioConstruccion, fotosCount, propietarioId, fechaCreacion, fechaVentaArriendo, activo,
             internalFeatures, externalFeatures)
         {
             ExternalRef = externalRef
@@ -152,9 +156,10 @@ public sealed class Inmueble
     public void ActualizarDatos(string nombre, string descripcion, TipoInmueble tipo,
         ModalidadInmueble modalidad, Direccion direccion, Dinero precio,
         int metrosCuadrados, int habitaciones, int banos, int parqueaderos,
-        string[]? internalFeatures = null, string[]? externalFeatures = null)
+        string[]? internalFeatures = null, string[]? externalFeatures = null,
+        int? anioConstruccion = null)
     {
-        ValidarDatos(nombre, precio, metrosCuadrados);
+        ValidarDatos(nombre, precio, metrosCuadrados, anioConstruccion);
 
         Nombre = nombre.Trim();
         Descripcion = descripcion?.Trim() ?? string.Empty;
@@ -166,11 +171,12 @@ public sealed class Inmueble
         Habitaciones = habitaciones;
         Banos = banos;
         Parqueaderos = parqueaderos;
+        AnioConstruccion = anioConstruccion;
         if (internalFeatures is not null) InternalFeatures = NormalizeFeatures(internalFeatures);
         if (externalFeatures is not null) ExternalFeatures = NormalizeFeatures(externalFeatures);
     }
 
-    private static void ValidarDatos(string nombre, Dinero precio, int metrosCuadrados)
+    private static void ValidarDatos(string nombre, Dinero precio, int metrosCuadrados, int? anioConstruccion)
     {
         if (string.IsNullOrWhiteSpace(nombre))
             throw new DomainError("El nombre del inmueble no puede ser vacio.");
@@ -180,6 +186,9 @@ public sealed class Inmueble
 
         if (metrosCuadrados <= 0)
             throw new DomainError("Los metros cuadrados deben ser mayores a 0.");
+
+        if (anioConstruccion is < 1 or > 9999)
+            throw new DomainError("El año de construcción debe estar entre 1 y 9999.");
     }
 
     private static string[] NormalizeFeatures(string[]? values)

@@ -37,6 +37,7 @@ public sealed class InmuebleListReadRepository(EnlyceDbContext context) : IInmue
         if (query.Habitaciones.HasValue) items = items.Where(x => x.Habitaciones >= query.Habitaciones.Value);
         if (query.Banos.HasValue) items = items.Where(x => x.Banos >= query.Banos.Value);
         if (query.Parqueaderos.HasValue) items = items.Where(x => x.Parqueaderos >= query.Parqueaderos.Value);
+        if (query.ConstruidoDesde.HasValue) items = items.Where(x => x.AnioConstruccion >= query.ConstruidoDesde.Value);
 
         var total = await items.CountAsync(ct);
         var ordered = query.Orden switch
@@ -50,7 +51,8 @@ public sealed class InmuebleListReadRepository(EnlyceDbContext context) : IInmue
             .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
             .Select(x => new InmuebleListItem(x.Id, x.Nombre, x.Tipo.ToString(), x.Modalidad.ToString(), x.Estado.ToString(),
                 context.PropertyPublications.Any(p => p.PropertyId == x.Id), x.Direccion.Ciudad, x.Direccion.Barrio,
-                x.ExternalRef, x.Precio.Moneda, x.Precio.Monto, x.MetrosCuadrados, x.Habitaciones, x.Banos, x.Parqueaderos))
+                x.ExternalRef, x.Precio.Moneda, x.Precio.Monto, x.MetrosCuadrados, x.Habitaciones, x.Banos, x.Parqueaderos,
+                x.AnioConstruccion))
             .ToListAsync(ct);
         return new ListInmueblesResponse(rows, query.Page, query.PageSize, total);
     }
