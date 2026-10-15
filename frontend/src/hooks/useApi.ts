@@ -108,6 +108,13 @@ export function useSentEmailReport(filters: Parameters<typeof api.getSentEmailRe
   })
 }
 
+export function useWebPropertyVisitsReport(from: string, to: string) {
+  return useQuery({
+    queryKey: ["analytics", "web-properties", from, to],
+    queryFn: () => api.getWebPropertyVisitsReport(from, to),
+  })
+}
+
 export function useCreateRealizedDeal() {
   const queryClient = useQueryClient()
   return useMutation({

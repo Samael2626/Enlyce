@@ -713,6 +713,12 @@ export interface SentEmailReportPage {
   }[]
 }
 
+export interface WebPropertyVisitsReport {
+  from: string
+  through: string
+  properties: { publicationId: string; title: string; visits: number }[]
+}
+
 export interface CreateRealizedDealInput {
   propertyId: string
   contactId: string

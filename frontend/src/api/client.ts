@@ -406,6 +406,11 @@ class ApiClient {
     return this.request<import("@/lib/types").SentEmailReportPage>(`/api/analytics/sent-emails?${query}`)
   }
 
+  async getWebPropertyVisitsReport(from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    return this.request<import("@/lib/types").WebPropertyVisitsReport>(`/api/analytics/web-properties?${query}`)
+  }
+
   async downloadRealizedDealsXlsx(filters: { from?: string; to?: string; advisorId?: string; operation?: string; propertyType?: string }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {

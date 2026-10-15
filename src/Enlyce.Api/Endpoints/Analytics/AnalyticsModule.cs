@@ -248,6 +248,25 @@ public static class AnalyticsModule
         .WithName("GetSentEmailReport")
         .Produces<SentEmailReportPage>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        app.MapGet("/api/analytics/web-properties", async (
+            DateOnly? from,
+            DateOnly? to,
+            IWebPropertyVisitsReportReadRepository report,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-29);
+            if (since > through || through.DayNumber - since.DayNumber >= 366)
+                return Results.BadRequest(new { error = "El rango debe ser valido y no superar 366 dias." });
+
+            return Results.Ok(await report.GetAsync(since, through, ct));
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetWebPropertyVisitsReport")
+        .Produces<WebPropertyVisitsReport>()
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static DateTime EnsureUtc(DateTime value) => value.Kind switch

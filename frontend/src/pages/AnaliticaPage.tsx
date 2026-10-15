@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
 import { api } from "@/api/client"
-import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport, useSentEmailReport } from "@/hooks/useApi"
+import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport, useSentEmailReport, useWebPropertyVisitsReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const labels: Record<string, string> = {
@@ -26,6 +26,8 @@ export function AnaliticaPage() {
   const [emailFrom, setEmailFrom] = useState(() => dateOffset(-29))
   const [emailTo, setEmailTo] = useState(() => dateOffset(0))
   const [emailPage, setEmailPage] = useState(1)
+  const [webFrom, setWebFrom] = useState(() => dateOffset(-29))
+  const [webTo, setWebTo] = useState(() => dateOffset(0))
   const user = useAuthStore((state) => state.user)
   const funnel = useAnalyticsFunnel(days)
   const crmReport = useCrmReportMetrics(crmFrom, crmTo)
@@ -39,6 +41,7 @@ export function AnaliticaPage() {
   const advisorReport = useAdvisorPerformanceReport(dealFrom, dealTo)
   const ownerReport = useOwnerPerformanceReport(dealFrom, dealTo)
   const sentEmailReport = useSentEmailReport({ from: emailFrom, to: emailTo, page: emailPage, pageSize: 10 })
+  const webPropertyReport = useWebPropertyVisitsReport(webFrom, webTo)
 
   if (user?.rol !== "Administrador") return <Navigate to="/dashboard" replace />
 
@@ -158,6 +161,15 @@ export function AnaliticaPage() {
         onFromChange={(value) => { setEmailPage(1); setEmailFrom(value) }}
         onToChange={(value) => { setEmailPage(1); setEmailTo(value) }}
         onPageChange={setEmailPage}
+      />
+      <WebPropertyVisitsSection
+        report={webPropertyReport.data}
+        from={webFrom}
+        to={webTo}
+        isLoading={webPropertyReport.isLoading}
+        isError={webPropertyReport.isError}
+        onFromChange={setWebFrom}
+        onToChange={setWebTo}
       />
 
       <section className="space-y-4" aria-labelledby="crm-report-title">
@@ -391,6 +403,62 @@ function SentEmailReportSection({
               <button type="button" className="crm-button min-h-8 px-3 py-1 text-xs" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}>Siguiente</button>
             </div>
           </footer>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function WebPropertyVisitsSection({
+  report,
+  from,
+  to,
+  isLoading,
+  isError,
+  onFromChange,
+  onToChange,
+}: {
+  report?: import("@/lib/types").WebPropertyVisitsReport
+  from: string
+  to: string
+  isLoading: boolean
+  isError: boolean
+  onFromChange: (value: string) => void
+  onToChange: (value: string) => void
+}) {
+  return (
+    <section className="space-y-4" aria-labelledby="web-property-report-title">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="crm-eyebrow">Sitio web</span>
+          <h2 id="web-property-report-title" className="mt-2 font-display text-3xl tracking-tight">Visitas por inmueble publicado</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Cuenta sesiones únicas por URL actual; incluye publicaciones publicadas, pausadas o retiradas.</p>
+        </div>
+        <div className="flex flex-wrap gap-3 text-xs font-bold text-muted-foreground">
+          <label>Desde <input aria-label="Visitas web desde" type="date" value={from} max={to} onChange={(event) => onFromChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+          <label>Hasta <input aria-label="Visitas web hasta" type="date" value={to} min={from} onChange={(event) => onToChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando visitas del sitio…</div>
+      ) : isError ? (
+        <div role="alert" className="crm-panel p-6 text-sm text-destructive">No se pudo cargar el reporte de visitas web.</div>
+      ) : (
+        <div className="crm-panel overflow-x-auto">
+          <table className="w-full min-w-[440px] text-left text-sm">
+            <thead className="bg-muted/50 text-xs text-muted-foreground">
+              <tr><th className="px-4 py-3">Título inmueble</th><th className="px-4 py-3">Visitas</th></tr>
+            </thead>
+            <tbody>
+              {(report?.properties ?? []).map((property) => (
+                <tr key={property.publicationId} className="border-t border-border">
+                  <th scope="row" className="px-4 py-3 font-medium">{property.title}</th>
+                  <td className="px-4 py-3 tabular-nums">{property.visits}</td>
+                </tr>
+              ))}
+              {report?.properties.length === 0 && <tr><td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">No hay inmuebles publicados.</td></tr>}
+            </tbody>
+          </table>
         </div>
       )}
     </section>
