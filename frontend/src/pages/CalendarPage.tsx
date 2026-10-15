@@ -3,7 +3,7 @@ import { CalendarClock, Check, ChevronLeft, ChevronRight, Clock3 } from "lucide-
 import { useBulkCancelCommercialTasks, useBulkCompleteCommercialTasks, useCommercialTasks, useCompleteCommercialTask, useCancelCommercialTask, useManageVisit, useRescheduleCommercialTask, useVisitas } from "@/hooks/useApi"
 
 export function CalendarPage() {
-  const [anchor] = useState(() => new Date())
+  const [anchor, setAnchor] = useState(() => new Date())
   const [newDates, setNewDates] = useState<Record<string, string>>({})
   const [visitDates, setVisitDates] = useState<Record<string, string>>({})
   const [visitFeedback, setVisitFeedback] = useState<Record<string, string>>({})
@@ -42,13 +42,18 @@ export function CalendarPage() {
 
       <section className="crm-panel overflow-hidden">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="font-display text-xl text-foreground">{anchor.toLocaleDateString("es-CO", { month: "long", year: "numeric" })}</h2>
+          <div className="flex items-center gap-2">
+            <button aria-label="Mes anterior" onClick={() => setAnchor((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))} className="rounded border border-border p-2 text-foreground"><ChevronLeft className="h-4 w-4" /></button>
+            <button onClick={() => setAnchor(new Date())} className="rounded border border-border px-3 py-1.5 text-sm text-foreground">Hoy</button>
+            <button aria-label="Mes siguiente" onClick={() => setAnchor((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))} className="rounded border border-border p-2 text-foreground"><ChevronRight className="h-4 w-4" /></button>
+            <h2 className="ml-2 font-display text-xl capitalize text-foreground">{anchor.toLocaleDateString("es-CO", { month: "long", year: "numeric" })}</h2>
+          </div>
           <span className="text-sm text-muted-foreground">{totalTasks} tareas</span>
         </div>
         <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[minmax(0,1fr)_170px_150px_auto]">
           <input aria-label="Buscar tareas" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Buscar título o contacto" className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" />
           <select aria-label="Filtrar por estado" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }} className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
-            <option value="">Todos los estados</option><option value="Pending">Pendientes</option><option value="Completed">Completadas</option><option value="Cancelled">Canceladas</option>
+            <option value="">Todos los estados</option><option value="Pending">Pendientes</option><option value="Overdue">Vencidas</option><option value="Completed">Terminadas</option><option value="Cancelled">Canceladas</option>
           </select>
           <select aria-label="Filtrar por prioridad" value={priority} onChange={(event) => { setPriority(event.target.value); setPage(1) }} className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
             <option value="">Toda prioridad</option><option value="High">Alta</option><option value="Normal">Normal</option><option value="Low">Baja</option>
@@ -73,6 +78,7 @@ export function CalendarPage() {
                   <p className="font-semibold text-foreground">{task.title}</p>
                   <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     <span>{task.type}</span><span>{task.priority}</span>
+                    {task.status === "Pending" && new Date(task.dueAt) < new Date() && <span className="font-semibold text-destructive">Vencida</span>}
                     <span className="inline-flex items-center gap-1"><Clock3 className="h-3 w-3" />{new Date(task.dueAt).toLocaleString("es-CO")}</span>
                   </p>
                   {task.reminderAt && <p className="mt-1 text-xs text-muted-foreground">Recordatorio: {new Date(task.reminderAt).toLocaleString("es-CO")}</p>}

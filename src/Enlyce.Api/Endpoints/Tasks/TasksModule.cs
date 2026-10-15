@@ -28,7 +28,8 @@ public static class TasksModule
                 return Results.BadRequest(new { error = "La pagina debe ser positiva y pageSize debe estar entre 1 y 100." });
             if (request.Query?.Length > 200)
                 return Results.BadRequest(new { error = "La busqueda no puede superar 200 caracteres." });
-            if (request.Status is not null && !TryParse(request.Status, out CommercialTaskStatus _))
+            var overdue = string.Equals(request.Status, "Overdue", StringComparison.OrdinalIgnoreCase);
+            if (request.Status is not null && !overdue && !TryParse(request.Status, out CommercialTaskStatus _))
                 return Results.BadRequest(new { error = "El estado no es valido." });
             if (request.Priority is not null && !TryParse(request.Priority, out CommercialTaskPriority _))
                 return Results.BadRequest(new { error = "La prioridad no es valida." });
@@ -49,7 +50,8 @@ public static class TasksModule
             }
 
             var result = await tasks.SearchAsync(advisorId, request.Query,
-                request.Status is null ? null : Enum.Parse<CommercialTaskStatus>(request.Status, true),
+                request.Status is null || overdue ? null : Enum.Parse<CommercialTaskStatus>(request.Status, true),
+                overdue,
                 request.Priority is null ? null : Enum.Parse<CommercialTaskPriority>(request.Priority, true),
                 request.From, request.To, request.ContactId, request.Page, request.PageSize, ct);
             return Results.Ok(new TaskSearchResponse(result.Total, result.Items.Select(ToDto).ToArray()));

@@ -27,7 +27,7 @@ public sealed class CommercialTaskRepository(EnlyceDbContext context) : ICommerc
     }
 
     public async Task<CommercialTaskSearchPage> SearchAsync(
-        Guid? advisorId, string? queryText, CommercialTaskStatus? status,
+        Guid? advisorId, string? queryText, CommercialTaskStatus? status, bool overdue,
         CommercialTaskPriority? priority, DateTime? from, DateTime? to, Guid? contactId,
         int page, int pageSize, CancellationToken ct = default)
     {
@@ -42,6 +42,11 @@ public sealed class CommercialTaskRepository(EnlyceDbContext context) : ICommerc
             query = query.Where(task => task.ContactId == contactId.Value);
         if (status.HasValue)
             query = query.Where(task => task.Status == status.Value);
+        if (overdue)
+        {
+            var now = DateTime.UtcNow;
+            query = query.Where(task => task.Status == CommercialTaskStatus.Pending && task.DueAt < now);
+        }
         if (priority.HasValue)
             query = query.Where(task => task.Priority == priority.Value);
         if (!string.IsNullOrWhiteSpace(queryText))

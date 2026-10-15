@@ -6,7 +6,7 @@ public interface ICommercialTaskRepository
 {
     Task<CommercialTask?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<IReadOnlyList<CommercialTask>> GetForAdvisorAsync(Guid? advisorId, DateTime? from, DateTime? to, Guid? contactId, CancellationToken ct = default);
-    Task<CommercialTaskSearchPage> SearchAsync(Guid? advisorId, string? query, CommercialTaskStatus? status,
+    Task<CommercialTaskSearchPage> SearchAsync(Guid? advisorId, string? query, CommercialTaskStatus? status, bool overdue,
         CommercialTaskPriority? priority, DateTime? from, DateTime? to, Guid? contactId,
         int page, int pageSize, CancellationToken ct = default);
     Task<IReadOnlyList<CommercialTask>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, Guid? advisorId,
