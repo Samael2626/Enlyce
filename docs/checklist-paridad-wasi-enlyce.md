@@ -165,6 +165,8 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 
 - Búsqueda en `tests/` no encontró pruebas dedicadas a `ClientImportModule`, `ContactImportBatch` ni al lector de importación de clientes. La suite general no acredita mapeo, errores por fila, duplicados por alcance, reintento con misma/otra carga, ni atomicidad entre contactos y lote. Añadir esa cobertura antes de marcar cerrado el módulo.
 
+- La deduplicacion actual solo identifica filas con email valido; filas sin email pueden volver a importarse. El aviso se muestra junto al selector del archivo. La regla equivalente de Wasi sigue sin evidencia.
+
 ## Detalle del reporte por asesor (2026-10-15)
 
 - La guía oficial de Wasi confirma que al abrir un asesor se ven llamadas, visitas, eventos, correos, ventas y rentas del periodo; también confirma exportar el reporte a PDF/Excel o enviarlo por correo. [Usuarios — Centro de ayuda Wasi](https://ayuda.wasi.co/es/article/usuarios).

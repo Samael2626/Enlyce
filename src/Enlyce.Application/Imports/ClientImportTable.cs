@@ -3,7 +3,8 @@ namespace Enlyce.Application.Imports;
 public sealed record ClientImportTable(
     IReadOnlyList<string> Columns,
     IReadOnlyList<IReadOnlyList<string?>> Rows,
-    IReadOnlySet<(int Row, int Column)>? UnsafeNumericIdentityCells = null);
+    IReadOnlySet<(int Row, int Column)>? UnsafeNumericIdentityCells = null,
+    IReadOnlyList<int>? SourceRowNumbers = null);
 
 public interface IClientImportTableReader
 {

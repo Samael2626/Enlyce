@@ -190,7 +190,7 @@ public static class ClientImportModule
                     valid++;
 
                 if (index >= firstPreviewRow && responseRows.Count < previewPageSize)
-                    responseRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phone,
+                    responseRows.Add(new ClientImportPreviewRow(SourceRowNumber(table, index), name, surname, emailText, phone,
                         false, GetMappedValues(row, mapping), error, duplicate)
                     {
                         SourceIndicatesEmailPermission = sourceIndicatesEmailPermission
@@ -406,15 +406,15 @@ public static class ClientImportModule
                     landline, dateOfBirth, identificationNumber, referredBy, acquisitionMedium,
                     additionalData, customerFunnel, customerTypes, customerLabels);
                 newContacts.Add(contact);
-                importedContactLinks.Add(new ClientImportContactLink(index + 2, contact.Id));
+                importedContactLinks.Add(new ClientImportContactLink(SourceRowNumber(table, index), contact.Id));
             }
 
             if (error is not null || duplicate)
-                errorRows.Add(new ClientImportErrorRow(index + 2,
+                errorRows.Add(new ClientImportErrorRow(SourceRowNumber(table, index),
                     error ?? "Email duplicado en contactos visibles o en el archivo."));
 
             if (resultRows.Count < MaxPreviewRows)
-                resultRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phoneText,
+                resultRows.Add(new ClientImportPreviewRow(SourceRowNumber(table, index), name, surname, emailText, phoneText,
                     canReceiveAutomatedEmail, GetMappedValues(row, mapping),
                     error ?? (duplicate ? "Email duplicado." : null), duplicate)
                 {
@@ -570,6 +570,11 @@ public static class ClientImportModule
 
     private static string? Cell(IReadOnlyList<string?> row, int index) =>
         index >= 0 && index < row.Count ? row[index]?.Trim() is { Length: > 0 } value ? value : null : null;
+
+    private static int SourceRowNumber(ClientImportTable table, int rowIndex) =>
+        table.SourceRowNumbers is { } sourceRows && rowIndex < sourceRows.Count
+            ? sourceRows[rowIndex]
+            : rowIndex + 2;
 
     private static bool HasUnsafeNumericIdentity(ClientImportTable table, int rowIndex,
         int phoneIndex, int landlineIndex, int identificationNumberIndex) =>

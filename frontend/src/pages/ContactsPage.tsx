@@ -741,6 +741,7 @@ export function ContactsPage() {
             }} />
           </label>
           <p className="text-xs text-muted-foreground">En Excel, guarda teléfonos e identificaciones como texto. Excel puede redondear números de más de 15 dígitos antes de que Enlyce los lea.</p>
+          <p className="text-xs text-muted-foreground">Los duplicados se detectan por correo. Si una fila no tiene correo, Enlyce no puede reconocer automáticamente si ya existe.</p>
           {importColumns.length > 0 && <>
             <fieldset disabled={importing} className="contents">
             <ImportColumnSelect label="Nombre *" value={nameColumn} columns={importColumns} onChange={(value) => updateImportMapping(setNameColumn, value)} />

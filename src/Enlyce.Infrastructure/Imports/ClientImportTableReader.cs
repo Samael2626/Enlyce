@@ -37,13 +37,16 @@ public sealed class ClientImportTableReader : IClientImportTableReader
             throw new InvalidDataException("La primera fila debe contener los encabezados.");
 
         var rows = new List<IReadOnlyList<string?>>();
+        var sourceRowNumbers = new List<int>();
         var unsafeNumericIdentityCells = new HashSet<(int Row, int Column)>();
+        var sourceRowNumber = 1;
         while (reader.Read())
         {
             ct.ThrowIfCancellationRequested();
+            sourceRowNumber++;
             var rowIndex = rows.Count;
             for (var columnIndex = 0; columnIndex < reader.FieldCount; columnIndex++)
-                if (IsUnsafeNumericIdentifier(reader.GetValue(columnIndex)))
+                if (IsUnsafeNumericIdentifier(reader.GetValue(columnIndex), reader.GetNumberFormatString(columnIndex)))
                     unsafeNumericIdentityCells.Add((rowIndex, columnIndex));
             var row = Enumerable.Range(0, reader.FieldCount)
                 .Select(index => CellText(reader.GetValue(index), reader.GetNumberFormatString(index)))
@@ -53,9 +56,10 @@ public sealed class ClientImportTableReader : IClientImportTableReader
             if (rows.Count == MaximumRows)
                 throw new InvalidDataException($"El archivo supera el máximo de {MaximumRows} filas de datos.");
             rows.Add(row);
+            sourceRowNumbers.Add(sourceRowNumber);
         }
 
-        return Task.FromResult(new ClientImportTable(columns, rows, unsafeNumericIdentityCells));
+        return Task.FromResult(new ClientImportTable(columns, rows, unsafeNumericIdentityCells, sourceRowNumbers));
     }
 
     private static ExcelReaderConfiguration CreateCsvConfiguration() => new()
@@ -78,10 +82,12 @@ public sealed class ClientImportTableReader : IClientImportTableReader
         _ => Convert.ToString(value, CultureInfo.InvariantCulture)?.Trim() is { Length: > 0 } text ? text : null
     };
 
-    private static bool IsUnsafeNumericIdentifier(object? value) => value switch
+    private static bool IsUnsafeNumericIdentifier(object? value, string? numberFormat) => value switch
     {
-        double number => Math.Abs(number) >= 1_000_000_000_000_000d && number == Math.Truncate(number),
-        decimal number => Math.Abs(number) >= 1_000_000_000_000_000m && number == decimal.Truncate(number),
+        double number => numberFormat is not { Length: > 0 } format || format.Any(character => character != '0') ||
+                         Math.Abs(number) >= 1_000_000_000_000_000d && number == Math.Truncate(number),
+        decimal number => numberFormat is not { Length: > 0 } format || format.Any(character => character != '0') ||
+                          Math.Abs(number) >= 1_000_000_000_000_000m && number == decimal.Truncate(number),
         _ => false
     };
 }
