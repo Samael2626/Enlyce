@@ -1,4 +1,4 @@
-﻿# Checklist de paridad Wasi → Enlyce
+# Checklist de paridad Wasi → Enlyce
 
 **Corte:** 14 de octubre de 2026  
 **Objetivo:** llevar a Enlyce las funciones de Wasi usadas por L&C, sin rehacer funciones que ya existen.  
@@ -128,4 +128,3 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - [Cruce inmuebles - clientes](https://ayuda.wasi.co/es/article/cruce-inmuebles-clientes): filtros del cruce y acciones para modificar/borrar demandas; se evidencia compartir propiedad por correo.
 - [Importar y exportar inmuebles](https://ayuda.wasi.co/es/article/como-importar-exportar-inmuebles): archivo Excel/CSV, mapeo de atributos y datos mínimos.
 - [Software inmobiliario Wasi](https://wasi.co/softwareinmobiliario/): CRM, web inmobiliaria, red de aliados, portalización, móvil y academia.
-
