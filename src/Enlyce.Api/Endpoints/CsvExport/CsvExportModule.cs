@@ -58,6 +58,7 @@ public static class CsvExportModule
             string? customerType,
             string? customerStatus,
             string? customerFunnel,
+            string? customerLabel,
             Guid? advisorId,
             HttpContext http,
             IContactRepository contacts,
@@ -65,7 +66,7 @@ public static class CsvExportModule
             CancellationToken ct) =>
         {
             var export = await BuildContactsCsvAsync(q, from, to, customerType, customerStatus, customerFunnel,
-                advisorId, http, contacts, leads, ct);
+                customerLabel, advisorId, http, contacts, leads, ct);
             return export.Error ?? Results.File(export.Content!, "text/csv; charset=utf-8", "clientes-enlyce.csv");
         })
         .RequireAuthorization()
@@ -79,6 +80,7 @@ public static class CsvExportModule
             string? customerType,
             string? customerStatus,
             string? customerFunnel,
+            string? customerLabel,
             Guid? advisorId,
             HttpContext http,
             IContactRepository contacts,
@@ -91,7 +93,7 @@ public static class CsvExportModule
                 return Results.BadRequest(new { error = "La cuenta no tiene correo asociado." });
 
             var export = await BuildContactsCsvAsync(q, from, to, customerType, customerStatus, customerFunnel,
-                advisorId, http, contacts, leads, ct);
+                customerLabel, advisorId, http, contacts, leads, ct);
             if (export.Error is not null)
                 return export.Error;
             if (export.Count == 0)
@@ -302,7 +304,7 @@ public static class CsvExportModule
     }
 
     private static async Task<ContactCsvExport> BuildContactsCsvAsync(string? q, DateOnly? from, DateOnly? to,
-        string? customerType, string? customerStatus, string? customerFunnel, Guid? advisorId,
+        string? customerType, string? customerStatus, string? customerFunnel, string? customerLabel, Guid? advisorId,
         HttpContext http, IContactRepository contacts, ILeadRepository leads, CancellationToken ct)
     {
         if (from.HasValue && to.HasValue && from > to)
@@ -316,6 +318,8 @@ public static class CsvExportModule
             return new(null, 0, Results.BadRequest(new { error = "El estado del cliente no es valido." }));
         if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
             return new(null, 0, Results.BadRequest(new { error = "El embudo no puede superar 100 caracteres." }));
+        if (!string.IsNullOrWhiteSpace(customerLabel) && customerLabel.Trim().Length > 50)
+            return new(null, 0, Results.BadRequest(new { error = "La etiqueta no puede superar 50 caracteres." }));
 
         IReadOnlyCollection<Guid>? allowedIds = null;
         if (!http.User.IsInRole("Administrador"))
@@ -340,7 +344,7 @@ public static class CsvExportModule
         {
             var result = await contacts.SearchAsync(q, from?.ToDateTime(TimeOnly.MinValue),
                 to?.ToDateTime(TimeOnly.MaxValue), allowedIds, skip, batchSize, ct,
-                customerType, customerStatus, customerFunnel?.Trim());
+                customerType, customerStatus, customerFunnel?.Trim(), customerLabel?.Trim());
             total = result.Total;
             if (total > maxRows)
                 return new(null, total, Results.Problem("La exportacion supera el limite de 50.000 clientes.",

@@ -57,6 +57,7 @@ public static class ContactsModule
             string? customerType,
             string? customerStatus,
             string? customerFunnel,
+            string? customerLabel,
             Guid? advisorId,
             int? page,
             int? pageSize,
@@ -75,6 +76,8 @@ public static class ContactsModule
                 return Results.BadRequest(new { error = "El estado del cliente no es valido." });
             if (!string.IsNullOrWhiteSpace(customerFunnel) && customerFunnel.Trim().Length > 100)
                 return Results.BadRequest(new { error = "El embudo del cliente no puede superar 100 caracteres." });
+            if (!string.IsNullOrWhiteSpace(customerLabel) && customerLabel.Trim().Length > 50)
+                return Results.BadRequest(new { error = "La etiqueta no puede superar 50 caracteres." });
             if (advisorId.HasValue && !http.User.IsInRole("Administrador"))
                 return Results.Forbid();
 
@@ -100,7 +103,7 @@ public static class ContactsModule
             }
             var result = await contacts.SearchAsync(
                 q, createdFrom, createdThrough, allowedContactIds, (int)skip, currentPageSize, ct,
-                customerType, customerStatus, customerFunnel?.Trim());
+                customerType, customerStatus, customerFunnel?.Trim(), customerLabel?.Trim());
             return Results.Ok(new ContactListResponse(
                 result.Total,
                 result.Items.Select(ToSummary).ToArray()));

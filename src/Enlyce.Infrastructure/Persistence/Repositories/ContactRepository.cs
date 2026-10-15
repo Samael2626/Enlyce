@@ -101,7 +101,8 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
         CancellationToken ct = default,
         string? customerType = null,
         string? customerStatus = null,
-        string? customerFunnel = null)
+        string? customerFunnel = null,
+        string? customerLabel = null)
     {
         var contacts = context.Contacts.AsNoTracking().Where(contact => contact.Active);
         if (!string.IsNullOrWhiteSpace(query))
@@ -125,6 +126,8 @@ public sealed class ContactRepository(EnlyceDbContext context) : IContactReposit
             contacts = contacts.Where(contact => contact.CustomerStatus == customerStatus);
         if (!string.IsNullOrWhiteSpace(customerFunnel))
             contacts = contacts.Where(contact => contact.CustomerFunnel == customerFunnel);
+        if (!string.IsNullOrWhiteSpace(customerLabel))
+            contacts = contacts.Where(contact => contact.CustomerLabels.Contains(customerLabel));
         if (allowedContactIds is not null)
         {
             if (allowedContactIds.Count == 0)

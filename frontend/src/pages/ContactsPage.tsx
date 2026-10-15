@@ -32,6 +32,7 @@ export function ContactsPage() {
   const [customerTypeFilter, setCustomerTypeFilter] = useState("")
   const [customerStatusFilter, setCustomerStatusFilter] = useState("")
   const [customerFunnelFilter, setCustomerFunnelFilter] = useState("")
+  const [customerLabelFilter, setCustomerLabelFilter] = useState("")
   const [advisorFilter, setAdvisorFilter] = useState("")
   const [crossFilters, setCrossFilters] = useState({ q: "", customerType: "", customerStatus: "", customerFunnel: "", advisorId: "",
     contactFrom: "", contactTo: "", demandFrom: "", demandTo: "" })
@@ -45,6 +46,7 @@ export function ContactsPage() {
   const [exportContactsNotice, setExportContactsNotice] = useState("")
   const contactsQuery = useContacts({ q: search, from: createdFrom, to: createdTo,
     customerType: customerTypeFilter, customerStatus: customerStatusFilter, customerFunnel: customerFunnelFilter,
+    customerLabel: customerLabelFilter,
     advisorId: advisorFilter || undefined, page, pageSize })
   const contacts = contactsQuery.data?.items ?? []
   const totalContacts = contactsQuery.data?.total ?? 0
@@ -58,7 +60,7 @@ export function ContactsPage() {
   }, [contacts, selectedId, pinnedImportedContactId, contactsQuery.isFetching])
 
   useEffect(() => setSelectedContactIds([]), [search, createdFrom, createdTo,
-    customerTypeFilter, customerStatusFilter, customerFunnelFilter, advisorFilter, page])
+    customerTypeFilter, customerStatusFilter, customerFunnelFilter, customerLabelFilter, advisorFilter, page])
 
   const detailQuery = useContact(selectedId)
   const contact = detailQuery.data?.contact
@@ -679,6 +681,9 @@ export function ContactsPage() {
                 <option value="">Todos</option>{customerFunnelOptions.map((value) => <option key={value} value={value}>{value}</option>)}
               </select>
             </label>
+            <label className="block text-xs text-muted-foreground">Etiqueta
+              <input list="customer-label-options" value={customerLabelFilter} onChange={(event) => { setCustomerLabelFilter(event.target.value); setPage(1) }} placeholder="Todas o personalizada" className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground" />
+            </label>
             {user?.rol === "Administrador" && <label className="block text-xs text-muted-foreground">Usuario encargado
               <select value={advisorFilter} onChange={(event) => { setAdvisorFilter(event.target.value); setPage(1) }} className="mt-1 block w-full rounded-sm border border-input bg-background px-2 py-2 text-foreground">
                 <option value="">Todos</option>
@@ -698,7 +703,7 @@ export function ContactsPage() {
                 try {
                   const blob = await api.downloadContactsCsv({ q: search, from: createdFrom, to: createdTo,
                     customerType: customerTypeFilter, customerStatus: customerStatusFilter,
-                    customerFunnel: customerFunnelFilter, advisorId: advisorFilter })
+                    customerFunnel: customerFunnelFilter, customerLabel: customerLabelFilter, advisorId: advisorFilter })
                   const url = URL.createObjectURL(blob)
                   const link = document.createElement("a"); link.href = url; link.download = "clientes-enlyce.csv"; link.click()
                   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
@@ -713,7 +718,7 @@ export function ContactsPage() {
                 try {
                   const result = await api.emailContactsCsv({ q: search, from: createdFrom, to: createdTo,
                     customerType: customerTypeFilter, customerStatus: customerStatusFilter,
-                    customerFunnel: customerFunnelFilter, advisorId: advisorFilter })
+                    customerFunnel: customerFunnelFilter, customerLabel: customerLabelFilter, advisorId: advisorFilter })
                   setExportContactsNotice(`Se enviaron ${result.count} clientes al correo de tu cuenta.`)
                 } catch (error) {
                   setExportContactsError(error instanceof Error ? error.message : "No se pudo enviar el archivo.")

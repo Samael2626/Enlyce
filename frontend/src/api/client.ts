@@ -182,7 +182,7 @@ class ApiClient {
   }
 
   async getContacts(filters: { q?: string; from?: string; to?: string; customerType?: string;
-    customerStatus?: string; customerFunnel?: string; advisorId?: string; page?: number; pageSize?: number } = {}) {
+    customerStatus?: string; customerFunnel?: string; customerLabel?: string; advisorId?: string; page?: number; pageSize?: number } = {}) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== "") query.set(key, String(value))
@@ -377,7 +377,7 @@ class ApiClient {
   }
 
   async downloadContactsCsv(filters: { q?: string; from?: string; to?: string; customerType?: string;
-    customerStatus?: string; customerFunnel?: string; advisorId?: string }): Promise<Blob> {
+    customerStatus?: string; customerFunnel?: string; customerLabel?: string; advisorId?: string }): Promise<Blob> {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value) query.set(key, value)
@@ -391,7 +391,7 @@ class ApiClient {
   }
 
   async emailContactsCsv(filters: { q?: string; from?: string; to?: string; customerType?: string;
-    customerStatus?: string; customerFunnel?: string; advisorId?: string }) {
+    customerStatus?: string; customerFunnel?: string; customerLabel?: string; advisorId?: string }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value) query.set(key, value)
