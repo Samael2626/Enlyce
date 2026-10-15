@@ -349,6 +349,14 @@ class ApiClient {
     return this.request<import("@/lib/types").AdvisorOption[]>("/api/asesores")
   }
 
+  async getInteractions(filters: { type?: string; query?: string; advisorId?: string; from?: string; to?: string; page?: number; pageSize?: number } = {}) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, String(value))
+    })
+    return this.request<{ total: number; items: { id: string; leadId: string; contactId: string | null; advisorId: string; type: string; summary: string | null; date: string; clientName: string }[] }>(`/api/interacciones?${query}`)
+  }
+
   async getFirstResponseMetrics(from: string, to: string) {
     const query = new URLSearchParams({ from, to })
     return this.request<import("@/lib/types").FirstResponseMetrics>(`/api/analytics/first-response?${query}`)

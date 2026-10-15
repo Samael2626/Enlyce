@@ -14,6 +14,7 @@ import { BillingResultPage } from "@/pages/BillingResultPage"
 import { AnaliticaPage } from "@/pages/AnaliticaPage"
 import { ContactsPage } from "@/pages/ContactsPage"
 import { CalendarPage } from "@/pages/CalendarPage"
+import { GestionesPage } from "@/pages/GestionesPage"
 import { SettingsPage } from "@/pages/SettingsPage"
 
 const queryClient = new QueryClient({
@@ -48,6 +49,7 @@ export function App() {
               <Route path="/facturacion" element={<BillingPage />} />
               <Route path="/facturacion/respuesta" element={<BillingResultPage />} />
               <Route path="/calendario" element={<CalendarPage />} />
+              <Route path="/gestiones" element={<GestionesPage />} />
               <Route path="/chat" element={<Placeholder title="Chat" />} />
               <Route path="/reportes" element={<AnaliticaPage />} />
               <Route path="/config" element={<SettingsPage />} />
