@@ -37,9 +37,14 @@ public sealed class ClientImportTableReader : IClientImportTableReader
             throw new InvalidDataException("La primera fila debe contener los encabezados.");
 
         var rows = new List<IReadOnlyList<string?>>();
+        var unsafeNumericIdentityCells = new HashSet<(int Row, int Column)>();
         while (reader.Read())
         {
             ct.ThrowIfCancellationRequested();
+            var rowIndex = rows.Count;
+            for (var columnIndex = 0; columnIndex < reader.FieldCount; columnIndex++)
+                if (IsUnsafeNumericIdentifier(reader.GetValue(columnIndex)))
+                    unsafeNumericIdentityCells.Add((rowIndex, columnIndex));
             var row = Enumerable.Range(0, reader.FieldCount)
                 .Select(index => CellText(reader.GetValue(index), reader.GetNumberFormatString(index)))
                 .ToArray();
@@ -50,7 +55,7 @@ public sealed class ClientImportTableReader : IClientImportTableReader
             rows.Add(row);
         }
 
-        return Task.FromResult(new ClientImportTable(columns, rows));
+        return Task.FromResult(new ClientImportTable(columns, rows, unsafeNumericIdentityCells));
     }
 
     private static ExcelReaderConfiguration CreateCsvConfiguration() => new()
@@ -71,5 +76,12 @@ public sealed class ClientImportTableReader : IClientImportTableReader
         double number => number.ToString("G", CultureInfo.InvariantCulture),
         decimal number => number.ToString(CultureInfo.InvariantCulture),
         _ => Convert.ToString(value, CultureInfo.InvariantCulture)?.Trim() is { Length: > 0 } text ? text : null
+    };
+
+    private static bool IsUnsafeNumericIdentifier(object? value) => value switch
+    {
+        double number => Math.Abs(number) >= 1_000_000_000_000_000d && number == Math.Truncate(number),
+        decimal number => Math.Abs(number) >= 1_000_000_000_000_000m && number == decimal.Truncate(number),
+        _ => false
     };
 }

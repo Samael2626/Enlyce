@@ -2,7 +2,8 @@ namespace Enlyce.Application.Imports;
 
 public sealed record ClientImportTable(
     IReadOnlyList<string> Columns,
-    IReadOnlyList<IReadOnlyList<string?>> Rows);
+    IReadOnlyList<IReadOnlyList<string?>> Rows,
+    IReadOnlySet<(int Row, int Column)>? UnsafeNumericIdentityCells = null);
 
 public interface IClientImportTableReader
 {

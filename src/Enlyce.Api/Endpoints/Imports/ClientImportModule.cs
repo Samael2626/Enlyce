@@ -174,10 +174,12 @@ public static class ClientImportModule
                 var city = cityIndex < 0 ? null : Cell(row, cityIndex);
                 var email = TryEmail(emailText);
                 var parsedPhone = TryPhone(phone);
-                var error = ValidateRow(name, surname, emailText, email, phone, parsedPhone,
-                    customerTypes, customerStatus, address, country, department, city,
-                    landline, TryPhone(landline), dateOfBirth, TryDateOfBirth(dateOfBirth),
-                    identificationNumber, referredBy, acquisitionMedium, additionalData, labels, funnel, validStages);
+                var error = HasUnsafeNumericIdentity(table, index, phoneIndex, landlineIndex, identificationNumberIndex)
+                    ? "Excel guarda esta identificacion o telefono como numero de mas de 15 digitos y pudo redondearlo. Corrige la celda en el archivo y vuelve a importar."
+                    : ValidateRow(name, surname, emailText, email, phone, parsedPhone,
+                        customerTypes, customerStatus, address, country, department, city,
+                        landline, TryPhone(landline), dateOfBirth, TryDateOfBirth(dateOfBirth),
+                        identificationNumber, referredBy, acquisitionMedium, additionalData, labels, funnel, validStages);
                 var duplicate = error is null && email is not null &&
                     (existing.Contains(email.Value) || !seenInFile.Add(email.Value));
                 if (duplicate)
@@ -380,10 +382,12 @@ public static class ClientImportModule
             var phone = TryPhone(phoneText);
             var landline = TryPhone(landlineText);
             var dateOfBirth = TryDateOfBirth(dateOfBirthText);
-            var error = ValidateRow(name, surname, emailText, email, phoneText, phone,
-                customerTypes, customerStatus, address, country, department, city,
-                landlineText, landline, dateOfBirthText, dateOfBirth, identificationNumber,
-                referredBy, acquisitionMedium, additionalData, customerLabels, customerFunnel, validStages);
+            var error = HasUnsafeNumericIdentity(table, index, phoneIndex, landlineIndex, identificationNumberIndex)
+                ? "Excel guarda esta identificacion o telefono como numero de mas de 15 digitos y pudo redondearlo. Corrige la celda en el archivo y vuelve a importar."
+                : ValidateRow(name, surname, emailText, email, phoneText, phone,
+                    customerTypes, customerStatus, address, country, department, city,
+                    landlineText, landline, dateOfBirthText, dateOfBirth, identificationNumber,
+                    referredBy, acquisitionMedium, additionalData, customerLabels, customerFunnel, validStages);
             var duplicate = error is null && email is not null &&
                 (existing.Contains(email.Value) || !seen.Add(email.Value));
             if (error is not null)
@@ -558,6 +562,13 @@ public static class ClientImportModule
 
     private static string? Cell(IReadOnlyList<string?> row, int index) =>
         index >= 0 && index < row.Count ? row[index]?.Trim() is { Length: > 0 } value ? value : null : null;
+
+    private static bool HasUnsafeNumericIdentity(ClientImportTable table, int rowIndex,
+        int phoneIndex, int landlineIndex, int identificationNumberIndex) =>
+        table.UnsafeNumericIdentityCells is { } cells &&
+        (phoneIndex >= 0 && cells.Contains((rowIndex, phoneIndex)) ||
+         landlineIndex >= 0 && cells.Contains((rowIndex, landlineIndex)) ||
+         identificationNumberIndex >= 0 && cells.Contains((rowIndex, identificationNumberIndex)));
 
     private static IReadOnlyDictionary<string, string?> GetMappedValues(
         IReadOnlyList<string?> row, IReadOnlyDictionary<string, string?> mapping) =>

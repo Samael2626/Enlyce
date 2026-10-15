@@ -158,3 +158,8 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - Enlyce expone `GET /api/analytics/advisors/{advisorId}/detail` para administradores y una vista expandible con interacciones (fecha, tipo, resumen y cliente), visitas (fecha, estado, feedback, cliente e inmueble) y cierres (fecha, operación, cliente/inmueble, valor y comisión). Usa el mismo rango y valida el asesor.
 - XLSX contiene hojas de resumen, interacciones, visitas y cierres; PDF imprimible incluye las mismas filas; el correo envía el libro dentro de ZIP. El XLSX admite varias hojas mediante el generador propio.
 - Falta confirmar que `Interaccion.Tipo` distingue llamadas, correos y eventos como Wasi, y que las reglas de fechas/estados de visitas coincidan. El detalle de cierres depende de `AddRealizedDeals` aplicada; toda migración sigue sujeta al ensayo de respaldo/restauración de la base objetivo.
+
+## Importación de clientes: números de identificación y teléfono (2026-10-15)
+
+- El lector de Excel ahora conserva las posiciones de celdas numéricas enteras con 16 o más dígitos. Si se mapean a teléfono, fijo o identificación, preview y confirmación rechazan esa fila con instrucción de corregir la celda como texto; evita importar el número redondeado silenciosamente.
+- Los números de menos de 16 dígitos pueden haber perdido ceros iniciales si Excel los guardó como valor numérico sin máscara. El lector recupera máscaras simples de ceros (`000...`), pero no puede reconstruir ceros que el archivo ya descartó: importar teléfonos e identificaciones como texto sigue siendo requisito operativo.
