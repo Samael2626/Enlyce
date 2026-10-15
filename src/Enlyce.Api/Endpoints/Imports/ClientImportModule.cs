@@ -182,12 +182,12 @@ public static class ClientImportModule
                         identificationNumber, referredBy, acquisitionMedium, additionalData, labels, funnel, validStages);
                 var duplicate = error is null && email is not null &&
                     (existing.Contains(email.Value) || !seenInFile.Add(email.Value));
-                if (duplicate)
-                    duplicates++;
-                if (error is null)
-                    valid++;
-                else
+                if (error is not null)
                     invalid++;
+                else if (duplicate)
+                    duplicates++;
+                else
+                    valid++;
 
                 if (index >= firstPreviewRow && responseRows.Count < previewPageSize)
                     responseRows.Add(new ClientImportPreviewRow(index + 2, name, surname, emailText, phone,
