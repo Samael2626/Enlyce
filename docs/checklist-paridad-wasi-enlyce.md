@@ -75,6 +75,7 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 ### Seguimiento desde ficha de cliente (2026-10-15)
 
 - Wasi ofrece «Nueva tarea» dentro de la ficha. El API de Enlyce ya permite una tarea asociada directamente al contacto sin oportunidad; la ficha ahora deja hacerlo también. Administradores deben escoger el asesor responsable cuando no hay una oportunidad asignada. No requiere migración. El frontend compiló; falta verificar el flujo con cuentas admin/asesor y pruebas automatizadas.
+- La ficha Wasi también muestra pestañas y acciones de correos, llamadas y eventos. Enlyce persiste interacciones solo por oportunidad (`LeadId`); un contacto importado sin oportunidad no tiene esa bitácora directa. La captura confirma que existen las superficies, pero no sus formularios, campos ni reglas. Falta recorrer una interacción de cada tipo antes de definir modelo y paridad; no crear filas ficticias en la cuenta activa.
 
 ### Encargado del inmueble (2026-10-15)
 
