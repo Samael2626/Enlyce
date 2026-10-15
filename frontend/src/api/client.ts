@@ -508,11 +508,11 @@ class ApiClient {
     page?: number; pageSize?: number; search?: string; modalidad?: string; estado?: string; tipo?: string;
     pais?: string; departamento?: string; ciudad?: string; barrio?: string; moneda?: string;
     precioDesde?: number; precioHasta?: number; areaDesde?: number; areaHasta?: number;
-    habitaciones?: number; banos?: number; parqueaderos?: number; orden?: string; papelera?: boolean;
+    habitaciones?: number; banos?: number; parqueaderos?: number; orden?: string; papelera?: boolean; codigoWasi?: string;
   } = {}) {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "") params.set(key, String(value)) })
-    return this.request<{ items: { id: string; nombre: string; tipo: string; modalidad: string; estado: string; tienePublicacion: boolean; ciudad: string; barrio?: string; moneda: string; precio: number; metrosCuadrados: number; habitaciones: number; banos: number; parqueaderos: number }[]; page: number; pageSize: number; total: number }>(`/api/inmuebles?${params}`)
+    return this.request<{ items: { id: string; nombre: string; tipo: string; modalidad: string; estado: string; tienePublicacion: boolean; ciudad: string; barrio?: string; externalRef?: string; moneda: string; precio: number; metrosCuadrados: number; habitaciones: number; banos: number; parqueaderos: number }[]; page: number; pageSize: number; total: number }>(`/api/inmuebles?${params}`)
   }
 
   async emailPropertiesXlsx() {

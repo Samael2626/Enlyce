@@ -19,7 +19,7 @@ public static class InmueblesModule
         group.MapGet("/", async (int? page, int? pageSize, string? search, string? modalidad, string? estado,
             string? tipo, string? pais, string? departamento, string? ciudad, string? barrio, string? moneda,
             decimal? precioDesde, decimal? precioHasta, int? areaDesde, int? areaHasta,
-            int? habitaciones, int? banos, int? parqueaderos, string? orden, bool? papelera,
+            int? habitaciones, int? banos, int? parqueaderos, string? orden, bool? papelera, string? codigoWasi,
             IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, CancellationToken ct) =>
         {
             if (page is < 1 || pageSize is < 1 or > 100 || search?.Length > 200 ||
@@ -27,14 +27,15 @@ public static class InmueblesModule
                 !ValidEnum<TipoInmueble>(tipo) || !ValidRange(precioDesde, precioHasta) ||
                 !ValidRange(areaDesde, areaHasta) || habitaciones < 0 || banos < 0 || parqueaderos < 0 ||
                 new[] { pais, departamento, ciudad, barrio }.Any(value => value?.Length > 100) ||
-                moneda?.Length > 3 || ((precioDesde.HasValue || precioHasta.HasValue) && string.IsNullOrWhiteSpace(moneda)) ||
+                moneda?.Length > 3 || codigoWasi?.Length > 100 ||
+                ((precioDesde.HasValue || precioHasta.HasValue) && string.IsNullOrWhiteSpace(moneda)) ||
                 orden is not (null or "recent" or "oldest" or "priceAsc" or "priceDesc"))
                 return Results.BadRequest(new { error = "Los filtros del inventario no son validos." });
 
             return Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(
                 page ?? 1, pageSize ?? 20, search, modalidad, estado, tipo, pais, departamento, ciudad, barrio,
                 moneda?.ToUpperInvariant(), precioDesde, precioHasta, areaDesde, areaHasta,
-                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false), ct));
+                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false, codigoWasi), ct));
         })
             .WithName("ListInmuebles");
 

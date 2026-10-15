@@ -8,6 +8,11 @@ public sealed class InmuebleListReadRepository(EnlyceDbContext context) : IInmue
     public async Task<ListInmueblesResponse> ListAsync(ListInmueblesQuery query, CancellationToken ct)
     {
         var items = context.Inmuebles.AsNoTracking().Where(x => x.Activo != query.Papelera);
+        if (!string.IsNullOrWhiteSpace(query.CodigoWasi))
+        {
+            var wasiRefPrefix = $"wasi:{query.CodigoWasi.Trim()}:";
+            items = items.Where(x => x.ExternalRef != null && x.ExternalRef.StartsWith(wasiRefPrefix));
+        }
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var search = query.Search.Trim().ToLower();
@@ -45,7 +50,7 @@ public sealed class InmuebleListReadRepository(EnlyceDbContext context) : IInmue
             .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
             .Select(x => new InmuebleListItem(x.Id, x.Nombre, x.Tipo.ToString(), x.Modalidad.ToString(), x.Estado.ToString(),
                 context.PropertyPublications.Any(p => p.PropertyId == x.Id), x.Direccion.Ciudad, x.Direccion.Barrio,
-                x.Precio.Moneda, x.Precio.Monto, x.MetrosCuadrados, x.Habitaciones, x.Banos, x.Parqueaderos))
+                x.ExternalRef, x.Precio.Moneda, x.Precio.Monto, x.MetrosCuadrados, x.Habitaciones, x.Banos, x.Parqueaderos))
             .ToListAsync(ct);
         return new ListInmueblesResponse(rows, query.Page, query.PageSize, total);
     }
