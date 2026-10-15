@@ -390,6 +390,16 @@ class ApiClient {
     return this.request<import("@/lib/types").RealizedDealReportPage>(`/api/analytics/realized-deals?${query}`)
   }
 
+  async downloadRealizedDealsXlsx(filters: { from?: string; to?: string; advisorId?: string; operation?: string; propertyType?: string }) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, String(value))
+    })
+    const response = await fetch(`${this.baseUrl}/api/analytics/realized-deals.xlsx?${query}`, { credentials: "include" })
+    if (!response.ok) throw new Error(`No se pudo exportar el reporte (${response.status}).`)
+    return response.blob()
+  }
+
   async createRealizedDeal(input: import("@/lib/types").CreateRealizedDealInput) {
     return this.request<{ id: string }>("/api/realized-deals", {
       method: "POST",

@@ -47,7 +47,7 @@ public static class AnalyticsModule
             IRealizedDealsReportReadRepository deals,
             CancellationToken ct) =>
         {
-            if (from.HasValue && to.HasValue && from > to || page is < 1 || pageSize is < 1 or > 100)
+            if (from.HasValue && to.HasValue && from > to || page is < 1 || pageSize is < 1 or > 5_000)
                 return Results.BadRequest(new { error = "Revise el rango de fechas y la paginacion." });
             if (!TryParseOptional(operation, out RealizedDealOperation? parsedOperation) ||
                 !TryParseOptional(propertyType, out TipoInmueble? parsedPropertyType))
@@ -61,6 +61,52 @@ public static class AnalyticsModule
         .WithName("GetRealizedDealsReport")
         .Produces<RealizedDealsReportPage>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        app.MapGet("/api/analytics/realized-deals.xlsx", async (
+            DateOnly? from,
+            DateOnly? to,
+            Guid? advisorId,
+            string? operation,
+            string? propertyType,
+            IRealizedDealsReportReadRepository deals,
+            CancellationToken ct) =>
+        {
+            if (from.HasValue && to.HasValue && from > to)
+                return Results.BadRequest(new { error = "El rango de fechas no es valido." });
+            if (!TryParseOptional(operation, out RealizedDealOperation? parsedOperation) ||
+                !TryParseOptional(propertyType, out TipoInmueble? parsedPropertyType))
+                return Results.BadRequest(new { error = "El tipo de operacion o inmueble no es valido." });
+
+            const int maxRows = 50_000;
+            var report = await deals.GetAsync(new RealizedDealsReportFilter(
+                from, to, advisorId, parsedOperation, parsedPropertyType, 1, maxRows + 1), ct);
+            if (report.Total > maxRows)
+                return Results.Problem("El reporte supera el limite de 50.000 negocios.", statusCode: StatusCodes.Status413PayloadTooLarge);
+
+            var rows = report.Items.Select(item => new object?[]
+            {
+                item.PropertyName,
+                item.PropertyType,
+                item.Operation == nameof(RealizedDealOperation.Sale) ? "Venta" : "Arriendo",
+                item.ClosedOn.ToString("yyyy-MM-dd"),
+                item.AdvisorName,
+                item.ClientName,
+                item.GrossAmount,
+                item.CommissionAmount,
+                item.Currency
+            });
+            var content = XlsxWorkbook.Build("Negocios",
+                ["Inmueble", "Tipo de inmueble", "Negocio", "Fecha", "Encargado", "Cliente", "Total bruto", "Comisión", "Moneda"],
+                rows);
+            return Results.File(content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "negocios-realizados.xlsx");
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("ExportRealizedDealsXlsx")
+        .Produces(StatusCodes.Status200OK, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status413PayloadTooLarge);
 
         app.MapPost("/api/public/analytics/events", async (
             [FromBody] RecordWebAnalyticsEventRequest request,

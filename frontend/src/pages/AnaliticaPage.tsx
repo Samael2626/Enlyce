@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
+import { api } from "@/api/client"
 import { useAdvisors, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useRealizedDealsReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
@@ -204,7 +205,60 @@ function RealizedDealsSection({
   onPageChange: (page: number) => void
 }) {
   const [showForm, setShowForm] = useState(false)
+  const [exportError, setExportError] = useState("")
+  const [exporting, setExporting] = useState(false)
   const maxPage = Math.max(1, Math.ceil((report?.total ?? 0) / (report?.pageSize ?? 10)))
+
+  async function exportXlsx() {
+    setExporting(true)
+    setExportError("")
+    try {
+      const blob = await api.downloadRealizedDealsXlsx(filters)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "negocios-realizados.xlsx"
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "No se pudo exportar el reporte.")
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function exportPdf() {
+    const popup = window.open("", "_blank")
+    if (!popup) {
+      setExportError("El navegador bloqueó la ventana de impresión.")
+      return
+    }
+    setExporting(true)
+    setExportError("")
+    popup.document.write("<p style='font:16px sans-serif;padding:24px'>Preparando reporte para imprimir…</p>")
+    try {
+      const exportFilters = { ...filters, pageSize: 5_000 }
+      const firstPage = await api.getRealizedDealsReport({ ...exportFilters, page: 1 })
+      if (firstPage.total > 50_000) throw new Error("El reporte supera el límite de 50.000 negocios para imprimir.")
+      const items = [...firstPage.items]
+      const pageCount = Math.ceil(firstPage.total / firstPage.pageSize)
+      for (let pageNumber = 2; pageNumber <= pageCount; pageNumber++) {
+        const result = await api.getRealizedDealsReport({ ...exportFilters, page: pageNumber })
+        items.push(...result.items)
+      }
+      popup.document.open()
+      popup.document.write(buildPrintableDealsReport(items, firstPage.totalsByCurrency, filters, advisors))
+      popup.document.close()
+      popup.focus()
+      window.setTimeout(() => popup.print(), 300)
+    } catch (error) {
+      popup.close()
+      setExportError(error instanceof Error ? error.message : "No se pudo preparar el reporte PDF.")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <section className="space-y-4" aria-labelledby="realized-deals-title">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -212,10 +266,15 @@ function RealizedDealsSection({
           <span className="crm-eyebrow">Negocios realizados</span>
           <h2 id="realized-deals-title" className="mt-2 font-display text-3xl tracking-tight">Cierres, valor y comisión</h2>
         </div>
-        <button type="button" className="rounded-sm bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => setShowForm((value) => !value)}>
-          {showForm ? "Cerrar formulario" : "Registrar negocio"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" disabled={exporting} className="rounded-sm border border-border px-4 py-2 text-sm font-semibold disabled:opacity-50" onClick={exportXlsx}>{exporting ? "Preparando…" : "Excel"}</button>
+          <button type="button" disabled={exporting} className="rounded-sm border border-border px-4 py-2 text-sm font-semibold disabled:opacity-50" onClick={exportPdf}>PDF</button>
+          <button type="button" className="rounded-sm bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" onClick={() => setShowForm((value) => !value)}>
+            {showForm ? "Cerrar formulario" : "Registrar negocio"}
+          </button>
+        </div>
       </div>
+      {exportError && <p role="alert" className="text-sm text-destructive">{exportError}</p>}
       {showForm && <RealizedDealForm advisors={advisors} />}
 
       <div className="crm-panel grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-5">
@@ -262,6 +321,25 @@ function RealizedDealsSection({
       )}
     </section>
   )
+}
+
+function buildPrintableDealsReport(
+  items: import("@/lib/types").RealizedDealReportPage["items"],
+  totals: import("@/lib/types").RealizedDealReportPage["totalsByCurrency"],
+  filters: { from: string; to: string; advisorId: string; operation: string; propertyType: string },
+  advisors: { id: string; name: string }[],
+) {
+  const escape = (value: string) => value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;",
+  })[character]!)
+  const currency = (amount: number, code: string) => `${amount.toLocaleString("es-CO", { maximumFractionDigits: 2 })} ${escape(code)}`
+  const advisorName = filters.advisorId ? advisors.find((advisor) => advisor.id === filters.advisorId)?.name ?? "Asesor" : "Todos"
+  const operationName = filters.operation === "Sale" ? "Venta" : filters.operation === "Rent" ? "Arriendo" : "Todos"
+  const rows = items.map((item) => `<tr><td>${escape(item.propertyName)}</td><td>${escape(item.propertyType)}</td><td>${item.operation === "Sale" ? "Venta" : "Arriendo"}</td><td>${escape(item.closedOn)}</td><td>${escape(item.advisorName)}</td><td>${escape(item.clientName)}</td><td class="number">${currency(item.grossAmount, item.currency)}</td><td class="number">${currency(item.commissionAmount, item.currency)}</td></tr>`).join("")
+  const summary = totals.map((item) => `<p><b>${item.count} negocios · ${escape(item.currency)}</b> — Total bruto: ${currency(item.grossAmount, item.currency)} · Comisión: ${currency(item.commissionAmount, item.currency)}</p>`).join("")
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Negocios realizados</title><style>
+    @page{size:A4 landscape;margin:12mm}body{font:11px Arial,sans-serif;color:#202633}h1{font-size:22px;margin:0 0 8px}p{margin:4px 0}.meta{color:#596273;margin-bottom:14px}table{border-collapse:collapse;width:100%;margin-top:12px}thead{display:table-header-group}th,td{border:1px solid #cbd1dc;padding:6px;text-align:left;vertical-align:top}th{background:#e9edf4}.number{text-align:right;white-space:nowrap}tr{page-break-inside:avoid}
+    </style></head><body><h1>Negocios realizados</h1><div class="meta">Periodo: ${escape(filters.from)} a ${escape(filters.to)} · Asesor: ${escape(advisorName)} · Operación: ${operationName} · Tipo: ${escape(filters.propertyType || "Todos")} · Filas: ${items.length}</div>${summary}<table><thead><tr><th>Inmueble</th><th>Tipo</th><th>Negocio</th><th>Fecha</th><th>Encargado</th><th>Cliente</th><th>Total bruto</th><th>Comisión</th></tr></thead><tbody>${rows}</tbody></table></body></html>`
 }
 
 function RealizedDealForm({ advisors }: { advisors: { id: string; name: string }[] }) {
