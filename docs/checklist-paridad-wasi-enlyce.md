@@ -44,7 +44,7 @@
 | Aplicación móvil | [ ] | Wasi ofrece aplicaciones Android/iOS; Enlyce no tiene app móvil identificada. |
 | Publicación en redes sociales | [~] | Wasi muestra controles para Facebook e Instagram en inmuebles; paridad de publicación no comprobada. |
 | Control de portales y publicación masiva | [~] | Enlyce gestiona publicaciones propias; falta verificar integración, sincronización, errores y publicación masiva en portales Wasi. |
-| Búsqueda y operaciones del inventario | [~] | Filtros y orden: ver fila de inmuebles; etiqueta se busca por coincidencia exacta. Faltan asesor, mapa/lista y acciones masivas restantes. Selección por página y envío/restauración masiva a papelera implementados (hasta 100 IDs). Borrado permanente requiere definir dependencias y retención. |
+| Búsqueda y operaciones del inventario | [~] | El inventario filtra por asesor responsable para administradores; permite búsqueda/orden y etiqueta por coincidencia exacta. La selección opera por página y se limpia al cambiarla; envío/restauración masiva a papelera acepta hasta 100 IDs. Falta mapa/lista y comparar las demás acciones masivas de Wasi. Borrado permanente requiere definir dependencias y retención. |
 | Configuración inicial de empresa | [ ] | Wasi presenta un asistente de puesta en marcha; Enlyce no muestra equivalente. |
 | Configuración comercial | [~] | Reglas de reparto y SLA existen; comparar el resto de ajustes visibles en Wasi. |
 | Mi Cuenta, reputación, academia y soporte | [ ] | Accesos visibles en Wasi; sin equivalentes CRM identificados en Enlyce. |
