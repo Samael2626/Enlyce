@@ -912,8 +912,18 @@ export function ContactsPage() {
                 <input type="checkbox" checked={contacts.length > 0 && contacts.every((item) => selectedContactIds.includes(item.id))} onChange={(event) => setSelectedContactIds(event.target.checked ? contacts.map((item) => item.id) : [])} />
                 Seleccionar página
               </label>
-              <button type="button" disabled={!selectedContactIds.length} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1.5 font-semibold text-foreground disabled:opacity-40" onClick={() => exportContactsCsv(contacts.filter((item) => selectedContactIds.includes(item.id)))}>
-                <Download className="h-3.5 w-3.5" /> Exportar ({selectedContactIds.length})
+              <button type="button" disabled={!selectedContactIds.length || exportingContacts} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1.5 font-semibold text-foreground disabled:opacity-40" onClick={async () => {
+                setExportingContacts(true); setExportContactsError("")
+                try {
+                  const blob = await api.downloadSelectedContactsCsv(selectedContactIds)
+                  const url = URL.createObjectURL(blob)
+                  const link = document.createElement("a"); link.href = url; link.download = "clientes-seleccionados-enlyce.csv"; link.click()
+                  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+                } catch (error) {
+                  setExportContactsError(error instanceof Error ? error.message : "No se pudo exportar la selección.")
+                } finally { setExportingContacts(false) }
+              }}>
+                <Download className="h-3.5 w-3.5" /> {exportingContacts ? "Exportando…" : `Exportar (${selectedContactIds.length})`}
               </button>
               <button type="button" disabled={exportingContacts} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1.5 font-semibold text-foreground disabled:opacity-40" onClick={async () => {
                 setExportingContacts(true); setExportContactsError("")
@@ -1372,21 +1382,4 @@ function ImportColumnSelect({ label, value, columns, onChange, optional = false 
 function toLocalDateTimeInput(date: Date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
   return local.toISOString().slice(0, 16)
-}
-
-function exportContactsCsv(contacts: { name: string; email: string | null; phone?: string; createdAt: string }[]) {
-  const encode = (value: string) => {
-    const formulaSafe = /^[\s\u0000]*[=+@-]/.test(value) ? `'${value}` : value
-    return `"${formulaSafe.replaceAll('"', '""')}"`
-  }
-  const rows = [
-    ["nombre", "correo", "telefono", "creado"],
-    ...contacts.map((item) => [item.name, item.email ?? "", item.phone ?? "", item.createdAt]),
-  ].map((row) => row.map(encode).join(",")).join("\r\n")
-  const url = URL.createObjectURL(new Blob(["\uFEFF", rows], { type: "text/csv;charset=utf-8" }))
-  const link = document.createElement("a")
-  link.href = url
-  link.download = "contactos-seleccionados.csv"
-  link.click()
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

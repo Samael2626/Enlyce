@@ -401,6 +401,18 @@ class ApiClient {
     return response.blob()
   }
 
+  async downloadSelectedContactsCsv(ids: string[]): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/api/contactos/export-seleccionados.csv`, {
+      method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({})) as { error?: string; detail?: string }
+      throw new Error(error.error ?? error.detail ?? `Error ${response.status}`)
+    }
+    return response.blob()
+  }
+
   async emailContactsCsv(filters: { q?: string; from?: string; to?: string; customerType?: string;
     customerStatus?: string; customerFunnel?: string; customerLabel?: string; advisorId?: string }) {
     const query = new URLSearchParams()

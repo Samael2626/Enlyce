@@ -12,6 +12,7 @@ namespace Enlyce.Api.Endpoints.CsvExport;
 
 public static class CsvExportModule
 {
+    public sealed record SelectedContactExportRequest(IReadOnlyList<Guid>? Ids);
     private const string SpreadsheetNamespace = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
 
     public static void MapCsvExport(this IEndpointRouteBuilder app)
@@ -71,6 +72,39 @@ public static class CsvExportModule
         })
         .RequireAuthorization()
         .WithName("ExportContactsCsv")
+        .Produces(StatusCodes.Status200OK, contentType: "text/csv");
+
+        app.MapPost("/api/contactos/export-seleccionados.csv", async Task<IResult> (
+            SelectedContactExportRequest request,
+            HttpContext http,
+            IContactRepository contacts,
+            ILeadRepository leads,
+            CancellationToken ct) =>
+        {
+            var requestedIds = (request.Ids ?? []).Distinct().ToArray();
+            if (requestedIds.Length is < 1 or > 50_000)
+                return Results.BadRequest(new { error = "Selecciona entre 1 y 50.000 clientes." });
+
+            HashSet<Guid>? allowedIds = null;
+            if (!http.User.IsInRole("Administrador"))
+            {
+                var advisorId = EndpointAccess.AdvisorId(http.User);
+                if (!advisorId.HasValue)
+                    return Results.Forbid();
+                allowedIds = (await GetAdvisorContactIdsAsync(advisorId.Value, contacts, leads)).ToHashSet();
+            }
+
+            var visible = await contacts.GetByIdsAsync(requestedIds, ct);
+            var requestedOrder = requestedIds.Select((id, index) => (id, index))
+                .ToDictionary(item => item.id, item => item.index);
+            var rows = visible.Where(contact => requestedOrder.ContainsKey(contact.Id) &&
+                    (allowedIds is null || allowedIds.Contains(contact.Id)))
+                .OrderBy(contact => requestedOrder[contact.Id]).ToArray();
+            var content = BuildContactsCsv(rows);
+            return Results.File(content, "text/csv; charset=utf-8", "clientes-seleccionados-enlyce.csv");
+        })
+        .RequireAuthorization()
+        .WithName("ExportSelectedContactsCsv")
         .Produces(StatusCodes.Status200OK, contentType: "text/csv");
 
         app.MapPost("/api/contactos/exportar-correo", async Task<IResult> (
@@ -354,15 +388,29 @@ public static class CsvExportModule
             skip += result.Items.Count;
         } while (skip < total);
 
+        return new(BuildContactsCsv(allContacts), allContacts.Count, null);
+    }
+
+    private static byte[] BuildContactsCsv(IReadOnlyCollection<Contact> contacts)
+    {
         var csv = new StringBuilder();
-        AppendRow(csv, ["nombre", "apellidos", "correo", "telefono", "tipo_cliente", "etiquetas", "estado", "embudo", "creado"]);
-        foreach (var contact in allContacts)
+        AppendRow(csv, ["nombre", "apellidos", "correo", "telefono_movil", "telefono_fijo", "tipos_cliente",
+            "etiquetas", "estado", "embudo", "direccion", "pais", "departamento", "ciudad",
+            "fecha_nacimiento", "numero_identificacion", "referido_por", "medio_captacion", "datos_adicionales",
+            "permiso_correo_automatizado", "asesor_id", "creado", "actualizado"]);
+        foreach (var contact in contacts)
             AppendRow(csv, [contact.Name, contact.Surname ?? string.Empty, contact.Email ?? string.Empty,
-                contact.Phone?.Value ?? string.Empty, string.Join(", ", contact.CustomerTypes), string.Join(", ", contact.CustomerLabels),
-                contact.CustomerStatus, contact.CustomerFunnel,
-                contact.CreatedAt.ToString("O", CultureInfo.InvariantCulture)]);
-        var content = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
-        return new(content, allContacts.Count, null);
+                contact.Phone?.Value ?? string.Empty, contact.Landline?.Value ?? string.Empty,
+                string.Join(", ", contact.CustomerTypes), string.Join(", ", contact.CustomerLabels),
+                contact.CustomerStatus, contact.CustomerFunnel, contact.Address ?? string.Empty, contact.Country,
+                contact.Department ?? string.Empty, contact.City ?? string.Empty,
+                contact.DateOfBirth?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty,
+                contact.IdentificationNumber ?? string.Empty, contact.ReferredBy ?? string.Empty,
+                contact.AcquisitionMedium ?? string.Empty, contact.AdditionalData ?? string.Empty,
+                contact.CanReceiveAutomatedEmail ? "true" : "false", contact.OwnerAdvisorId?.ToString() ?? string.Empty,
+                contact.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
+                contact.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)]);
+        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
     }
 
     private sealed record ContactCsvExport(byte[]? Content, int Count, IResult? Error);
