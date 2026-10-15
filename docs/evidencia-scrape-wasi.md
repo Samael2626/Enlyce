@@ -28,7 +28,7 @@
 
 ## Límites de la evidencia
 
-El scrape preserva las etiquetas de campos y rutas, pero declara que no captura valores ni filas. No prueba opciones dinámicas de selectores, reglas de validación, permisos efectivos, resultados de botones, columnas/criterios de exportación ni estados después de guardar. Las pantallas `/usuario/clientes/exportar` y `/usuario/inmuebles/exportar` prueban que esas superficies existen; falta recorrerlas para documentar su comportamiento.
+El scrape preserva las etiquetas de campos y rutas, pero declara que no captura valores ni filas. No prueba opciones dinámicas de selectores, reglas de validación, permisos efectivos, resultados de botones, columnas/criterios de exportación ni estados después de guardar. El JSON `wasi-ui-wasi.co-1791954505967.json` registra `/usuario/clientes/exportar` y el enlace lateral «Importar clientes» apunta a esa misma ruta, pero no captura encabezados ni formularios (`forms: []`). La captura aportada confirma únicamente el selector XLS/XLSX/CSV. Esta evidencia no muestra mapeo, validaciones, confirmación ni resultado de importación. Las pantallas `/usuario/clientes/exportar` y `/usuario/inmuebles/exportar` prueban que esas superficies existen; falta recorrerlas para documentar su comportamiento.
 
 Las capturas de formularios tampoco prueban que Wasi importe demandas o que el archivo de clientes permita mapear todos esos campos. La guía oficial de importación sigue siendo la fuente para el formato de importación.
 
