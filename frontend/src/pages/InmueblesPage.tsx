@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { useChangeInmuebleTrashState, useChangeInmueblesTrashState, useCreateInmueble, useInmueble, useInmuebles, usePropertyDemandCounts, useUpdateInmueble } from "@/hooks/useApi"
+import { useAdvisors, useChangeInmuebleTrashState, useChangeInmueblesTrashState, useCreateInmueble, useInmueble, useInmuebles, usePropertyDemandCounts, useUpdateInmueble } from "@/hooks/useApi"
 import { PropertyDemandsPanel } from "@/components/PropertyDemandsPanel"
 import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE } from "@/lib/constants"
 import { api } from "@/api/client"
+import { useAuthStore } from "@/stores/authStore"
 import {
   Home,
   Plus,
@@ -21,7 +22,7 @@ export function InmueblesPage() {
   const [showTrash, setShowTrash] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [draftFilters, setDraftFilters] = useState({
-    search: "", codigoWasi: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "",
+    search: "", codigoWasi: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", asesorResponsableId: "",
     moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "",
     habitaciones: "", banos: "", parqueaderos: "", construidoDesde: "", etiqueta: "", orden: "recent",
   })
@@ -40,6 +41,8 @@ export function InmueblesPage() {
     parqueaderos: filters.parqueaderos ? Number(filters.parqueaderos) : undefined,
     construidoDesde: filters.construidoDesde ? Number(filters.construidoDesde) : undefined,
   })
+  const user = useAuthStore((state) => state.user)
+  const advisorQuery = useAdvisors(user?.rol === "Administrador")
   const demandCounts = usePropertyDemandCounts(showTrash ? [] : inventory.data?.items.map((item) => item.id) ?? [])
   const createInmueble = useCreateInmueble()
   const updateInmueble = useUpdateInmueble()
@@ -54,7 +57,7 @@ export function InmueblesPage() {
       nombre: property.nombre, descripcion: property.descripcion, tipo: property.tipo, modalidad: property.modalidad,
       calle: property.calle, ciudad: property.ciudad, barrio: property.barrio ?? "", precio: String(property.precio),
       moneda: property.moneda, metrosCuadrados: String(property.metrosCuadrados), habitaciones: String(property.habitaciones),
-      banos: String(property.banos), parqueaderos: String(property.parqueaderos), anioConstruccion: property.anioConstruccion == null ? "" : String(property.anioConstruccion), estadoFisico: property.estadoFisico ?? "", etiquetas: property.etiquetas?.join(", ") ?? "", propietarioId: property.propietarioId,
+      banos: String(property.banos), parqueaderos: String(property.parqueaderos), anioConstruccion: property.anioConstruccion == null ? "" : String(property.anioConstruccion), estadoFisico: property.estadoFisico ?? "", etiquetas: property.etiquetas?.join(", ") ?? "", propietarioId: property.propietarioId, asesorResponsableId: property.asesorResponsableId ?? "",
       caracteristicasInternas: property.caracteristicasInternas.join(", "),
       caracteristicasExternas: property.caracteristicasExternas.join(", "),
     })
@@ -78,6 +81,7 @@ export function InmueblesPage() {
     estadoFisico: "",
     etiquetas: "",
     propietarioId: "",
+    asesorResponsableId: "",
     caracteristicasInternas: "",
     caracteristicasExternas: "",
   })
@@ -92,6 +96,7 @@ export function InmueblesPage() {
         banos: parseInt(form.banos) || 0,
         parqueaderos: parseInt(form.parqueaderos) || 0,
         anioConstruccion: form.anioConstruccion ? parseInt(form.anioConstruccion) : null,
+        asesorResponsableId: form.asesorResponsableId || null,
         estadoFisico: form.estadoFisico.trim() || null,
         etiquetas: splitFeatures(form.etiquetas),
         caracteristicasInternas: splitFeatures(form.caracteristicasInternas),
@@ -100,7 +105,7 @@ export function InmueblesPage() {
     const onSuccess = () => {
       setShowForm(false)
       setEditingId("")
-      setForm({ nombre: "", descripcion: "", tipo: "Apartamento", modalidad: "Venta", calle: "", ciudad: "", barrio: "", precio: "", moneda: "COP", metrosCuadrados: "", habitaciones: "", banos: "", parqueaderos: "", anioConstruccion: "", estadoFisico: "", etiquetas: "", propietarioId: "", caracteristicasInternas: "", caracteristicasExternas: "" })
+      setForm({ nombre: "", descripcion: "", tipo: "Apartamento", modalidad: "Venta", calle: "", ciudad: "", barrio: "", precio: "", moneda: "COP", metrosCuadrados: "", habitaciones: "", banos: "", parqueaderos: "", anioConstruccion: "", estadoFisico: "", etiquetas: "", propietarioId: "", asesorResponsableId: "", caracteristicasInternas: "", caracteristicasExternas: "" })
     }
     if (editingId) {
       updateInmueble.mutate({ id: editingId, data }, { onSuccess })
@@ -183,9 +188,10 @@ export function InmueblesPage() {
           {(["habitaciones", "banos", "parqueaderos"] as const).map((key) => <input key={key} aria-label={key} type="number" min="0" placeholder={`${key[0].toUpperCase()}${key.slice(1)} mín.`} value={draftFilters[key]} onChange={(e) => setDraftFilters({ ...draftFilters, [key]: e.target.value })} className="rounded-md border bg-background px-3 py-2" />)}
           <input aria-label="Construido desde el año" type="number" min="1" max="9999" placeholder="Construido desde el año" value={draftFilters.construidoDesde} onChange={(e) => setDraftFilters({ ...draftFilters, construidoDesde: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
           <input aria-label="Etiqueta de inmueble" placeholder="Etiqueta" value={draftFilters.etiqueta} onChange={(e) => setDraftFilters({ ...draftFilters, etiqueta: e.target.value })} className="rounded-md border bg-background px-3 py-2" />
+          {user?.rol === "Administrador" && <select aria-label="Encargado del inmueble" value={draftFilters.asesorResponsableId} onChange={(e) => setDraftFilters({ ...draftFilters, asesorResponsableId: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="">Todos los encargados</option>{advisorQuery.data?.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}</select>}
           <select aria-label="Ordenar" value={draftFilters.orden} onChange={(e) => setDraftFilters({ ...draftFilters, orden: e.target.value })} className="rounded-md border bg-background px-3 py-2"><option value="recent">Más recientes</option><option value="oldest">Más antiguos</option><option value="priceAsc">Menor precio</option><option value="priceDesc">Mayor precio</option></select>
         </div>
-        <div className="flex gap-2"><button className="crm-button" type="submit"><Search className="h-4 w-4" /> Buscar</button><button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { const empty = { search: "", codigoWasi: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "", habitaciones: "", banos: "", parqueaderos: "", construidoDesde: "", etiqueta: "", orden: "recent" }; setDraftFilters(empty); setFilters({ orden: "recent" }); setSelectedIds([]); setPage(1) }}>Limpiar</button></div>
+        <div className="flex gap-2"><button className="crm-button" type="submit"><Search className="h-4 w-4" /> Buscar</button><button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { const empty = { search: "", codigoWasi: "", tipo: "", modalidad: "", estado: "", pais: "", departamento: "", ciudad: "", barrio: "", asesorResponsableId: "", moneda: "COP", precioDesde: "", precioHasta: "", areaDesde: "", areaHasta: "", habitaciones: "", banos: "", parqueaderos: "", construidoDesde: "", etiqueta: "", orden: "recent" }; setDraftFilters(empty); setFilters({ orden: "recent" }); setSelectedIds([]); setPage(1) }}>Limpiar</button></div>
       </form>}
 
       {/* Form modal */}
@@ -258,6 +264,12 @@ export function InmueblesPage() {
                     ))}
                   </select>
                 </div>
+
+                {user?.rol === "Administrador" && <label className="text-sm font-medium">Encargado del inmueble
+                  <select value={form.asesorResponsableId} onChange={(event) => setForm({ ...form, asesorResponsableId: event.target.value })} className="mt-1 w-full rounded-md border bg-background px-3 py-2">
+                    <option value="">Sin asignar</option>{advisorQuery.data?.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
+                  </select>
+                </label>}
 
                 <div className="col-span-2">
                   <label className="text-sm font-medium">Direccion</label>
@@ -416,8 +428,8 @@ export function InmueblesPage() {
             </button>
           </div>
           <table className="w-full text-left text-sm">
-            <thead><tr className="border-b text-muted-foreground"><th className="p-4"><span className="sr-only">Seleccionar</span></th><th className="p-4">Nombre</th><th className="p-4">Código Wasi</th><th className="p-4">Ubicación</th><th className="p-4">Precio</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th><th className="p-4"><span className="sr-only">Acciones</span></th></tr></thead>
-            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4"><input type="checkbox" aria-label={`Seleccionar ${item.nombre}`} checked={selectedIds.includes(item.id)} onChange={(event) => setSelectedIds((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /></td><td className="p-4 font-medium"><div>{item.nombre}</div>{Boolean(item.etiquetas?.length) && <div className="mt-1 flex flex-wrap gap-1">{item.etiquetas?.map((tag) => <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-xs font-normal">{tag}</span>)}</div>}</td><td className="p-4">{item.externalRef?.match(/^wasi:(.*?):(?:venta|arriendo|sin-precio)$/i)?.[1] ?? "—"}</td><td className="p-4">{[item.barrio, item.ciudad].filter(Boolean).join(", ")}</td><td className="p-4">{new Intl.NumberFormat("es-CO", { style: "currency", currency: item.moneda }).format(item.precio)}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="space-y-2 p-4">{showTrash ? <button className="crm-button" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: true }, { onSuccess: () => setSelectedIds((current) => current.filter((id) => id !== item.id)) })}>Restaurar</button> : <><button className="rounded border px-3 py-1" onClick={() => void beginEditing(item.id)}>Editar</button><button className="rounded border px-3 py-1" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: false }, { onSuccess: () => setSelectedIds((current) => current.filter((id) => id !== item.id)) })}>Enviar a papelera</button><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></>}</td></tr>)}</tbody>
+            <thead><tr className="border-b text-muted-foreground"><th className="p-4"><span className="sr-only">Seleccionar</span></th><th className="p-4">Nombre</th><th className="p-4">Código Wasi</th><th className="p-4">Ubicación</th><th className="p-4">Encargado</th><th className="p-4">Precio</th><th className="p-4">Tipo</th><th className="p-4">Modalidad</th><th className="p-4">Estado</th><th className="p-4">Publicación</th><th className="p-4"><span className="sr-only">Acciones</span></th></tr></thead>
+            <tbody>{inventory.data?.items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-4"><input type="checkbox" aria-label={`Seleccionar ${item.nombre}`} checked={selectedIds.includes(item.id)} onChange={(event) => setSelectedIds((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /></td><td className="p-4 font-medium"><div>{item.nombre}</div>{Boolean(item.etiquetas?.length) && <div className="mt-1 flex flex-wrap gap-1">{item.etiquetas?.map((tag) => <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-xs font-normal">{tag}</span>)}</div>}</td><td className="p-4">{item.externalRef?.match(/^wasi:(.*?):(?:venta|arriendo|sin-precio)$/i)?.[1] ?? "—"}</td><td className="p-4">{[item.barrio, item.ciudad].filter(Boolean).join(", ")}</td><td className="p-4">{item.asesorResponsableNombre ?? "Sin asignar"}</td><td className="p-4">{new Intl.NumberFormat("es-CO", { style: "currency", currency: item.moneda }).format(item.precio)}</td><td className="p-4">{item.tipo}</td><td className="p-4">{item.modalidad}</td><td className="p-4">{item.estado}</td><td className="p-4">{item.tienePublicacion ? "Sí" : "No"}</td><td className="space-y-2 p-4">{showTrash ? <button className="crm-button" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: true }, { onSuccess: () => setSelectedIds((current) => current.filter((id) => id !== item.id)) })}>Restaurar</button> : <><button className="rounded border px-3 py-1" onClick={() => void beginEditing(item.id)}>Editar</button><button className="rounded border px-3 py-1" disabled={changeTrashState.isPending} onClick={() => changeTrashState.mutate({ id: item.id, restore: false }, { onSuccess: () => setSelectedIds((current) => current.filter((id) => id !== item.id)) })}>Enviar a papelera</button><button className="crm-button" onClick={() => setCrossProperty({ id: item.id, name: item.nombre })}>Clientes posibles{demandCounts.data ? ` (${demandCounts.data[item.id] ?? 0})` : ""}</button></>}</td></tr>)}</tbody>
           </table>
           <div className="flex items-center justify-between p-4"><span className="text-sm text-muted-foreground">{inventory.data?.total} inmuebles</span><div className="flex gap-2"><button className="crm-button" disabled={page <= 1} onClick={() => { setSelectedIds([]); setPage(page - 1) }}>Anterior</button><button className="crm-button" disabled={page * (inventory.data?.pageSize ?? 20) >= (inventory.data?.total ?? 0)} onClick={() => { setSelectedIds([]); setPage(page + 1) }}>Siguiente</button></div></div>
         </div>

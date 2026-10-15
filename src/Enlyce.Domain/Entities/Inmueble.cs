@@ -49,6 +49,7 @@ public sealed class Inmueble
     public int FotosRequeridas { get; } = 3;
     public int FotosCount { get; private set; }
     public Guid PropietarioId { get; private set; }
+    public Guid? AsesorResponsableId { get; private set; }
     public DateTime FechaCreacion { get; private set; }
     public DateTime? FechaVentaArriendo { get; private set; }
     public bool Activo { get; private set; }
@@ -66,7 +67,8 @@ public sealed class Inmueble
         Dinero precio, int metrosCuadrados, int habitaciones, int banos,
         int parqueaderos, int? anioConstruccion, string? estadoFisico, int fotosCount, Guid propietarioId,
         DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
-        string[]? internalFeatures = null, string[]? externalFeatures = null, string[]? etiquetas = null)
+        string[]? internalFeatures = null, string[]? externalFeatures = null, string[]? etiquetas = null,
+        Guid? asesorResponsableId = null)
     {
         Id = id;
         Nombre = nombre;
@@ -84,6 +86,7 @@ public sealed class Inmueble
         EstadoFisico = NormalizeEstadoFisico(estadoFisico);
         FotosCount = fotosCount;
         PropietarioId = propietarioId;
+        AsesorResponsableId = asesorResponsableId;
         FechaCreacion = fechaCreacion;
         FechaVentaArriendo = fechaVentaArriendo;
         Activo = activo;
@@ -96,7 +99,8 @@ public sealed class Inmueble
         ModalidadInmueble modalidad, Direccion direccion, Dinero precio,
         int metrosCuadrados, int habitaciones, int banos, int parqueaderos,
         Guid propietarioId, string[]? internalFeatures = null, string[]? externalFeatures = null,
-        int? anioConstruccion = null, string? estadoFisico = null, string[]? etiquetas = null)
+        int? anioConstruccion = null, string? estadoFisico = null, string[]? etiquetas = null,
+        Guid? asesorResponsableId = null)
     {
         ValidarDatos(nombre, precio, metrosCuadrados, anioConstruccion, estadoFisico);
 
@@ -122,7 +126,8 @@ public sealed class Inmueble
             true,
             internalFeatures,
             externalFeatures,
-            etiquetas);
+            etiquetas,
+            asesorResponsableId);
     }
 
     public static Inmueble Reconstituir(Guid id, string nombre, string descripcion,
@@ -132,12 +137,12 @@ public sealed class Inmueble
         DateTime fechaCreacion, DateTime? fechaVentaArriendo, bool activo,
         string? externalRef = null, string[]? internalFeatures = null,
         string[]? externalFeatures = null, int? anioConstruccion = null, string? estadoFisico = null,
-        string[]? etiquetas = null)
+        string[]? etiquetas = null, Guid? asesorResponsableId = null)
     {
         return new Inmueble(id, nombre, descripcion, tipo, modalidad, estado,
             direccion, precio, metrosCuadrados, habitaciones, banos, parqueaderos,
             anioConstruccion, estadoFisico, fotosCount, propietarioId, fechaCreacion, fechaVentaArriendo, activo,
-            internalFeatures, externalFeatures, etiquetas)
+            internalFeatures, externalFeatures, etiquetas, asesorResponsableId)
         {
             ExternalRef = externalRef
         };
@@ -246,6 +251,8 @@ public sealed class Inmueble
     {
         Activo = false;
     }
+
+    public void AsignarAsesorResponsable(Guid? asesorId) => AsesorResponsableId = asesorId;
 
     public void RestaurarDePapelera()
     {

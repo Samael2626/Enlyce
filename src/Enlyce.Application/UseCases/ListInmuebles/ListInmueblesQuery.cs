@@ -6,9 +6,9 @@ public sealed record ListInmueblesQuery(
     string? Moneda = null, decimal? PrecioDesde = null, decimal? PrecioHasta = null,
     int? AreaDesde = null, int? AreaHasta = null, int? Habitaciones = null, int? Banos = null, int? Parqueaderos = null,
     string Orden = "recent", bool Papelera = false, string? CodigoWasi = null, int? ConstruidoDesde = null,
-    string? Etiqueta = null);
+    string? Etiqueta = null, Guid? AsesorResponsableId = null, bool IncluirSinResponsable = false);
 public sealed record InmuebleListItem(Guid Id, string Nombre, string Tipo, string Modalidad, string Estado,
     bool TienePublicacion, string Ciudad, string? Barrio, string? ExternalRef, string Moneda, decimal Precio,
     int MetrosCuadrados, int Habitaciones, int Banos, int Parqueaderos, int? AnioConstruccion = null,
-    IReadOnlyList<string>? Etiquetas = null);
+    IReadOnlyList<string>? Etiquetas = null, Guid? AsesorResponsableId = null, string? AsesorResponsableNombre = null);
 public sealed record ListInmueblesResponse(IReadOnlyList<InmuebleListItem> Items, int Page, int PageSize, int Total);

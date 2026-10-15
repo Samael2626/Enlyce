@@ -5,6 +5,7 @@ using Enlyce.Application.UseCases.ListInmuebles;
 using Enlyce.Application.UseCases.UpdateInmueble;
 using Enlyce.Application.UseCases.ManageInmuebleTrash;
 using Enlyce.Domain.Entities;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Enlyce.Api.Endpoints.Inmuebles;
@@ -13,16 +14,20 @@ public static class InmueblesModule
 {
     public static void MapInmuebles(this IEndpointRouteBuilder app)
     {
-        // Inmueble solo referencia al propietario; no tiene asesor responsable.
         var group = app.MapGroup("/api/inmuebles").WithTags("Inmuebles").RequireAuthorization();
 
         group.MapGet("/", async (int? page, int? pageSize, string? search, string? modalidad, string? estado,
             string? tipo, string? pais, string? departamento, string? ciudad, string? barrio, string? moneda,
             decimal? precioDesde, decimal? precioHasta, int? areaDesde, int? areaHasta,
             int? habitaciones, int? banos, int? parqueaderos, string? orden, bool? papelera, string? codigoWasi,
-            int? construidoDesde, string? etiqueta,
-            IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, CancellationToken ct) =>
+            int? construidoDesde, string? etiqueta, Guid? asesorResponsableId,
+            IQueryHandler<ListInmueblesQuery, ListInmueblesResponse> handler, ClaimsPrincipal user, CancellationToken ct) =>
         {
+            var isAdministrator = user.IsInRole("Administrador");
+            var currentAdvisorId = EndpointAccess.AdvisorId(user);
+            if (!isAdministrator && user.IsInRole("Asesor") && currentAdvisorId is null)
+                return Results.Unauthorized();
+
             if (page is < 1 || pageSize is < 1 or > 100 || search?.Length > 200 ||
                 !ValidEnum<ModalidadInmueble>(modalidad) || !ValidEnum<EstadoInmueble>(estado) ||
                 !ValidEnum<TipoInmueble>(tipo) || !ValidRange(precioDesde, precioHasta) ||
@@ -36,7 +41,9 @@ public static class InmueblesModule
             return Results.Ok(await handler.HandleAsync(new ListInmueblesQuery(
                 page ?? 1, pageSize ?? 20, search, modalidad, estado, tipo, pais, departamento, ciudad, barrio,
                 moneda?.ToUpperInvariant(), precioDesde, precioHasta, areaDesde, areaHasta,
-                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false, codigoWasi, construidoDesde, etiqueta), ct));
+                habitaciones, banos, parqueaderos, orden ?? "recent", papelera ?? false, codigoWasi, construidoDesde, etiqueta,
+                isAdministrator ? asesorResponsableId : currentAdvisorId,
+                !isAdministrator && user.IsInRole("Asesor")), ct));
         })
             .WithName("ListInmuebles");
 
@@ -53,10 +60,16 @@ public static class InmueblesModule
 
         group.MapPost("/", async (
             [FromBody] CreateInmuebleRequest request,
-            ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse> handler) =>
+            ICommandHandler<CreateInmuebleCommand, CreateInmuebleResponse> handler, HttpContext http) =>
         {
             if (request.AnioConstruccion is < 1 or > 9999 || request.EstadoFisico?.Length > 100)
                 return Results.BadRequest(new { error = "Revise el año de construcción y el estado físico del inmueble." });
+
+            var advisorId = http.User.IsInRole("Administrador")
+                ? request.AsesorResponsableId
+                : EndpointAccess.AdvisorId(http.User);
+            if (http.User.IsInRole("Asesor") && advisorId is null)
+                return Results.Unauthorized();
 
             var command = new CreateInmuebleCommand(
                 request.Nombre, request.Descripcion, request.Tipo,
@@ -65,9 +78,11 @@ public static class InmueblesModule
                 request.MetrosCuadrados, request.Habitaciones,
                 request.Banos, request.Parqueaderos, request.PropietarioId, request.Pais, request.Departamento,
                 request.CaracteristicasInternas, request.CaracteristicasExternas, request.AnioConstruccion,
-                request.EstadoFisico, request.Etiquetas);
+                request.EstadoFisico, request.Etiquetas, advisorId);
 
-            var result = await handler.HandleAsync(command);
+            CreateInmuebleResponse result;
+            try { result = await handler.HandleAsync(command); }
+            catch (InvalidOperationException error) { return Results.BadRequest(new { error = error.Message }); }
             return Results.Created($"/api/inmuebles/{result.Id}", result);
         })
         .WithName("CreateInmueble")
@@ -76,7 +91,7 @@ public static class InmueblesModule
 
         group.MapPut("/{id:guid}", async (
             Guid id, [FromBody] UpdateInmuebleRequest request,
-            ICommandHandler<UpdateInmuebleCommand, CreateInmuebleResponse?> handler, CancellationToken ct) =>
+            ICommandHandler<UpdateInmuebleCommand, CreateInmuebleResponse?> handler, HttpContext http, CancellationToken ct) =>
         {
             if (request.AnioConstruccion is < 1 or > 9999 || request.EstadoFisico?.Length > 100)
                 return Results.BadRequest(new { error = "Revise el año de construcción y el estado físico del inmueble." });
@@ -86,13 +101,16 @@ public static class InmueblesModule
                 request.Moneda, request.MetrosCuadrados, request.Habitaciones, request.Banos,
                 request.Parqueaderos, request.Pais, request.Departamento,
                 request.CaracteristicasInternas, request.CaracteristicasExternas, request.AnioConstruccion,
-                request.EstadoFisico, request.Etiquetas);
+                request.EstadoFisico, request.Etiquetas,
+                http.User.IsInRole("Administrador") ? request.AsesorResponsableId : null,
+                http.User.IsInRole("Administrador"));
             try
             {
                 var result = await handler.HandleAsync(command, ct);
                 return result is null ? Results.NotFound() : Results.Ok(result);
             }
             catch (Enlyce.Domain.Errors.DomainError error) { return Results.BadRequest(new { error = error.Message }); }
+            catch (InvalidOperationException error) { return Results.BadRequest(new { error = error.Message }); }
         })
         .WithName("UpdateInmueble")
         .Produces<CreateInmuebleResponse>()
@@ -168,7 +186,7 @@ public record CreateInmuebleRequest(
     string[]? CaracteristicasInternas = null,
     string[]? CaracteristicasExternas = null,
     int? AnioConstruccion = null,
-    string? EstadoFisico = null, string[]? Etiquetas = null);
+    string? EstadoFisico = null, string[]? Etiquetas = null, Guid? AsesorResponsableId = null);
 
 public record UpdateInmuebleRequest(
     string Nombre, string? Descripcion, TipoInmueble Tipo, ModalidadInmueble Modalidad,
@@ -176,6 +194,7 @@ public record UpdateInmuebleRequest(
     int MetrosCuadrados, int Habitaciones, int Banos, int Parqueaderos,
     string Pais = "Colombia", string? Departamento = null,
     string[]? CaracteristicasInternas = null, string[]? CaracteristicasExternas = null,
-    int? AnioConstruccion = null, string? EstadoFisico = null, string[]? Etiquetas = null);
+    int? AnioConstruccion = null, string? EstadoFisico = null, string[]? Etiquetas = null,
+    Guid? AsesorResponsableId = null);
 
 public record BatchInmuebleTrashRequest(Guid[]? Ids);

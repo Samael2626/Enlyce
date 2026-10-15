@@ -39,6 +39,10 @@ public sealed class InmuebleListReadRepository(EnlyceDbContext context) : IInmue
         if (query.Parqueaderos.HasValue) items = items.Where(x => x.Parqueaderos >= query.Parqueaderos.Value);
         if (query.ConstruidoDesde.HasValue) items = items.Where(x => x.AnioConstruccion >= query.ConstruidoDesde.Value);
         if (!string.IsNullOrWhiteSpace(query.Etiqueta)) items = items.Where(x => x.Etiquetas.Contains(query.Etiqueta.Trim()));
+        if (query.AsesorResponsableId.HasValue)
+            items = query.IncluirSinResponsable
+                ? items.Where(x => x.AsesorResponsableId == query.AsesorResponsableId || x.AsesorResponsableId == null)
+                : items.Where(x => x.AsesorResponsableId == query.AsesorResponsableId);
 
         var total = await items.CountAsync(ct);
         var ordered = query.Orden switch
@@ -53,7 +57,8 @@ public sealed class InmuebleListReadRepository(EnlyceDbContext context) : IInmue
             .Select(x => new InmuebleListItem(x.Id, x.Nombre, x.Tipo.ToString(), x.Modalidad.ToString(), x.Estado.ToString(),
                 context.PropertyPublications.Any(p => p.PropertyId == x.Id), x.Direccion.Ciudad, x.Direccion.Barrio,
                 x.ExternalRef, x.Precio.Moneda, x.Precio.Monto, x.MetrosCuadrados, x.Habitaciones, x.Banos, x.Parqueaderos,
-                x.AnioConstruccion, x.Etiquetas))
+                x.AnioConstruccion, x.Etiquetas, x.AsesorResponsableId,
+                context.Asesores.Where(a => a.Id == x.AsesorResponsableId).Select(a => a.Nombre).FirstOrDefault()))
             .ToListAsync(ct);
         return new ListInmueblesResponse(rows, query.Page, query.PageSize, total);
     }

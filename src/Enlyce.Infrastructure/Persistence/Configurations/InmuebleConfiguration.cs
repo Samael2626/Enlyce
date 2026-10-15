@@ -39,6 +39,9 @@ public class InmuebleConfiguration : IEntityTypeConfiguration<Inmueble>
         });
 
         builder.Property(i => i.PropietarioId).IsRequired();
+        builder.HasOne<Asesor>().WithMany().HasForeignKey(i => i.AsesorResponsableId)
+            .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(i => i.AsesorResponsableId);
         builder.Property(i => i.Activo).IsRequired();
 
         builder.HasIndex(i => i.Tipo);

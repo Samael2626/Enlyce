@@ -7,4 +7,5 @@ public sealed record UpdateInmuebleCommand(
     string Calle, string Ciudad, string? Barrio, decimal Precio, string Moneda,
     int MetrosCuadrados, int Habitaciones, int Banos, int Parqueaderos,
     string Pais, string? Departamento, string[]? CaracteristicasInternas, string[]? CaracteristicasExternas,
-    int? AnioConstruccion = null, string? EstadoFisico = null, string[]? Etiquetas = null);
+    int? AnioConstruccion = null, string? EstadoFisico = null, string[]? Etiquetas = null,
+    Guid? AsesorResponsableId = null, bool ActualizarAsesorResponsable = false);

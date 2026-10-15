@@ -5,7 +5,7 @@ using Enlyce.Domain.ValueObjects;
 
 namespace Enlyce.Application.UseCases.UpdateInmueble;
 
-public sealed class UpdateInmuebleHandler(IInmuebleRepository properties)
+public sealed class UpdateInmuebleHandler(IInmuebleRepository properties, IAsesorRepository advisors)
     : ICommandHandler<UpdateInmuebleCommand, CreateInmuebleResponse?>
 {
     public async Task<CreateInmuebleResponse?> HandleAsync(UpdateInmuebleCommand command, CancellationToken ct = default)
@@ -13,6 +13,14 @@ public sealed class UpdateInmuebleHandler(IInmuebleRepository properties)
         var property = await properties.GetByIdAsync(command.Id);
         if (property is null || !property.Activo)
             return null;
+
+        if (command.ActualizarAsesorResponsable)
+        {
+            if (command.AsesorResponsableId is Guid advisorId &&
+                await advisors.ObtenerPorIdAsync(advisorId) is not { Activo: true, Rol: "Asesor" })
+                throw new InvalidOperationException($"Asesor responsable {advisorId} no encontrado o inactivo.");
+            property.AsignarAsesorResponsable(command.AsesorResponsableId);
+        }
 
         property.ActualizarDatos(command.Nombre, command.Descripcion ?? string.Empty, command.Tipo,
             command.Modalidad,

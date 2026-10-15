@@ -612,6 +612,9 @@ namespace Enlyce.Infrastructure.Migrations
                     b.Property<int?>("AnioConstruccion")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("AsesorResponsableId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Banos")
                         .HasColumnType("integer");
 
@@ -738,6 +741,8 @@ namespace Enlyce.Infrastructure.Migrations
                         });
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AsesorResponsableId");
 
                     b.HasIndex("ExternalRef")
                         .IsUnique()
@@ -1553,6 +1558,14 @@ namespace Enlyce.Infrastructure.Migrations
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Enlyce.Domain.Entities.Inmueble", b =>
+                {
+                    b.HasOne("Enlyce.Domain.Entities.Asesor", null)
+                        .WithMany()
+                        .HasForeignKey("AsesorResponsableId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Enlyce.Domain.Entities.Interaccion", b =>

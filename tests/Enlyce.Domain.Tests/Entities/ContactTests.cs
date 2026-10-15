@@ -21,6 +21,6 @@ public sealed class ContactTests
     {
         var contact = Contact.Create("Ana", Email.Create("ana@example.com"));
 
-        Assert.Throws<DomainError>(() => contact.Update(" ", null));
+        Assert.Throws<DomainError>(() => contact.Update(" ", null, null, null, "Nuevo", null, null, null, null));
     }
 }

@@ -26,4 +26,5 @@ public record GetInmuebleByIdResponse(
     bool Activo,
     int? AnioConstruccion = null,
     string? EstadoFisico = null,
-    IReadOnlyList<string>? Etiquetas = null);
+    IReadOnlyList<string>? Etiquetas = null,
+    Guid? AsesorResponsableId = null);
