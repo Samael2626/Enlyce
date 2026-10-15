@@ -157,7 +157,8 @@ Las etiquetas ahora se pueden asignar y editar por cliente como lista de texto, 
 - La guía oficial de Wasi confirma que al abrir un asesor se ven llamadas, visitas, eventos, correos, ventas y rentas del periodo; también confirma exportar el reporte a PDF/Excel o enviarlo por correo. [Usuarios — Centro de ayuda Wasi](https://ayuda.wasi.co/es/article/usuarios).
 - Enlyce expone `GET /api/analytics/advisors/{advisorId}/detail` para administradores y una vista expandible con interacciones (fecha, tipo, resumen y cliente), visitas (fecha, estado, feedback, cliente e inmueble) y cierres (fecha, operación, cliente/inmueble, valor y comisión). Usa el mismo rango y valida el asesor.
 - XLSX contiene hojas de resumen, interacciones, visitas y cierres; PDF imprimible incluye las mismas filas; el correo envía el libro dentro de ZIP. El XLSX admite varias hojas mediante el generador propio.
-- Falta confirmar que `Interaccion.Tipo` distingue llamadas, correos y eventos como Wasi, y que las reglas de fechas/estados de visitas coincidan. El detalle de cierres depende de `AddRealizedDeals` aplicada; toda migración sigue sujeta al ensayo de respaldo/restauración de la base objetivo.
+- Enlyce permite registrar `Llamada`, `Email`, `WhatsApp`, `Visita` y `Reunion`; los leads web generan `ContactoWeb`. El resumen actual agrega todos esos tipos como interacciones y reporta las entidades `Visita` aparte. No existe tipo general `Evento` en el selector ni un mapeo verificado con las categorías Wasi.
+- Wasi confirma detalle de llamadas, visitas, eventos, correos, ventas y rentas. Falta una captura del detalle abierto para identificar qué registros cuentan como evento y cómo separa las interacciones; también validar fechas/estados de visita. El detalle de cierres depende de `AddRealizedDeals` aplicada; toda migración sigue sujeta al ensayo de respaldo/restauración de la base objetivo.
 
 ## Importación de clientes: números de identificación y teléfono (2026-10-15)
 
