@@ -1,10 +1,11 @@
-import { Outlet, Navigate } from "react-router-dom"
+import { Outlet, Navigate, useLocation } from "react-router-dom"
 import { useAuthStore } from "@/stores/authStore"
 import { useMe } from "@/hooks/useApi"
 import { AppSidebar } from "./AppSidebar"
 import { Header } from "./Header"
 
 export function MainLayout() {
+  const location = useLocation()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const session = useMe()
 
@@ -17,7 +18,7 @@ export function MainLayout() {
   }
 
   if (session.isError || !isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}${location.hash}` }} />
   }
 
   return (

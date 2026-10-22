@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { useLogin } from "@/hooks/useApi"
 import { ArrowRight, Loader2 } from "lucide-react"
 
@@ -8,7 +8,13 @@ export function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const navigate = useNavigate()
+  const location = useLocation()
   const login = useLogin()
+  const requestedPath = (location.state as { from?: unknown } | null)?.from
+  const destination = typeof requestedPath === "string" && requestedPath.startsWith("/")
+    && !requestedPath.startsWith("//") && !requestedPath.includes("\\")
+    ? requestedPath
+    : "/dashboard"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -18,7 +24,7 @@ export function LoginPage() {
       { email, password },
       {
         onSuccess: () => {
-          navigate("/dashboard")
+          navigate(destination, { replace: true })
         },
         onError: (err) => {
           setError(err.message || "Credenciales incorrectas")

@@ -22,6 +22,7 @@ import {
   ImagePlus,
   Loader2,
   MapPin,
+  MessageCircle,
   Pencil,
   Plus,
   Send,
@@ -207,6 +208,17 @@ export function PublicacionesPage() {
                 {publication.status === "Published" && (
                   <a className="publication-action" href={`${PUBLIC_SITE_URL}/inmuebles/${publication.slug}`} target="_blank" rel="noreferrer">
                     <ExternalLink className="h-4 w-4" /> Ver
+                  </a>
+                )}
+                {publication.status === "Published" && (
+                  <a
+                    className="publication-action"
+                    href={`https://wa.me/?text=${encodeURIComponent(`${publication.publicTitle} ${PUBLIC_SITE_URL}/inmuebles/${encodeURIComponent(publication.slug)}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Compartir ${publication.publicTitle} por WhatsApp`}
+                  >
+                    <MessageCircle className="h-4 w-4" /> WhatsApp
                   </a>
                 )}
               </div>
