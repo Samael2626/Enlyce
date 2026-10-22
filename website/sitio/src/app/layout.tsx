@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SocialContactDock } from "@/components/SocialContactDock";
 import { INSTAGRAM_URL, whatsappLink } from "@/lib/contact";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
@@ -15,6 +16,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  manifest: "/manifest.webmanifest",
+  icons: { apple: "/lyc-logo.png" },
   title: {
     default: "L&C Propiedad Raíz — Inmuebles en Medellín y el Valle de Aburrá",
     template: "%s | L&C Propiedad Raíz",
@@ -26,6 +29,10 @@ export const metadata: Metadata = {
     locale: "es_CO",
     siteName: "L&C Propiedad Raíz",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0F1A3D",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
