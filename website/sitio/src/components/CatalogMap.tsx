@@ -48,6 +48,37 @@ function MapCamera({ properties, selectedSlug }: Pick<Props, "properties" | "sel
   return null;
 }
 
+function ResizeMapToContainer() {
+  const map = useMap();
+
+  useEffect(() => {
+    let frame = 0;
+    let previousWidth = 0;
+    let previousHeight = 0;
+    const refreshMap = () => {
+      const { width, height } = map.getContainer().getBoundingClientRect();
+      if (width === previousWidth && height === previousHeight) return;
+      previousWidth = width;
+      previousHeight = height;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => map.invalidateSize({ pan: false, debounceMoveend: true }));
+    };
+    const observer = new ResizeObserver(refreshMap);
+    observer.observe(map.getContainer());
+    observer.observe(map.getContainer().parentElement ?? map.getContainer());
+    refreshMap();
+    window.addEventListener("resize", refreshMap);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", refreshMap);
+    };
+  }, [map]);
+
+  return null;
+}
+
 export default function CatalogMap({ properties, selectedSlug, onSelect }: Props) {
   const center = properties[0]?.location ?? { latitude: 6.2442, longitude: -75.5937 };
 
@@ -62,6 +93,7 @@ export default function CatalogMap({ properties, selectedSlug, onSelect }: Props
         keyboard={true}
         className="h-full w-full"
       >
+        <ResizeMapToContainer />
         <TileLayer
           attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={PUBLIC_MAP_TILE_URL}

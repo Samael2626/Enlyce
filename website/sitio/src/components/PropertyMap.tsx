@@ -1,7 +1,8 @@
 "use client";
 
 import { divIcon } from "leaflet";
-import { Circle, MapContainer, Marker, TileLayer } from "react-leaflet";
+import { useEffect } from "react";
+import { Circle, MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   APPROXIMATE_RADIUS_METERS,
@@ -25,6 +26,49 @@ const marker = divIcon({
   iconAnchor: [0, 0],
 });
 
+function ResizeMapToContainer() {
+  const map = useMap();
+
+  useEffect(() => {
+    let frame = 0;
+    let previousWidth = 0;
+    let previousHeight = 0;
+    const refreshMap = () => {
+      const { width, height } = map.getContainer().getBoundingClientRect();
+      if (width === previousWidth && height === previousHeight) return;
+      previousWidth = width;
+      previousHeight = height;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        map.invalidateSize({ pan: false, debounceMoveend: true });
+      });
+    };
+    const observer = new ResizeObserver(refreshMap);
+    observer.observe(map.getContainer());
+    observer.observe(map.getContainer().parentElement ?? map.getContainer());
+    refreshMap();
+    window.addEventListener("resize", refreshMap);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", refreshMap);
+    };
+  }, [map]);
+
+  return null;
+}
+
+function SyncMapCenter({ latitude, longitude }: { latitude: number; longitude: number }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView([latitude, longitude], DEFAULT_DETAIL_ZOOM, { animate: false });
+  }, [latitude, longitude, map]);
+
+  return null;
+}
+
 export default function PropertyMap({ location, label }: Props) {
   const center: [number, number] = [location.latitude, location.longitude];
 
@@ -35,14 +79,20 @@ export default function PropertyMap({ location, label }: Props) {
         zoom={DEFAULT_DETAIL_ZOOM}
         maxZoom={MAX_DETAIL_ZOOM}
         minZoom={11}
+        preferCanvas={true}
         scrollWheelZoom={false}
         className="h-full w-full"
       >
+        <SyncMapCenter latitude={location.latitude} longitude={location.longitude} />
+        <ResizeMapToContainer />
         <TileLayer
           // Atribucion obligatoria por la licencia de OpenStreetMap.
           attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={PUBLIC_MAP_TILE_URL}
           maxZoom={MAX_DETAIL_ZOOM}
+          updateWhenIdle={true}
+          updateWhenZooming={false}
+          keepBuffer={1}
         />
         <Circle
           center={center}

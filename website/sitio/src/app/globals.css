@@ -710,6 +710,7 @@ h1, h2, h3 {
 
 /* Leaflet: el mapa hereda la paleta editorial en vez del gris de fabrica. */
 .leaflet-container {
+  z-index: 0;
   background: var(--color-bg);
   font-family: var(--font-body);
 }
