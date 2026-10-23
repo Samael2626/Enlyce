@@ -1,0 +1,16 @@
+{
+  "id": "/crm",
+  "name": "Enlyce | L&C Propiedad Raíz",
+  "short_name": "Enlyce",
+  "description": "CRM inmobiliario de L&C Propiedad Raíz.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1a3d",
+  "theme_color": "#0f1a3d",
+  "lang": "es-CO",
+  "icons": [
+    { "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
