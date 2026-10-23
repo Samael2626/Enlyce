@@ -14,6 +14,7 @@ public sealed class PaymentOrderStatusHistoryTests
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
+        connection.CreateFunction<string?, int>("char_length", value => value?.Length ?? 0);
         var options = new DbContextOptionsBuilder<EnlyceDbContext>()
             .UseSqlite(connection)
             .Options;
