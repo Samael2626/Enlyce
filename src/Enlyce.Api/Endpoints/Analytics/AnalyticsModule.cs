@@ -2,7 +2,9 @@ using Enlyce.Application.Abstractions;
 using Enlyce.Application.Analytics;
 using Enlyce.Domain.Entities;
 using Enlyce.Domain.Ports;
+using Enlyce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.IO.Compression;
 using System.Net.Mail;
 
@@ -376,6 +378,73 @@ public static class AnalyticsModule
         .WithName("GetSentEmailReport")
         .Produces<SentEmailReportPage>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        app.MapGet("/api/analytics/sent-emails.xlsx", async (
+            DateOnly? from,
+            DateOnly? to,
+            EnlyceDbContext db,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-Math.Min(29, through.DayNumber));
+            if (since > through || through.DayNumber - since.DayNumber >= 366)
+                return Results.BadRequest(new { error = "El rango debe ser valido y no superar 366 dias." });
+
+            var start = since.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var query = db.EmailDeliveryLogs.AsNoTracking().Where(item => item.AttemptedAt >= start);
+            if (through != DateOnly.MaxValue)
+            {
+                var end = through.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+                query = query.Where(item => item.AttemptedAt < end);
+            }
+
+            const int maxRows = 50_000;
+            var items = await query.OrderByDescending(item => item.AttemptedAt)
+                .ThenByDescending(item => item.Id)
+                .Take(maxRows + 1)
+                .Select(item => new
+                {
+                    item.AttemptedAt,
+                    item.Subject,
+                    item.Description,
+                    item.RecipientAddress,
+                    item.SenderName,
+                    item.Status,
+                    item.FailureCode
+                })
+                .ToArrayAsync(ct);
+            if (items.Length > maxRows)
+                return Results.Problem("El reporte supera el limite de 50.000 correos.",
+                    statusCode: StatusCodes.Status413PayloadTooLarge);
+
+            var rows = items.Select(item => new object?[]
+            {
+                item.AttemptedAt.ToString("yyyy-MM-dd HH:mm 'UTC'"),
+                item.Subject,
+                item.Description,
+                item.RecipientAddress,
+                item.SenderName,
+                item.Status switch
+                {
+                    EmailDeliveryStatus.AcceptedBySmtp => "Aceptado por SMTP",
+                    EmailDeliveryStatus.Failed => "Falló el envío",
+                    EmailDeliveryStatus.NotConfigured => "SMTP no configurado",
+                    _ => item.Status.ToString()
+                },
+                item.FailureCode
+            });
+            var content = XlsxWorkbook.Build("Correos enviados",
+                ["Fecha", "Asunto", "Descripción", "Destinatario", "Usuario encargado", "Estado", "Código de fallo"], rows);
+            return Results.File(content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"correos-enviados-{since:yyyyMMdd}-{through:yyyyMMdd}.xlsx");
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("ExportSentEmailReportXlsx")
+        .Produces(StatusCodes.Status200OK, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status413PayloadTooLarge);
 
         app.MapGet("/api/analytics/web-properties", async (
             DateOnly? from,

@@ -466,10 +466,30 @@ function SentEmailReportSection({
   onPageChange: (value: number) => void
 }) {
   const pageCount = Math.max(1, Math.ceil((report?.total ?? 0) / (report?.pageSize ?? 10)))
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState("")
   const statusLabels = {
     AcceptedBySmtp: "Aceptado por SMTP",
     Failed: "Falló el envío",
     NotConfigured: "SMTP no configurado",
+  }
+
+  async function exportXlsx() {
+    setExporting(true)
+    setExportError("")
+    try {
+      const blob = await api.downloadSentEmailReportXlsx(from, to)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `correos-enviados-${from}-${to}.xlsx`
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "No se pudo exportar el reporte.")
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -480,11 +500,15 @@ function SentEmailReportSection({
           <h2 id="sent-email-report-title" className="mt-2 font-display text-3xl tracking-tight">Correos enviados</h2>
           <p className="mt-2 text-sm text-muted-foreground">Registra intentos desde que se habilite la migración. “Aceptado por SMTP” no confirma entrega en la bandeja.</p>
         </div>
-        <div className="flex flex-wrap gap-3 text-xs font-bold text-muted-foreground">
+        <div className="flex flex-wrap items-end gap-3 text-xs font-bold text-muted-foreground">
           <label>Desde <input aria-label="Correos desde" type="date" value={from} max={to} onChange={(event) => onFromChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
           <label>Hasta <input aria-label="Correos hasta" type="date" value={to} min={from} onChange={(event) => onToChange(event.target.value)} className="ml-2 rounded-sm border border-input bg-card px-2 py-2 text-foreground" /></label>
+          <button type="button" className="crm-button min-h-9 px-3 py-1 text-xs" disabled={exporting || isLoading || isError} onClick={() => void exportXlsx()}>
+            {exporting ? "Exportando…" : "Descargar Excel"}
+          </button>
         </div>
       </div>
+      {exportError && <p role="alert" className="text-sm text-destructive">{exportError}</p>}
       {isLoading ? (
         <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando registro de correos…</div>
       ) : isError ? (

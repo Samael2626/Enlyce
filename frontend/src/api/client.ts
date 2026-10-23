@@ -428,6 +428,13 @@ class ApiClient {
     return this.request<import("@/lib/types").SentEmailReportPage>(`/api/analytics/sent-emails?${query}`)
   }
 
+  async downloadSentEmailReportXlsx(from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    const response = await fetch(`${this.baseUrl}/api/analytics/sent-emails.xlsx?${query}`, { credentials: "include" })
+    if (!response.ok) throw new Error(`No se pudo exportar el reporte (${response.status}).`)
+    return response.blob()
+  }
+
   async getWebPropertyVisitsReport(from: string, to: string) {
     const query = new URLSearchParams({ from, to })
     return this.request<import("@/lib/types").WebPropertyVisitsReport>(`/api/analytics/web-properties?${query}`)
