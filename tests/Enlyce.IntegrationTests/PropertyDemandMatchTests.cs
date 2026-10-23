@@ -129,6 +129,53 @@ public sealed class PropertyDemandMatchTests(TestWebApplicationFactory factory)
     }
 
     [Fact]
+    public async Task AdvisorCannotSeeOrLinkAnotherAdvisorsProperty()
+    {
+        var (clientA, advisorA) = factory.CreateAuthenticatedClient("Asesor");
+        var (clientB, advisorB) = factory.CreateAuthenticatedClient("Asesor");
+        var (admin, _) = factory.CreateAuthenticatedClient("Administrador");
+        using (clientA)
+        using (clientB)
+        using (admin)
+        {
+            var city = $"Ciudad-{Guid.NewGuid():N}";
+            var owned = CreateProperty(city, 400_000_000);
+            owned.AsignarAsesorResponsable(advisorA.Id);
+            var foreign = CreateProperty(city, 400_000_000);
+            foreign.AsignarAsesorResponsable(advisorB.Id);
+            var (contact, lead) = SeedContact(advisorA.Id);
+            var demand = Demand(contact.Id, lead.Id, city, null, null);
+            Seed(owned, demand);
+            Seed(foreign);
+
+            var forward = await clientA.GetFromJsonAsync<ForwardDto[]>($"/api/demandas/{demand.Id}/coincidencias");
+            Assert.Equal([owned.Id], forward!.Select(item => item.PropertyId));
+
+            var cross = await clientA.GetFromJsonAsync<CrossPageDto>("/api/demandas/cruce?pageSize=100");
+            Assert.Equal(1, Assert.Single(cross!.Items, item => item.Demand.Id == demand.Id).OwnPropertyMatches);
+
+            var counts = await clientA.GetFromJsonAsync<Dictionary<Guid, int>>(
+                $"/api/inmuebles/clientes-posibles?ids={owned.Id}&ids={foreign.Id}");
+            Assert.Equal(1, counts![owned.Id]);
+            Assert.False(counts.ContainsKey(foreign.Id));
+
+            var reverse = await clientA.GetAsync($"/api/inmuebles/{foreign.Id}/demandas");
+            Assert.Equal(HttpStatusCode.NotFound, reverse.StatusCode);
+            var linked = await clientA.PostAsync($"/api/demandas/{demand.Id}/inmuebles/{foreign.Id}", null);
+            Assert.Equal(HttpStatusCode.NotFound, linked.StatusCode);
+
+            var adminLink = await admin.PostAsync($"/api/demandas/{demand.Id}/inmuebles/{foreign.Id}", null);
+            Assert.Equal(HttpStatusCode.Created, adminLink.StatusCode);
+            var foreignStatus = await clientA.PutAsJsonAsync(
+                $"/api/demandas/{demand.Id}/inmuebles/{foreign.Id}/estado", new { status = "Shared" });
+            Assert.Equal(HttpStatusCode.NotFound, foreignStatus.StatusCode);
+
+            var adminForward = await admin.GetFromJsonAsync<ForwardDto[]>($"/api/demandas/{demand.Id}/coincidencias");
+            Assert.Equal(new[] { owned.Id, foreign.Id }.Order(), adminForward!.Select(item => item.PropertyId).Order());
+        }
+    }
+
+    [Fact]
     public async Task FollowUpFromPropertySideIsPersistedAndVisibleInBothDirections()
     {
         var (client, advisor) = factory.CreateAuthenticatedClient("Asesor");
@@ -194,4 +241,6 @@ public sealed class PropertyDemandMatchTests(TestWebApplicationFactory factory)
     private sealed record DemandDto(Guid Id);
     private sealed record MatchDto(DemandDto Demand, string ContactName, string? RelationshipStatus);
     private sealed record ForwardDto(Guid PropertyId, string? RelationshipStatus);
+    private sealed record CrossPageDto(CrossItemDto[] Items);
+    private sealed record CrossItemDto(DemandDto Demand, int OwnPropertyMatches);
 }

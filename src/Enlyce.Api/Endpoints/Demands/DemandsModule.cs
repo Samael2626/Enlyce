@@ -103,7 +103,8 @@ public static class DemandsModule
                 .OrderByDescending(demand => demand.UpdatedAt).ThenBy(demand => demand.Id).ToArray();
             var total = filtered.Length;
             var pageItems = filtered.Skip((currentPage - 1) * currentPageSize).Take(currentPageSize).ToArray();
-            var inventory = await properties.GetAllAsync();
+            var inventory = (await properties.GetAllAsync())
+                .Where(property => CanSeeProperty(http, property)).ToArray();
             var items = pageItems.Select(demand =>
             {
                 var contact = contactLookup[demand.ContactId];
@@ -236,7 +237,7 @@ public static class DemandsModule
             var linked = (await demands.GetPropertyLinksAsync(id, ct))
                 .ToDictionary(link => link.PropertyId);
             var matches = (await properties.GetAllAsync())
-                .Where(demand.Matches)
+                .Where(property => CanSeeProperty(http, property) && demand.Matches(property))
                 .Select(property => new DemandPropertyMatchDto(
                     property.Id, property.Nombre, property.Tipo.ToString(), property.Modalidad.ToString(),
                     property.Direccion.Ciudad, property.Direccion.Pais, property.Direccion.Departamento,
@@ -260,6 +261,8 @@ public static class DemandsModule
         {
             var property = await properties.GetByIdAsync(propertyId);
             if (property is null)
+                return Results.NotFound();
+            if (!CanSeeProperty(http, property))
                 return Results.NotFound();
 
             var matched = (await ScopedActiveDemandsAsync(http, demands, leads, contacts, ct))
@@ -299,6 +302,7 @@ public static class DemandsModule
                 .Where(contact => contact.Active).Select(contact => contact.Id).ToHashSet();
             scoped = scoped.Where(demand => activeContacts.Contains(demand.ContactId)).ToArray();
             var counts = (await properties.GetByIdsAsync(ids.Distinct().ToArray(), ct))
+                .Where(property => CanSeeProperty(http, property))
                 .ToDictionary(property => property.Id, property => scoped.Count(demand => demand.Matches(property)));
             return Results.Ok(counts);
         })
@@ -324,6 +328,8 @@ public static class DemandsModule
             var property = await properties.GetByIdAsync(propertyId);
             if (property is null || !demand.Matches(property))
                 return Results.BadRequest(new { error = "El inmueble no coincide con la demanda activa." });
+            if (!CanSeeProperty(http, property))
+                return Results.NotFound();
 
             var existing = await demands.GetPropertyLinkAsync(id, propertyId, ct);
             if (existing is not null)
@@ -340,6 +346,7 @@ public static class DemandsModule
             [FromBody] SetDemandPropertyStatusRequest request,
             HttpContext http,
             ICustomerDemandRepository demands,
+            IInmuebleRepository properties,
             IContactRepository contacts,
             ILeadRepository leads,
             CancellationToken ct) =>
@@ -349,6 +356,9 @@ public static class DemandsModule
                 return Results.NotFound();
             if (!await CanAccessDemandAsync(http, demand, leads, contacts))
                 return Results.Forbid();
+            var property = await properties.GetByIdAsync(propertyId);
+            if (property is null || !CanSeeProperty(http, property))
+                return Results.NotFound();
             if (!TryParse(request.Status, out DemandPropertyStatus status))
                 return Results.BadRequest(new { error = "El estado no es valido." });
             var link = await demands.GetPropertyLinkAsync(id, propertyId, ct);
@@ -360,6 +370,11 @@ public static class DemandsModule
         })
         .WithName("SetDemandPropertyStatus");
     }
+
+    private static bool CanSeeProperty(HttpContext http, Inmueble property) =>
+        http.User.IsInRole("Administrador") ||
+        EndpointAccess.AdvisorId(http.User) is { } advisorId &&
+        (property.AsesorResponsableId is null || property.AsesorResponsableId == advisorId);
 
     // Demandas activas visibles: administracion todas; asesor las de sus oportunidades o contactos
     private static async Task<IReadOnlyList<CustomerDemand>> ScopedActiveDemandsAsync(
