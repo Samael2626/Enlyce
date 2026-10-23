@@ -44,4 +44,4 @@ public sealed record PropertyPublicationOptions(
     IReadOnlyList<PublicationPropertyOption> Properties,
     IReadOnlyList<PublicationAdvisorOption> Advisors);
 
-public sealed record PropertyPublicationMutationResponse(Guid Id, string Status);
+public sealed record PropertyPublicationMutationResponse(Guid Id, string Status, string Slug);

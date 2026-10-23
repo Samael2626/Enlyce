@@ -69,7 +69,7 @@ public sealed class CreatePropertyPublicationHandler
             command.ApproximateLongitude);
 
         await _publications.SaveAsync(publication, ct);
-        return new(publication.Id, publication.Status.ToString());
+        return new(publication.Id, publication.Status.ToString(), publication.Slug);
     }
 
 }
@@ -112,7 +112,7 @@ public sealed class UpdatePropertyPublicationHandler
             command.ApproximateLongitude);
 
         await _publications.SaveAsync(publication, ct);
-        return new(publication.Id, publication.Status.ToString());
+        return new(publication.Id, publication.Status.ToString(), publication.Slug);
     }
 }
 
@@ -149,6 +149,6 @@ public sealed class ChangePropertyPublicationStatusHandler
         await _publications.SaveAsync(publication, ct);
         if (publication.Status == PublicationStatus.Published)
             await _alerts.DispatchAsync(publication, ct);
-        return new(publication.Id, publication.Status.ToString());
+        return new(publication.Id, publication.Status.ToString(), publication.Slug);
     }
 }

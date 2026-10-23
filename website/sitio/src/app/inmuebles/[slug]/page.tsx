@@ -7,6 +7,9 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyGallery } from "@/components/PropertyGallery";
 import { ShareButton } from "@/components/ShareButton";
 import { PropertyLocation } from "@/components/PropertyLocation";
+import { PropertyAdminLink } from "@/components/PropertyAdminLink";
+import { PropertyPublicationEditor } from "@/components/PropertyPublicationEditor";
+import { PropertyInventoryEditor } from "@/components/PropertyInventoryEditor";
 import { getProperties, getPropertyBySlug } from "@/lib/api/catalog";
 import type { PropertyListItem } from "@/lib/api/client";
 import { formatArea, formatOperation, formatPrice, formatPropertyPrice } from "@/lib/format";
@@ -19,7 +22,7 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").re
 // Metadatos por inmueble: la razon principal de traer Next a la web publica.
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const property = await getPropertyBySlug(slug);
+  const property = await getPropertyBySlug(slug, true);
   if (!property) return { title: "Inmueble no encontrado" };
 
   const title = `${property.publicTitle} — ${property.location.neighborhood}`;
@@ -42,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function InmueblePage({ params }: PageProps) {
   const { slug } = await params;
-  const property = await getPropertyBySlug(slug);
+  const property = await getPropertyBySlug(slug, true);
   if (!property) notFound();
 
   const photos = [...property.photos].sort((a, b) => a.order - b.order);
@@ -119,11 +122,15 @@ export default async function InmueblePage({ params }: PageProps) {
         <p className="font-display text-3xl text-accent-strong">
           {formatPropertyPrice(property.price.amount, property.price.currency, property.operation)}
         </p>
+        {(property.labels?.length ?? 0) > 0 && <ul className="flex flex-wrap gap-2">{property.labels.map((label) => <li key={label.name} className="flex items-center gap-2 rounded-full border border-line px-3 py-1 text-sm">{label.color && <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: label.color }} />}{label.name}</li>)}</ul>}
         {property.administrationFee && (
           <p className="text-sm text-muted">
             Administración: {formatPrice(property.administrationFee.amount, property.administrationFee.currency)}
           </p>
         )}
+        <PropertyAdminLink propertyId={property.id} />
+        <PropertyInventoryEditor propertyId={property.id} />
+        {property.publicationId && <PropertyPublicationEditor publicationId={property.publicationId} />}
       </header>
 
       <PropertyGallery photos={gallery} />

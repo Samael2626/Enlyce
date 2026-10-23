@@ -96,9 +96,10 @@ export async function getProperties(filters: CatalogFilters): Promise<PropertyPa
   };
 }
 
-export async function getPropertyBySlug(slug: string): Promise<PropertyDetail | null> {
+export async function getPropertyBySlug(slug: string, fresh = false): Promise<PropertyDetail | null> {
   const property = await apiGetOrNull<PropertyDetail>(
     `/api/public/inmuebles/${encodeURIComponent(slug)}`,
+    fresh ? { revalidate: 0 } : undefined,
   );
   return property
     ? {
