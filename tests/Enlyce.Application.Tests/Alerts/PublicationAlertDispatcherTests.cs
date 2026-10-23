@@ -24,7 +24,9 @@ public sealed class PublicationAlertDispatcherTests
         var property = Property(400_000_000);
         var publication = PropertyPublication.Create(property.Id, Guid.NewGuid(), "apto-laureles", "Apto en Laureles", null);
         var contact = Contact.Create("Ana", Email.Create("ana@test.com"));
+        contact.SetAutomatedEmailPermission(true);
         var matching = Demand(contact.Id, 500_000_000);
+        Assert.True(matching.Matches(property));
         var tooCheap = Demand(Guid.NewGuid(), 100_000_000);
         var alreadyNotified = Demand(Guid.NewGuid(), 500_000_000);
         _properties.GetByIdAsync(property.Id).Returns(property);
@@ -42,8 +44,11 @@ public sealed class PublicationAlertDispatcherTests
         await _demands.Received(1).AddPropertyLinkAsync(
             Arg.Is<DemandPropertyLink>(link => link.DemandId == matching.Id), Arg.Any<CancellationToken>());
         await _email.Received(1).SendAsync("ana@test.com", Arg.Any<string>(),
-            Arg.Is<string>(body => body.Contains("https://lyc.test/inmuebles/apto-laureles")));
-        await _email.Received(1).SendAsync("asesor@test.com", Arg.Any<string>(), Arg.Is<string>(body => body.Contains("ana@test.com")));
+            Arg.Is<string>(body => body.Contains("https://lyc.test/inmuebles/apto-laureles")),
+            "Aviso de inmueble coincidente");
+        await _email.Received(1).SendAsync("asesor@test.com", Arg.Any<string>(),
+            Arg.Is<string>(body => body.Contains("ana@test.com")),
+            "Resumen de contactos avisados al publicar");
     }
 
     [Fact]
@@ -55,6 +60,25 @@ public sealed class PublicationAlertDispatcherTests
         _demands.GetActiveAsync(Arg.Any<CancellationToken>()).Returns([Demand(Guid.NewGuid(), 100_000_000)]);
 
         Assert.Equal(0, await CreateSut().DispatchAsync(publication));
+        await _email.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!);
+    }
+
+    [Fact]
+    public async Task Dispatch_InactiveContactWithEmailPermission_SendsNothing()
+    {
+        var property = Property(400_000_000);
+        var publication = PropertyPublication.Create(property.Id, Guid.NewGuid(), "apto-inactivo", "Apto", null);
+        var now = DateTime.UtcNow;
+        var contact = Contact.Reconstitute(Guid.NewGuid(), "Ana", "ana@test.com", null,
+            now, now, false, canReceiveAutomatedEmail: true);
+        var demand = Demand(contact.Id, 500_000_000);
+        Assert.True(demand.Matches(property));
+        _properties.GetByIdAsync(property.Id).Returns(property);
+        _demands.GetActiveAsync(Arg.Any<CancellationToken>()).Returns([demand]);
+        _contacts.GetByIdAsync(contact.Id, Arg.Any<CancellationToken>()).Returns(contact);
+
+        Assert.Equal(0, await CreateSut().DispatchAsync(publication));
+        await _demands.DidNotReceiveWithAnyArgs().AddPropertyLinkAsync(default!, default);
         await _email.DidNotReceiveWithAnyArgs().SendAsync(default!, default!, default!);
     }
 

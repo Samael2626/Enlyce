@@ -17,7 +17,12 @@
 
 - `InteraccionRepository.SearchAsync` vuelve a unir interacciones, actividades, tareas completadas y visitas con filtros y paginacion SQL. La proyeccion a `InteractionSearchItem` ocurre despues de la union; `CompletedAt.Value` evita una proyeccion de cliente que antes producia HTTP 409. Los dos tests de gestiones que fallaban ahora pasan.
 - Las rutas publicas de calificacion por token declaran acceso anonimo, limite por IP y cuerpo maximo de 16 KB. La matriz de autorizacion pasa. El archivo `ServiceRatingsModule.cs` ya existia sin seguimiento; la correccion funcional queda en el arbol de trabajo, fuera del commit aislado.
-- Arbol de trabajo verificado: integracion 305 aprobadas, 2 omitidas, 0 fallidas; dominio 234 aprobadas; aplicacion 77 aprobadas. Los tests de SQLite sin `char_length` y los contratos de catalogo fueron alineados con el estado actual. El commit aislado no incorpora archivos con cambios ajenos.
+- Arbol de trabajo verificado: integracion 305 aprobadas, 2 omitidas, 0 fallidas; dominio 234 aprobadas; aplicacion 78 aprobadas. Los tests de SQLite sin `char_length` y los contratos de catalogo fueron alineados con el estado actual. El commit aislado no incorpora archivos con cambios ajenos.
+
+## Alertas de publicaciones
+
+- `PublicationAlertDispatcher` omite contactos inactivos aunque conserven permiso de correo automatico y demanda activa. No envia correo ni crea vinculo para ellos; evita reactivar una alerta por un permiso anterior a la baja.
+- Suite de aplicacion en el arbol actual: 78 aprobadas, 0 fallidas. El parche aislado sobre `HEAD`, compilando solo el dispatcher y sus pruebas, paso 3 de 3. La prueba nueva cubre contacto inactivo con permiso y demanda coincidente.
 
 ## Bloqueos de evidencia
 
