@@ -58,5 +58,6 @@ public sealed class GetPublicPropertyBySlugHandlerTests
         [new PublicPhotoData("https://media.example.test/cover.webp", "Sala", 0, true)],
         Guid.NewGuid(),
         "Asesor L&C",
+        null,
         DateTime.UtcNow);
 }
