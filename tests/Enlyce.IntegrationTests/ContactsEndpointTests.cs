@@ -83,7 +83,7 @@ public sealed class ContactsEndpointTests(TestWebApplicationFactory factory)
                 phone = "3001234567"
             });
 
-            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             using var scope = factory.Services.CreateScope();
             var saved = await scope.ServiceProvider.GetRequiredService<EnlyceDbContext>()
                 .Contacts.SingleAsync(item => item.Id == contact.Id);

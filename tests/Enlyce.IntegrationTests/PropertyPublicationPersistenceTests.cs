@@ -3,6 +3,7 @@ using Enlyce.Domain.ValueObjects;
 using Enlyce.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Enlyce.IntegrationTests;
 
@@ -17,6 +18,7 @@ public sealed class PropertyPublicationPersistenceTests
 
         var options = new DbContextOptionsBuilder<EnlyceDbContext>()
             .UseSqlite(connection)
+            .ReplaceService<IModelCustomizer, SqliteTestModelCustomizer>()
             .Options;
 
         await using var db = new EnlyceDbContext(options);
@@ -78,6 +80,7 @@ public sealed class PropertyPublicationPersistenceTests
 
         var options = new DbContextOptionsBuilder<EnlyceDbContext>()
             .UseSqlite(connection)
+            .ReplaceService<IModelCustomizer, SqliteTestModelCustomizer>()
             .Options;
 
         await using var db = new EnlyceDbContext(options);

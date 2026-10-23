@@ -19,7 +19,7 @@ public sealed class PublicCatalogEndpointTests : IClassFixture<TestWebApplicatio
     }
 
     [Fact]
-    public async Task GetList_ReturnsPagedPublishedItemsAndCacheHeader()
+    public async Task GetList_ReturnsPagedVisibleItemsAndCacheHeader()
     {
         var response = await _client.GetAsync("/api/public/inmuebles?page=1&pageSize=12");
 
@@ -31,11 +31,14 @@ public sealed class PublicCatalogEndpointTests : IClassFixture<TestWebApplicatio
         var root = document.RootElement;
         Assert.Equal(1, root.GetProperty("page").GetInt32());
         Assert.Equal(12, root.GetProperty("pageSize").GetInt32());
-        Assert.Equal(2, root.GetProperty("total").GetInt32());
-        Assert.Equal(2, root.GetProperty("items").GetArrayLength());
+        Assert.Equal(3, root.GetProperty("total").GetInt32());
+        Assert.Equal(3, root.GetProperty("items").GetArrayLength());
 
         AssertPropertyNames(root, "page", "pageSize", "total", "items");
-        var item = root.GetProperty("items")[0];
+        var items = root.GetProperty("items").EnumerateArray().ToArray();
+        Assert.Contains(items, candidate => candidate.GetProperty("slug").GetString()!.StartsWith("crm-", StringComparison.Ordinal));
+        var item = Assert.Single(items, candidate =>
+            candidate.GetProperty("slug").GetString() == PublicCatalogTestData.PublishedApartmentSlug);
         AssertPropertyNames(
             item,
             "id",
@@ -109,6 +112,7 @@ public sealed class PublicCatalogEndpointTests : IClassFixture<TestWebApplicatio
             "features",
             "photos",
             "advisor",
+            "publicationId",
             "publishedAt");
         AssertPropertyNames(
             root.GetProperty("features"),

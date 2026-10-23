@@ -4,21 +4,24 @@ using Enlyce.Infrastructure.Persistence;
 using Enlyce.Infrastructure.Persistence.Repositories;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Enlyce.IntegrationTests;
 
 public sealed class PublicPropertyRepositoryTests
 {
     [Fact]
-    public async Task SearchAsync_DefaultQuery_ReturnsOnlyPublishedProperties()
+    public async Task SearchAsync_DefaultQuery_IncludesVisibleCrmPropertiesWithoutPublishedPublication()
     {
         await using var harness = await CreateHarnessAsync();
 
         var result = await harness.Repository.SearchAsync(new PublicPropertySearchCriteria());
 
-        Assert.Equal(2, result.Total);
+        Assert.Equal(3, result.Total);
         Assert.DoesNotContain(result.Items, item => item.Slug == PublicCatalogTestData.PausedSlug);
-        Assert.All(result.Items, item => Assert.NotNull(item.CoverPhoto));
+        Assert.Contains(result.Items, item => item.Slug.StartsWith("crm-", StringComparison.Ordinal));
+        Assert.All(result.Items.Where(item => !item.Slug.StartsWith("crm-", StringComparison.Ordinal)),
+            item => Assert.NotNull(item.CoverPhoto));
     }
 
     [Fact]
@@ -60,7 +63,7 @@ public sealed class PublicPropertyRepositoryTests
         var result = await harness.Repository.SearchAsync(criteria);
 
         var item = Assert.Single(result.Items);
-        Assert.Equal(2, result.Total);
+        Assert.Equal(3, result.Total);
         Assert.Equal(PublicCatalogTestData.PublishedApartmentSlug, item.Slug);
     }
 
@@ -83,8 +86,10 @@ public sealed class PublicPropertyRepositoryTests
     {
         var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
+        connection.CreateFunction<string?, int>("char_length", value => value?.Length ?? 0);
         var options = new DbContextOptionsBuilder<EnlyceDbContext>()
             .UseSqlite(connection)
+            .ReplaceService<IModelCustomizer, SqliteTestModelCustomizer>()
             .Options;
         var db = new EnlyceDbContext(options);
         await db.Database.EnsureCreatedAsync();

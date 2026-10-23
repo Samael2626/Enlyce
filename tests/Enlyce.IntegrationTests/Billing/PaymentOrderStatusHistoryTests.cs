@@ -4,6 +4,7 @@ using Enlyce.Infrastructure.Persistence;
 using Enlyce.Infrastructure.Persistence.Repositories;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Enlyce.IntegrationTests.Billing;
 
@@ -17,6 +18,7 @@ public sealed class PaymentOrderStatusHistoryTests
         connection.CreateFunction<string?, int>("char_length", value => value?.Length ?? 0);
         var options = new DbContextOptionsBuilder<EnlyceDbContext>()
             .UseSqlite(connection)
+            .ReplaceService<IModelCustomizer, SqliteTestModelCustomizer>()
             .Options;
         await using (var db = new EnlyceDbContext(options))
             await db.Database.EnsureCreatedAsync();
