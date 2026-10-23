@@ -24,6 +24,13 @@
 - `PublicationAlertDispatcher` omite contactos inactivos aunque conserven permiso de correo automatico y demanda activa. No envia correo ni crea vinculo para ellos; evita reactivar una alerta por un permiso anterior a la baja.
 - Suite de aplicacion en el arbol actual: 78 aprobadas, 0 fallidas. El parche aislado sobre `HEAD`, compilando solo el dispatcher y sus pruebas, paso 3 de 3. La prueba nueva cubre contacto inactivo con permiso y demanda coincidente.
 
+## Web instalable: fallback sin conexion
+
+- Se agrego un service worker al sitio publico. Para navegaciones del mismo origen intenta siempre la red; cuando falla muestra una pagina estatica sin conexion. No guarda respuestas de la API, fichas de inmuebles ni formularios.
+- `node tests/service-worker.test.mjs`: 3 aprobadas, 0 fallidas. `npm run typecheck` y `npm run build`: aprobados en checkout aislado. El tipo de etiquetas de la ficha se tolera como opcional porque el contrato base aun no lo declara; esto permite compilar el checkout sin incorporar el cambio ajeno de `client.ts`. El lint global conserva un error previo en `PropertyAdminLink.tsx`; los archivos nuevos no lo causan.
+- La paridad movil completa sigue pendiente: funciones CRM en movil, validacion en dispositivo y recorrido de la app Wasi. El editor web sigue a la espera de la decision de dominio. No se desplego.
+- Los arreglos de gestiones y calificaciones siguen sin commit en el arbol principal: la consulta de gestiones depende de una extension ajena de `InteraccionRepository`, y el modulo de calificaciones entero es ajeno sin seguimiento. Sus correcciones puntuales no se pueden publicar solas desde `HEAD`.
+
 ## Bloqueos de evidencia
 
 - No existe muestra XLS/XLSX/CSV de importacion de clientes Wasi; duplicados y demandas no se pueden contrastar con ese flujo.

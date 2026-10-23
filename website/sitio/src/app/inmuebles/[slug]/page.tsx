@@ -53,6 +53,7 @@ export default async function InmueblePage({ params }: PageProps) {
   const gallery = cover ? [cover, ...photos.filter((photo) => photo !== cover)] : [];
   const similar = await getSimilar(property.slug, property.operation, property.propertyType, property.location.municipality);
   const canonicalUrl = `${siteUrl}/inmuebles/${encodeURIComponent(property.slug)}`;
+  const labels = (property as typeof property & { labels?: Array<{ name: string; color: string | null }> }).labels ?? [];
   const propertyType = property.propertyType === "Apartamento"
     ? "Apartment"
     : property.propertyType === "Casa"
@@ -122,7 +123,7 @@ export default async function InmueblePage({ params }: PageProps) {
         <p className="font-display text-3xl text-accent-strong">
           {formatPropertyPrice(property.price.amount, property.price.currency, property.operation)}
         </p>
-        {(property.labels?.length ?? 0) > 0 && <ul className="flex flex-wrap gap-2">{property.labels.map((label) => <li key={label.name} className="flex items-center gap-2 rounded-full border border-line px-3 py-1 text-sm">{label.color && <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: label.color }} />}{label.name}</li>)}</ul>}
+        {labels.length > 0 && <ul className="flex flex-wrap gap-2">{labels.map((label) => <li key={label.name} className="flex items-center gap-2 rounded-full border border-line px-3 py-1 text-sm">{label.color && <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: label.color }} />}{label.name}</li>)}</ul>}
         {property.administrationFee && (
           <p className="text-sm text-muted">
             Administración: {formatPrice(property.administrationFee.amount, property.administrationFee.currency)}

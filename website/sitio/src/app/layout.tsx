@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AnalyticsPageView } from "@/components/AnalyticsPageView";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { SocialContactDock } from "@/components/SocialContactDock";
 import { INSTAGRAM_URL, whatsappLink } from "@/lib/contact";
 import "./globals.css";
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-CO" className={`${fraunces.variable} ${dmSans.variable}`}>
       <body className="min-h-dvh flex flex-col">
+        <ServiceWorkerRegistration />
         <Suspense fallback={null}><AnalyticsPageView /></Suspense>
         <a
           href="#contenido"
