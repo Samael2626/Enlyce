@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -24,6 +25,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         _connection = new SqliteConnection("Data Source=:memory:");
         _connection.Open();
+        _connection.CreateFunction<string, int>("char_length", value => value.Length);
     }
 
     public (HttpClient Client, Asesor User) CreateAuthenticatedClient(string role = "Administrador")
@@ -61,7 +63,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(d);
 
             services.AddDbContext<EnlyceDbContext>(options =>
-                options.UseSqlite(_connection));
+                options.UseSqlite(_connection)
+                    .ReplaceService<IModelCustomizer, SqliteTestModelCustomizer>());
 
             services.AddSingleton(Options.Create(new JwtSettings
             {
@@ -123,5 +126,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         if (disposing)
             _connection.Dispose();
+    }
+}
+
+internal sealed class SqliteTestModelCustomizer(ModelCustomizerDependencies dependencies)
+    : ModelCustomizer(dependencies)
+{
+    public override void Customize(ModelBuilder modelBuilder, DbContext context)
+    {
+        base.Customize(modelBuilder, context);
+        foreach (var property in modelBuilder.Model.GetEntityTypes()
+                     .SelectMany(entity => entity.GetProperties())
+                     .Where(property => property.ClrType == typeof(string[])))
+        {
+            property.SetColumnType("TEXT");
+            property.SetDefaultValueSql("'[]'");
+        }
     }
 }
