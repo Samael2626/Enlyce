@@ -785,3 +785,34 @@ export interface ConsultarDatosLeadResponse {
     metodo: string
   }
 }
+
+// Chat
+export interface ChatUser {
+  id: string
+  name: string
+  email: string
+  role: string
+  unreadCount: number
+}
+
+export interface ChatMessage {
+  id: string
+  senderId: string
+  senderName: string
+  recipientId: string | null
+  content: string
+  sentAtUtc: string
+  isRead: boolean
+  readAtUtc?: string | null
+}
+
+export interface SendMessageInput {
+  recipientId: string | null
+  content: string
+}
+
+export interface ChatUnreadSummary {
+  total: number
+  byUser: Record<string, number>
+}
+

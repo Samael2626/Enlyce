@@ -795,6 +795,37 @@ class ApiClient {
       method: "DELETE",
     })
   }
+
+  // Chat
+  async getChatUsers() {
+    return this.request<import("@/lib/types").ChatUser[]>("/api/chat/users")
+  }
+
+  async getChatMessages(recipientId?: string | null, limit?: number) {
+    const params = new URLSearchParams()
+    if (recipientId) params.set("recipientId", recipientId)
+    if (limit) params.set("limit", limit.toString())
+    const query = params.toString() ? `?${params.toString()}` : ""
+    return this.request<import("@/lib/types").ChatMessage[]>(`/api/chat/messages${query}`)
+  }
+
+  async sendChatMessage(data: import("@/lib/types").SendMessageInput) {
+    return this.request<import("@/lib/types").ChatMessage>("/api/chat/messages", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async markChatRead(senderId: string) {
+    return this.request<void>("/api/chat/read", {
+      method: "POST",
+      body: JSON.stringify({ senderId }),
+    })
+  }
+
+  async getChatUnread() {
+    return this.request<import("@/lib/types").ChatUnreadSummary>("/api/chat/unread")
+  }
 }
 
 export const api = new ApiClient(API_BASE)

@@ -30,6 +30,8 @@ using Enlyce.Api.Endpoints.Media;
 using Enlyce.Api.Endpoints.Publications;
 using Enlyce.Api.Endpoints.PublicCatalog;
 using Enlyce.Api.Endpoints.RealizedDeals;
+using Enlyce.Api.Endpoints.Chat;
+using Enlyce.Api.Hubs;
 using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
 using Enlyce.Api.Security;
@@ -74,6 +76,16 @@ builder.Services.AddAuthentication(options =>
     options.SaveToken = false;
     options.Events = new JwtBearerEvents
     {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        },
         OnTokenValidated = async context =>
         {
             var subject = context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
@@ -111,6 +123,9 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>>(sp =>
         };
     });
 });
+
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, CustomUserIdProvider>();
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("Administrador", policy => policy.RequireRole("Administrador"))
@@ -365,6 +380,8 @@ app.MapPropertyPublications();
 app.MapBilling();
 app.MapAnalytics();
 app.MapRealizedDeals();
+app.MapChat();
+app.MapHub<ChatHub>("/hubs/chat");
 
 var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 if (File.Exists(Path.Combine(webRoot, "index.html")))

@@ -15,6 +15,7 @@ import { AnaliticaPage } from "@/pages/AnaliticaPage"
 import { ContactsPage } from "@/pages/ContactsPage"
 import { CalendarPage } from "@/pages/CalendarPage"
 import { GestionesPage } from "@/pages/GestionesPage"
+import { ChatPage } from "@/pages/ChatPage"
 import { SettingsPage } from "@/pages/SettingsPage"
 
 const queryClient = new QueryClient({
@@ -50,7 +51,7 @@ export function App() {
               <Route path="/facturacion/respuesta" element={<BillingResultPage />} />
               <Route path="/calendario" element={<CalendarPage />} />
               <Route path="/gestiones" element={<GestionesPage />} />
-              <Route path="/chat" element={<Placeholder title="Chat" />} />
+              <Route path="/chat" element={<ChatPage />} />
               <Route path="/reportes" element={<AnaliticaPage />} />
               <Route path="/config" element={<SettingsPage />} />
             </Route>

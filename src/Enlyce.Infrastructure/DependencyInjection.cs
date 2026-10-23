@@ -59,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<IOwnerPerformanceReportReadRepository, OwnerPerformanceReportReadRepository>();
         services.AddScoped<ISentEmailReportReadRepository, SentEmailReportReadRepository>();
         services.AddScoped<IWebPropertyVisitsReportReadRepository, WebPropertyVisitsReportReadRepository>();
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
         services.AddScoped<Enlyce.Application.Imports.IImportedListingsReadRepository, ImportedListingsReadRepository>();
         services.AddSingleton<IClientImportTableReader, ClientImportTableReader>();
         services.AddSingleton<IPropertyImportTableReader, PropertyImportTableReader>();

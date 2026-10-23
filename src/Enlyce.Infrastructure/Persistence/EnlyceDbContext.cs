@@ -34,6 +34,7 @@ public class EnlyceDbContext : DbContext
     public DbSet<WebAnalyticsEvent> WebAnalyticsEvents => Set<WebAnalyticsEvent>();
     public DbSet<RealizedDeal> RealizedDeals => Set<RealizedDeal>();
     public DbSet<EmailDeliveryLog> EmailDeliveryLogs => Set<EmailDeliveryLog>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     public EnlyceDbContext(DbContextOptions<EnlyceDbContext> options) : base(options) { }
 
