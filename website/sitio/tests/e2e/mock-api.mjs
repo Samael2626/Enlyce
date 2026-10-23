@@ -26,6 +26,7 @@ const property = {
 
 const detail = {
   id: property.id,
+  publicationId: "14e14f4c-2f54-41e8-8be4-943239e7b8a6",
   slug: property.slug,
   publicTitle: property.publicTitle,
   publicDescription: "Apartamento iluminado en el sector de Laureles.",
@@ -139,6 +140,24 @@ const server = createServer(async (request, response) => {
 
   if (method === "GET" && url.pathname === "/api/public/inmuebles/apartamento-laureles") {
     return sendJson(response, 200, detail);
+  }
+
+  if (method === "GET" && url.pathname === "/api/public/inmuebles/apartamento-arriendo") {
+    return sendJson(response, 200, {
+      ...detail,
+      slug: "apartamento-arriendo",
+      operation: "Arriendo",
+      publicTitle: "Apartamento en arriendo",
+    });
+  }
+
+  if (method === "GET" && url.pathname === "/api/public/inmuebles/apartamento-venta-arriendo") {
+    return sendJson(response, 200, {
+      ...detail,
+      slug: "apartamento-venta-arriendo",
+      operation: "VentaYArriendo",
+      publicTitle: "Apartamento en venta y arriendo",
+    });
   }
 
   if (method === "GET" && url.pathname === "/api/politica/activa") {

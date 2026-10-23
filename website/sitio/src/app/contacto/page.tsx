@@ -26,7 +26,7 @@ export default async function ContactoPage({ searchParams }: PageProps) {
   // publicacion. Se resuelve aqui; si el slug no existe se ignora y el
   // formulario sigue funcionando como contacto general.
   const [property, policy] = await Promise.all([
-    slug ? getPropertyBySlug(slug) : Promise.resolve(null),
+    slug ? getPropertyBySlug(slug, true) : Promise.resolve(null),
     getActivePolicy(),
   ]);
 
@@ -72,6 +72,7 @@ export default async function ContactoPage({ searchParams }: PageProps) {
         publicationId={property?.publicationId ?? undefined}
         propertySlug={property?.slug}
         propertyTitle={property?.publicTitle}
+        propertyOperation={property?.operation}
         isOwnerInquiry={isOwnerInquiry}
         policyVersion={policy?.version}
         campaign={campaign}

@@ -45,9 +45,35 @@ test.describe("formularios de contacto", () => {
       autorizacionDatos: true,
       sourceRoute: "/contacto",
       utmCampaign: "e2e",
+      tipoOperacion: "Venta",
     });
     expect(lead!.body.publicationId).toEqual(expect.any(String));
     expect(lead!.body.publicationId).not.toBe("apartamento-laureles");
+  });
+
+  test("clasifica como arriendo la consulta de un inmueble en arriendo", async ({ page, request }) => {
+    await clearCapturedRequests(request);
+
+    await page.goto("/contacto?inmueble=apartamento-arriendo");
+    await submitContactForm(page);
+
+    await expect(page.getByRole("heading", { name: "Solicitud recibida" })).toBeVisible();
+    const entries = await capturedRequests(request);
+    const lead = entries.find((entry) => entry.method === "POST" && entry.path === "/api/leads");
+    expect(lead?.body).toMatchObject({ tipoOperacion: "Arriendo", fuente: "Website:apartamento-arriendo" });
+  });
+
+  test("permite elegir arriendo en un inmueble de venta y arriendo", async ({ page, request }) => {
+    await clearCapturedRequests(request);
+
+    await page.goto("/contacto?inmueble=apartamento-venta-arriendo");
+    await page.getByLabel("Operación que te interesa").selectOption("Arriendo");
+    await submitContactForm(page);
+
+    await expect(page.getByRole("heading", { name: "Solicitud recibida" })).toBeVisible();
+    const entries = await capturedRequests(request);
+    const lead = entries.find((entry) => entry.method === "POST" && entry.path === "/api/leads");
+    expect(lead?.body).toMatchObject({ tipoOperacion: "Arriendo", fuente: "Website:apartamento-venta-arriendo" });
   });
 
   test("registra servicio y campaña del propietario y permite completar la solicitud", async ({

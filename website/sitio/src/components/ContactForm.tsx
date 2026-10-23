@@ -20,6 +20,7 @@ type Props = {
   publicationId?: string;
   propertySlug?: string;
   propertyTitle?: string;
+  propertyOperation?: string;
   isOwnerInquiry: boolean;
   policyVersion?: string;
   campaign?: CampaignParams;
@@ -45,6 +46,7 @@ export function ContactForm({
   publicationId,
   propertySlug,
   propertyTitle,
+  propertyOperation,
   isOwnerInquiry,
   policyVersion,
   campaign,
@@ -53,6 +55,9 @@ export function ContactForm({
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [authorized, setAuthorized] = useState(false);
   const [service, setService] = useState<OwnerServiceValue>(initialOwnerService ?? "vender");
+  const [operation, setOperation] = useState<"Venta" | "Arriendo">(
+    propertyOperation === "Arriendo" ? "Arriendo" : "Venta",
+  );
   const [detailsStatus, setDetailsStatus] = useState<DetailsStatus>({ kind: "idle" });
   const formStarted = useRef(false);
 
@@ -100,7 +105,7 @@ export function ContactForm({
         email: form.email.trim(),
         telefono: form.telefono,
         fuente: buildSource(),
-        tipoOperacion: isOwnerInquiry ? selected.operation : "Venta",
+        tipoOperacion: isOwnerInquiry ? selected.operation : operation,
         ownerService: isOwnerInquiry ? selected.ownerService : null,
         publicationId: publicationId ?? null,
         sourceRoute: window.location.pathname,
@@ -342,6 +347,19 @@ export function ContactForm({
               {OWNER_SERVICES.map((item) => (
                 <option key={item.value} value={item.value}>{item.label}</option>
               ))}
+            </select>
+          </label>
+        )}
+        {!isOwnerInquiry && propertyOperation === "VentaYArriendo" && (
+          <label className="text-sm">
+            <span className="mb-1 block text-muted">Operación que te interesa</span>
+            <select
+              className={fieldClass}
+              value={operation}
+              onChange={(event) => setOperation(event.target.value as "Venta" | "Arriendo")}
+            >
+              <option value="Venta">Compra</option>
+              <option value="Arriendo">Arriendo</option>
             </select>
           </label>
         )}
