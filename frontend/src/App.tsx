@@ -16,6 +16,7 @@ import { ContactsPage } from "@/pages/ContactsPage"
 import { CalendarPage } from "@/pages/CalendarPage"
 import { GestionesPage } from "@/pages/GestionesPage"
 import { ChatPage } from "@/pages/ChatPage"
+import { MercadoPage } from "@/pages/MercadoPage"
 import { SettingsPage } from "@/pages/SettingsPage"
 
 const queryClient = new QueryClient({
@@ -52,6 +53,7 @@ export function App() {
               <Route path="/calendario" element={<CalendarPage />} />
               <Route path="/gestiones" element={<GestionesPage />} />
               <Route path="/chat" element={<ChatPage />} />
+              <Route path="/mercado" element={<MercadoPage />} />
               <Route path="/reportes" element={<AnaliticaPage />} />
               <Route path="/config" element={<SettingsPage />} />
             </Route>

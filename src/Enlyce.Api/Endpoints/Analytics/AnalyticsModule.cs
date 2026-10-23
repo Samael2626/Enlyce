@@ -52,6 +52,45 @@ public static class AnalyticsModule
         .WithName("GetInventoryAnalytics")
         .Produces<InventoryAnalyticsResponse>();
 
+        app.MapGet("/api/analytics/market-analysis", async (
+            string? city,
+            string? neighborhood,
+            string? propertyType,
+            string? operation,
+            int? targetAreaM2,
+            int? bedrooms,
+            int? bathrooms,
+            IMarketAnalysisReadRepository marketAnalysis,
+            CancellationToken ct) =>
+        {
+            if (!TryParseOptional(propertyType, out TipoInmueble? parsedPropertyType) ||
+                !TryParseOptional(operation, out ModalidadInmueble? parsedOperation))
+            {
+                return Results.BadRequest(new { error = "El tipo de inmueble u operacion no es valido." });
+            }
+
+            if (targetAreaM2 is < 0 or > 100_000 || bedrooms is < 0 or > 50 || bathrooms is < 0 or > 50)
+            {
+                return Results.BadRequest(new { error = "Los parametros numericos de area o distribucion no son validos." });
+            }
+
+            var filter = new MarketAnalysisFilter(
+                city,
+                neighborhood,
+                parsedPropertyType,
+                parsedOperation,
+                targetAreaM2,
+                bedrooms,
+                bathrooms);
+
+            var result = await marketAnalysis.AnalyzeAsync(filter, ct);
+            return Results.Ok(result);
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("GetMarketComparativeAnalysis")
+        .Produces<MarketComparativeAnalysisResult>()
+        .ProducesProblem(StatusCodes.Status400BadRequest);
+
         app.MapGet("/api/analytics/realized-deals", async (
             DateOnly? from,
             DateOnly? to,

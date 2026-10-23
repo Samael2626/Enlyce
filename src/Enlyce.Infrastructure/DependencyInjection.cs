@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IWebAnalyticsRepository, WebAnalyticsRepository>();
         services.AddScoped<IRealizedDealRepository, RealizedDealRepository>();
         services.AddScoped<IRealizedDealsReportReadRepository, RealizedDealsReportReadRepository>();
+        services.AddScoped<IMarketAnalysisReadRepository, MarketAnalysisReadRepository>();
         services.AddScoped<IAdvisorPerformanceReportReadRepository, AdvisorPerformanceReportReadRepository>();
         services.AddScoped<IOwnerPerformanceReportReadRepository, OwnerPerformanceReportReadRepository>();
         services.AddScoped<ISentEmailReportReadRepository, SentEmailReportReadRepository>();

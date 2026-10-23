@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react"
-import { Navigate } from "react-router-dom"
-import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
+import { Link, Navigate } from "react-router-dom"
+import { ArrowDownRight, BarChart3, MousePointerClick, TrendingUp } from "lucide-react"
 import { api } from "@/api/client"
 import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport, useSentEmailReport, useUpdateRealizedDeal, useWebPropertyVisitsReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
@@ -52,10 +52,19 @@ export function AnaliticaPage() {
   return (
     <div className="space-y-8">
       <header className="analytics-hero rounded-lg p-7 md:p-10">
-        <div className="relative z-10 max-w-3xl">
-          <span className="text-[.68rem] font-bold uppercase tracking-[.18em] text-[#e3be65]">Lectura comercial</span>
-          <h1 className="mt-4 font-display text-[clamp(2.7rem,6vw,5.4rem)] leading-[.9] tracking-[-.05em]">Del interés a la oportunidad.</h1>
-          <p className="mt-5 max-w-xl text-sm leading-6 text-white/72">Sesiones anónimas de la web pública. Sin nombres, correos, teléfonos ni vigilancia decorativa.</p>
+        <div className="relative z-10 flex flex-wrap items-end justify-between gap-6">
+          <div className="max-w-3xl">
+            <span className="text-[.68rem] font-bold uppercase tracking-[.18em] text-[#e3be65]">Lectura comercial</span>
+            <h1 className="mt-4 font-display text-[clamp(2.7rem,6vw,5.4rem)] leading-[.9] tracking-[-.05em]">Del interés a la oportunidad.</h1>
+            <p className="mt-5 max-w-xl text-sm leading-6 text-white/72">Sesiones anónimas de la web pública. Sin nombres, correos, teléfonos ni vigilancia decorativa.</p>
+          </div>
+          <Link
+            to="/mercado"
+            className="flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-white/20"
+          >
+            <TrendingUp className="h-4 w-4 text-[#e3be65]" />
+            Mercado Inmobiliario (ACM)
+          </Link>
         </div>
       </header>
 

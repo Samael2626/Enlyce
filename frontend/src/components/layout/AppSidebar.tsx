@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   GalleryVerticalEnd,
   CreditCard,
+  TrendingUp,
 } from "lucide-react"
 
 const iconMap: Record<string, React.ElementType> = {
@@ -28,6 +29,7 @@ const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
   GalleryVerticalEnd,
   CreditCard,
+  TrendingUp,
 }
 
 interface AppSidebarProps {

@@ -816,3 +816,89 @@ export interface ChatUnreadSummary {
   byUser: Record<string, number>
 }
 
+// Mercado inmobiliario (ACM)
+export interface MarketAnalysisFilter {
+  city?: string
+  neighborhood?: string
+  propertyType?: string
+  operation?: string
+  targetAreaM2?: number
+  bedrooms?: number
+  bathrooms?: number
+}
+
+export interface MarketInventoryMetrics {
+  sampleSize: number
+  averagePrice: number
+  medianPrice: number
+  minPrice: number
+  maxPrice: number
+  averagePricePerM2: number
+  medianPricePerM2: number
+  minPricePerM2: number
+  maxPricePerM2: number
+  averageDaysOnMarket: number
+}
+
+export interface MarketClosedDealsMetrics {
+  sampleSize: number
+  averageGrossAmount: number
+  medianGrossAmount: number
+  averagePricePerM2: number
+  medianPricePerM2: number
+  averageDaysToClose: number
+  averageDiscountPercentage: number | null
+}
+
+export interface MarketValuationEstimate {
+  targetAreaM2: number
+  referencePricePerM2: number
+  lowEstimate: number
+  targetEstimate: number
+  highEstimate: number
+  confidenceLevel: string
+  explanation: string
+}
+
+export interface MarketComparableActiveProperty {
+  id: string
+  title: string
+  propertyType: string
+  operation: string
+  city: string
+  neighborhood?: string | null
+  areaM2: number
+  bedrooms: number
+  bathrooms: number
+  askingPrice: number
+  pricePerM2: number
+  daysOnMarket: number
+  currency: string
+}
+
+export interface MarketComparableClosedDeal {
+  dealId: string
+  propertyId: string
+  title: string
+  propertyType: string
+  operation: string
+  city: string
+  neighborhood?: string | null
+  areaM2: number
+  bedrooms: number
+  bathrooms: number
+  closedPrice: number
+  pricePerM2: number
+  daysToClose: number
+  closedOn: string
+  currency: string
+}
+
+export interface MarketComparativeAnalysisResult {
+  filter: MarketAnalysisFilter
+  activeMetrics: MarketInventoryMetrics
+  closedMetrics: MarketClosedDealsMetrics
+  valuationEstimate: MarketValuationEstimate | null
+  activeComparables: MarketComparableActiveProperty[]
+  closedComparables: MarketComparableClosedDeal[]
+}

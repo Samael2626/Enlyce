@@ -80,6 +80,13 @@ export function useInventoryAnalytics() {
   })
 }
 
+export function useMarketComparativeAnalysis(filters: Parameters<typeof api.getMarketComparativeAnalysis>[0]) {
+  return useQuery({
+    queryKey: ["analytics", "market-analysis", filters],
+    queryFn: () => api.getMarketComparativeAnalysis(filters),
+  })
+}
+
 export function useRealizedDealsReport(filters: Parameters<typeof api.getRealizedDealsReport>[0]) {
   return useQuery({
     queryKey: ["analytics", "realized-deals", filters],

@@ -384,6 +384,14 @@ class ApiClient {
     return this.request<import("@/lib/types").InventoryAnalytics>("/api/analytics/inventory")
   }
 
+  async getMarketComparativeAnalysis(filters: import("@/lib/types").MarketAnalysisFilter = {}) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") query.set(key, String(value))
+    })
+    return this.request<import("@/lib/types").MarketComparativeAnalysisResult>(`/api/analytics/market-analysis?${query}`)
+  }
+
   async getRealizedDealsReport(filters: { from?: string; to?: string; advisorId?: string; operation?: string; propertyType?: string; page?: number; pageSize?: number }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {

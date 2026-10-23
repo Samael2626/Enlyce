@@ -98,6 +98,7 @@ export const NAV_ITEMS = [
   { title: "Calendario", href: "/calendario", icon: "Calendar" },
   { title: "Gestiones", href: "/gestiones", icon: "Activity" },
   { title: "Chat", href: "/chat", icon: "MessageSquare" },
+  { title: "Mercado inmobiliario", href: "/mercado", icon: "TrendingUp", adminOnly: true },
   { title: "Analítica web", href: "/reportes", icon: "BarChart3", adminOnly: true },
   { title: "Alertas", href: "/alertas", icon: "Bell" },
   { title: "Plan y facturación", href: "/facturacion", icon: "CreditCard", adminOnly: true },
