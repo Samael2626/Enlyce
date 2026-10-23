@@ -30,7 +30,9 @@ public sealed record RealizedDealReportItem(
     string ClientName,
     decimal GrossAmount,
     decimal CommissionAmount,
-    string Currency);
+    string Currency,
+    Guid AdvisorId,
+    DateTime RecordedAtUtc);
 
 public interface IRealizedDealsReportReadRepository
 {

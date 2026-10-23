@@ -657,6 +657,8 @@ export interface RealizedDealReportPage {
     grossAmount: number
     commissionAmount: number
     currency: string
+    advisorId: string
+    recordedAtUtc: string
   }[]
 }
 
@@ -735,6 +737,13 @@ export interface CreateRealizedDealInput {
   leadId?: string | null
   advisorId?: string | null
   operation: "Sale" | "Rent"
+  grossAmount: number
+  commissionAmount: number
+  currency: string
+  closedOn: string
+}
+
+export interface UpdateRealizedDealInput {
   grossAmount: number
   commissionAmount: number
   currency: string

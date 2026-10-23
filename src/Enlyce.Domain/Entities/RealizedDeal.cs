@@ -67,4 +67,27 @@ public sealed class RealizedDeal
             RecordedAtUtc = DateTime.SpecifyKind(recordedAtUtc, DateTimeKind.Utc)
         };
     }
+
+    public bool CanEditAt(DateTime nowUtc) =>
+        nowUtc.Kind == DateTimeKind.Utc && nowUtc >= RecordedAtUtc &&
+        nowUtc < RecordedAtUtc.AddDays(3);
+
+    public void UpdateFinancials(decimal grossAmount, decimal commissionAmount, string currency,
+        DateOnly closedOn, DateTime nowUtc)
+    {
+        if (!CanEditAt(nowUtc))
+            throw new DomainError("El plazo de tres dias para modificar el negocio vencio.");
+        if (grossAmount <= 0 || commissionAmount < 0)
+            throw new DomainError("El valor bruto debe ser mayor a cero y la comision no puede ser negativa.");
+        if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != 3 ||
+            currency.Any(character => !char.IsAsciiLetter(character)))
+            throw new DomainError("La moneda debe ser un codigo de tres letras.");
+        if (closedOn == default)
+            throw new DomainError("La fecha de cierre es obligatoria.");
+
+        GrossAmount = decimal.Round(grossAmount, 2);
+        CommissionAmount = decimal.Round(commissionAmount, 2);
+        Currency = currency.Trim().ToUpperInvariant();
+        ClosedOn = closedOn;
+    }
 }

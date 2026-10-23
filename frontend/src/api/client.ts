@@ -471,6 +471,13 @@ class ApiClient {
     })
   }
 
+  async updateRealizedDeal(id: string, input: import("@/lib/types").UpdateRealizedDealInput) {
+    return this.request(`/api/realized-deals/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    })
+  }
+
   async downloadOpportunitiesCsv(from: string, to: string): Promise<Blob> {
     const query = new URLSearchParams({ from, to })
     const response = await fetch(`${this.baseUrl}/api/opportunities/export.csv?${query}`, {

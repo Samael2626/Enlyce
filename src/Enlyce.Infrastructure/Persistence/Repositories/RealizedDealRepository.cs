@@ -10,4 +10,9 @@ public sealed class RealizedDealRepository(EnlyceDbContext context) : IRealizedD
         context.RealizedDeals.Add(deal);
         await context.SaveChangesAsync(ct);
     }
+
+    public Task<RealizedDeal?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        context.RealizedDeals.FindAsync([id], ct).AsTask();
+
+    public Task SaveAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
 }

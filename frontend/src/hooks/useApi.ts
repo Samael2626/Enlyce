@@ -127,6 +127,15 @@ export function useCreateRealizedDeal() {
   })
 }
 
+export function useUpdateRealizedDeal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: import("@/lib/types").UpdateRealizedDealInput }) =>
+      api.updateRealizedDeal(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["analytics", "realized-deals"] }),
+  })
+}
+
 export function useMoveLeadInPipeline() {
   const queryClient = useQueryClient()
 

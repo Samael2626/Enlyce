@@ -104,8 +104,48 @@ public static class RealizedDealsModule
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status409Conflict);
+
+        app.MapPut("/api/realized-deals/{id:guid}", async (
+            Guid id,
+            UpdateRealizedDealRequest request,
+            HttpContext http,
+            IRealizedDealRepository deals,
+            CancellationToken ct) =>
+        {
+            var deal = await deals.GetByIdAsync(id, ct);
+            if (deal is null)
+                return Results.NotFound();
+            if (!http.User.IsInRole("Administrador") && EndpointAccess.AdvisorId(http.User) != deal.AdvisorId)
+                return Results.NotFound();
+            var nowUtc = DateTime.UtcNow;
+            if (!deal.CanEditAt(nowUtc))
+                return Results.Conflict(new { error = "El plazo de tres dias para modificar el negocio vencio." });
+
+            try
+            {
+                deal.UpdateFinancials(request.GrossAmount, request.CommissionAmount,
+                    request.Currency, request.ClosedOn, nowUtc);
+                await deals.SaveAsync(ct);
+                return Results.Ok(new RealizedDealCreatedResponse(
+                    deal.Id, deal.PropertyId, deal.ContactId, deal.LeadId, deal.AdvisorId,
+                    deal.Operation.ToString(), deal.GrossAmount, deal.CommissionAmount,
+                    deal.Currency, deal.ClosedOn, deal.RecordedByUserId, deal.RecordedAtUtc));
+            }
+            catch (DomainError error)
+            {
+                return Results.BadRequest(new { error = error.Message });
+            }
+        })
+        .RequireAuthorization()
+        .WithName("UpdateRealizedDeal");
     }
 }
+
+public sealed record UpdateRealizedDealRequest(
+    decimal GrossAmount,
+    decimal CommissionAmount,
+    string Currency,
+    DateOnly ClosedOn);
 
 public sealed record CreateRealizedDealRequest(
     Guid PropertyId,

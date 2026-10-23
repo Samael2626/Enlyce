@@ -2,7 +2,7 @@ import { Fragment, useState } from "react"
 import { Navigate } from "react-router-dom"
 import { ArrowDownRight, BarChart3, MousePointerClick } from "lucide-react"
 import { api } from "@/api/client"
-import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport, useSentEmailReport, useWebPropertyVisitsReport } from "@/hooks/useApi"
+import { useAdvisors, useAdvisorPerformanceReport, useAnalyticsFunnel, useContacts, useCreateRealizedDeal, useCrmReportMetrics, useFirstResponseMetrics, useInmuebles, useInventoryAnalytics, useOwnerPerformanceReport, useRealizedDealsReport, useSentEmailReport, useUpdateRealizedDeal, useWebPropertyVisitsReport } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 
 const labels: Record<string, string> = {
@@ -688,6 +688,7 @@ function RealizedDealsSection({
   onPageChange: (page: number) => void
 }) {
   const [showForm, setShowForm] = useState(false)
+  const [editingDealId, setEditingDealId] = useState<string | null>(null)
   const [exportError, setExportError] = useState("")
   const [exporting, setExporting] = useState(false)
   const maxPage = Math.max(1, Math.ceil((report?.total ?? 0) / (report?.pageSize ?? 10)))
@@ -783,7 +784,7 @@ function RealizedDealsSection({
           </div>
           <div className="crm-panel overflow-x-auto">
             <table className="w-full min-w-[850px] text-left text-sm">
-              <thead className="border-b border-border bg-muted/50 text-muted-foreground"><tr>{["Inmueble", "Negocio", "Fecha", "Encargado", "Cliente", "Total bruto", "Comisión"].map((heading) => <th key={heading} className="px-4 py-3 font-semibold">{heading}</th>)}</tr></thead>
+              <thead className="border-b border-border bg-muted/50 text-muted-foreground"><tr>{["Inmueble", "Negocio", "Fecha", "Encargado", "Cliente", "Total bruto", "Comisión", "Acciones"].map((heading) => <th key={heading} className="px-4 py-3 font-semibold">{heading}</th>)}</tr></thead>
               <tbody className="divide-y divide-border">{(report?.items ?? []).map((item) => <tr key={item.id}>
                 <td className="px-4 py-3">{item.propertyName}<small className="block text-muted-foreground">{item.propertyType}</small></td>
                 <td className="px-4 py-3">{item.operation === "Sale" ? "Venta" : "Arriendo"}</td>
@@ -792,8 +793,10 @@ function RealizedDealsSection({
                 <td className="px-4 py-3">{item.clientName}</td>
                 <td className="px-4 py-3">{formatMoney(item.grossAmount, item.currency)}</td>
                 <td className="px-4 py-3">{formatMoney(item.commissionAmount, item.currency)}</td>
+                <td className="px-4 py-3">{Date.now() < new Date(item.recordedAtUtc).getTime() + 3 * 24 * 60 * 60 * 1000 && <button type="button" onClick={() => setEditingDealId(item.id)} className="text-sm font-semibold text-accent underline">Modificar</button>}</td>
               </tr>)}</tbody>
             </table>
+            {report?.items.map((item) => item.id === editingDealId && <RealizedDealEditForm key={item.id} item={item} onClose={() => setEditingDealId(null)} />)}
             {report?.items.length === 0 && <p className="p-6 text-sm text-muted-foreground">No hay negocios en este periodo.</p>}
             <div className="flex items-center justify-between border-t border-border p-4 text-sm text-muted-foreground">
               <span>{report?.total ?? 0} negocios · página {page} de {maxPage}</span>
@@ -804,6 +807,41 @@ function RealizedDealsSection({
       )}
     </section>
   )
+}
+
+function RealizedDealEditForm({ item, onClose }: {
+  item: import("@/lib/types").RealizedDealReportPage["items"][number]
+  onClose: () => void
+}) {
+  const updateDeal = useUpdateRealizedDeal()
+  const [errorMessage, setErrorMessage] = useState("")
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setErrorMessage("")
+    const form = new FormData(event.currentTarget)
+    try {
+      await updateDeal.mutateAsync({ id: item.id, input: {
+        closedOn: String(form.get("closedOn")),
+        grossAmount: Number(form.get("grossAmount")),
+        commissionAmount: Number(form.get("commissionAmount")),
+        currency: String(form.get("currency")),
+      } })
+      onClose()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "No se pudo modificar el negocio.")
+    }
+  }
+
+  return <form onSubmit={submit} className="grid gap-3 border-t border-border p-4 md:grid-cols-4">
+    <p className="md:col-span-4 text-sm font-semibold">Modificar cierre de {item.propertyName}. Disponible durante 72 horas desde el registro.</p>
+    <label className="text-xs font-bold">Fecha de cierre<input name="closedOn" type="date" required defaultValue={item.closedOn} className="mt-1 block w-full rounded border border-input p-2" /></label>
+    <label className="text-xs font-bold">Valor bruto<input name="grossAmount" type="number" min="0.01" step="0.01" required defaultValue={item.grossAmount} className="mt-1 block w-full rounded border border-input p-2" /></label>
+    <label className="text-xs font-bold">Comisión<input name="commissionAmount" type="number" min="0" step="0.01" required defaultValue={item.commissionAmount} className="mt-1 block w-full rounded border border-input p-2" /></label>
+    <label className="text-xs font-bold">Moneda<input name="currency" minLength={3} maxLength={3} required defaultValue={item.currency} className="mt-1 block w-full rounded border border-input p-2 uppercase" /></label>
+    <div className="flex gap-2 md:col-span-4"><button type="submit" disabled={updateDeal.isPending} className="rounded bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">Guardar</button><button type="button" onClick={onClose} className="rounded border border-border px-3 py-2 text-sm">Cancelar</button></div>
+    {errorMessage && <p role="alert" className="text-sm text-destructive md:col-span-4">{errorMessage}</p>}
+  </form>
 }
 
 function buildPrintableDealsReport(

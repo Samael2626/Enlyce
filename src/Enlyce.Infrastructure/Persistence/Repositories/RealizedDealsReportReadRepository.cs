@@ -53,7 +53,9 @@ public sealed class RealizedDealsReportReadRepository(EnlyceDbContext context) :
                     : row.contact.Name + " " + row.contact.Surname,
                 row.deal.GrossAmount,
                 row.deal.CommissionAmount,
-                row.deal.Currency))
+                row.deal.Currency,
+                row.deal.AdvisorId,
+                row.deal.RecordedAtUtc))
             .ToArrayAsync(ct);
 
         return new RealizedDealsReportPage(total, filter.Page, filter.PageSize, totals, items);
