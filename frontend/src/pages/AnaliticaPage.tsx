@@ -401,6 +401,8 @@ function OwnerPerformanceSection({
   isLoading: boolean
   isError: boolean
 }) {
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState("")
   const columns = [
     ["Visitas en página", "pageVisits"],
     ["Llamadas", "calls"],
@@ -410,13 +412,37 @@ function OwnerPerformanceSection({
     ["Contactos recibidos", "receivedContacts"],
   ] as const
 
+  async function exportXlsx() {
+    setExporting(true)
+    setExportError("")
+    try {
+      const blob = await api.downloadOwnerPerformanceReportXlsx(from, to)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `propietarios-${from}-${to}.xlsx`
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "No se pudo exportar el reporte.")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <section className="space-y-4" aria-labelledby="owner-report-title">
-      <div>
-        <span className="crm-eyebrow">Propietarios</span>
-        <h2 id="owner-report-title" className="mt-2 font-display text-3xl tracking-tight">Actividad por propietario</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Periodo {report?.from ?? from} a {report?.through ?? to}. Actividad asociada a consultas de publicaciones de sus inmuebles.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="crm-eyebrow">Propietarios</span>
+          <h2 id="owner-report-title" className="mt-2 font-display text-3xl tracking-tight">Actividad por propietario</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Periodo {report?.from ?? from} a {report?.through ?? to}. Actividad asociada a consultas de publicaciones de sus inmuebles.</p>
+        </div>
+        <button type="button" className="crm-button min-h-9 px-3 py-1 text-xs" disabled={exporting || isLoading || isError} onClick={() => void exportXlsx()}>
+          {exporting ? "Exportando…" : "Descargar Excel"}
+        </button>
       </div>
+      {exportError && <p role="alert" className="text-sm text-destructive">{exportError}</p>}
       {isLoading ? (
         <div className="crm-panel p-6 text-sm text-muted-foreground">Cargando actividad de propietarios…</div>
       ) : isError ? (

@@ -355,6 +355,41 @@ public static class AnalyticsModule
         .Produces<OwnerPerformanceReport>()
         .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        app.MapGet("/api/analytics/owners.xlsx", async (
+            DateOnly? from,
+            DateOnly? to,
+            IOwnerPerformanceReportReadRepository report,
+            TimeProvider timeProvider,
+            CancellationToken ct) =>
+        {
+            var through = to ?? DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+            var since = from ?? through.AddDays(-Math.Min(29, through.DayNumber));
+            if (since > through || through == DateOnly.MaxValue || through.DayNumber - since.DayNumber >= 366)
+                return Results.BadRequest(new { error = "El rango debe ser valido y no superar 366 dias." });
+
+            var result = await report.GetAsync(since, through, ct);
+            if (result.Owners.Count > 50_000)
+                return Results.Problem("El reporte supera el limite de 50.000 propietarios.",
+                    statusCode: StatusCodes.Status413PayloadTooLarge);
+
+            var rows = result.Owners.Select(owner => new object?[]
+            {
+                owner.OwnerName, owner.PageVisits, owner.Calls, owner.Emails,
+                owner.Events, owner.Visits, owner.ReceivedContacts
+            });
+            var content = XlsxWorkbook.Build("Propietarios",
+                ["Propietario", "Visitas en página", "Llamadas", "Correos", "Eventos", "Visitas", "Contactos recibidos"],
+                rows);
+            return Results.File(content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"propietarios-{since:yyyyMMdd}-{through:yyyyMMdd}.xlsx");
+        })
+        .RequireAuthorization("Administrador")
+        .WithName("ExportOwnerPerformanceReportXlsx")
+        .Produces(StatusCodes.Status200OK, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status413PayloadTooLarge);
+
         app.MapGet("/api/analytics/sent-emails", async (
             DateOnly? from,
             DateOnly? to,

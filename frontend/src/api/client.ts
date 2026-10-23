@@ -422,6 +422,13 @@ class ApiClient {
     return this.request<import("@/lib/types").OwnerPerformanceReport>(`/api/analytics/owners?${query}`)
   }
 
+  async downloadOwnerPerformanceReportXlsx(from: string, to: string) {
+    const query = new URLSearchParams({ from, to })
+    const response = await fetch(`${this.baseUrl}/api/analytics/owners.xlsx?${query}`, { credentials: "include" })
+    if (!response.ok) throw new Error(`No se pudo exportar el reporte (${response.status}).`)
+    return response.blob()
+  }
+
   async getSentEmailReport(filters: { from: string; to: string; page?: number; pageSize?: number }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => query.set(key, String(value)))
