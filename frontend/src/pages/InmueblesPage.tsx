@@ -4,6 +4,7 @@ import { PropertyDemandsPanel } from "@/components/PropertyDemandsPanel"
 import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE, ETIQUETAS_MODALIDAD_INMUEBLE } from "@/lib/constants"
 import { api } from "@/api/client"
 import { useAuthStore } from "@/stores/authStore"
+import { useSearchParams } from "react-router-dom"
 import {
   Home,
   Plus,
@@ -16,6 +17,7 @@ import {
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
 
 export function InmueblesPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [showForm, setShowForm] = useState(false)
   const [page, setPage] = useState(1)
   const [editingId, setEditingId] = useState("")
@@ -122,6 +124,24 @@ export function InmueblesPage() {
     setEditingId(id)
     setShowForm(true)
   }
+
+  useEffect(() => {
+    const editId = searchParams.get("edit")
+    if (!editId) return
+    setEditingId(editId)
+    setShowForm(true)
+  }, [searchParams])
+
+  useEffect(() => {
+    const editId = searchParams.get("edit")
+    const property = editingProperty.data
+    if (!editId || editingId !== editId || !property) return
+    const canEdit = user?.rol === "Administrador" || property.asesorResponsableId === user?.id
+    if (!canEdit) return
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete("edit")
+    setSearchParams(nextParams, { replace: true })
+  }, [editingId, editingProperty.data, searchParams, setSearchParams, user?.id, user?.rol])
 
   return (
     <div className="space-y-7">
