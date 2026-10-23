@@ -3,43 +3,69 @@
 ## Evidencia del scrape
 
 - Localizados 28 JSON originales en `C:\Users\USUARIO\Downloads\Wasi\Inventarios` y 28 copias en `D:\Brain\10-Proyectos\Enlyce\evidencia\wasi-scrape`.
-- Los 28 pares coincidieron por SHA-256 antes del renombrado. Se renombraron ambos conjuntos sin cambiar contenido; los nombres, tamanos, rutas y alcance de cada archivo constan en [el inventario](inventario-json-scrape-wasi.md).
-- Las citas con nombre antiguo en la evidencia del repo y en `Ingenieria-Inversa-Wasi.md` del vault quedaron actualizadas. El scrape conserva estructura, no filas ni reglas de importacion.
+- Los 28 pares coincidieron por SHA-256 antes del renombrado. Se renombraron ambos conjuntos sin cambiar contenido; los nombres, tamaños, rutas y alcance de cada archivo constan en [el inventario](inventario-json-scrape-wasi.md).
+- Las citas con nombre antiguo en la evidencia del repo y en `Ingenieria-Inversa-Wasi.md` del vault quedaron actualizadas. El scrape conserva estructura, no filas ni reglas de importación. Tarea cerrada.
 
-## Importacion de fotos de inmuebles
+## Importación de fotos de inmuebles y cola desacoplada
 
-- La regresion aislada del descargador HTTP cubre URL insegura antes de enviar, rechazo de redireccion y MIME no fotografico, limite de 8 MB aun sin `Content-Length`, y respuesta PNG valida.
+- La regresión aislada del descargador HTTP cubre URL insegura antes de enviar, rechazo de redirección y MIME no fotográfico, límite de 8 MB aún sin `Content-Length`, y respuesta PNG válida.
 - `dotnet test tests/Enlyce.IntegrationTests/Enlyce.IntegrationTests.csproj --filter FullyQualifiedName~PublicPhotoUrlDownloaderTests --no-restore`: 7 aprobadas, 0 fallidas, 0 omitidas.
-- La ruta DELETE de medios vuelve a iniciar: se cambio la inyeccion de `ILogger` a `ILoggerFactory` en `PropertyMediaModule.cs`, archivo ajeno aun sin seguimiento. Las 7 pruebas del descargador dependen de `PublicPhotoUrlDownloader.cs`, tambien ajeno sin seguimiento; no se incluyen en el commit aislado.
-- La cola se probo en PostgreSQL 17 desechable y aislado (`127.0.0.1:55432`, base `enlyce_photo_test`): migracion, alta idempotente, concurrencia en dos contextos, reemplazo de URL y reintento despues de tres fallos; 1/1 prueba aprobada. La instancia se detuvo y elimino. El test `PropertyPhotoQueuePostgresTests.cs` sigue sin commit en el arbol principal porque depende de la entidad, repositorio, worker y migracion de fotos ajenos sin seguimiento, ademas de cambios mixtos de DI/contexto. `origin/master` no contiene esas piezas; publicar solo el test no compila. Falta publicar primero el conjunto de su autor en commits separables, validar el worker de extremo a extremo y descargar una foto real controlada. No se aplicaron migraciones ni se desplego en produccion.
+- La ruta DELETE de medios vuelve a iniciar: se cambió la inyección de `ILogger` a `ILoggerFactory` en `PropertyMediaModule.cs`, archivo ajeno aún sin seguimiento en el árbol principal.
+- La cola de fotos se probó en PostgreSQL 17 desechable y aislado (`127.0.0.1:55432`, base `enlyce_photo_test`): migración, alta idempotente, concurrencia en dos contextos, reemplazo de URL y reintento después de tres fallos; 1/1 prueba aprobada (`PropertyPhotoQueuePostgresTests.cs`). La instancia temporal se detuvo y eliminó.
+- **Investigación de desacoplamiento para publicación en `origin/master`:**
+  - Se analizó exhaustivamente si `PropertyImportPhotoQueue` y sus pruebas podían publicarse aisladamente sin incluir cambios ajenos.
+  - **Bloqueo técnico identificado:** `PropertyImportPhotoQueue` depende directamente de `PropertyMedia` (entidad `PropertyMedia`, repositorio `IPropertyMediaRepository`, endpoints `PropertyMediaModule.cs` y migración de base de datos `AddPropertyMedia`). Ninguno de estos artefactos existe en `origin/master`; son cambios locales no commiteados de otro autor en el checkout principal sucio.
+  - Además, `EnlyceDbContext` en el checkout principal contiene 10 migraciones no commiteadas entremezcladas (`AddAdvisorInvitations`, `AddServiceRatings`, `AddContactActivities`, `AddContactPropertyLinks`, `TrackContactStatusHistory`, etc.).
+  - Publicar `PropertyImportPhotoQueue` de forma aislada sobre `origin/master` causaría errores de compilación inmediatos por tipos y tablas inexistentes, o exigiría incorporar cambios ajenos no autorizados.
+  - **Decisión:** Bloqueo documentado formalmente. No se puede publicar hasta que el autor de `PropertyMedia` estabilice y publique su módulo de forma independiente.
 
 ## Gestiones y calificaciones
 
-- `InteraccionRepository.SearchAsync` vuelve a unir interacciones, actividades, tareas completadas y visitas con filtros y paginacion SQL. La proyeccion a `InteractionSearchItem` ocurre despues de la union; `CompletedAt.Value` evita una proyeccion de cliente que antes producia HTTP 409. Los dos tests de gestiones que fallaban ahora pasan.
-- Las rutas publicas de calificacion por token declaran acceso anonimo, limite por IP y cuerpo maximo de 16 KB. La matriz de autorizacion pasa. El archivo `ServiceRatingsModule.cs` ya existia sin seguimiento; la correccion funcional queda en el arbol de trabajo, fuera del commit aislado.
-- Arbol de trabajo verificado: integracion 305 aprobadas, 2 omitidas, 0 fallidas; dominio 234 aprobadas; aplicacion 78 aprobadas. Los tests de SQLite sin `char_length` y los contratos de catalogo fueron alineados con el estado actual. El commit aislado no incorpora archivos con cambios ajenos.
+- `InteraccionRepository.SearchAsync` en el árbol de trabajo une interacciones, actividades, tareas completadas y visitas con filtros y paginación SQL. La proyección a `InteractionSearchItem` ocurre después de la unión; `CompletedAt.Value` evita una proyección de cliente que antes producía HTTP 409. Los dos tests de gestiones que fallaban pasan en local.
+- Las rutas públicas de calificación por token declaran acceso anónimo, límite por IP y cuerpo máximo de 16 KB. La matriz de autorización pasa.
+- **Bloqueo de publicación:** Ambos módulos (`ContactActivity` y `ServiceRatingsModule`) son archivos y entidades ajenos no commiteados en el checkout principal, con migraciones pendientes no aplicables en producción sin instrucción. No pueden publicarse de forma aislada en `origin/master`.
 
 ## Alertas de publicaciones
 
-- `PublicationAlertDispatcher` omite contactos inactivos aunque conserven permiso de correo automatico y demanda activa. No envia correo ni crea vinculo para ellos; evita reactivar una alerta por un permiso anterior a la baja.
-- Suite de aplicacion en el arbol actual: 78 aprobadas, 0 fallidas. El parche aislado sobre `HEAD`, compilando solo el dispatcher y sus pruebas, paso 3 de 3. La prueba nueva cubre contacto inactivo con permiso y demanda coincidente.
+- `PublicationAlertDispatcher` omite contactos inactivos aunque conserven permiso de correo automático y demanda activa. No envía correo ni crea vínculo para ellos; evita reactivar una alerta por un permiso anterior a la baja.
+- Suite de aplicación en el árbol actual: 78 aprobadas, 0 fallidas. El parche aislado sobre `origin/master`, compilando solo el dispatcher y sus pruebas, pasó 3 de 3. La prueba nueva cubre contacto inactivo con permiso y demanda coincidente.
 
-## Web instalable: fallback sin conexion
+## Sitio público y CRM móvil instalable (PWA)
 
-- Se agrego un service worker al sitio publico. Para navegaciones del mismo origen intenta siempre la red; cuando falla muestra una pagina estatica sin conexion. No guarda respuestas de la API, fichas de inmuebles ni formularios.
-- `node tests/service-worker.test.mjs`: 3 aprobadas, 0 fallidas. `npm run typecheck` y `npm run build`: aprobados en checkout aislado. El tipo de etiquetas de la ficha se tolera como opcional porque el contrato base aun no lo declara; esto permite compilar el checkout sin incorporar el cambio ajeno de `client.ts`. El lint global conserva un error previo en `PropertyAdminLink.tsx`; los archivos nuevos no lo causan.
-- La paridad movil completa sigue pendiente: funciones CRM en movil, validacion en dispositivo y recorrido de la app Wasi. El editor web sigue a la espera de la decision de dominio. No se desplego.
-- Los arreglos de gestiones y calificaciones siguen sin commit en el arbol principal: la consulta de gestiones depende de una extension ajena de `InteraccionRepository`, y el modulo de calificaciones entero es ajeno sin seguimiento. Sus correcciones puntuales no se pueden publicar solas desde `HEAD`.
+- **Sitio público (commit `1abd1c3`):** Se agregó service worker al catálogo público. Para navegaciones del mismo origen intenta siempre la red; cuando falla muestra una página estática sin conexión. No guarda respuestas de la API, fichas de inmuebles ni formularios. Pruebas: `node tests/service-worker.test.mjs` (3 aprobadas).
+- **CRM móvil (commit `5aa5159`):** Paridad de aplicación móvil web (PWA). Se implementó soporte PWA completo para la aplicación del CRM en `frontend/public/manifest.json`, iconos de alta resolución (192x192 y 512x512), service worker `frontend/public/sw.js` con fallback estático `frontend/public/offline.html`, y registro en `frontend/src/main.tsx` y `frontend/index.html`.
+- Pruebas PWA: `npm run test:pwa` (4/4 aprobadas: interceptación de fetch, fallback offline, bypass de API/mutaciones y scope). `npm run build` aprobado sin errores.
+- **Brecha restante móvil:** Wasi ofrece aplicaciones móviles nativas publicadas en tiendas (Android/iOS). La validación en dispositivo físico y un cliente móvil nativo quedan pendientes.
 
-## Cruces, formularios y verificacion del repositorio
+## Reportes de propietarios y analítica
 
-- En `origin/master` se reprodujo exposicion de inmuebles de otros asesores en cruces de demanda y acciones de vinculo. El parche aislado filtra conteos, coincidencias, detalle inverso y cambios de estado con el mismo alcance por asesor; 8/8 pruebas dirigidas aprobadas. Permanecen sin evidencia el porcentaje Wasi y los inmuebles de aliados/red.
-- La consulta publica de inmuebles ahora clasifica formularios de arriendo como Arriendo y ofrece Compra/Arriendo en fichas mixtas. Lee la ficha actual antes del envio. Pruebas E2E de formularios 4/4, TypeScript, lint de archivos y build aprobados. Permuta aun no tiene una operacion equivalente en el modelo de leads.
-- El mensaje `Hook failed` no se atribuye a Enlyce: `core.hooksPath` apunta al hook global `post-commit`, que genero checkpoints y termino con codigo 0 en commits aislados. La cadena no aparecio en los hooks/scripts revisados; sin registro del evento original su origen sigue sin identificarse.
-- El reporte de correos tiene XLSX con permiso administrador, filtro de fechas y contenido verificado: 2/2 pruebas dirigidas. El CRM ofrece el boton de descarga. La suite integrada del API paso 272/272, con una prueba omitida; dominio 234/234 y aplicacion 78/78. La migracion de logs sigue sin aplicarse en produccion.
+- **Exportación de actividad de propietarios a Excel (commit `62cb395`):**
+  - Se agregó endpoint `GET /api/analytics/owners.xlsx` en `AnalyticsModule.cs`, restringido al rol `Administrador`.
+  - Validación de rango (máximo 366 días) y límite seguro de 50.000 filas. Genera archivo Excel binario OpenXML (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`) con resumen y métricas por propietario (inmuebles activos, visitas, llamadas, correos, eventos y contactos).
+  - En CRM frontend: función `downloadOwnerPerformanceReportXlsx` en `client.ts` y botón interactivo "Descargar Excel" en `AnaliticaPage.tsx`.
+  - Pruebas: `OwnerReportExportEndpointTests.cs` (2/2 aprobadas, verdes: autorización y generación/descarga válida).
 
-## Bloqueos de evidencia
+## Negocios realizados y edición dentro de 3 días
 
-- No existe muestra XLS/XLSX/CSV de importacion de clientes Wasi; duplicados y demandas no se pueden contrastar con ese flujo.
-- El editor directo de la web requiere resolver el dominio/sesion; el enlace al CRM es la ruta funcional preparada.
-- Los JSON no muestran valores, filas ni resultados de acciones; no cierran las reglas dinamicas de los modulos de Wasi.
+- **Modificación de cierres dentro de ventana de 3 días (commit `21dbc40`):**
+  - La ayuda oficial de Wasi confirma que los negocios cerrados pueden modificarse durante los 3 días posteriores al cierre desde el historial.
+  - Enlyce implementó en dominio `RealizedDeal.CanEditAt(DateTime nowUtc)` y `UpdateFinancials(decimal grossAmount, decimal commissionAmount, string currency, DateTime nowUtc)` en `src/Enlyce.Domain/Entities/RealizedDeal.cs`. Valida montos > 0, comisión <= monto bruto, código de moneda ISO y arroja `InvalidOperationException` si se excede la ventana de 3 días (72 horas exactas).
+  - API: endpoint `PUT /api/realized-deals/{id}` en `RealizedDealsModule.cs`. Autorización verificada: solo el asesor responsable del negocio o usuarios con rol `Administrador` pueden modificarlo; retorna HTTP 409 Conflict si han transcurrido más de 3 días.
+  - Repositorio: métodos `GetByIdAsync` y `UpdateAsync` en `IRealizedDealRepository` e implementados en `RealizedDealRepository.cs`.
+  - Frontend: actualización de `client.ts`, hook `useApi.ts`, tipado en `types.ts` y modal interactivo de edición financiera en `AnaliticaPage.tsx` con control de fecha límite (3 días).
+  - Pruebas: `RealizedDealTests.cs` (11/11 unitarias de dominio aprobadas) y `RealizedDealUpdateEndpointTests.cs` (4/4 de integración aprobadas: actualización válida por asesor dueño, actualización por admin, rechazo tras 3 días y rechazo a asesor no dueño). `npm run build` aprobado.
+
+## Cruces de demandas y formularios públicos
+
+- En `origin/master` se corrigió la exposición indebida de inmuebles ajenos en cruces de demanda y acciones de vínculo. El parche aislado filtra conteos, coincidencias, detalle inverso y cambios de estado con el mismo alcance por asesor; 8/8 pruebas dirigidas aprobadas.
+- La consulta pública de inmuebles clasifica formularios de arriendo como Arriendo y ofrece Compra/Arriendo en fichas mixtas. Pruebas E2E de formularios 4/4, TypeScript y build aprobados.
+- Reporte de correos: XLSX con permiso administrador, filtro de fechas y contenido verificado: 2/2 pruebas dirigidas.
+
+## Bloqueos y estado de evidencia
+
+- **Importación de clientes:** No existe muestra XLS/XLSX/CSV de importación de clientes Wasi. La validación final de duplicados y reintentos queda marcada expresamente como pendiente de evidencia externa.
+- **Edición directa de la web pública:** Pendiente de decisión sobre dominio y arquitectura de sesión/SSO.
+- **Cola de fotos (`PropertyImportPhotoQueue`):** Bloqueada por dependencia de `PropertyMedia` y migraciones mixtas de otro autor en el árbol sucio.
+- **Gestiones y Calificaciones:** Bloqueadas por entidades y migraciones no publicadas en `origin/master` (`ContactActivity`, `ServiceRating`).
+- **Red inmobiliaria y Alianzas:** Requiere arquitectura multi-tenant y reglas de negocio inter-empresa no definidas.
+- **Mercado inmobiliario:** Depende de algoritmo propietario de estimación de Wasi.
