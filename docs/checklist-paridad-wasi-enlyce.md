@@ -19,6 +19,7 @@
 - Reporte de propietarios a Excel: se agrego endpoint `GET /api/analytics/owners.xlsx` y accion en CRM para descargar XLSX de actividad de propietarios con limite de 366 dias y 50.000 filas; 2/2 pruebas de integracion aprobadas. Commit `62cb395`.
 - CRM movil e instalacion PWA: se agrego soporte PWA al CRM con manifiesto, iconos de alta resolucion, service worker y fallback offline estatico en `sw.js`; suite `test:pwa` (4/4) y build aprobados. Commit `5aa5159`.
 - Edicion de negocios cerrados: se habilito modificacion de negocios realizados durante los primeros 3 dias posteriores al cierre (`PUT /api/realized-deals/{id}`) con validacion de autorizacion para asesor responsable o administrador, validacion de dominio, formulario en `AnaliticaPage.tsx` y pruebas completas (11 unitarias de dominio y 4 de integracion aprobadas). Commit `21dbc40`.
+- Chat interno en tiempo real: se implemento mensajeria interna con SignalR (WebSockets y fallback REST), canal general de agencia y mensajes directos 1-a-1 entre asesores con presencia en linea, confirmacion de lectura, contador de no leidos y UI completa en `/chat` (`ChatPage.tsx`); 11 pruebas unitarias de dominio y 6 de integracion aprobadas. Commit `3782d64`.
 - Fotos por archivo: la implementacion y migracion siguen sin commit ajeno en el arbol principal, ausentes de `origin/master`. Una prueba propia en ese arbol paso con PostgreSQL desechable: migracion, idempotencia, concurrencia, reemplazo de URL y reintento tras tres fallos. Bloqueo confirmado: `PropertyImportPhotoQueue` depende intimamente de `PropertyMedia` y migraciones mixtas sin commit de otro autor; no puede separarse de forma aislada sin incorporar esos cambios ajenos.
 - Gestiones y calificaciones: las ampliaciones del arbol principal no estan publicadas. La calificacion puede dejar token inaccesible si falta URL o falla SMTP; requiere correccion y pruebas antes de cerrar el flujo. Ninguna migracion se aplico en produccion.
 - `Hook failed`: el hook Git global observado (`post-commit`) termino con codigo 0 y creo checkpoints; no se identifico el origen del mensaje original.
@@ -60,7 +61,7 @@
 | Configuración inicial de empresa | [ ] | Wasi presenta un asistente de puesta en marcha; Enlyce no muestra equivalente. |
 | Configuración comercial | [~] | Reglas de reparto y SLA existen; comparar el resto de ajustes visibles en Wasi. |
 | Mi Cuenta, reputación, academia y soporte | [ ] | Accesos visibles en Wasi; sin equivalentes CRM identificados en Enlyce. |
-| Chat interno | [ ] | Enlyce muestra placeholder; Wasi muestra chat y contactos de red. |
+| Chat interno | [x] | Chat en tiempo real con SignalR sobre WebSockets y fallback REST. Soporta canal general de agencia y mensajes directos 1-a-1 entre asesores con indicadores de estado en vivo, confirmación de lectura ('Leído'/'Enviado'), contador de no leídos en tiempo real y detector de escritura ('escribiendo...'). Migración en código `AddChatMessages`. Pruebas completas aprobadas (11 unitarias de dominio y 6 de integración en `ChatEndpointTests.cs`). UI interactiva integrada en `/chat` (`ChatPage.tsx`). Commit `3782d64`. |
 | Plan y facturación | [~] | Enlyce tiene checkout y estado de pago; comparar gestión de plan, factura y cuenta frente a Wasi. |
 
 ### Avance verificado — 2026-10-14

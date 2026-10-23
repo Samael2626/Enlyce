@@ -59,7 +59,14 @@
 
 - En `origin/master` se corrigió la exposición indebida de inmuebles ajenos en cruces de demanda y acciones de vínculo. El parche aislado filtra conteos, coincidencias, detalle inverso y cambios de estado con el mismo alcance por asesor; 8/8 pruebas dirigidas aprobadas.
 - La consulta pública de inmuebles clasifica formularios de arriendo como Arriendo y ofrece Compra/Arriendo en fichas mixtas. Pruebas E2E de formularios 4/4, TypeScript y build aprobados.
-- Reporte de correos: XLSX con permiso administrador, filtro de fechas y contenido verificado: 2/2 pruebas dirigidas.
+## Chat interno en tiempo real (SignalR + UI en CRM)
+
+- **Implementación completa (commit `3782d64`):**
+  - **Dominio:** Entidad `ChatMessage` con validaciones de longitud (<= 2000 chars), sanitización, destinatario opcional (canal general vs mensaje directo 1-a-1), fecha de envío y marca de lectura (`MarkAsRead`). Puerto `IChatMessageRepository` con consultas paginadas, conteos de no leídos por usuario y marcado de lectura en lote. Pruebas de dominio: `ChatMessageTests.cs` (11/11 aprobadas).
+  - **Infraestructura:** `ChatMessageConfiguration` con índices optimizados para buzones y canales, `ChatMessageRepository` con consultas asíncronas EF Core y migración generada en código `AddChatMessages`.
+  - **SignalR Hub & Transporte:** `ChatHub` en `/hubs/chat` protegido con JWT (`[Authorize]`), con extracción de token desde query string para WebSockets y `CustomUserIdProvider` para mapeo por GUID de usuario. Soporta canal general de agencia (`GeneralChannel`), mensajes directos por ID de usuario, indicadores de lectura (`MessagesRead`) y eventos de escritura en vivo (`UserTyping`).
+  - **API REST complementaria:** `ChatModule.cs` expone `GET /api/chat/users` (asesores con conteo de no leídos), `GET /api/chat/messages` (historial de conversación o canal), `POST /api/chat/messages` (envío con fallback a REST si reconecta WebSockets), `POST /api/chat/read` (marcar lectura) y `GET /api/chat/unread`. Pruebas de integración: `ChatEndpointTests.cs` (6/6 aprobadas).
+  - **Frontend:** Hook `useChatHub.ts` con reconexión automática y listeners en tiempo real; métodos en `client.ts`; página interactiva `/chat` en `ChatPage.tsx` con lista de canales, contactos, burbujas de mensaje, indicadores de lectura («Leído»/«Enviado»), detector de escritura y conexión en vivo. `App.tsx` actualizado y build verificado sin errores.
 
 ## Bloqueos y estado de evidencia
 
