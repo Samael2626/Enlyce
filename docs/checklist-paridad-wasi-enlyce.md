@@ -1,5 +1,7 @@
 # Checklist de paridad Wasi → Enlyce
 
+**Actualizacion del 2026-10-24:** [estado verificable por modulo](estado-paridad-wasi-2026-10-24.md). Esta nota prevalece para agenda, ficha PDF/WhatsApp, blog y gate de migraciones; las filas historicas de abajo conservan el alcance documentado en su fecha.
+
 **Corte:** 14 de octubre de 2026  
 **Objetivo:** llevar a Enlyce las funciones de Wasi usadas por L&C, sin rehacer funciones que ya existen.  
 **Referencias externas para todo Enlyce:** ver [radar de repositorios externos](radar-repositorios-externos.md), que cubre CRM, inmuebles, red, agenda, web, finanzas y operacion.
