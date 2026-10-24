@@ -68,11 +68,27 @@
   - **API REST complementaria:** `ChatModule.cs` expone `GET /api/chat/users` (asesores con conteo de no leídos), `GET /api/chat/messages` (historial de conversación o canal), `POST /api/chat/messages` (envío con fallback a REST si reconecta WebSockets), `POST /api/chat/read` (marcar lectura) y `GET /api/chat/unread`. Pruebas de integración: `ChatEndpointTests.cs` (6/6 aprobadas).
   - **Frontend:** Hook `useChatHub.ts` con reconexión automática y listeners en tiempo real; métodos en `client.ts`; página interactiva `/chat` en `ChatPage.tsx` con lista de canales, contactos, burbujas de mensaje, indicadores de lectura («Leído»/«Enviado»), detector de escritura y conexión en vivo. `App.tsx` actualizado y build verificado sin errores.
 
+## Análisis Comparativo de Mercado (ACM) y Avalúos Algorítmicos
+
+- **Implementación completa (commit `a9acd4b`):**
+  - **Dominio & Aplicación:** Modelo `MarketComparativeAnalysisResult` con filtros `MarketAnalysisFilter` (operación, tipo de inmueble, municipio, barrio, área mínima/máxima). Define métricas de oferta activa (`MarketInventoryMetrics`) y transacciones cerradas (`MarketClosedDealsMetrics`), estimación de avalúo comercial (`MarketValuationEstimate`) con rango ±5% y nivel de confianza estadístico (Alto/Medio/Bajo) según volumen muestral.
+  - **Infraestructura:** `MarketAnalysisReadRepository` en EF Core LINQ consultando `Inmuebles` activos (`Disponible`/`Reservado`) y transacciones cerradas históricas (`RealizedDeals` cruzado con `Inmuebles`). Calcula promedios y medianas de precio por m², días en mercado (tiempo de absorción) y tasa de negociación o descuento obtenido respecto al precio de lista.
+  - **API:** Endpoint `GET /api/analytics/market-analysis` en `AnalyticsModule.cs` con validación de parámetros y autorización para administradores. Pruebas de integración: `MarketAnalysisEndpointTests.cs` (4/4 aprobadas: filtro por municipio/barrio, cálculo de mediana/promedio, estimación de avalúo y rechazo a usuarios no autorizados). Suite de dominio `Enlyce.Domain.Tests` (256/256 aprobadas).
+  - **Frontend:** Interfaz interactiva de alta fidelidad en `/mercado` (`MercadoPage.tsx`) con barra de filtros en tiempo real, tarjetas de indicadores clave (precios m², días en mercado, tasa de descuento), caja de valoración algorítmica con rango ±5%, y tablas detalladas de comparables activos y cierres históricos. Enrutamiento en `App.tsx`, acceso desde barra lateral (`AppSidebar.tsx`), botón directo desde `AnaliticaPage.tsx` y build Vite verificado.
+
+## Edición Directa de la Web Pública y Banners (CMS en CRM)
+
+- **Implementación completa (commit `72258c5`):**
+  - **Dominio:** Entidad `PublicWebsiteConfig` con valores predeterminados corporativos de la agencia, validaciones de longitudes y sanitización. Puerto `IPublicWebsiteConfigRepository` para lectura singleton y actualización atómica.
+  - **Infraestructura:** `PublicWebsiteConfigConfiguration` en Fluent API, `PublicWebsiteConfigRepository`, registro en DI y migración EF Core `20261023235334_AddPublicWebsiteConfig`.
+  - **API:** Módulo `WebsiteConfigModule.cs` que expone `GET /api/public/sitio-web` (anónimo con cache HTTP) y `GET`/`PUT /api/configuracion/sitio-web` (protegido para administradores). Pruebas de integración: `WebsiteConfigEndpointTests.cs` (5/5 aprobadas: lectura anónima, lectura autenticada, actualización admin, validación de campos obligatorios y rechazo a no administradores).
+  - **Frontend CRM:** Panel CMS en `/config` (`SettingsPage.tsx`) con navegación por pestañas («CRM & Operaciones» vs «Sitio Web Público & Marketing»), vista previa en vivo y responsiva del banner hero con logotipo y botones, edición de identidad de marca, títulos y URLs de imagen de portada, reseña institucional, canales de contacto (teléfono, WhatsApp, correo, sede física), redes sociales (Instagram, Facebook), metadatos SEO y selector de colores primario/acento.
+  - **Portal Público (Next.js):** Módulo cliente `websiteConfig.ts` con llamada a `/api/public/sitio-web` y fallback seguro a los valores por defecto del portal. Consumo dinámico en `website/sitio/src/app/page.tsx` para titular, subtítulo, imagen de portada y metadatos estructurados JSON-LD. Build Vite (`npm run build`) y pruebas PWA (4/4) aprobados.
+
 ## Bloqueos y estado de evidencia
 
 - **Importación de clientes:** No existe muestra XLS/XLSX/CSV de importación de clientes Wasi. La validación final de duplicados y reintentos queda marcada expresamente como pendiente de evidencia externa.
-- **Edición directa de la web pública:** Pendiente de decisión sobre dominio y arquitectura de sesión/SSO.
 - **Cola de fotos (`PropertyImportPhotoQueue`):** Bloqueada por dependencia de `PropertyMedia` y migraciones mixtas de otro autor en el árbol sucio.
 - **Gestiones y Calificaciones:** Bloqueadas por entidades y migraciones no publicadas en `origin/master` (`ContactActivity`, `ServiceRating`).
 - **Red inmobiliaria y Alianzas:** Requiere arquitectura multi-tenant y reglas de negocio inter-empresa no definidas.
-- **Mercado inmobiliario:** Depende de algoritmo propietario de estimación de Wasi.
+- **Migraciones en producción:** Congeladas hasta ejecutar el protocolo de ensayo de respaldo y restauración en la base de datos de producción.
