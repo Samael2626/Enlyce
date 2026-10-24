@@ -6,7 +6,7 @@
 - **Almacenamiento de respaldos:** Bucket privado de Supabase Storage `enlyce-backups`.
 - **Tarea programada de respaldo diario:** `Enlyce-Postgres-Backup` ejecutada automáticamente mediante `tools/backup/Backup-Enlyce.ps1` hacia `%LOCALAPPDATA%\Enlyce\Backups`.
 - **Último respaldo verificado:**
-  - Archivo: `%LOCALAPPDATA%\Enlyce\Backups\enlyce-20261021-030036.dump` (110.901 bytes).
+  - Archivo: `%LOCALAPPDATA%\Enlyce\Backups\enlyce-20261024-183807.dump` (110.901 bytes).
   - Formato: PostgreSQL Custom Dump (gzip, versión 1.16-0).
   - Integridad: 151 entradas TOC verificadas exitosamente con `pg_restore.exe --list`.
 - **Política de congelamiento:** Ninguna migración nueva se aplica a producción sin autorización explícita del usuario y verificación de respaldo previo.
@@ -15,7 +15,7 @@
 
 ## 2. Cadena de Migraciones Pendientes en Producción
 
-Las siguientes 22 migraciones aditivas están generadas en código y esperan verificación del historial real antes de cualquier pase a producción. Las suites de dominio e integración pasan en el checkout aislado; esto no acredita una aplicación de todas las migraciones en PostgreSQL:
+El dump actual de Railway del 24/10/2026 contiene 23 migraciones, incluida `20261013002606_AgregarExternalRefInmueble`. Quedan 21 de las 22 migraciones listadas abajo. Se debe volver a comparar el historial con un respaldo inmediato antes de cualquier pase a producción. Las suites de dominio e integración pasan en el checkout aislado; esto no acredita una aplicación de todas las migraciones en PostgreSQL:
 
 1. `20261013002606_AgregarExternalRefInmueble`: Referencia externa Wasi para trazabilidad de sincronización.
 2. `20261014132917_AddIndependentImportedContacts`: Contactos independientes importados sin oportunidad obligatoria.
@@ -60,15 +60,19 @@ Características técnicas del script:
 
 **Ensayo local 2026-10-24:** PostgreSQL 17 desechable, base vacía: 44 migraciones aplicadas, segunda ejecución idempotente y fallo inyectado revertido sin tablas residuales. La primera ejecución detectó un punto y coma ausente en `AddCustomerFunnelStages`; se corrigió la migración fuente y se regeneró el SQL. Falta restaurar y ensayar la copia exacta de la base objetivo. El ensayo local no autoriza aplicar el script en Railway.
 
+**Ensayo adicional 2026-10-24 con respaldo antiguo:** el dump local del 21/10 pasó `pg_restore --list` (151 entradas) y se restauró en PostgreSQL 18 aislado. Historial/esquema: 23 migraciones y 24 tablas antes; 44 y 33 tras aplicar el SQL pendiente con `ON_ERROR_STOP=1 --single-transaction`. La segunda aplicación fue correcta. Contactos, demandas, inmuebles y asesores mantuvieron sus conteos de 3, 1, 26 y 1. La tarea de backup falló los días 22-24/10 y Railway CLI informa OAuth `invalid_grant`; el dump del 21/10 no reemplaza el respaldo actual exigido para abrir el gate. El script de las cuatro etapas L&C se ensayó dos veces sobre esta copia: `tools/migrations/seed-lc-customer-stages.sql`. No se ejecutó en producción.
+
+**Ensayo con respaldo actual del 24/10 a las 18:38:** tras renovar Railway CLI, `Backup-Enlyce.ps1 -Mode Run` creó y subió un dump de 110.901 bytes; la clave SSH temporal se retiró. PostgreSQL 18.6, 151 entradas TOC y restauración aislada correcta. El SQL llevó la copia de 23 migraciones/24 tablas a 44/33; segunda ejecución idempotente. Los conteos de contactos/demandas/inmuebles/asesores siguieron en 3/1/26/1. Otra copia restaurada recibió una falla `SELECT 1/0` al final de la misma transacción: código 1 y estado intacto de 23/24 con los mismos conteos. Las cuatro etapas L&C se crearon únicamente en la copia. Falta definir retención remota y alerta externa del backup, plan de reversa operativo y autorización para cualquier aplicación en producción.
+
 ### Paso 1: Respaldo Inmediato Pre-Vuelo
 Ejecutar el script de respaldo para capturar el estado exacto de producción minutos antes del pase:
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\backup\Backup-Enlyce.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\backup\Backup-Enlyce.ps1 -Mode Run
 ```
 Verificar que el log en `%LOCALAPPDATA%\Enlyce\Backups\backup.log` reporte `OK <nombre>.dump <tamaño> bytes uploaded`.
 
 ### Paso 2: Aplicación del Script SQL Atómico
-Aplicar el script idempotente mediante `psql` con control de detención ante error y una sola transacción. Primero comparar `__EFMigrationsHistory` con las 22 migraciones previstas y ensayar este archivo en una restauración de la base objetivo:
+Aplicar el script idempotente mediante `psql` con control de detención ante error y una sola transacción. Primero comparar `__EFMigrationsHistory` con la cadena prevista (21 pendientes en el dump del 24/10; recalcular sobre el respaldo inmediato) y ensayar este archivo en una restauración de la base objetivo:
 ```bash
 psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --single-transaction -f tools/migrations/migrations-idempotent.sql
 ```
