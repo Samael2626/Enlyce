@@ -2029,3 +2029,47 @@ BEGIN
     END IF;
 END $EF$;
 
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    CREATE TABLE "BlogPosts" (
+        "Id" uuid NOT NULL,
+        "Slug" character varying(120) NOT NULL,
+        "Title" character varying(200) NOT NULL,
+        "Summary" character varying(500) NOT NULL,
+        "Body" character varying(20000) NOT NULL,
+        "CoverImageUrl" character varying(500),
+        "SeoTitle" character varying(150) NOT NULL,
+        "SeoDescription" character varying(300) NOT NULL,
+        "IsPublished" boolean NOT NULL,
+        "PublishedAtUtc" timestamp with time zone,
+        "CreatedAtUtc" timestamp with time zone NOT NULL,
+        "UpdatedAtUtc" timestamp with time zone NOT NULL,
+        "AuthorUserId" uuid NOT NULL,
+        CONSTRAINT "PK_BlogPosts" PRIMARY KEY ("Id")
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    CREATE INDEX "IX_BlogPosts_IsPublished_PublishedAtUtc" ON "BlogPosts" ("IsPublished", "PublishedAtUtc");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    CREATE UNIQUE INDEX "IX_BlogPosts_Slug" ON "BlogPosts" ("Slug");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261024014120_AddBlogPosts', '10.0.11');
+    END IF;
+END $EF$;
+

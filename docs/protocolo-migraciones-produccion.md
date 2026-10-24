@@ -15,7 +15,7 @@
 
 ## 2. Cadena de Migraciones Pendientes en Producción
 
-Las siguientes 21 migraciones aditivas han sido generadas, probadas con 100% de tests verdes en integración y dominio, y esperan su pase a producción:
+Las siguientes 22 migraciones aditivas están generadas en código y esperan verificación del historial real antes de cualquier pase a producción. Las suites de dominio e integración pasan en el checkout aislado; esto no acredita una aplicación de todas las migraciones en PostgreSQL:
 
 1. `20261013002606_AgregarExternalRefInmueble`: Referencia externa Wasi para trazabilidad de sincronización.
 2. `20261014132917_AddIndependentImportedContacts`: Contactos independientes importados sin oportunidad obligatoria.
@@ -38,18 +38,19 @@ Las siguientes 21 migraciones aditivas han sido generadas, probadas con 100% de 
 19. `20261015162531_AddEmailDeliveryLogs`: Bitácora de entregas de correo y notificaciones SMTP.
 20. `20261023232115_AddChatMessages`: Mensajería interna en tiempo real (SignalR + buzones 1-a-1 y general).
 21. `20261023235334_AddPublicWebsiteConfig`: CMS para edición del sitio web público, banners y metadatos SEO.
+22. `20261024014120_AddBlogPosts`: artículos editoriales con borrador y publicación.
 
 ---
 
 ## 3. Script Idempotente Generado
 
 El script SQL idempotente preparado para una transacción única se encuentra ubicado en:
-`tools/migrations/migrations-idempotent.sql` (79.767 bytes).
+`tools/migrations/migrations-idempotent.sql` (80.598 bytes; 44 migraciones históricas).
 
 Características técnicas del script:
 - Bloques condicionales PL/pgSQL `DO $EF$ ... IF NOT EXISTS ...` que garantizan idempotencia total.
-- Sin `START TRANSACTION` ni `COMMIT` internos. El archivo generado originalmente por EF Core contenía 43 pares: cada `COMMIT` rompía la transacción externa de `psql --single-transaction` y permitía una aplicación parcial.
-- Antes de cada ejecución, comprobar que una regeneración no reintrodujo límites de transacción internos.
+- Sin `START TRANSACTION` ni `COMMIT` internos. El SQL generado por EF Core contiene un par por migración; cada `COMMIT` rompe la transacción externa de `psql --single-transaction` y permite una aplicación parcial.
+- Regenerar el SQL en un archivo temporal y preparar el artefacto con `node tools/migrations/prepare-atomic.mjs <sql-generado> tools/migrations/migrations-idempotent.sql`; la herramienta verifica el número de límites y registros. Antes de ejecutar, comprobar de nuevo que no aparezcan límites internos.
 - Registro automático en la tabla `__EFMigrationsHistory`.
 - Libre de dependencias destructivas (`DROP TABLE` o eliminación de columnas); todas las modificaciones son estrictamente aditivas o de compatibilidad hacia adelante.
 
@@ -65,7 +66,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup\Backup-Enlyce.ps1
 Verificar que el log en `%LOCALAPPDATA%\Enlyce\Backups\backup.log` reporte `OK <nombre>.dump <tamaño> bytes uploaded`.
 
 ### Paso 2: Aplicación del Script SQL Atómico
-Aplicar el script idempotente mediante `psql` con control de detención ante error y una sola transacción. Primero comparar `__EFMigrationsHistory` con las 21 migraciones previstas y ensayar este archivo en una restauración de la base objetivo:
+Aplicar el script idempotente mediante `psql` con control de detención ante error y una sola transacción. Primero comparar `__EFMigrationsHistory` con las 22 migraciones previstas y ensayar este archivo en una restauración de la base objetivo:
 ```bash
 psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --single-transaction -f tools/migrations/migrations-idempotent.sql
 ```
