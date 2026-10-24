@@ -43,12 +43,13 @@ Las siguientes 21 migraciones aditivas han sido generadas, probadas con 100% de 
 
 ## 3. Script Idempotente Generado
 
-El script SQL completo y atómico se encuentra ubicado en:
-`tools/migrations/migrations-idempotent.sql` (80.228 bytes).
+El script SQL idempotente preparado para una transacción única se encuentra ubicado en:
+`tools/migrations/migrations-idempotent.sql` (79.767 bytes).
 
 Características técnicas del script:
 - Bloques condicionales PL/pgSQL `DO $EF$ ... IF NOT EXISTS ...` que garantizan idempotencia total.
-- Transacciones delimitadas (`START TRANSACTION; ... COMMIT;`) por cada migración.
+- Sin `START TRANSACTION` ni `COMMIT` internos. El archivo generado originalmente por EF Core contenía 43 pares: cada `COMMIT` rompía la transacción externa de `psql --single-transaction` y permitía una aplicación parcial.
+- Antes de cada ejecución, comprobar que una regeneración no reintrodujo límites de transacción internos.
 - Registro automático en la tabla `__EFMigrationsHistory`.
 - Libre de dependencias destructivas (`DROP TABLE` o eliminación de columnas); todas las modificaciones son estrictamente aditivas o de compatibilidad hacia adelante.
 
@@ -64,7 +65,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup\Backup-Enlyce.ps1
 Verificar que el log en `%LOCALAPPDATA%\Enlyce\Backups\backup.log` reporte `OK <nombre>.dump <tamaño> bytes uploaded`.
 
 ### Paso 2: Aplicación del Script SQL Atómico
-Aplicar el script idempotente directamente mediante `psql` con control de detención ante error:
+Aplicar el script idempotente mediante `psql` con control de detención ante error y una sola transacción. Primero comparar `__EFMigrationsHistory` con las 21 migraciones previstas y ensayar este archivo en una restauración de la base objetivo:
 ```bash
 psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --single-transaction -f tools/migrations/migrations-idempotent.sql
 ```
@@ -81,7 +82,7 @@ psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --single-transaction -f tools/migrati
 
 ### Paso 4: Plan de Reversión (Rollback)
 Si el script falla o se interrumpe:
-- Gracias a la bandera `--single-transaction`, ninguna modificación parcial queda confirmada.
+- Con el archivo actual sin `COMMIT` internos, `--single-transaction` revierte toda la ejecución si falla una sentencia. Verificar el historial y el esquema tras el error; no asumir que un archivo regenerado conserva esta propiedad.
 - En caso de requerir restauración forzada desde el dump:
   ```bash
   pg_restore --clean --if-exists -d "$DATABASE_URL" "%LOCALAPPDATA%\Enlyce\Backups\<dump_pre_vuelo>.dump"
