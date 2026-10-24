@@ -1,6 +1,6 @@
 # Checklist de paridad Wasi → Enlyce
 
-**Actualizacion del 2026-10-24:** [estado verificable por modulo](estado-paridad-wasi-2026-10-24.md) y [proteccion del arbol local](auditoria-arbol-local-2026-10-24.md). El estado incluye un ensayo autenticado de importacion con el XLSX real exportado por Wasi: 19 importados y 44 rechazados. Estas notas prevalecen para importacion de clientes, agenda, ficha PDF/WhatsApp, blog y gate de migraciones; las filas historicas de abajo conservan el alcance documentado en su fecha.
+**Actualizacion del 2026-10-24:** [estado verificable por modulo](estado-paridad-wasi-2026-10-24.md) y [proteccion del arbol local](auditoria-arbol-local-2026-10-24.md). El ensayo autenticado con el XLSX real exportado por Wasi importo 19 clientes y rechazo 44; las 19 fichas nuevas ya fueron conciliadas. Estas notas prevalecen para importacion de clientes, agenda, ficha PDF/WhatsApp, blog y gate de migraciones; las filas historicas de abajo conservan el alcance documentado en su fecha.
 
 **Corte:** 14 de octubre de 2026  
 **Objetivo:** llevar a Enlyce las funciones de Wasi usadas por L&C, sin rehacer funciones que ya existen.  

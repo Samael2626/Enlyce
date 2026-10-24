@@ -585,9 +585,19 @@ public static class ClientImportModule
     private static bool HasUnsafeNumericIdentity(ClientImportTable table, int rowIndex,
         int phoneIndex, int landlineIndex, int identificationNumberIndex) =>
         table.UnsafeNumericIdentityCells is { } cells &&
-        (phoneIndex >= 0 && cells.Contains((rowIndex, phoneIndex)) ||
-         landlineIndex >= 0 && cells.Contains((rowIndex, landlineIndex)) ||
+        (HasUnsafeNumericPhone(table, rowIndex, phoneIndex, cells) ||
+         HasUnsafeNumericPhone(table, rowIndex, landlineIndex, cells) ||
          identificationNumberIndex >= 0 && cells.Contains((rowIndex, identificationNumberIndex)));
+
+    private static bool HasUnsafeNumericPhone(ClientImportTable table, int rowIndex, int columnIndex,
+        IReadOnlySet<(int Row, int Column)> cells)
+    {
+        if (columnIndex < 0 || !cells.Contains((rowIndex, columnIndex)))
+            return false;
+
+        var value = Cell(table.Rows[rowIndex], columnIndex);
+        return value is null || !ClientImportPhoneSafety.IsExactNumericPhone(value);
+    }
 
     private static IReadOnlyDictionary<string, string?> GetMappedValues(
         IReadOnlyList<string?> row, IReadOnlyDictionary<string, string?> mapping) =>

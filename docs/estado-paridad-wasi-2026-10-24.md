@@ -15,7 +15,7 @@
 
 | Modulo | Estado en codigo | Evidencia y commit propio | Bloqueo exacto para cerrar paridad |
 |---|---|---|---|
-| Clientes e importacion | Parcial | Formularios, directorio e importador CSV/XLS/XLSX en `origin/master`; suite integrada verde. Ensayo real en Wasi: 19 importados y 44 rechazados de un XLSX exportado por la misma cuenta; detalle abajo. | Falta reconciliar los 19 contactos nuevos con los originales; quedan sin validar demandas importadas y exportacion enviada por correo. Migraciones pendientes de produccion. |
+| Clientes e importacion | Parcial | Formularios, directorio e importador CSV/XLS/XLSX en `origin/master`; ensayo real en Wasi: 19 importados y 44 rechazados. Las 19 fichas nuevas fueron conciliadas. Enlyce abre las 63 filas del XLSX, prioriza Movil, reconoce Estado y admite telefonos numericos exactos; detalle abajo. | Antes de importar en Enlyce faltan cuatro etapas personalizadas en el embudo y el gate de migraciones. Demandas importadas y exportacion enviada por correo siguen sin validar. |
 | Demandas y cruces | Parcial | Cruce inverso y alcance por asesor presentes en `origin/master`; integracion verde. | Falta contraste del porcentaje Wasi y cruces con inventario aliado/en red; migraciones pendientes. |
 | Inmuebles y fotos | Parcial | Ficha PDF y enlace WhatsApp desde CRM: `ca2110d`, build verde. Cola de fotos probada previamente en PostgreSQL sobre el arbol local, pero no publicable: [analisis de dependencia](analisis-cola-fotos-2026-10-23.md). | `PropertyMedia` y su migracion son cambios ajenos no publicados. Falta ficha con fotos reales verificadas, operacion doble, atribucion de propietario y sindicacion. El PDF se construye con datos de la ficha publica; no adjunta archivo a WhatsApp. |
 | Agenda y tareas | Parcial | Rejilla consulta todas las tareas del periodo con alcance por asesor: `30d0fbb`; admin puede filtrar tareas y visitas por asesor mientras el asesor no puede consultar a otro. Pruebas dirigidas y build verdes. | Faltan Google Calendar, eventos generales y comparacion de estados/acciones con una sesion Wasi. |
@@ -43,13 +43,21 @@
 - `Estado` exporta valores `Publicado` (28), `Cerrado Negativo` (1), `Seguimiento 2` (1), `Visita Inmueble` (12) y `Nuevo` (21). El importador solo acepta `Nuevo`, `En proceso`, `Convertido`, `Recuperado` y `Perdido`. Exportar e importar en la misma cuenta no conserva esas etapas personalizadas.
 - El importador muestra cinco filas de vista previa y obliga a mapear columnas. Se desmarco `Incluir primera fila` para excluir encabezados. Se mapearon 15 de 18 columnas; `Ubicacion`, `Fecha Registro` e `Inmuebles enlazados` no tienen destino directo y se ignoraron. Se conservaron los valores reales de `Estado` para observar su validacion.
 - Tras autorizar el usuario la importacion de las 63 filas, Wasi proceso cada cliente y mostro resultados por fila. Resultado: 19 `Cliente importado con exito` con enlace a ficha y 44 rechazados. Aparecieron 42 errores de estado, 2 de correo ya usado y 2 de telefono ya usado; una fila puede acumular varios errores. Los 19 exitos corresponden a las filas 43, 45, 46 y 48-63 del resultado Wasi.
-- La operacion escribio 19 contactos en la cuenta real. No se repitio el lote ni se corrigieron etapas para evitar mas duplicados. Se requiere conciliar esos contactos con los originales antes de otra importacion. No se ejecuto la exportacion por correo ni se verificaron demandas.
+- La operacion escribio 19 contactos en la cuenta real. No se repitio el lote ni se corrigieron etapas. Se concilio una ficha nueva mediante `Combinar` desde la ficha original, conservando su ID y sus campos; se retiraron las otras 18 fichas nuevas por sus IDs de resultado. El directorio quedo en 68 clientes y ninguno de los 19 IDs nuevos aparece en la primera pagina. No se ejecuto la exportacion por correo ni se verificaron demandas.
+
+## Ajuste del importador Enlyce con el XLSX real (2026-10-24)
+
+- `ClientImportTableReader` abrio el XLSX original dentro del ZIP: 63 filas y 18 columnas. No se agrego el archivo real ni valores personales al repositorio.
+- El mapeo automatico ahora prioriza `Movil` como telefono principal y `Telefono` como fijo, reconoce `Estado`, `Referido` y `Observaciones Adicionales`, y evita asignar dos veces una unica columna de telefono.
+- El lector marco 58 celdas telefonicas numericas. Sus valores son enteros exactos de 10 a 13 digitos; la validacion admite numeros de 7 a 15 digitos sin cero inicial y conserva el rechazo de identificaciones numericas inseguras. El ensayo local clasifico las 58 como seguras sin mostrar sus valores.
+- Las cuatro etapas personalizadas `Publicado`, `Cerrado Negativo`, `Seguimiento 2` y `Visita Inmueble` deben crearse en el embudo de Enlyce antes de confirmar esta carga; el importador no inventa ni cambia etapas. `Ubicacion`, `Fecha Registro`, `Inmuebles enlazados` y `Encargado Del Cliente` no tienen un mapeo automatico equivalente.
+- Verificacion de la rama: 299 pruebas de integracion aprobadas y 1 omitida; 86 pruebas de aplicacion aprobadas; build CRM y 2 pruebas del mapeo aprobados. El cambio no se desplego ni aplico migraciones en Railway.
 
 ## Orden de cierre
 
 1. Ensayar el gate SQL sobre una restauracion exacta de Railway; la prueba en base vacia no sustituye esa verificacion.
 2. Publicar `PropertyMedia` por su autor y luego portar/volver a probar la cola de fotos.
 3. Separar gestiones y calificaciones locales; verificar permisos por asesor y correo real.
-4. Conciliar el ensayo real de importacion; completar evidencia de exportacion, demandas y otros flujos Wasi. Negociar contratos de portales/MLS.
+4. Crear las cuatro etapas de L&C y ejecutar carga controlada en Enlyce tras el gate de migraciones; completar evidencia de exportacion, demandas y otros flujos Wasi. Negociar contratos de portales/MLS.
 
 **Conclusion:** hay avances publicables en una rama aislada, pero la paridad total permanece abierta.
