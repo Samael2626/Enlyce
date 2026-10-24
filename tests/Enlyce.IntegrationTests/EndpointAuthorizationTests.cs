@@ -39,6 +39,7 @@ public sealed class EndpointAuthorizationTests : IClassFixture<TestWebApplicatio
             "health", "api/auth/login", "api/auth/seed", "api/leads",
             "api/leads/owner-details",
             "api/public/inmuebles", "api/public/inmuebles/{slug}",
+            "api/public/sitio-web",
             "api/public/analytics/events",
             "api/public/alertas", "api/public/alertas/{id:guid}/baja",
             "api/politica/activa", "api/webhooks/wompi"
