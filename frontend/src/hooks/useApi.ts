@@ -740,3 +740,30 @@ export function useSuprimirDatosLead() {
     },
   })
 }
+
+// Sitio Web Publico (CMS)
+export function useAdminWebsiteConfig() {
+  return useQuery({
+    queryKey: ["website-config", "admin"],
+    queryFn: () => api.getAdminWebsiteConfig(),
+  })
+}
+
+export function usePublicWebsiteConfig() {
+  return useQuery({
+    queryKey: ["website-config", "public"],
+    queryFn: () => api.getPublicWebsiteConfig(),
+  })
+}
+
+export function useUpdateWebsiteConfig() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: import("@/lib/types").UpdateWebsiteConfigInput) =>
+      api.updateWebsiteConfig(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["website-config"] })
+    },
+  })
+}

@@ -902,3 +902,45 @@ export interface MarketComparativeAnalysisResult {
   activeComparables: MarketComparableActiveProperty[]
   closedComparables: MarketComparableClosedDeal[]
 }
+
+// Configuracion Sitio Web Publico (CMS)
+export interface PublicWebsiteConfig {
+  agencyName: string
+  slogan: string
+  heroTitle: string
+  heroSubtitle: string
+  heroBannerUrl?: string | null
+  aboutTitle: string
+  aboutText: string
+  contactPhone: string
+  contactWhatsapp: string
+  contactEmail: string
+  address: string
+  instagramUrl?: string | null
+  facebookUrl?: string | null
+  seoTitle: string
+  seoDescription: string
+  primaryColor?: string | null
+  accentColor?: string | null
+  updatedAtUtc: string
+}
+
+export interface UpdateWebsiteConfigInput {
+  agencyName: string
+  slogan?: string
+  heroTitle: string
+  heroSubtitle?: string
+  heroBannerUrl?: string | null
+  aboutTitle?: string
+  aboutText?: string
+  contactPhone: string
+  contactWhatsapp?: string
+  contactEmail: string
+  address?: string
+  instagramUrl?: string | null
+  facebookUrl?: string | null
+  seoTitle?: string
+  seoDescription?: string
+  primaryColor?: string | null
+  accentColor?: string | null
+}

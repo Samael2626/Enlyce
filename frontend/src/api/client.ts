@@ -834,6 +834,22 @@ class ApiClient {
   async getChatUnread() {
     return this.request<import("@/lib/types").ChatUnreadSummary>("/api/chat/unread")
   }
+
+  // Sitio Web Publico (CMS)
+  async getPublicWebsiteConfig() {
+    return this.request<import("@/lib/types").PublicWebsiteConfig>("/api/public/sitio-web")
+  }
+
+  async getAdminWebsiteConfig() {
+    return this.request<import("@/lib/types").PublicWebsiteConfig>("/api/configuracion/sitio-web")
+  }
+
+  async updateWebsiteConfig(data: import("@/lib/types").UpdateWebsiteConfigInput) {
+    return this.request<import("@/lib/types").PublicWebsiteConfig>("/api/configuracion/sitio-web", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
 }
 
 export const api = new ApiClient(API_BASE)

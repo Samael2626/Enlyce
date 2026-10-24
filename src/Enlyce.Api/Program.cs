@@ -31,6 +31,7 @@ using Enlyce.Api.Endpoints.Publications;
 using Enlyce.Api.Endpoints.PublicCatalog;
 using Enlyce.Api.Endpoints.RealizedDeals;
 using Enlyce.Api.Endpoints.Chat;
+using Enlyce.Api.Endpoints.WebsiteConfig;
 using Enlyce.Api.Hubs;
 using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
@@ -381,6 +382,7 @@ app.MapBilling();
 app.MapAnalytics();
 app.MapRealizedDeals();
 app.MapChat();
+app.MapWebsiteConfig();
 app.MapHub<ChatHub>("/hubs/chat");
 
 var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");

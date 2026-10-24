@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertySearchPanel } from "@/components/PropertySearchPanel";
 import { getProperties } from "@/lib/api/catalog";
+import { getPublicWebsiteConfig } from "@/lib/api/websiteConfig";
 import { serializeJsonLd } from "@/lib/seo/json-ld";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -10,21 +11,24 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").re
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const page = await getProperties({ pageSize: 6 });
+  const [page, websiteConfig] = await Promise.all([
+    getProperties({ pageSize: 6 }),
+    getPublicWebsiteConfig(),
+  ]);
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "RealEstateAgent",
         "@id": `${siteUrl}/#organization`,
-        name: "L&C Propiedad Raíz S.A.S.",
+        name: websiteConfig.agencyName,
         url: siteUrl,
         logo: `${siteUrl}/lyc-logo-transparent.png`,
       },
       {
         "@type": "WebSite",
         "@id": `${siteUrl}/#website`,
-        name: "L&C Propiedad Raíz",
+        name: websiteConfig.agencyName,
         url: siteUrl,
         inLanguage: "es-CO",
         publisher: { "@id": `${siteUrl}/#organization` },
@@ -42,6 +46,8 @@ export default async function HomePage() {
     ],
   };
 
+  const isExternalBanner = websiteConfig.heroBannerUrl?.startsWith("http");
+
   return (
     <div className="space-y-20 pb-20">
       <script
@@ -51,19 +57,20 @@ export default async function HomePage() {
       <div>
         <section className="hero-shell">
           <Image
-            src="/medellin-hero.png"
-            alt=""
+            src={websiteConfig.heroBannerUrl || "/medellin-hero.png"}
+            alt={websiteConfig.agencyName}
             fill
             priority
             fetchPriority="high"
             sizes="100vw"
+            unoptimized={Boolean(isExternalBanner)}
             className="hero-visual"
           />
           <div className="hero-shade" aria-hidden="true" />
           <div className="relative mx-auto grid min-h-[660px] max-w-6xl items-end gap-10 px-4 pb-28 pt-14 lg:grid-cols-[1fr_21rem] lg:pb-32 lg:pt-20">
           <Image
             src="/lyc-logo-transparent.png"
-            alt="L&C Propiedad Raíz S.A.S."
+            alt={websiteConfig.agencyName}
             width={1280}
             height={1280}
             sizes="(max-width: 800px) 88px, 184px"
@@ -71,11 +78,10 @@ export default async function HomePage() {
           />
           <div className="max-w-3xl space-y-6">
             <h1 className="text-balance text-5xl leading-[.98] text-white sm:text-6xl lg:text-7xl">
-              Propiedades con altura. Decisiones con criterio.
+              {websiteConfig.heroTitle}
             </h1>
             <p className="max-w-2xl text-lg leading-relaxed text-white/80">
-              Inmuebles seleccionados y asesoría cercana para comprar, arrendar o vender con
-              seguridad en Medellín y sus alrededores.
+              {websiteConfig.heroSubtitle}
             </p>
           </div>
           <div className="hero-actions">
