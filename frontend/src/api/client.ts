@@ -662,6 +662,10 @@ class ApiClient {
     return this.request<any>(`/api/inmuebles/${id}`)
   }
 
+  async getPublicPropertySheet(slug: string) {
+    return this.request<import("@/lib/propertySheet").PublicPropertySheet>(`/api/public/inmuebles/${encodeURIComponent(slug)}`)
+  }
+
   // Publicaciones
   async getPublications() {
     return this.request<import("@/lib/types").PropertyPublicationAdmin[]>("/api/publicaciones")
