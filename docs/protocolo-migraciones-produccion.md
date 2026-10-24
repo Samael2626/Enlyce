@@ -82,15 +82,14 @@ psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --single-transaction -f tools/migrati
    ```sql
    SELECT count(*) FROM "__EFMigrationsHistory";
    ```
-2. Ejecutar prueba de humo en la API:
+2. Ejecutar prueba de humo en la API. El 24/10/2026 la URL y ruta reales respondieron HTTP 200 con `database=connected`:
    ```bash
-   curl -I https://api.enlyce.com/healthz
+   curl -i https://enlyce-production.up.railway.app/health
    ```
 
 ### Paso 4: Plan de Reversión (Rollback)
-Si el script falla o se interrumpe:
-- Con el archivo actual sin `COMMIT` internos, `--single-transaction` revierte toda la ejecución si falla una sentencia. Verificar el historial y el esquema tras el error; no asumir que un archivo regenerado conserva esta propiedad.
-- En caso de requerir restauración forzada desde el dump:
-  ```bash
-  pg_restore --clean --if-exists -d "$DATABASE_URL" "%LOCALAPPDATA%\Enlyce\Backups\<dump_pre_vuelo>.dump"
-  ```
+Si el script falla antes de confirmar la transacción, detener el pase. El archivo actual sin `COMMIT` internos revierte toda la ejecución con `--single-transaction`; comprobar historial, tablas y conteos antes de reintentar. La falla inyectada sobre la restauración del 24/10 dejó 23 migraciones y 24 tablas, igual que el origen. Regenerar el SQL obliga a repetir ese ensayo.
+
+Si la migración confirma pero falla el código nuevo, detener escrituras y volver a la versión anterior de la API y el sitio. Las migraciones actuales son aditivas; verificar que el código anterior funciona con el esquema nuevo antes de abrir tráfico. No borrar columnas ni tablas para simular una reversión.
+
+Si se corrompen datos tras confirmar, mantener el respaldo previo recuperable, restaurarlo en **otra** base aislada y comparar historial, esquema y conteos con el registro pre-vuelo. Calcular las escrituras posteriores que se perderían y obtener autorización expresa para el corte a esa base. No ejecutar `pg_restore --clean` contra la base viva: borraría datos posteriores al respaldo. El responsable, ventana, RPO/RTO y mecanismo de cambio de conexión siguen pendientes de aprobación.
