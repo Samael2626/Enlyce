@@ -862,6 +862,22 @@ class ApiClient {
       body: JSON.stringify(data),
     })
   }
+
+  async getBlogPosts() {
+    return this.request<import("@/lib/types").BlogPost[]>("/api/configuracion/blog/")
+  }
+
+  async createBlogPost(data: import("@/lib/types").BlogPostInput) {
+    return this.request<import("@/lib/types").BlogPost>("/api/configuracion/blog/", {
+      method: "POST", body: JSON.stringify(data),
+    })
+  }
+
+  async updateBlogPost(id: string, data: import("@/lib/types").BlogPostInput) {
+    return this.request<import("@/lib/types").BlogPost>(`/api/configuracion/blog/${id}`, {
+      method: "PUT", body: JSON.stringify(data),
+    })
+  }
 }
 
 export const api = new ApiClient(API_BASE)
