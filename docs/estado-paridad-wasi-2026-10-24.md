@@ -5,7 +5,7 @@
 ## Verificacion de la rama integrada
 
 - Dominio: 256 aprobadas, 0 fallidas.
-- Integracion: 297 aprobadas, 1 omitida (requiere PostgreSQL), 0 fallidas. La matriz de autorizacion incorpora las rutas publicas de CMS y blog.
+- Integracion completa antes del filtro de equipo: 297 aprobadas, 1 omitida (requiere PostgreSQL), 0 fallidas. Tras ese cambio, 17 pruebas dirigidas de tareas y visitas aprobadas. La matriz de autorizacion incorpora las rutas publicas de CMS y blog.
 - CRM: `npm run build` y `npm run test:pwa` aprobados (4/4).
 - Sitio Next.js: `npm run build` aprobado; `/blog` y `/blog/[slug]` se renderizan por solicitud.
 - SQL: 44 migraciones historicas en script idempotente, sin `START TRANSACTION` ni `COMMIT` internos. `prepare-atomic.mjs` verifica que cada migracion generada tenga su par y registro. No se ensayo `psql` ni restauracion: Docker Desktop esta detenido y `psql` no esta disponible.
