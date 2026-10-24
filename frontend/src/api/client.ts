@@ -244,6 +244,14 @@ class ApiClient {
     return this.request<import("@/lib/types").PagedItems<import("@/lib/types").CommercialTask>>(`/api/tareas?${query}`)
   }
 
+  async getCalendarCommercialTasks(filters: { from: string; to: string; query?: string; status?: string; priority?: string }) {
+    const query = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.set(key, value)
+    })
+    return this.request<import("@/lib/types").CommercialTask[]>(`/api/tareas/calendario?${query}`)
+  }
+
   async bulkCompleteTasks(ids: string[]) {
     return this.request<import("@/lib/types").BulkTaskResult>("/api/tareas/bulk/completar", { method: "POST", body: JSON.stringify({ ids }) })
   }

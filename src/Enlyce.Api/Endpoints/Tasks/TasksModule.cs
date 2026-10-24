@@ -58,6 +58,32 @@ public static class TasksModule
         })
         .WithName("ListCommercialTasks");
 
+        group.MapGet("/calendario", async Task<IResult> (
+            DateTime? from, DateTime? to, string? query, string? status, string? priority,
+            HttpContext http, ICommercialTaskRepository tasks, CancellationToken ct) =>
+        {
+            if (!from.HasValue || !to.HasValue || !ValidRange(from, to))
+                return Results.BadRequest(new { error = "El periodo UTC es obligatorio y no puede superar 366 dias." });
+            if (query?.Length > 200)
+                return Results.BadRequest(new { error = "La busqueda no puede superar 200 caracteres." });
+            var overdue = string.Equals(status, "Overdue", StringComparison.OrdinalIgnoreCase);
+            if (status is not null && !overdue && !TryParse(status, out CommercialTaskStatus _))
+                return Results.BadRequest(new { error = "El estado no es valido." });
+            if (priority is not null && !TryParse(priority, out CommercialTaskPriority _))
+                return Results.BadRequest(new { error = "La prioridad no es valida." });
+
+            var advisorId = http.User.IsInRole("Administrador") ? null : EndpointAccess.AdvisorId(http.User);
+            if (!http.User.IsInRole("Administrador") && advisorId is null)
+                return Results.Forbid();
+
+            var items = await tasks.SearchCalendarAsync(advisorId, query,
+                status is null || overdue ? null : Enum.Parse<CommercialTaskStatus>(status, true),
+                overdue, priority is null ? null : Enum.Parse<CommercialTaskPriority>(priority, true),
+                from.Value, to.Value, ct);
+            return Results.Ok(items.Select(ToDto).ToArray());
+        })
+        .WithName("ListCalendarCommercialTasks");
+
         group.MapPost("/bulk/completar", (
             [FromBody] BulkTaskRequest request,
             HttpContext http,

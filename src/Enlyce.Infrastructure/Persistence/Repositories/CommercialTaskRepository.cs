@@ -31,6 +31,27 @@ public sealed class CommercialTaskRepository(EnlyceDbContext context) : ICommerc
         CommercialTaskPriority? priority, DateTime? from, DateTime? to, Guid? contactId,
         int page, int pageSize, CancellationToken ct = default)
     {
+        var query = BuildSearchQuery(advisorId, queryText, status, overdue, priority, from, to, contactId);
+        var total = await query.CountAsync(ct);
+        var items = await query.OrderBy(task => task.DueAt).ThenBy(task => task.Priority)
+            .ThenBy(task => task.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+        return new CommercialTaskSearchPage(total, items);
+    }
+
+    public async Task<IReadOnlyList<CommercialTask>> SearchCalendarAsync(
+        Guid? advisorId, string? queryText, CommercialTaskStatus? status, bool overdue,
+        CommercialTaskPriority? priority, DateTime from, DateTime to, CancellationToken ct = default) =>
+        await BuildSearchQuery(advisorId, queryText, status, overdue, priority, from, to, null)
+            .OrderBy(task => task.DueAt).ThenBy(task => task.Priority).ThenBy(task => task.Id)
+            .ToListAsync(ct);
+
+    private IQueryable<CommercialTask> BuildSearchQuery(Guid? advisorId, string? queryText,
+        CommercialTaskStatus? status, bool overdue, CommercialTaskPriority? priority,
+        DateTime? from, DateTime? to, Guid? contactId)
+    {
         var query = context.CommercialTasks.AsNoTracking().AsQueryable();
         if (advisorId.HasValue)
             query = query.Where(task => task.AdvisorId == advisorId.Value);
@@ -58,13 +79,7 @@ public sealed class CommercialTaskRepository(EnlyceDbContext context) : ICommerc
                      (contact.Email != null && contact.Email.ToLower().Contains(search)))));
         }
 
-        var total = await query.CountAsync(ct);
-        var items = await query.OrderBy(task => task.DueAt).ThenBy(task => task.Priority)
-            .ThenBy(task => task.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(ct);
-        return new CommercialTaskSearchPage(total, items);
+        return query;
     }
 
     public async Task<IReadOnlyList<CommercialTask>> GetByIdsAsync(

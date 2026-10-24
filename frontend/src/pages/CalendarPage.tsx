@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { CalendarClock, Check, ChevronLeft, ChevronRight, Clock3 } from "lucide-react"
-import { useBulkCancelCommercialTasks, useBulkCompleteCommercialTasks, useCommercialTasks, useCompleteCommercialTask, useCancelCommercialTask, useManageVisit, useRescheduleCommercialTask, useVisitas } from "@/hooks/useApi"
+import { useBulkCancelCommercialTasks, useBulkCompleteCommercialTasks, useCalendarCommercialTasks, useCommercialTasks, useCompleteCommercialTask, useCancelCommercialTask, useManageVisit, useRescheduleCommercialTask, useVisitas } from "@/hooks/useApi"
 
 export function CalendarPage() {
   const [anchor, setAnchor] = useState(() => new Date())
@@ -27,6 +27,7 @@ export function CalendarPage() {
     return end.toISOString()
   }, [anchor, view])
   const tasksQuery = useCommercialTasks({ from, to, query, status, priority, page, pageSize })
+  const calendarTasksQuery = useCalendarCommercialTasks({ from, to, query, status, priority })
   const completeTask = useCompleteCommercialTask()
   const cancelTask = useCancelCommercialTask()
   const bulkComplete = useBulkCompleteCommercialTasks()
@@ -44,14 +45,14 @@ export function CalendarPage() {
   })
   const calendarDays = useMemo(() => getCalendarDays(anchor, view), [anchor, view])
   const calendarItems = useMemo(() => {
-    const tasks = (tasksQuery.data?.items ?? []).map((task) => ({
+    const tasks = (calendarTasksQuery.data ?? []).map((task) => ({
       id: task.id, date: new Date(task.dueAt), title: task.title, kind: "Tarea", status: task.status,
     }))
     const visits = periodVisits.map((visit) => ({
       id: visit.id, date: new Date(visit.fechaProgramada), title: `Visita · inmueble ${visit.inmuebleId.slice(0, 8)}`, kind: "Visita", status: visit.estado,
     }))
     return [...tasks, ...visits]
-  }, [tasksQuery.data?.items, periodVisits])
+  }, [calendarTasksQuery.data, periodVisits])
 
   return (
     <div className="space-y-6">
@@ -84,6 +85,7 @@ export function CalendarPage() {
             </button>
           })}
         </div>
+        {calendarTasksQuery.isError && <p role="alert" className="p-4 text-sm text-destructive">No se pudieron cargar todas las tareas del calendario.</p>}
         <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[minmax(0,1fr)_170px_150px_auto]">
           <input aria-label="Buscar tareas" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Buscar título o contacto" className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" />
           <select aria-label="Filtrar por estado" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }} className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">

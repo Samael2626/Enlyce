@@ -12,6 +12,42 @@ public sealed class TaskListBulkEndpointTests(TestWebApplicationFactory factory)
     : IClassFixture<TestWebApplicationFactory>
 {
     [Fact]
+    public async Task CalendarReturnsMoreThanOnePageWithoutExposingOtherAdvisorsTasks()
+    {
+        var (client, advisor) = factory.CreateAuthenticatedClient("Asesor");
+        var (otherClient, otherAdvisor) = factory.CreateAuthenticatedClient("Asesor");
+        using (client)
+        using (otherClient)
+        {
+            var dueAt = DateTime.UtcNow.AddDays(2);
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+                var contact = Contact.Create("Contacto agenda", Email.Create($"{Guid.NewGuid():N}@test.com"));
+                db.Contacts.Add(contact);
+                for (var index = 0; index < 101; index++)
+                    db.CommercialTasks.Add(CommercialTask.Create(contact.Id, null, advisor.Id,
+                        CommercialTaskType.Call, $"Calendario {index}", null,
+                        dueAt.AddMinutes(index), null, CommercialTaskPriority.Normal));
+                db.CommercialTasks.Add(CommercialTask.Create(contact.Id, null, otherAdvisor.Id,
+                    CommercialTaskType.Call, "Calendario ajeno", null, dueAt,
+                    null, CommercialTaskPriority.Normal));
+                await db.SaveChangesAsync();
+            }
+
+            var from = Uri.EscapeDataString(dueAt.AddDays(-1).ToString("O"));
+            var to = Uri.EscapeDataString(dueAt.AddDays(1).ToString("O"));
+            using var response = await client.GetAsync(
+                $"/api/tareas/calendario?from={from}&to={to}&query=Calendario");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var items = await response.Content.ReadFromJsonAsync<TaskItem[]>();
+            Assert.NotNull(items);
+            Assert.Equal(101, items.Length);
+            Assert.All(items, item => Assert.Equal(advisor.Id, item.AdvisorId));
+        }
+    }
+
+    [Fact]
     public async Task ListFiltersSearchByContactAndTitleAndPaginatesWithinAdvisorScope()
     {
         var (client, advisor) = factory.CreateAuthenticatedClient("Asesor");
