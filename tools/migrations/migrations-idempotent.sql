@@ -1804,7 +1804,7 @@ BEGIN
                END, stage_pairs."Name") - 1,
            stage_pairs."FunnelName" = 'Clientes' AND stage_pairs."Name" = 'Nuevo',
            now()
-    FROM stage_pairs
+    FROM stage_pairs;
     END IF;
 END $EF$;
 

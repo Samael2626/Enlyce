@@ -58,6 +58,8 @@ Características técnicas del script:
 
 ## 4. Procedimiento de Ejecución del Gate
 
+**Ensayo local 2026-10-24:** PostgreSQL 17 desechable, base vacía: 44 migraciones aplicadas, segunda ejecución idempotente y fallo inyectado revertido sin tablas residuales. La primera ejecución detectó un punto y coma ausente en `AddCustomerFunnelStages`; se corrigió la migración fuente y se regeneró el SQL. Falta restaurar y ensayar la copia exacta de la base objetivo. El ensayo local no autoriza aplicar el script en Railway.
+
 ### Paso 1: Respaldo Inmediato Pre-Vuelo
 Ejecutar el script de respaldo para capturar el estado exacto de producción minutos antes del pase:
 ```powershell
