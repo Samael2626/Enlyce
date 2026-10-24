@@ -34,8 +34,12 @@ public static class TasksModule
             if (request.Priority is not null && !TryParse(request.Priority, out CommercialTaskPriority _))
                 return Results.BadRequest(new { error = "La prioridad no es valida." });
 
-            var advisorId = http.User.IsInRole("Administrador") ? null : EndpointAccess.AdvisorId(http.User);
-            if (!http.User.IsInRole("Administrador") && advisorId is null)
+            var isAdmin = http.User.IsInRole("Administrador");
+            var ownAdvisorId = EndpointAccess.AdvisorId(http.User);
+            if (!isAdmin && request.AdvisorId.HasValue && request.AdvisorId != ownAdvisorId)
+                return Results.Forbid();
+            var advisorId = isAdmin ? request.AdvisorId : ownAdvisorId;
+            if (!isAdmin && advisorId is null)
                 return Results.Forbid();
 
             if (request.ContactId.HasValue && advisorId.HasValue)
@@ -59,7 +63,7 @@ public static class TasksModule
         .WithName("ListCommercialTasks");
 
         group.MapGet("/calendario", async Task<IResult> (
-            DateTime? from, DateTime? to, string? query, string? status, string? priority,
+            DateTime? from, DateTime? to, string? query, string? status, string? priority, Guid? advisorId,
             HttpContext http, ICommercialTaskRepository tasks, CancellationToken ct) =>
         {
             if (!from.HasValue || !to.HasValue || !ValidRange(from, to))
@@ -72,8 +76,12 @@ public static class TasksModule
             if (priority is not null && !TryParse(priority, out CommercialTaskPriority _))
                 return Results.BadRequest(new { error = "La prioridad no es valida." });
 
-            var advisorId = http.User.IsInRole("Administrador") ? null : EndpointAccess.AdvisorId(http.User);
-            if (!http.User.IsInRole("Administrador") && advisorId is null)
+            var isAdmin = http.User.IsInRole("Administrador");
+            var ownAdvisorId = EndpointAccess.AdvisorId(http.User);
+            if (!isAdmin && advisorId.HasValue && advisorId != ownAdvisorId)
+                return Results.Forbid();
+            advisorId = isAdmin ? advisorId : ownAdvisorId;
+            if (!isAdmin && advisorId is null)
                 return Results.Forbid();
 
             var items = await tasks.SearchCalendarAsync(advisorId, query,
@@ -334,7 +342,7 @@ public static class TasksModule
 public sealed record ListTasksRequest(
     string? Query = null, string? Status = null, string? Priority = null,
     DateTime? From = null, DateTime? To = null, Guid? ContactId = null,
-    int Page = 1, int PageSize = 20);
+    Guid? AdvisorId = null, int Page = 1, int PageSize = 20);
 public sealed record TaskSearchResponse(int Total, IReadOnlyList<CommercialTaskDto> Items);
 public sealed record BulkTaskRequest(IReadOnlyList<Guid> Ids);
 public sealed record BulkTaskResult(Guid Id, string Result);

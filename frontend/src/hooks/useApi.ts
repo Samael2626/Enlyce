@@ -520,10 +520,10 @@ export function useRegistrarInteraccion() {
 }
 
 // Visitas
-export function useVisitas() {
+export function useVisitas(advisorId?: string) {
   return useQuery({
-    queryKey: ["visitas"],
-    queryFn: () => api.getVisitas(),
+    queryKey: ["visitas", advisorId],
+    queryFn: () => api.getVisitas(advisorId),
   })
 }
 

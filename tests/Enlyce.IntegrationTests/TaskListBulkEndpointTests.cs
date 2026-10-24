@@ -12,6 +12,40 @@ public sealed class TaskListBulkEndpointTests(TestWebApplicationFactory factory)
     : IClassFixture<TestWebApplicationFactory>
 {
     [Fact]
+    public async Task AdminCanFilterTeamCalendarAndAdvisorCannotSelectAnotherAdvisor()
+    {
+        var (advisorClient, advisor) = factory.CreateAuthenticatedClient("Asesor");
+        var (otherClient, otherAdvisor) = factory.CreateAuthenticatedClient("Asesor");
+        var (adminClient, _) = factory.CreateAuthenticatedClient("Administrador");
+        using (advisorClient)
+        using (otherClient)
+        using (adminClient)
+        {
+            var dueAt = DateTime.UtcNow.AddDays(3);
+            var ownId = SeedTask(advisor.Id, "Agenda propia", "Contacto propio", dueAt,
+                CommercialTaskPriority.Normal);
+            var otherId = SeedTask(otherAdvisor.Id, "Agenda ajena", "Contacto ajeno", dueAt,
+                CommercialTaskPriority.Normal);
+            var from = Uri.EscapeDataString(dueAt.AddDays(-1).ToString("O"));
+            var to = Uri.EscapeDataString(dueAt.AddDays(1).ToString("O"));
+            var filter = $"advisorId={otherAdvisor.Id}&from={from}&to={to}";
+
+            var calendar = await adminClient.GetFromJsonAsync<TaskItem[]>($"/api/tareas/calendario?{filter}");
+            Assert.Contains(calendar!, item => item.Id == otherId);
+            Assert.DoesNotContain(calendar!, item => item.Id == ownId);
+
+            var list = await adminClient.GetFromJsonAsync<TaskSearchResponse>($"/api/tareas?{filter}");
+            Assert.Contains(list!.Items, item => item.Id == otherId);
+            Assert.DoesNotContain(list.Items, item => item.Id == ownId);
+
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await advisorClient.GetAsync($"/api/tareas/calendario?{filter}")).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await advisorClient.GetAsync($"/api/tareas?{filter}")).StatusCode);
+        }
+    }
+
+    [Fact]
     public async Task CalendarReturnsMoreThanOnePageWithoutExposingOtherAdvisorsTasks()
     {
         var (client, advisor) = factory.CreateAuthenticatedClient("Asesor");

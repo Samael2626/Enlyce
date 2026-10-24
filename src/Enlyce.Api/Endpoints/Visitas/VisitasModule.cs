@@ -13,20 +13,21 @@ public static class VisitasModule
         var group = app.MapGroup("/api/visitas").WithTags("Visitas");
 
         group.MapGet("/", async Task<IResult> (
+            Guid? advisorId,
             HttpContext http,
             IVisitaRepository repo) =>
         {
             if (http.User.IsInRole("Administrador"))
-                return Results.Ok(await repo.ObtenerVisitasAsync(null));
+                return Results.Ok(await repo.ObtenerVisitasAsync(advisorId));
 
             if (!http.User.IsInRole("Asesor"))
                 return Results.Forbid();
 
-            var advisorId = GetAdvisorId(http);
-            if (advisorId is null)
+            var ownAdvisorId = GetAdvisorId(http);
+            if (ownAdvisorId is null || (advisorId.HasValue && advisorId != ownAdvisorId))
                 return Results.Forbid();
 
-            return Results.Ok(await repo.ObtenerVisitasAsync(advisorId));
+            return Results.Ok(await repo.ObtenerVisitasAsync(ownAdvisorId));
         })
         .RequireAuthorization()
         .WithName("ObtenerVisitas")

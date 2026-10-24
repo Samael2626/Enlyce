@@ -236,7 +236,7 @@ class ApiClient {
     })
   }
 
-  async getCommercialTasks(filters: { from?: string; to?: string; contactId?: string; query?: string; status?: string; priority?: string; page?: number; pageSize?: number } = {}) {
+  async getCommercialTasks(filters: { from?: string; to?: string; contactId?: string; query?: string; status?: string; priority?: string; advisorId?: string; page?: number; pageSize?: number } = {}) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== "") query.set(key, String(value))
@@ -244,7 +244,7 @@ class ApiClient {
     return this.request<import("@/lib/types").PagedItems<import("@/lib/types").CommercialTask>>(`/api/tareas?${query}`)
   }
 
-  async getCalendarCommercialTasks(filters: { from: string; to: string; query?: string; status?: string; priority?: string }) {
+  async getCalendarCommercialTasks(filters: { from: string; to: string; query?: string; status?: string; priority?: string; advisorId?: string }) {
     const query = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== "") query.set(key, value)
@@ -574,8 +574,8 @@ class ApiClient {
   }
 
   // Visitas
-  async getVisitas() {
-    return this.request<any[]>("/api/visitas")
+  async getVisitas(advisorId?: string) {
+    return this.request<any[]>(advisorId ? `/api/visitas?advisorId=${encodeURIComponent(advisorId)}` : "/api/visitas")
   }
 
   async getVisitaById(id: string) {
