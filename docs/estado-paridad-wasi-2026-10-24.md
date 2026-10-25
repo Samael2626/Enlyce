@@ -85,3 +85,7 @@ En [conexión de portales Wasi](contratos-portales-wasi-2026-10-25.md) se observ
 En [red Wasi](evidencia-red-wasi-2026-10-25.md) se vieron controles de solicitud/aceptación de alianzas, privacidad de grupos y audiencia del foro. No se ejecutaron acciones ni se validaron permisos, acuerdos o inventario aliado. Enlyce sigue sin red multiempresa; requiere decisión de alcance L&C.
 
 Al aclararse que el correo propuesto para alertas era personal, se desactivó `Enlyce-Backup-Monitor` y se borró su configuración local. Se comprobó que `Enlyce-Postgres-Backup` sigue activa. No hay alertas externas hasta acordar y probar un buzón de servicio o canal de L&C; el respaldo diario no se desactivó.
+
+Después el usuario autorizó expresamente usar esa cuenta personal como remitente. El instalador se ajustó para validar y normalizar la contraseña de aplicación antes de guardar; deja la tarea desactivada hasta que SMTP acepte una prueba y el usuario confirme recepción. La contraseña aún no se ha ingresado; no hay alerta externa activa. La decisión posterior reemplaza la sugerencia de exigir un buzón de servicio.
+
+La cuenta personal se configuró luego mediante prompt oculto. El usuario confirmó recepción del correo SMTP inicial. `Enlyce-Backup-Monitor` se activó y una ejecución manual desde el Programador terminó con código 0; próxima ejecución programada el 26/10 a las 4:00. Dos alertas sintéticas marcadas `PRUEBA` (fallo y omisión) fueron aceptadas por SMTP sin alterar el respaldo; falta confirmar ambas en el buzón. La retención remota sigue sin aplicarse.

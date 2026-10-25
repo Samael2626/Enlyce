@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Install', 'Check', 'SelfTest', 'TestEmail')]
+    [ValidateSet('Install', 'Check', 'SelfTest', 'TestEmail', 'TestAlerts')]
     [string] $Mode = 'Check'
 )
 
@@ -49,22 +49,41 @@ function Send-BackupAlert {
     try { $plainPassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) }
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
 
+    $mailPath = Join-Path $env:TEMP ([IO.Path]::GetRandomFileName())
     try {
-        $message = [Net.Mail.MailMessage]::new($config.Sender, $config.Recipient, $Subject, $Body)
-        $client = [Net.Mail.SmtpClient]::new('smtp.gmail.com', 587)
-        try {
-            $client.EnableSsl = $true
-            $client.UseDefaultCredentials = $false
-            $client.Credentials = [Net.NetworkCredential]::new($config.Sender, $plainPassword)
-            $client.Timeout = 30000
-            $client.Send($message)
+        $plainPassword = $plainPassword -replace ' ', ''
+        if ($plainPassword -notmatch '^[A-Za-z0-9]{16}$') {
+            throw "La contraseña de aplicación debe tener 16 caracteres (recibidos: $($plainPassword.Length))."
         }
-        finally {
-            $client.Dispose()
-            $message.Dispose()
-        }
+        $mail = "From: $($config.Sender)`r`nTo: $($config.Recipient)`r`nSubject: $Subject`r`nContent-Type: text/plain; charset=utf-8`r`n`r`n$Body`r`n"
+        [IO.File]::WriteAllText($mailPath, $mail, [Text.UTF8Encoding]::new($false))
+        $curlConfig = "user = `"$($config.Sender):$plainPassword`""
+        $curlConfig | & curl.exe --config - --silent --show-error --fail --connect-timeout 10 --max-time 30 `
+            --ssl-reqd --url 'smtp://smtp.gmail.com:587' --mail-from $config.Sender `
+            --mail-rcpt $config.Recipient --upload-file $mailPath
+        if ($LASTEXITCODE -ne 0) { throw "Gmail SMTP devolvió código $LASTEXITCODE." }
     }
-    finally { $plainPassword = $null }
+    finally {
+        $plainPassword = $null
+        if (Test-Path -LiteralPath $mailPath) { Remove-Item -LiteralPath $mailPath -Force }
+    }
+}
+
+function Protect-GmailPassword {
+    param([securestring] $Password)
+
+    $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
+    try {
+        $normalized = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) -replace ' ', ''
+        if ($normalized -notmatch '^[A-Za-z0-9]{16}$') {
+            throw 'La contraseña de aplicación debe tener 16 caracteres; se aceptan tres espacios separadores.'
+        }
+        return (ConvertTo-SecureString -String $normalized -AsPlainText -Force | ConvertFrom-SecureString)
+    }
+    finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
+        $normalized = $null
+    }
 }
 
 function Install-Monitor {
@@ -78,7 +97,8 @@ function Install-Monitor {
     [void][Net.Mail.MailAddress]::new($sender)
     [void][Net.Mail.MailAddress]::new($recipient)
     $password = Read-Host 'Contraseña de aplicación de Gmail (no se mostrará)' -AsSecureString
-    @{ Sender = $sender; Recipient = $recipient; EncryptedPassword = ($password | ConvertFrom-SecureString) } |
+    $encryptedPassword = Protect-GmailPassword -Password $password
+    @{ Sender = $sender; Recipient = $recipient; EncryptedPassword = $encryptedPassword } |
         ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
 
     $scriptPath = Join-Path $PSScriptRoot 'Vigilar-Respaldo-Enlyce.ps1'
@@ -87,7 +107,8 @@ function Install-Monitor {
     $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
     $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 5) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
     Register-ScheduledTask -TaskName $monitorTaskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
-    Write-Host "Monitor instalado: $monitorTaskName, 4:00 a. m."
+    Disable-ScheduledTask -TaskName $monitorTaskName | Out-Null
+    Write-Host "Monitor configurado: $monitorTaskName, 4:00 a. m. Queda desactivado hasta probar correo y recepcion."
 }
 
 function Invoke-Monitor {
@@ -126,7 +147,17 @@ function Test-Monitor {
         $actual = Get-BackupHealth -ExpectedAt $expected -LastRunAt $case.LastRun -LastTaskResult $case.Result -LastSuccessAt $case.LastOk
         if ($actual -ne $case.Want) { throw "Esperado $($case.Want), recibido $actual" }
     }
-    Write-Host '4 casos de monitor aprobados.'
+    $sample = ConvertTo-SecureString -String 'abcd efgh ijkl mnop' -AsPlainText -Force
+    $encrypted = Protect-GmailPassword -Password $sample
+    if ((ConvertTo-SecureString $encrypted).Length -ne 16) {
+        throw 'La contraseña de prueba no se normalizo a 16 caracteres.'
+    }
+    $invalidRejected = $false
+    try { Protect-GmailPassword -Password (ConvertTo-SecureString -String 'abcdefghij' -AsPlainText -Force) | Out-Null }
+    catch { $invalidRejected = $true }
+    if (-not $invalidRejected) { throw 'Se acepto una contraseña de prueba corta.' }
+    if (-not (Get-Command curl.exe -ErrorAction SilentlyContinue)) { throw 'Falta curl.exe para SMTP.' }
+    Write-Host '4 casos de monitor, validacion de contraseña y curl aprobados.'
 }
 
 switch ($Mode) {
@@ -136,5 +167,10 @@ switch ($Mode) {
     'TestEmail' {
         Send-BackupAlert -Subject 'Enlyce: prueba del monitor de respaldos' -Body 'Prueba de alerta. No se ha detectado un fallo de respaldo.'
         Write-Host 'Correo de prueba aceptado por SMTP.'
+    }
+    'TestAlerts' {
+        Send-BackupAlert -Subject 'Enlyce: PRUEBA respaldo Failed' -Body 'Prueba sintetica de fallo. El respaldo real no se ha modificado.'
+        Send-BackupAlert -Subject 'Enlyce: PRUEBA respaldo Missed' -Body 'Prueba sintetica de ejecucion omitida. El respaldo real no se ha modificado.'
+        Write-Host 'Dos alertas de prueba aceptadas por SMTP.'
     }
 }
