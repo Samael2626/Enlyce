@@ -59,10 +59,13 @@ function Get-RetentionPlan {
     $candidates = [Collections.Generic.List[object]]::new()
     $days = [Collections.Generic.HashSet[string]]::new()
     $months = [Collections.Generic.HashSet[string]]::new()
-    foreach ($item in ($dated | Sort-Object Timestamp -Descending)) {
+    $ordered = @($dated | Sort-Object Timestamp -Descending)
+    $latestName = if ($ordered.Count -gt 0) { $ordered[0].Name } else { $null }
+    foreach ($item in $ordered) {
         $day = $item.Timestamp.ToString('yyyy-MM-dd')
         $month = $item.Timestamp.ToString('yyyy-MM')
-        if ($item.Timestamp.Date -ge $recentStart -or
+        if ($item.Name -eq $latestName -or
+            $item.Timestamp.Date -ge $recentStart -or
             ($item.Timestamp.Date -ge $dailyStart -and $days.Add($day)) -or
             ($item.Timestamp -ge $monthlyStart -and $item.Timestamp -lt $currentMonth -and $months.Add($month))) {
             $keep.Add($item)
@@ -85,7 +88,13 @@ function Test-RetentionPlan {
     if ($plan.Keep.Count -ne 5 -or $plan.Candidates.Count -ne 3 -or $plan.Unknown.Count -ne 2) {
         throw "Plan inesperado: $($plan.Keep.Count)/$($plan.Candidates.Count)/$($plan.Unknown.Count)"
     }
-    Write-Host 'Retencion sintetica aprobada: 5 conservar, 3 candidatos, 2 desconocidos protegidos.'
+    $stale = @('enlyce-20240101-020000.dump', 'enlyce-20230101-020000.dump') |
+        ForEach-Object { [pscustomobject]@{ name = $_; metadata = @{ size = 100 } } }
+    $stalePlan = Get-RetentionPlan -Objects $stale -Now $now
+    if ($stalePlan.Keep.Count -ne 1 -or $stalePlan.Keep[0].Name -ne $stale[0].name -or $stalePlan.Candidates.Count -ne 1) {
+        throw 'El plan debe conservar el respaldo mas reciente aunque todos sean antiguos.'
+    }
+    Write-Host 'Retencion sintetica aprobada: 5 conservar, 3 candidatos, 2 desconocidos protegidos; ultimo respaldo siempre protegido.'
 }
 
 if ($Mode -eq 'SelfTest') { Test-RetentionPlan; return }
