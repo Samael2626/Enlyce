@@ -79,3 +79,5 @@ También se observaron [gestiones y tareas en Wasi](evidencia-gestiones-wasi-202
 En [blog y banners Wasi](evidencia-cms-wasi-2026-10-25.md) se inspeccionaron las listas vacías y los formularios de alta sin guardar. El blog pidió título, imagen, resumen y cuerpo; el banner, imagen, título, vínculo y estado. Falta probar publicación real y decidir si L&C requiere varios banners ordenables; no se acredita paridad CMS.
 
 La ficha Enlyce incorporó los intervalos de aviso de tareas observados en Wasi, con cálculo desde la fecha del compromiso y opción personalizada. El build del CRM pasó; esto no prueba que el aviso se entregue por el mismo canal de Wasi ni que se notifique al cliente.
+
+En [conexión de portales Wasi](contratos-portales-wasi-2026-10-25.md) se observaron Fincaraiz y Metrocuadrado conectados y varios portales gratuitos conectados. Se documentaron controles y contratos requeridos sin leer credenciales ni publicar anuncios. L&C debe elegir portales y proporcionar acceso/API independientes; el estado conectado en Wasi no constituye autorización de integración Enlyce.
