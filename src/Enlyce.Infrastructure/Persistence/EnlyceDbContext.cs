@@ -36,6 +36,7 @@ public class EnlyceDbContext : DbContext
     public DbSet<EmailDeliveryLog> EmailDeliveryLogs => Set<EmailDeliveryLog>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<PublicWebsiteConfig> PublicWebsiteConfigs => Set<PublicWebsiteConfig>();
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
 
     public EnlyceDbContext(DbContextOptions<EnlyceDbContext> options) : base(options) { }
 

@@ -60,3 +60,9 @@ public static class ClientImportFields
     public const string CustomerLabels = "customerLabels";
     public const string CustomerFunnel = "customerFunnel";
 }
+
+public static class ClientImportPhoneSafety
+{
+    public static bool IsExactNumericPhone(string value) =>
+        value.Length is >= 7 and <= 15 && value[0] != '0' && value.All(char.IsDigit);
+}

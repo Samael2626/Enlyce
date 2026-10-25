@@ -904,6 +904,25 @@ export interface MarketComparativeAnalysisResult {
 }
 
 // Configuracion Sitio Web Publico (CMS)
+export interface BlogPost {
+  id: string
+  slug: string
+  title: string
+  summary: string
+  body: string
+  coverImageUrl: string | null
+  seoTitle: string
+  seoDescription: string
+  isPublished: boolean
+  publishedAtUtc: string | null
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export type BlogPostInput = Pick<BlogPost,
+  "slug" | "title" | "summary" | "body" | "coverImageUrl" |
+  "seoTitle" | "seoDescription" | "isPublished">
+
 export interface PublicWebsiteConfig {
   agencyName: string
   slogan: string

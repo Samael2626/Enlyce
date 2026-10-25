@@ -18,6 +18,7 @@ import { GestionesPage } from "@/pages/GestionesPage"
 import { ChatPage } from "@/pages/ChatPage"
 import { MercadoPage } from "@/pages/MercadoPage"
 import { SettingsPage } from "@/pages/SettingsPage"
+import { BlogPage } from "@/pages/BlogPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,6 +57,7 @@ export function App() {
               <Route path="/mercado" element={<MercadoPage />} />
               <Route path="/reportes" element={<AnaliticaPage />} />
               <Route path="/config" element={<SettingsPage />} />
+              <Route path="/blog" element={<BlogPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

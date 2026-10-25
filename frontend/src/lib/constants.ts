@@ -103,4 +103,5 @@ export const NAV_ITEMS = [
   { title: "Alertas", href: "/alertas", icon: "Bell" },
   { title: "Plan y facturación", href: "/facturacion", icon: "CreditCard", adminOnly: true },
   { title: "Configuración", href: "/config", icon: "Settings", adminOnly: true },
+  { title: "Blog editorial", href: "/blog", icon: "Settings", adminOnly: true },
 ] as const

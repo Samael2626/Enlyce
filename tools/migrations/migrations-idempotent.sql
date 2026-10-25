@@ -4,8 +4,6 @@
     CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
 );
 
-START TRANSACTION;
-
 DO $EF$
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260819233121_InitialCreate') THEN
@@ -245,9 +243,6 @@ BEGIN
     VALUES ('20260819233121_InitialCreate', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -376,9 +371,6 @@ BEGIN
     VALUES ('20260904230951_AddPropertyPublications', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -401,9 +393,6 @@ BEGIN
     VALUES ('20260911175754_AddOwnerServiceToLeads', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -426,9 +415,6 @@ BEGIN
     VALUES ('20260911182545_AddPublicationIdToLeads', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -448,9 +434,6 @@ BEGIN
     VALUES ('20260922115201_RedondearCoordenadasPublicas', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -498,9 +481,6 @@ BEGIN
     VALUES ('20260925042518_AddPaymentOrders', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -575,9 +555,6 @@ BEGIN
     VALUES ('20260926152753_AddOwnerInquiryDetails', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -614,9 +591,6 @@ BEGIN
     VALUES ('20260927151212_SecureOwnerInquiryContinuation', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -675,9 +649,6 @@ BEGIN
     VALUES ('20260927155326_HardenSecurityAudit', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -715,9 +686,6 @@ BEGIN
     VALUES ('20260928030423_AddWebAnalytics', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -791,9 +759,6 @@ BEGIN
     VALUES ('20261008195641_LinkLeadsToContacts', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -880,9 +845,6 @@ BEGIN
     VALUES ('20261008200424_AddCommercialTasks', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -984,9 +946,6 @@ BEGIN
     VALUES ('20261009000231_DemandAndFirstResponse', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1057,9 +1016,6 @@ BEGIN
     VALUES ('20261009040430_TrackLeadAssignmentHistory', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1099,9 +1055,6 @@ BEGIN
     VALUES ('20261009042314_ConfigureLeadDistribution', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1117,9 +1070,6 @@ BEGIN
     VALUES ('20261009042459_AddRoundRobinCursor', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1160,9 +1110,6 @@ BEGIN
     VALUES ('20261009173821_TrackLeadStageHistory', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1194,9 +1141,6 @@ BEGIN
     VALUES ('20261009183408_AddLeadSlaRules', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1219,9 +1163,6 @@ BEGIN
     VALUES ('20261009190152_CaptureLeadSourceAttribution', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1244,9 +1185,6 @@ BEGIN
     VALUES ('20261009224818_EnforcePublicCoordinatePrecision', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1278,9 +1216,6 @@ BEGIN
     VALUES ('20261010010224_TrackPaymentOrderStatusChanges', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1315,9 +1250,6 @@ BEGIN
     VALUES ('20261010023810_UseLeadSlaResponseMinutes', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1340,9 +1272,6 @@ BEGIN
     VALUES ('20261013002606_AgregarExternalRefInmueble', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1449,9 +1378,6 @@ BEGIN
     VALUES ('20261014132917_AddIndependentImportedContacts', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1504,9 +1430,6 @@ BEGIN
     VALUES ('20261014142031_AddContactEmailPermissionEvents', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1533,9 +1456,6 @@ BEGIN
     VALUES ('20261014142900_AddContactImportIdempotency', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1565,9 +1485,6 @@ BEGIN
     VALUES ('20261014143455_AddCustomerDemandAreaAndCurrency', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1604,9 +1521,6 @@ BEGIN
     VALUES ('20261014144248_AddPropertyCountryDepartmentAndDemandLocation', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1657,9 +1571,6 @@ BEGIN
     VALUES ('20261014145955_AddContactPrivateProfileFields', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1675,9 +1586,6 @@ BEGIN
     VALUES ('20261014160000_AddContactFunnel', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1714,9 +1622,6 @@ BEGIN
     VALUES ('20261014162300_AddDemandAndPropertyFeatures', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1739,9 +1644,6 @@ BEGIN
     VALUES ('20261014170000_AddMultipleCustomerTypes', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1757,9 +1659,6 @@ BEGIN
     VALUES ('20261014180000_AddCustomerLabels', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1789,9 +1688,6 @@ BEGIN
     VALUES ('20261015010253_AddCustomerCatalogItems', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1807,9 +1703,6 @@ BEGIN
     VALUES ('20261015043830_AgregarAnioConstruccionInmueble', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1825,9 +1718,6 @@ BEGIN
     VALUES ('20261015044422_AgregarEstadoFisicoInmueble', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1843,9 +1733,6 @@ BEGIN
     VALUES ('20261015044838_AgregarEtiquetasInmueble', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1875,9 +1762,6 @@ BEGIN
     VALUES ('20261015045612_AgregarAsesorResponsableInmueble', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -1920,7 +1804,7 @@ BEGIN
                END, stage_pairs."Name") - 1,
            stage_pairs."FunnelName" = 'Clientes' AND stage_pairs."Name" = 'Nuevo',
            now()
-    FROM stage_pairs
+    FROM stage_pairs;
     END IF;
 END $EF$;
 
@@ -1952,9 +1836,6 @@ BEGIN
     VALUES ('20261015052059_AddCustomerFunnelStages', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -2026,9 +1907,6 @@ BEGIN
     VALUES ('20261015154409_AddRealizedDeals', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -2068,9 +1946,6 @@ BEGIN
     VALUES ('20261015162531_AddEmailDeliveryLogs', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -2116,9 +1991,6 @@ BEGIN
     VALUES ('20261023232115_AddChatMessages', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
-
-START TRANSACTION;
 
 DO $EF$
 BEGIN
@@ -2156,5 +2028,48 @@ BEGIN
     VALUES ('20261023235334_AddPublicWebsiteConfig', '10.0.11');
     END IF;
 END $EF$;
-COMMIT;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    CREATE TABLE "BlogPosts" (
+        "Id" uuid NOT NULL,
+        "Slug" character varying(120) NOT NULL,
+        "Title" character varying(200) NOT NULL,
+        "Summary" character varying(500) NOT NULL,
+        "Body" character varying(20000) NOT NULL,
+        "CoverImageUrl" character varying(500),
+        "SeoTitle" character varying(150) NOT NULL,
+        "SeoDescription" character varying(300) NOT NULL,
+        "IsPublished" boolean NOT NULL,
+        "PublishedAtUtc" timestamp with time zone,
+        "CreatedAtUtc" timestamp with time zone NOT NULL,
+        "UpdatedAtUtc" timestamp with time zone NOT NULL,
+        "AuthorUserId" uuid NOT NULL,
+        CONSTRAINT "PK_BlogPosts" PRIMARY KEY ("Id")
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    CREATE INDEX "IX_BlogPosts_IsPublished_PublishedAtUtc" ON "BlogPosts" ("IsPublished", "PublishedAtUtc");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    CREATE UNIQUE INDEX "IX_BlogPosts_Slug" ON "BlogPosts" ("Slug");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261024014120_AddBlogPosts') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261024014120_AddBlogPosts', '10.0.11');
+    END IF;
+END $EF$;
 

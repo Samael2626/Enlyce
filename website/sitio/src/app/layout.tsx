@@ -68,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/inmuebles?operation=Venta">Comprar</Link>
               <Link href="/inmuebles?operation=Arriendo">Arrendar</Link>
               <Link href="/zonas">Zonas</Link>
+              <Link href="/blog">Blog</Link>
               <Link href="/favoritos">Mis favoritos</Link>
             </nav>
             <nav aria-label="Empresa">

@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
 using Enlyce.Api.Endpoints.Billing;
+using Enlyce.Api.Endpoints.Blog;
 using Enlyce.Api.Endpoints.Analytics;
 using Enlyce.Api.Development;
 using Enlyce.Api.Endpoints.Alertas;
@@ -383,6 +384,7 @@ app.MapAnalytics();
 app.MapRealizedDeals();
 app.MapChat();
 app.MapWebsiteConfig();
+app.MapBlog();
 app.MapHub<ChatHub>("/hubs/chat");
 
 var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");

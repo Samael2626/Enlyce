@@ -319,6 +319,13 @@ export function useCommercialTasks(filters: Parameters<typeof api.getCommercialT
   })
 }
 
+export function useCalendarCommercialTasks(filters: Parameters<typeof api.getCalendarCommercialTasks>[0]) {
+  return useQuery({
+    queryKey: ["tasks", "calendar", filters],
+    queryFn: () => api.getCalendarCommercialTasks(filters),
+  })
+}
+
 export function useBulkCompleteCommercialTasks() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -513,10 +520,10 @@ export function useRegistrarInteraccion() {
 }
 
 // Visitas
-export function useVisitas() {
+export function useVisitas(advisorId?: string) {
   return useQuery({
-    queryKey: ["visitas"],
-    queryFn: () => api.getVisitas(),
+    queryKey: ["visitas", advisorId],
+    queryFn: () => api.getVisitas(advisorId),
   })
 }
 

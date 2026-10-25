@@ -3,6 +3,7 @@ import { useAdvisors, useChangeInmuebleTrashState, useChangeInmueblesTrashState,
 import { PropertyDemandsPanel } from "@/components/PropertyDemandsPanel"
 import { TIPOS_INMUEBLE, MODALIDADES_INMUEBLE, ETIQUETAS_MODALIDAD_INMUEBLE } from "@/lib/constants"
 import { api } from "@/api/client"
+import { crmPropertySlug, downloadPropertySheet, propertyWhatsappUrl } from "@/lib/propertySheet"
 import { useAuthStore } from "@/stores/authStore"
 import { useSearchParams } from "react-router-dom"
 import {
@@ -32,6 +33,8 @@ export function InmueblesPage() {
   const [crossProperty, setCrossProperty] = useState<{ id: string; name: string } | null>(null)
   const [emailingInventory, setEmailingInventory] = useState(false)
   const [inventoryExportMessage, setInventoryExportMessage] = useState("")
+  const [sheetError, setSheetError] = useState("")
+  const [sheetLoading, setSheetLoading] = useState(false)
   const inventory = useInmuebles({
     page, ...filters, papelera: showTrash,
     precioDesde: filters.precioDesde ? Number(filters.precioDesde) : undefined,
@@ -51,6 +54,19 @@ export function InmueblesPage() {
   const changeTrashState = useChangeInmuebleTrashState()
   const changeInmueblesTrashState = useChangeInmueblesTrashState()
   const editingProperty = useInmueble(editingId)
+
+  async function downloadSheet() {
+    if (!editingId) return
+    setSheetError("")
+    setSheetLoading(true)
+    try {
+      await downloadPropertySheet(crmPropertySlug(editingId))
+    } catch {
+      setSheetError("La ficha pública de este inmueble no está disponible. Revisa su estado antes de compartirla.")
+    } finally {
+      setSheetLoading(false)
+    }
+  }
 
   useEffect(() => {
     const property = editingProperty.data
@@ -232,6 +248,7 @@ export function InmueblesPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5 p-5 md:p-7">
+              {sheetError && <p role="alert" className="text-sm text-destructive">{sheetError}</p>}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {editingProperty.isError && editingId && <p role="alert" className="text-sm text-destructive sm:col-span-2">No se pudo cargar el inmueble para editar.</p>}
                 <div className="sm:col-span-2">
@@ -409,6 +426,16 @@ export function InmueblesPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-4 border-t">
+                {editingId && editingProperty.data?.activo && (
+                  <>
+                    <button type="button" className="rounded border px-3 py-2 text-sm" disabled={sheetLoading} onClick={() => void downloadSheet()}>
+                      Descargar ficha PDF
+                    </button>
+                    <a className="rounded border px-3 py-2 text-sm" href={propertyWhatsappUrl(editingProperty.data.nombre, crmPropertySlug(editingId))} target="_blank" rel="noopener noreferrer">
+                      Compartir por WhatsApp
+                    </a>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => { setEditingId(""); setShowForm(false) }}
