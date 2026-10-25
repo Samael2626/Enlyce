@@ -81,3 +81,5 @@ En [blog y banners Wasi](evidencia-cms-wasi-2026-10-25.md) se inspeccionaron las
 La ficha Enlyce incorporó los intervalos de aviso de tareas observados en Wasi, con cálculo desde la fecha del compromiso y opción personalizada. El build del CRM pasó; esto no prueba que el aviso se entregue por el mismo canal de Wasi ni que se notifique al cliente.
 
 En [conexión de portales Wasi](contratos-portales-wasi-2026-10-25.md) se observaron Fincaraiz y Metrocuadrado conectados y varios portales gratuitos conectados. Se documentaron controles y contratos requeridos sin leer credenciales ni publicar anuncios. L&C debe elegir portales y proporcionar acceso/API independientes; el estado conectado en Wasi no constituye autorización de integración Enlyce.
+
+En [red Wasi](evidencia-red-wasi-2026-10-25.md) se vieron controles de solicitud/aceptación de alianzas, privacidad de grupos y audiencia del foro. No se ejecutaron acciones ni se validaron permisos, acuerdos o inventario aliado. Enlyce sigue sin red multiempresa; requiere decisión de alcance L&C.

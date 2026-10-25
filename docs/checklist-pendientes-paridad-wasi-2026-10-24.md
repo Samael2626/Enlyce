@@ -46,7 +46,7 @@ Estado al 24/10/2026. Este listado desglosa las casillas abiertas del [checklist
 ## 5. Contratos y decisiones de alcance
 
 - [ ] Para cada portal que L&C use: [configuración Wasi y matriz de contratos observadas](contratos-portales-wasi-2026-10-25.md). Fincaraiz y Metrocuadrado aparecen conectados, pero faltan contrato/API independiente, credenciales de prueba, campos, alta/edición/baja, estados, errores y reintentos. Probar sin afectar anuncios reales.
-- [ ] Observar foro, inmuebles aliados, alianzas y grupos; acordar con L&C roles, acuerdos, audiencia, moderación y si requiere red multiempresa antes de implementarla.
+- [ ] Observar foro, inmuebles aliados, alianzas y grupos: [controles de alianzas, grupos y foro observados](evidencia-red-wasi-2026-10-25.md), sin ejecutar acciones ni inspeccionar inventario aliado. Acordar con L&C roles, acuerdos, audiencia, moderación y si requiere red multiempresa antes de implementarla.
 - [ ] Recorrer configuración inicial de empresa en Wasi y registrar campos, validaciones y permisos; implementar el alta necesaria.
 - [ ] Decidir con L&C alcance de redes sociales, marketing, cuenta, soporte, academia, reputación y facturación. Documentar contrato o exclusión aprobada por función.
 
