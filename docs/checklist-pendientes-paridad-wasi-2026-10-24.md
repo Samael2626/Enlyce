@@ -24,7 +24,7 @@ Estado al 24/10/2026. Este listado desglosa las casillas abiertas del [checklist
 - [ ] Cargar controladamente los 63 clientes en Enlyce **solo tras** gate y etapas; conciliar resultados y comprobar que reejecutar el lote no duplica fichas. No repetir importación en Wasi.
 - [ ] Validar exportación real de clientes Enlyce: filtros, entrega SMTP, adjunto XLSX, valores y reimportación. Comparar con una exportación Wasi observada sin guardar datos personales en Git.
 - [ ] Observar en Wasi importación/exportación de demandas con sesión real; documentar columnas, validaciones, rechazo por fila y permisos. Implementar lo aprobado con pruebas de éxito y error.
-- [ ] Comparar alta, edición, estados y cruce de demandas con inmuebles propios: porcentajes, filtros, límites y acceso por asesor. Probar resultados concretos de Wasi en Enlyce.
+- [ ] Comparar alta, edición, estados y cruce de demandas con inmuebles propios: porcentajes, filtros, límites y acceso por asesor. [Observación real del 25/10](evidencia-cruce-demandas-wasi-2026-10-25.md): una coincidencia en red mostró `Acierto: 56.6%`; la fórmula y permisos no quedaron demostrados. Probar resultados controlados de Wasi en Enlyce.
 
 ## 3. Gestiones, calificaciones e inmuebles
 
