@@ -30,7 +30,7 @@ Estado al 24/10/2026. Este listado desglosa las casillas abiertas del [checklist
 - [ ] Atribuir y separar `ContactActivity`, `ServiceRating` y `PropertyMedia` del checkout principal. Revisar dependencias, DI, migraciones y snapshot EF por módulo; incorporar solo código trazable y probado en `codex/paridad-gate`.
 - [ ] Observar y reproducir gestiones desde ficha: tipos, fechas, autor, visibilidad, edición/borrado, permisos y errores. Probar API, persistencia e interfaz.
 - [ ] Observar y reproducir calificaciones: criterios, cálculo, permisos, invitación por correo, respuesta y errores. Probar casos reales anonimizados.
-- [ ] Sustituir ImageSharp vulnerable tras prototipo de otra biblioteca: licencia, compatibilidad Linux/Windows, límites de recursos, formato, orientación y pruebas. `Magick.NET-Q8-AnyCPU` es candidato, no decisión cerrada.
+- [x] Sustituir ImageSharp vulnerable: Magick.NET-Q8-AnyCPU 15.0.0 pasó pruebas de formato, límites y orientación en Windows y Linux (23 dirigidas). NPOI se retiró por su EULA y ImageSharp transitivo; el lector XLS/XLSX usa ExcelDataReader y OpenMcdf. Auditoría NuGet sin paquetes vulnerables en Infrastructure. Fotos aún apagadas por `PropertyMedia`.
 - [ ] Integrar fotos y cola solo tras separar `PropertyMedia` y ensayar migración sobre copia restaurada; probar fotos reales autorizadas, reintentos, concurrencia, atribución y acceso.
 - [ ] Comparar ficha PDF y compartir por WhatsApp con inmueble real: imágenes, campos públicos, privacidad de propietario y errores.
 

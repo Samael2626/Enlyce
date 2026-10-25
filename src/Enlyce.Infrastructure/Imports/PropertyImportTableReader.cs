@@ -1,8 +1,10 @@
 using System.Globalization;
+using System.IO.Compression;
 using System.Text;
+using System.Xml;
 using ExcelDataReader;
 using Enlyce.Application.Imports;
-using NPOI.SS.UserModel;
+using OpenMcdf;
 
 namespace Enlyce.Infrastructure.Imports;
 
@@ -10,9 +12,9 @@ public sealed class PropertyImportTableReader : IPropertyImportTableReader
 {
     private const int MaximumColumns = 100;
     private const int MaximumRows = 2_000;
+    private const int MaximumFileBytes = 16 * 1024 * 1024;
 
-    static PropertyImportTableReader() =>
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    static PropertyImportTableReader() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
     public Task<PropertyImportTable> ReadAsync(Stream file, string fileName, CancellationToken ct = default)
     {
@@ -21,7 +23,7 @@ public sealed class PropertyImportTableReader : IPropertyImportTableReader
         return extension switch
         {
             ".csv" => Task.FromResult(ReadCsv(file, ct)),
-            ".xls" or ".xlsx" => Task.FromResult(ReadWorkbook(file, ct)),
+            ".xls" or ".xlsx" => Task.FromResult(ReadWorkbook(file, extension, ct)),
             _ => throw new InvalidDataException("El archivo debe ser CSV, XLS o XLSX.")
         };
     }
@@ -35,7 +37,32 @@ public sealed class PropertyImportTableReader : IPropertyImportTableReader
             TrimWhiteSpace = true,
             LeaveOpen = true
         });
+        return ReadRows(reader, rejectTextFormulas: true, ct);
+    }
 
+    private static PropertyImportTable ReadWorkbook(Stream file, string extension, CancellationToken ct)
+    {
+        using var content = new MemoryStream();
+        var chunk = new byte[81920];
+        int count;
+        while ((count = file.Read(chunk)) != 0)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (content.Length + count > MaximumFileBytes)
+                throw new InvalidDataException("El archivo supera el máximo de 16 MB.");
+            content.Write(chunk, 0, count);
+        }
+
+        content.Position = 0;
+        if (extension == ".xlsx") RejectOpenXmlFormulas(content, ct);
+        else RejectBinaryFormulas(content, ct);
+        content.Position = 0;
+        using var reader = ExcelReaderFactory.CreateReader(content);
+        return ReadRows(reader, rejectTextFormulas: false, ct);
+    }
+
+    private static PropertyImportTable ReadRows(IExcelDataReader reader, bool rejectTextFormulas, CancellationToken ct)
+    {
         if (!reader.Read())
             throw new InvalidDataException("El archivo no contiene encabezados.");
         if (reader.FieldCount is < 1 or > MaximumColumns)
@@ -44,8 +71,10 @@ public sealed class PropertyImportTableReader : IPropertyImportTableReader
         var columns = Enumerable.Range(0, reader.FieldCount)
             .Select(index => CellText(reader.GetValue(index), reader.GetNumberFormatString(index)) ?? string.Empty)
             .ToArray();
-        RejectCsvFormulas(columns);
-        ValidateHeaders(columns);
+        if (rejectTextFormulas) RejectCsvFormulas(columns);
+        if (columns.All(string.IsNullOrWhiteSpace))
+            throw new InvalidDataException("La primera fila debe contener los encabezados.");
+
         var rows = new List<IReadOnlyList<string?>>();
         while (reader.Read())
         {
@@ -53,96 +82,71 @@ public sealed class PropertyImportTableReader : IPropertyImportTableReader
             var row = Enumerable.Range(0, reader.FieldCount)
                 .Select(index => CellText(reader.GetValue(index), reader.GetNumberFormatString(index)))
                 .ToArray();
-            RejectCsvFormulas(row);
-            if (row.All(string.IsNullOrWhiteSpace))
-                continue;
-            AddRow(rows, row);
+            if (rejectTextFormulas) RejectCsvFormulas(row);
+            if (row.All(string.IsNullOrWhiteSpace)) continue;
+            if (rows.Count >= MaximumRows)
+                throw new InvalidDataException($"El archivo supera el máximo de {MaximumRows} inmuebles.");
+            rows.Add(row);
         }
 
         return new PropertyImportTable(columns, rows);
     }
 
-    private static PropertyImportTable ReadWorkbook(Stream file, CancellationToken ct)
+    private static void RejectOpenXmlFormulas(Stream content, CancellationToken ct)
     {
-        using var workbook = WorkbookFactory.Create(file);
-        if (workbook.NumberOfSheets == 0)
-            throw new InvalidDataException("El archivo no contiene hojas.");
-
-        var sheet = workbook.GetSheetAt(0);
-        if (sheet.PhysicalNumberOfRows == 0)
-            throw new InvalidDataException("El archivo no contiene encabezados.");
-
-        RejectFormulas(workbook, ct);
-        var header = sheet.GetRow(sheet.FirstRowNum)
-            ?? throw new InvalidDataException("El archivo no contiene encabezados.");
-        var columnCount = header.LastCellNum;
-        if (columnCount is < 1 or > MaximumColumns)
-            throw new InvalidDataException($"El archivo debe tener entre 1 y {MaximumColumns} columnas.");
-
-        var formatter = new DataFormatter(CultureInfo.InvariantCulture);
-        var columns = Enumerable.Range(0, columnCount)
-            .Select(index => CellText(header.GetCell(index), formatter) ?? string.Empty)
-            .ToArray();
-        ValidateHeaders(columns);
-
-        var rows = new List<IReadOnlyList<string?>>();
-        for (var rowIndex = header.RowNum + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+        using var archive = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
+        foreach (var entry in archive.Entries)
         {
             ct.ThrowIfCancellationRequested();
-            var sourceRow = sheet.GetRow(rowIndex);
-            var row = Enumerable.Range(0, columnCount)
-                .Select(index => CellText(sourceRow?.GetCell(index), formatter))
-                .ToArray();
-            if (row.All(string.IsNullOrWhiteSpace))
+            if (!entry.FullName.StartsWith("xl/", StringComparison.OrdinalIgnoreCase) ||
+                !entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
                 continue;
-            AddRow(rows, row);
-        }
-
-        return new PropertyImportTable(columns, rows);
-    }
-
-    private static void RejectFormulas(IWorkbook workbook, CancellationToken ct)
-    {
-        for (var sheetIndex = 0; sheetIndex < workbook.NumberOfSheets; sheetIndex++)
-        {
-            var sheet = workbook.GetSheetAt(sheetIndex);
-            for (var rowIndex = sheet.FirstRowNum; rowIndex <= sheet.LastRowNum; rowIndex++)
+            using var stream = entry.Open();
+            using var reader = XmlReader.Create(stream, new XmlReaderSettings
+            {
+                DtdProcessing = DtdProcessing.Prohibit,
+                XmlResolver = null,
+                MaxCharactersInDocument = 32_000_000
+            });
+            while (reader.Read())
             {
                 ct.ThrowIfCancellationRequested();
-                var row = sheet.GetRow(rowIndex);
-                if (row is null) continue;
-                for (var cellIndex = row.FirstCellNum; cellIndex >= 0 && cellIndex < row.LastCellNum; cellIndex++)
-                    if (row.GetCell(cellIndex)?.CellType == CellType.Formula)
-                        throw new InvalidDataException("El archivo contiene fórmulas. Convierte sus resultados a valores y vuelve a cargarlo.");
+                if (reader.NodeType == XmlNodeType.Element && reader.LocalName == "f")
+                    throw new InvalidDataException("El archivo contiene fórmulas. Convierte sus resultados a valores y vuelve a cargarlo.");
             }
         }
     }
 
-    private static void ValidateHeaders(IReadOnlyList<string?> columns)
+    private static void RejectBinaryFormulas(MemoryStream content, CancellationToken ct)
     {
-        if (columns.All(string.IsNullOrWhiteSpace))
-            throw new InvalidDataException("La primera fila debe contener los encabezados.");
+        using var compoundContent = new MemoryStream(content.ToArray());
+        using var storage = RootStorage.Open(compoundContent);
+        if (!storage.TryOpenStream("Workbook", out var workbook) &&
+            !storage.TryOpenStream("Book", out workbook))
+            throw new InvalidDataException("El archivo XLS no contiene un libro de trabajo.");
+        using (workbook)
+        {
+            using var reader = new BinaryReader(workbook, Encoding.UTF8, leaveOpen: true);
+            while (workbook.Position + 4 <= workbook.Length)
+            {
+                ct.ThrowIfCancellationRequested();
+                var recordType = reader.ReadUInt16();
+                var recordLength = reader.ReadUInt16();
+                if (recordLength > 8224 || workbook.Position + recordLength > workbook.Length)
+                    throw new InvalidDataException("El archivo XLS contiene un registro dañado.");
+                if (recordType is 0x0006 or 0x0221 or 0x0236)
+                    throw new InvalidDataException("El archivo contiene fórmulas. Convierte sus resultados a valores y vuelve a cargarlo.");
+                workbook.Position += recordLength;
+            }
+            if (workbook.Position != workbook.Length)
+                throw new InvalidDataException("El archivo XLS contiene un registro incompleto.");
+        }
     }
 
     private static void RejectCsvFormulas(IEnumerable<string?> cells)
     {
         if (cells.Any(value => value?.TrimStart().StartsWith('=') == true))
             throw new InvalidDataException("El archivo contiene celdas que parecen fórmulas. Convierte sus resultados a valores y vuelve a cargarlo.");
-    }
-
-    private static void AddRow(List<IReadOnlyList<string?>> rows, IReadOnlyList<string?> row)
-    {
-        if (rows.Count >= MaximumRows)
-            throw new InvalidDataException($"El archivo supera el máximo de {MaximumRows} inmuebles.");
-        rows.Add(row);
-    }
-
-    private static string? CellText(ICell? cell, DataFormatter formatter)
-    {
-        if (cell is null || cell.CellType is CellType.Blank)
-            return null;
-        var text = formatter.FormatCellValue(cell).Trim();
-        return text.Length == 0 ? null : text;
     }
 
     private static string? CellText(object? value, string? format) => value switch

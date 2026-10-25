@@ -7,7 +7,7 @@ Estado al 2026-10-24. Alcance: funciones que L&C usa o aprueba para su operacion
 - [ ] Mantener todo el trabajo en `codex/paridad-gate` y PR #1 en borrador; no integrar ni limpiar el checkout principal con cambios ajenos.
 - [ ] Revisar por separado `ContactActivity`, `ServiceRating`, `PropertyMedia` y sus migraciones del checkout principal; identificar autor, dependencias y cambios propios antes de portar algo.
 - [ ] Restaurar un respaldo exacto de la base Railway objetivo en PostgreSQL aislado; comparar esquema e historial de migraciones, aplicar el SQL pendiente, comprobar datos y segunda ejecucion idempotente, y documentar restauracion/retencion/alertas.
-- [ ] Resolver los avisos y condiciones de licencia de ImageSharp antes de activar el procesamiento de fotos.
+- [x] Resolver los avisos y condiciones de licencia de ImageSharp antes de activar el procesamiento de fotos. Magick.NET sustituyó el procesador; NPOI se eliminó para retirar ImageSharp transitivo. Falta `PropertyMedia` y pruebas reales antes de activar fotos.
 - [ ] Antes de produccion: aprobar ventana y plan de reversa, desplegar migraciones y codigo en orden, verificar salud y registros, mantener respaldo recuperable. El ensayo en PostgreSQL vacio no cierra este gate.
 - [ ] Mantener pruebas de dominio, aplicacion, integracion, CRM, sitio y PWA verdes; documentar la prueba omitida y cualquier riesgo real. Commit, push y nota en vault por entrega.
 
@@ -59,3 +59,8 @@ Estado al 2026-10-24. Alcance: funciones que L&C usa o aprueba para su operacion
 - ImageSharp: el usuario eligio evaluar otra biblioteca. [Comparacion y criterio de prototipo](evaluacion-biblioteca-imagenes-2026-10-24.md): Magick.NET-Q8-AnyCPU 15.0.0 es el candidato inicial Apache-2.0; falta prototipo Windows/Linux y pruebas antes de sustituir ImageSharp 3.1.12 o activar fotos.
 - Correo de exportacion Enlyce: ahora adjunta XLSX `Clientes` con las mismas 22 columnas de la descarga CSV. Prueba sintetica dirigida: filtro deja una fila, las celdas son texto (sin formulas ejecutables) y `ClientImportTableReader` reabre el adjunto con 22 columnas y una fila. Suite final: dominio 256, aplicacion 86, integracion 300 aprobadas y 1 omitida. La entrega SMTP real y la comparacion de valores con el archivo Wasi siguen abiertas.
 - Respaldo automatico: propuesta de 30 diarios y 12 mensuales remotos, con alerta externa por fallo o ausencia de ejecucion. El usuario pidio ayuda para decidir; faltan destinatario/canal, prueba de alerta y autorizacion para borrar objetos antiguos. La retencion remota sigue sin aplicar.
+
+## Evidencia posterior del 24/10/2026
+
+- La tarea `Enlyce-Postgres-Backup` ejecutada manualmente **desde el Programador** a las 19:53 terminó con `LastTaskResult=0` y registró `OK enlyce-20261024-195315.dump 110901 bytes uploaded`. La siguiente ejecución automática está programada para el 25/10 a las 2:00; aún no está comprobada. El destinatario de alertas se acordó fuera de Git; faltan mecanismo emisor, prueba de fallo/omisión y retención remota.
+- [Sustitución de ImageSharp y NPOI](evaluacion-biblioteca-imagenes-2026-10-24.md): Magick.NET 15.0.0 y OpenMcdf 3.3.0. `dotnet nuget why` no encontró ImageSharp; la consulta actual de NuGet no reportó paquetes vulnerables en Infrastructure. Pruebas dirigidas Linux: 23/23, incluida orientación EXIF. Suite Windows: dominio 256, aplicación 86, integración 310 aprobadas y 1 omitida. Builds CRM y sitio verdes; PWA 4/4. No hubo despliegue.

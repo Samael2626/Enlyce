@@ -61,3 +61,9 @@
 4. Crear las cuatro etapas de L&C y ejecutar carga controlada en Enlyce tras el gate de migraciones; completar evidencia de exportacion, demandas y otros flujos Wasi. Negociar contratos de portales/MLS.
 
 **Conclusion:** hay avances publicables en una rama aislada, pero la paridad total permanece abierta.
+
+## Actualización posterior del 24/10/2026
+
+La sección inicial de verificación registra una entrega anterior. El gate Railway avanzó: el dump exacto del 24/10 fue restaurado y ensayado en PostgreSQL 18 aislado (23 a 44 migraciones, 24 a 33 tablas, segunda aplicación idempotente y rollback ante falla). Las cuatro etapas de L&C se crearon solo en esa copia. La tarea de respaldo ejecutada manualmente desde el Programador terminó con código 0 y subida correcta a las 19:53; falta comprobar la siguiente ejecución automática, retención remota y alertas. No hubo migración, carga ni despliegue en producción.
+
+El procesador de fotos ahora usa Magick.NET 15.0.0. Se retiraron ImageSharp y NPOI del grafo de Infrastructure; `PropertyImportTableReader` conserva lectura XLS/XLSX y rechazo estructural de fórmulas mediante ExcelDataReader y OpenMcdf. El usuario eligió esta sustitución para evitar la nueva EULA de NPOI. La auditoría actual de NuGet no reportó paquetes vulnerables en Infrastructure. Pruebas dirigidas de imágenes e importación de propiedades pasaron en Windows y Linux (23/23 en Linux); suite Windows: 256 dominio, 86 aplicación, 310 integración aprobadas y una omitida. Fotos y cola siguen apagadas por la procedencia pendiente de `PropertyMedia` y la falta de ensayo con archivos reales.
