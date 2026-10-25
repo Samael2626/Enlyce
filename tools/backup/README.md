@@ -57,3 +57,7 @@ El log local queda en `%LOCALAPPDATA%\Enlyce\Backups\backup.log`; contiene estad
 3. Confirma recepcion del correo de prueba. `TestEmail` solo comprueba aceptacion SMTP; la recepcion se verifica en el buzon. Ejecuta `-Mode Check` para consultar el respaldo actual.
 
 El monitor usa Gmail SMTP con TLS en el puerto 587. Necesita que Windows este encendido y la sesion del usuario abierta; si el equipo permanece apagado, la alerta sale al volver a ejecutarse la tarea. Un observador externo independiente aun no esta instalado. La retencion remota de 30 diarios y 12 mensuales sigue pendiente de aprobacion y ensayo; este monitor no borra objetos.
+
+## Vista previa de retencion remota
+
+`Plan-Retencion-Enlyce.ps1` lista metadatos del bucket privado y calcula candidatos sin borrar ni descargar dumps. Conserva todas las copias de los ultimos siete dias, la copia mas reciente de cada dia durante los 30 dias recientes y la mas reciente de cada mes durante los 12 meses anteriores. Los objetos con nombres desconocidos o fechas invalidas quedan protegidos. La vista previa muestra el total de objetos, bytes y los nombres candidatos. Ejecuta `-Mode SelfTest` y luego `-Mode Preview` desde PowerShell. La politica y cualquier borrado remoto requieren aprobacion expresa; el script no tiene modo de borrado.
