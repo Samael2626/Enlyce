@@ -14,3 +14,7 @@ Sesión L&C. Se abrieron formularios desde una ficha existente y se cancelaron s
 - Enlyce tiene `CommercialTask` con tipo, vencimiento, recordatorio, responsable y eventos de historial. En la interfaz de contacto ofrece `Llamada`, `Mensaje`, `Reunión`, `Seguimiento` y `Otro`. El módulo `ContactActivity` del checkout principal sigue sin autor atribuible y no está en `codex/paridad-gate`; por eso `Registrar llamada` no tiene una equivalencia completa publicada.
 - No se verificaron validaciones al guardar, reglas de notificación por correo, permisos por rol, transiciones, borrado, calificación de visita ni entrega de avisos. Los nombres de campos y controles no bastan para afirmar esos comportamientos.
 - Antes de portar gestiones o calificaciones: atribuir y separar `ContactActivity`/`ServiceRating`, observar una acción completa autorizada en Wasi y probar persistencia, API y UI en Enlyce.
+
+## Ajuste Enlyce en la rama
+
+- La ficha de contacto ahora ofrece los intervalos de `Aviso` observados y conserva fecha personalizada. Calcula `ReminderAt` desde la fecha de la tarea y lo envía al API existente; `npm run build` del CRM pasó. Es un recordatorio de Enlyce: no se probó entrega de correo ni equivalencia del mecanismo de aviso Wasi.

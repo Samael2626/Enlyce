@@ -287,6 +287,7 @@ export function ContactsPage() {
   const [taskAdvisorId, setTaskAdvisorId] = useState("")
   const [taskDescription, setTaskDescription] = useState("")
   const [taskReminderAt, setTaskReminderAt] = useState("")
+  const [taskReminderOffset, setTaskReminderOffset] = useState("")
   const [taskComment, setTaskComment] = useState("")
   const [taskType, setTaskType] = useState("FollowUp")
   const [taskPriority, setTaskPriority] = useState("Normal")
@@ -1115,6 +1116,12 @@ export function ContactsPage() {
                       className="flex flex-wrap items-end gap-2"
                       onSubmit={(event) => {
                         event.preventDefault()
+                        const dueAt = new Date(taskDueAt)
+                        const reminderAt = taskReminderOffset === "custom"
+                          ? taskReminderAt ? new Date(taskReminderAt) : undefined
+                          : taskReminderOffset !== ""
+                            ? new Date(dueAt.getTime() - Number(taskReminderOffset) * 60_000)
+                            : undefined
                         createTask.mutate({
                           contactId: contact.id,
                           advisorId: user?.rol === "Administrador"
@@ -1123,10 +1130,10 @@ export function ContactsPage() {
                           type: taskType,
                           title: taskTitle,
                           description: taskDescription || undefined,
-                          dueAt: new Date(taskDueAt).toISOString(),
-                          reminderAt: taskReminderAt ? new Date(taskReminderAt).toISOString() : undefined,
+                          dueAt: dueAt.toISOString(),
+                          reminderAt: reminderAt?.toISOString(),
                           priority: taskPriority,
-                        }, { onSuccess: () => { setTaskTitle(""); setTaskDescription(""); setTaskReminderAt("") } })
+                        }, { onSuccess: () => { setTaskTitle(""); setTaskDescription(""); setTaskReminderAt(""); setTaskReminderOffset("") } })
                       }}
                     >
                       <label className="text-xs text-muted-foreground">Compromiso
@@ -1146,9 +1153,19 @@ export function ContactsPage() {
                           {advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
                         </select>
                       </label>}
-                      <label className="text-xs text-muted-foreground">Recordatorio opcional
-                        <input type="datetime-local" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskReminderAt} onChange={(event) => setTaskReminderAt(event.target.value)} />
+                      <label className="text-xs text-muted-foreground">Aviso en Enlyce
+                        <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskReminderOffset} onChange={(event) => setTaskReminderOffset(event.target.value)}>
+                          <option value="">Ninguno</option><option value="0">A la hora de la tarea</option>
+                          <option value="5">5 minutos antes</option><option value="10">10 minutos antes</option>
+                          <option value="15">15 minutos antes</option><option value="30">30 minutos antes</option>
+                          <option value="60">1 hora antes</option><option value="120">2 horas antes</option>
+                          <option value="1440">1 día antes</option><option value="2880">2 días antes</option>
+                          <option value="custom">Fecha personalizada</option>
+                        </select>
                       </label>
+                      {taskReminderOffset === "custom" && <label className="text-xs text-muted-foreground">Fecha del aviso
+                        <input type="datetime-local" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskReminderAt} onChange={(event) => setTaskReminderAt(event.target.value)} required />
+                      </label>}
                       <label className="text-xs text-muted-foreground sm:col-span-2">Notas
                         <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskDescription} onChange={(event) => setTaskDescription(event.target.value)} maxLength={2000} />
                       </label>

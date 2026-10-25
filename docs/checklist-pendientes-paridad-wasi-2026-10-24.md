@@ -37,7 +37,7 @@ Estado al 24/10/2026. Este listado desglosa las casillas abiertas del [checklist
 
 ## 4. Agenda, reportes, sitio y chat
 
-- [ ] Comparar agenda Wasi: tareas personales/de equipo, eventos, estados, recordatorios y Google Calendar; implementar el alcance aprobado y probar permisos y resultados.
+- [ ] Comparar agenda Wasi: tareas personales/de equipo, eventos, estados, recordatorios y Google Calendar. La ficha Enlyce ya ofrece los intervalos de aviso observados en Wasi; falta probar entrega, notificación al cliente, permisos y resultados antes de cerrar.
 - [ ] Comparar reportes y ACM: fórmulas, filtros, períodos, estados, totales y exportación usando casos anonimizados; cubrir divergencias con pruebas.
 - [ ] Probar CMS/blog en el entorno objetivo tras migraciones: [formularios Wasi observados el 25/10](evidencia-cms-wasi-2026-10-25.md), sin publicación ni contenido existente. Faltan borrador, publicación, SEO, visualización y decisión sobre banners múltiples; resolver edición desde web con sesión, dominio, cookies y permisos.
 - [ ] Observar chat Wasi en sesión real: destinatarios, permisos, entrega, estados y errores; ensayar migración pendiente y probar equivalente Enlyce.
