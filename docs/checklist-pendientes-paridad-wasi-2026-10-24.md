@@ -13,7 +13,7 @@ Estado al 24/10/2026. Este listado desglosa las casillas abiertas del [checklist
 ## 1. Gate Railway y respaldo
 
 - [x] Confirmar respaldo automático tras renovar Railway CLI: tarea del 25/10 a las 2:00, `LastTaskResult=0`, log `OK enlyce-20261025-020002.dump 110901 bytes uploaded`. Falta retención y alerta activa.
-- [ ] Definir e implementar retención remota y alerta externa por fallo **y** ejecución omitida. Propuesta por validar: 30 diarios y 12 mensuales; vista previa del 25/10: 13 objetos, cero candidatos. El destino de alerta está acordado fuera de Git y la tarea instalada, pero falló el correo de prueba por credencial local inválida. Corregirla y probar recepción; no borrar respaldos remotos sin autorización.
+- [ ] Definir e implementar retención remota y alerta externa por fallo **y** ejecución omitida. Propuesta por validar: 30 diarios y 12 mensuales; vista previa del 25/10: 13 objetos, cero candidatos. El monitor quedó desactivado y se borró su configuración local al aclararse que el correo propuesto era personal; la tarea de respaldo sigue activa. Acordar buzón de servicio de L&C o canal externo, instalarlo y probar recepción; no borrar respaldos remotos sin autorización.
 - [ ] Justo antes del pase, obtener un dump nuevo de la base objetivo, verificar integridad, restaurarlo en PostgreSQL aislado y comparar esquema, historial, conteos y huellas relevantes. Repetir SQL, segunda ejecución y rollback de falla sobre esa copia; archivar evidencia sin datos personales.
 - [ ] Cerrar protocolo de reversa: operador, ventana, corte de conexiones, RPO/RTO, secuencia de restauración y comprobaciones de salud. Pedir autorización expresa para cualquier migración o despliegue en producción. No usar `pg_restore --clean` sobre la base viva.
 

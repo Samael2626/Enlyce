@@ -83,3 +83,5 @@ La ficha Enlyce incorporó los intervalos de aviso de tareas observados en Wasi,
 En [conexión de portales Wasi](contratos-portales-wasi-2026-10-25.md) se observaron Fincaraiz y Metrocuadrado conectados y varios portales gratuitos conectados. Se documentaron controles y contratos requeridos sin leer credenciales ni publicar anuncios. L&C debe elegir portales y proporcionar acceso/API independientes; el estado conectado en Wasi no constituye autorización de integración Enlyce.
 
 En [red Wasi](evidencia-red-wasi-2026-10-25.md) se vieron controles de solicitud/aceptación de alianzas, privacidad de grupos y audiencia del foro. No se ejecutaron acciones ni se validaron permisos, acuerdos o inventario aliado. Enlyce sigue sin red multiempresa; requiere decisión de alcance L&C.
+
+Al aclararse que el correo propuesto para alertas era personal, se desactivó `Enlyce-Backup-Monitor` y se borró su configuración local. Se comprobó que `Enlyce-Postgres-Backup` sigue activa. No hay alertas externas hasta acordar y probar un buzón de servicio o canal de L&C; el respaldo diario no se desactivó.

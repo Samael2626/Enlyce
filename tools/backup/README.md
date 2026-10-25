@@ -45,7 +45,7 @@ El log local queda en `%LOCALAPPDATA%\Enlyce\Backups\backup.log`; contiene estad
 
 `Vigilar-Respaldo-Enlyce.ps1` consulta la tarea diaria y la ultima linea `OK` del log a las 4:00 a. m. Distingue tarea no ejecutada, resultado distinto de cero y subida no confirmada. Solo envia una alerta por fecha y estado. Los correos se configuran fuera de Git; la contrasena de aplicacion se cifra con DPAPI para el usuario de Windows.
 
-1. En la cuenta Gmail remitente, activa verificacion en dos pasos y crea una [contrasena de aplicacion](https://support.google.com/accounts/answer/185833). No la pegues en el chat ni en el repositorio.
+1. Usa un buzon de servicio controlado por L&C, nunca una cuenta personal. Si el remitente elegido es Gmail, activa verificacion en dos pasos y crea una [contrasena de aplicacion](https://support.google.com/accounts/answer/185833). No la pegues en el chat ni en el repositorio.
 2. En PowerShell, desde el checkout que conservara el script, ejecuta:
 
    ```powershell
