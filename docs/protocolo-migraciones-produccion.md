@@ -5,10 +5,7 @@
 - **Base de datos objetivo:** PostgreSQL en Railway (`dbname: railway`, versión 18 / 17 compatible).
 - **Almacenamiento de respaldos:** Bucket privado de Supabase Storage `enlyce-backups`.
 - **Tarea programada de respaldo diario:** `Enlyce-Postgres-Backup` ejecutada automáticamente mediante `tools/backup/Backup-Enlyce.ps1` hacia `%LOCALAPPDATA%\Enlyce\Backups`.
-- **Último respaldo verificado:**
-  - Archivo: `%LOCALAPPDATA%\Enlyce\Backups\enlyce-20261024-183807.dump` (110.901 bytes).
-  - Formato: PostgreSQL Custom Dump (gzip, versión 1.16-0).
-  - Integridad: 151 entradas TOC verificadas exitosamente con `pg_restore.exe --list`.
+- **Último respaldo restaurado y ensayado:** dump automático `enlyce-20261025-020002.dump` (110.901 bytes), PostgreSQL custom. Se restauró con `pg_restore --exit-on-error` en PostgreSQL 18 sin red ni puerto; el ensayo se detalla abajo. Antes de un pase autorizado se exige otro respaldo inmediato.
 - **Política de congelamiento:** Ninguna migración nueva se aplica a producción sin autorización explícita del usuario y verificación de respaldo previo.
 
 ---
@@ -64,6 +61,8 @@ Características técnicas del script:
 
 **Ensayo con respaldo actual del 24/10 a las 18:38:** tras renovar Railway CLI, `Backup-Enlyce.ps1 -Mode Run` creó y subió un dump de 110.901 bytes; la clave SSH temporal se retiró. PostgreSQL 18.6, 151 entradas TOC y restauración aislada correcta. El SQL llevó la copia de 23 migraciones/24 tablas a 44/33; segunda ejecución idempotente. Los conteos de contactos/demandas/inmuebles/asesores siguieron en 3/1/26/1. Otra copia restaurada recibió una falla `SELECT 1/0` al final de la misma transacción: código 1 y estado intacto de 23/24 con los mismos conteos. Las cuatro etapas L&C se crearon únicamente en la copia. Falta definir retención remota y alerta externa del backup, plan de reversa operativo y autorización para cualquier aplicación en producción.
 
+**Ensayo con el respaldo automático del 25/10 a las 2:00:** `pg_restore --exit-on-error` terminó correctamente en PostgreSQL 18 aislado. [Consulta de conteos](../tools/migrations/conteos-gate.sql): 23 migraciones/24 tablas antes, 44/33 después; segunda aplicación atómica con código 0. Contactos/demandas/inmuebles/asesores: 3/1/26/1 antes y después. El seed de las cuatro etapas se ejecutó dos veces con código 0; quedaron nueve etapas de clientes, cuatro personalizadas. No hubo escritura en Railway. La reversión por falla inyectada se probó sobre el dump del 24/10 y debe repetirse si cambia el SQL.
+
 ### Paso 1: Respaldo Inmediato Pre-Vuelo
 Ejecutar el script de respaldo para capturar el estado exacto de producción minutos antes del pase:
 ```powershell
@@ -93,3 +92,12 @@ Si el script falla antes de confirmar la transacción, detener el pase. El archi
 Si la migración confirma pero falla el código nuevo, detener escrituras y volver a la versión anterior de la API y el sitio. Las migraciones actuales son aditivas; verificar que el código anterior funciona con el esquema nuevo antes de abrir tráfico. No borrar columnas ni tablas para simular una reversión.
 
 Si se corrompen datos tras confirmar, mantener el respaldo previo recuperable, restaurarlo en **otra** base aislada y comparar historial, esquema y conteos con el registro pre-vuelo. Calcular las escrituras posteriores que se perderían y obtener autorización expresa para el corte a esa base. No ejecutar `pg_restore --clean` contra la base viva: borraría datos posteriores al respaldo. El responsable, ventana, RPO/RTO y mecanismo de cambio de conexión siguen pendientes de aprobación.
+
+### Decisiones para autorizar el pase
+
+- Registrar quién opera Railway y quién confirma el resultado de L&C; fijar ventana con hora y zona `America/Bogota`.
+- Definir cuánto dato posterior al respaldo podría perderse (RPO) y cuánto tiempo puede estar indisponible Enlyce (RTO). No asumir cero: el respaldo diario y una eventual restauración implican pérdida potencial de escrituras recientes.
+- Acordar cómo detener nuevas escrituras, informar a usuarios y comprobar que no quedan operaciones en curso antes del respaldo inmediato. Mantener la instancia antigua disponible hasta verificar la nueva.
+- Preparar base alternativa vacía y credenciales de conexión para restauración; ensayar el cambio de conexión y la vuelta a la instancia anterior sin modificar la base viva. Registrar conteos, historial y `GET /health` antes y después.
+- Si falla el SQL antes del commit, comprobar reversión de la transacción y no desplegar. Si falla el código, volver a la versión anterior compatible y conservar el esquema aditivo. Si se requiere restaurar datos, calcular pérdida desde el respaldo, pedir aprobación específica para ese corte y cambiar la conexión solo después de restaurar y verificar la base alternativa.
+- La autorización final debe mencionar el dump inmediato, el ensayo sobre él, el plan de corte y la versión de código. Hasta entonces no aplicar SQL, seed, carga de clientes ni despliegue en producción.
