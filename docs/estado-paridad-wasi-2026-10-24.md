@@ -75,3 +75,5 @@ El procesador de fotos ahora usa Magick.NET 15.0.0. Se retiraron ImageSharp y NP
 El 25/10 se observó el [cruce de demandas en Wasi](evidencia-cruce-demandas-wasi-2026-10-25.md) con sesión L&C: contadores separados para propios, aliados y red; una coincidencia en red mostró `Acierto: 56.6%`. El editor mostró rangos y características; no se guardó ni borró nada. Enlyce solo cruza inventario propio mediante una regla booleana. Fórmula, permisos y contratos siguen abiertos.
 
 También se observaron [gestiones y tareas en Wasi](evidencia-gestiones-wasi-2026-10-25.md): lista global vacía y formularios de llamada, evento y visita abiertos/cancelados desde una ficha. Se documentaron catálogo, campos, estados y avisos; ningún guardado, permiso o envío se acreditó. La separación de `ContactActivity` y `ServiceRating` sigue pendiente.
+
+En [blog y banners Wasi](evidencia-cms-wasi-2026-10-25.md) se inspeccionaron las listas vacías y los formularios de alta sin guardar. El blog pidió título, imagen, resumen y cuerpo; el banner, imagen, título, vínculo y estado. Falta probar publicación real y decidir si L&C requiere varios banners ordenables; no se acredita paridad CMS.
