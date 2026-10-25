@@ -2,6 +2,7 @@ using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Enlyce.Domain.Media;
+using Enlyce.Domain.Errors;
 using Enlyce.Infrastructure;
 using Enlyce.Infrastructure.Media;
 using Enlyce.Domain.Ports;
@@ -9,9 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.PixelFormats;
+using ImageMagick;
 using Xunit;
 
 namespace Enlyce.IntegrationTests;
@@ -21,12 +20,13 @@ public class ImageVariantProcessorTests
     private static MediaUpload BuildUpload(byte[] png)
         => MediaUpload.Create(Guid.NewGuid(), "foto.png", "image/png", png.Length, new MemoryStream(png));
 
+    private static MediaUpload BuildUpload(byte[] data, string contentType)
+        => MediaUpload.Create(Guid.NewGuid(), "foto", contentType, data.Length, new MemoryStream(data));
+
     private static byte[] CreatePng(int width, int height)
     {
-        using var image = new Image<Rgba32>(width, height);
-        using var buffer = new MemoryStream();
-        image.Save(buffer, new PngEncoder());
-        return buffer.ToArray();
+        using var image = new MagickImage(MagickColors.White, (uint)width, (uint)height);
+        return image.ToByteArray(MagickFormat.Png);
     }
 
     private static bool IsWebp(byte[] data)
@@ -59,6 +59,77 @@ public class ImageVariantProcessorTests
 
         Assert.Equal(a.Fingerprint, b.Fingerprint);
         Assert.Matches("^[0-9a-f]{16}$", a.Fingerprint);
+    }
+
+    [Theory]
+    [InlineData(MagickFormat.Jpeg, "image/jpeg")]
+    [InlineData(MagickFormat.WebP, "image/webp")]
+    public async Task ProcessAsync_AcceptsDeclaredSupportedFormats(MagickFormat format, string contentType)
+    {
+        using var image = new MagickImage(MagickColors.White, 1000, 800);
+        var bytes = image.ToByteArray(format);
+
+        var result = await new ImageVariantProcessor()
+            .ProcessAsync(BuildUpload(bytes, contentType), [800], 82);
+
+        Assert.Equal(800, Assert.Single(result.Variants).Width);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_RejectsMimeMismatchBeforeDecoding()
+    {
+        var png = CreatePng(1000, 800);
+
+        var error = await Assert.ThrowsAsync<DomainError>(() => new ImageVariantProcessor()
+            .ProcessAsync(BuildUpload(png, "image/jpeg"), [800], 82));
+
+        Assert.Contains("no coincide", error.Message);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_RejectsStreamLargerThanDeclaredLimit()
+    {
+        var bytes = new byte[MediaConstraints.MaxSizeBytes + 1];
+        var upload = MediaUpload.Create(Guid.NewGuid(), "foto.png", "image/png", 1,
+            new MemoryStream(bytes));
+
+        await Assert.ThrowsAsync<DomainError>(() => new ImageVariantProcessor()
+            .ProcessAsync(upload, [800], 82));
+    }
+
+    [Fact]
+    public async Task ProcessAsync_RejectsCorruptPngWithValidSignature()
+    {
+        var bytes = new byte[2048];
+        new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }.CopyTo(bytes, 0);
+
+        await Assert.ThrowsAsync<DomainError>(() => new ImageVariantProcessor()
+            .ProcessAsync(BuildUpload(bytes), [800], 82));
+    }
+
+    [Fact]
+    public async Task ProcessAsync_AppliesExifOrientationBeforeGeneratingVariant()
+    {
+        using var image = new MagickImage(MagickColors.White, 1000, 800);
+        var jpeg = image.ToByteArray(MagickFormat.Jpeg);
+        byte[] exif =
+        [
+            0xff, 0xe1, 0x00, 0x22, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00,
+            0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00,
+            0x01, 0x00, 0x12, 0x01, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00,
+            0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        ];
+        var bytes = new byte[jpeg.Length + exif.Length];
+        jpeg.AsSpan(0, 2).CopyTo(bytes);
+        exif.CopyTo(bytes, 2);
+        jpeg.AsSpan(2).CopyTo(bytes.AsSpan(exif.Length + 2));
+
+        var result = await new ImageVariantProcessor()
+            .ProcessAsync(BuildUpload(bytes, "image/jpeg"), [800], 82);
+
+        Assert.Equal(800, result.OriginalWidth);
+        Assert.Equal(1000, result.OriginalHeight);
+        Assert.Equal(800, Assert.Single(result.Variants).Width);
     }
 }
 

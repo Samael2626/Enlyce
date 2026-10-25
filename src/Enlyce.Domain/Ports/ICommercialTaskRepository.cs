@@ -9,6 +9,9 @@ public interface ICommercialTaskRepository
     Task<CommercialTaskSearchPage> SearchAsync(Guid? advisorId, string? query, CommercialTaskStatus? status, bool overdue,
         CommercialTaskPriority? priority, DateTime? from, DateTime? to, Guid? contactId,
         int page, int pageSize, CancellationToken ct = default);
+    Task<IReadOnlyList<CommercialTask>> SearchCalendarAsync(Guid? advisorId, string? query,
+        CommercialTaskStatus? status, bool overdue, CommercialTaskPriority? priority,
+        DateTime from, DateTime to, CancellationToken ct = default);
     Task<IReadOnlyList<CommercialTask>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, Guid? advisorId,
         CancellationToken ct = default);
     Task SaveManyAsync(IReadOnlyCollection<CommercialTask> tasks,

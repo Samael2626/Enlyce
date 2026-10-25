@@ -1,10 +1,8 @@
 using Enlyce.Domain.Errors;
 using Enlyce.Domain.Media;
 using Enlyce.Infrastructure.Media;
+using ImageMagick;
 using Microsoft.Extensions.Options;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Enlyce.IntegrationTests.Media;
 
@@ -24,11 +22,8 @@ public sealed class LocalMediaStorageTests : IDisposable
 
     private static MemoryStream Png(int width, int height)
     {
-        using var image = new Image<Rgba32>(width, height, new Rgba32(180, 120, 90));
-        var buffer = new MemoryStream();
-        image.Save(buffer, new PngEncoder());
-        buffer.Position = 0;
-        return buffer;
+        using var image = new MagickImage(new MagickColor(180, 120, 90), (uint)width, (uint)height);
+        return new MemoryStream(image.ToByteArray(MagickFormat.Png));
     }
 
     private static MediaUpload Upload(Guid publicationId, Stream content) =>
@@ -51,8 +46,8 @@ public sealed class LocalMediaStorageTests : IDisposable
         foreach (var variant in stored.Variants)
         {
             var path = Path.Combine(folder, Path.GetFileName(new Uri(variant.Url).LocalPath));
-            using var image = await Image.LoadAsync(path);
-            Assert.Equal(variant.Width, image.Width);
+            using var image = new MagickImage(path);
+            Assert.Equal(variant.Width, (int)image.Width);
         }
     }
 
@@ -105,8 +100,9 @@ public sealed class LocalMediaStorageTests : IDisposable
         var storage = CreateStorage();
 
         using var first = Png(1800, 1200);
+        var original = first.ToArray();
         var one = await storage.StoreAsync(Upload(publicationId, first));
-        using var second = Png(1800, 1200);
+        using var second = new MemoryStream(original);
         var two = await storage.StoreAsync(Upload(publicationId, second));
 
         Assert.Equal(one.Url, two.Url);

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { MAX_PAGE_SIZE, getProperties } from "@/lib/api/catalog";
 import { NEIGHBORHOODS } from "@/lib/zones";
+import { getBlogPosts } from "@/lib/api/blog";
 import type { PropertyListItem } from "@/lib/api/client";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -27,7 +28,7 @@ async function collectProperties(): Promise<PropertyListItem[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const statics: MetadataRoute.Sitemap = [
-    "", "/inmuebles", "/zonas", "/nosotros", "/brochure", "/propietarios", "/contacto", "/privacidad",
+    "", "/inmuebles", "/zonas", "/blog", "/nosotros", "/brochure", "/propietarios", "/contacto", "/privacidad",
   ].map((path) => ({ url: `${siteUrl}${path}`, changeFrequency: "weekly", priority: 0.7 }));
 
   const zones: MetadataRoute.Sitemap = NEIGHBORHOODS.map((zone) => ({
@@ -38,9 +39,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const properties = await collectProperties();
+    const posts = await getBlogPosts();
     return [
       ...statics,
       ...zones,
+      ...posts.map((post) => ({
+        url: `${siteUrl}/blog/${post.slug}`,
+        lastModified: post.publishedAtUtc ? new Date(post.publishedAtUtc) : undefined,
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      })),
       ...properties.map((property) => ({
         url: `${siteUrl}/inmuebles/${property.slug}`,
         lastModified: new Date(property.publishedAt),

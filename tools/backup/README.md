@@ -39,4 +39,26 @@ El log local queda en `%LOCALAPPDATA%\Enlyce\Backups\backup.log`; contiene estad
 - La validacion automatica comprueba firma y tamano, no sustituye `pg_restore --list` ni una restauracion de ensayo.
 - La tarea solo puede respaldar mientras Windows y Railway CLI esten disponibles y autenticados.
 - La cuota Storage Free y el maximo por objeto pueden cambiar; vigila uso en Dashboard. Los objetos remotos se acumulan hasta borrado manual.
-- No hay alerta externa; revisa el log y la fecha del objeto mas reciente.
+- El monitor por correo es opcional hasta instalar `Vigilar-Respaldo-Enlyce.ps1`; revisa el log y la fecha del objeto mas reciente mientras tanto.
+
+## Monitor de fallos y ejecuciones omitidas
+
+`Vigilar-Respaldo-Enlyce.ps1` consulta la tarea diaria y la ultima linea `OK` del log a las 4:00 a. m. Distingue tarea no ejecutada, resultado distinto de cero y subida no confirmada. Solo envia una alerta por fecha y estado. Los correos se configuran fuera de Git; la contrasena de aplicacion se cifra con DPAPI para el usuario de Windows.
+
+1. Usa el remitente que L&C autorice. Para Gmail, activa verificacion en dos pasos y crea una [contrasena de aplicacion](https://support.google.com/accounts/answer/185833). No la pegues en el chat ni en el repositorio.
+2. En PowerShell, desde el checkout que conservara el script, ejecuta:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\backup\Vigilar-Respaldo-Enlyce.ps1 -Mode SelfTest
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\backup\Vigilar-Respaldo-Enlyce.ps1 -Mode Install
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\backup\Vigilar-Respaldo-Enlyce.ps1 -Mode TestEmail
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\backup\Vigilar-Respaldo-Enlyce.ps1 -Mode TestAlerts
+   ```
+
+3. `Install` deja la tarea desactivada. Confirma recepcion del correo de prueba; `TestEmail` solo comprueba aceptacion SMTP. `TestAlerts` envia dos mensajes marcados `PRUEBA` para fallo y ejecucion omitida sin alterar el respaldo real; confirma ambos en el buzon. Despues activa la tarea con `Enable-ScheduledTask -TaskName Enlyce-Backup-Monitor` y ejecuta `-Mode Check` para consultar el respaldo actual.
+
+El monitor usa Gmail SMTP con TLS en el puerto 587. Necesita que Windows este encendido y la sesion del usuario abierta; si el equipo permanece apagado, la alerta sale al volver a ejecutarse la tarea. Un observador externo independiente aun no esta instalado. La retencion remota de 30 diarios y 12 mensuales sigue pendiente de aprobacion y ensayo; este monitor no borra objetos.
+
+## Vista previa de retencion remota
+
+`Plan-Retencion-Enlyce.ps1` lista metadatos del bucket privado y calcula candidatos sin borrar ni descargar dumps. Conserva todas las copias de los ultimos siete dias, la copia mas reciente de cada dia durante los 30 dias recientes y la mas reciente de cada mes durante los 12 meses anteriores. El respaldo mas reciente siempre queda protegido, aunque todos sean antiguos. Los objetos con nombres desconocidos o fechas invalidas tambien quedan protegidos. La vista previa muestra el total de objetos, bytes y los nombres candidatos. Ejecuta `-Mode SelfTest` y luego `-Mode Preview` desde PowerShell. La politica y cualquier borrado remoto requieren aprobacion expresa; el script no tiene modo de borrado.

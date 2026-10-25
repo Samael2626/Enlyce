@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
 import { CalendarClock, Check, ChevronLeft, ChevronRight, Clock3 } from "lucide-react"
-import { useBulkCancelCommercialTasks, useBulkCompleteCommercialTasks, useCommercialTasks, useCompleteCommercialTask, useCancelCommercialTask, useManageVisit, useRescheduleCommercialTask, useVisitas } from "@/hooks/useApi"
+import { useAdvisors, useBulkCancelCommercialTasks, useBulkCompleteCommercialTasks, useCalendarCommercialTasks, useCommercialTasks, useCompleteCommercialTask, useCancelCommercialTask, useManageVisit, useRescheduleCommercialTask, useVisitas } from "@/hooks/useApi"
+import { useAuthStore } from "@/stores/authStore"
 
 export function CalendarPage() {
+  const isAdmin = useAuthStore((state) => state.user?.rol === "Administrador")
+  const advisors = useAdvisors(isAdmin)
+  const [advisorId, setAdvisorId] = useState("")
   const [anchor, setAnchor] = useState(() => new Date())
   const [view, setView] = useState<"month" | "week" | "day">("month")
   const [newDates, setNewDates] = useState<Record<string, string>>({})
@@ -26,32 +30,33 @@ export function CalendarPage() {
       : view === "week" ? addDays(startOfWeek(anchor), 7) : new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + 1)
     return end.toISOString()
   }, [anchor, view])
-  const tasksQuery = useCommercialTasks({ from, to, query, status, priority, page, pageSize })
+  const tasksQuery = useCommercialTasks({ from, to, query, status, priority, advisorId, page, pageSize })
+  const calendarTasksQuery = useCalendarCommercialTasks({ from, to, query, status, priority, advisorId })
   const completeTask = useCompleteCommercialTask()
   const cancelTask = useCancelCommercialTask()
   const bulkComplete = useBulkCompleteCommercialTasks()
   const bulkCancel = useBulkCancelCommercialTasks()
   const rescheduleTask = useRescheduleCommercialTask()
-  const visitsQuery = useVisitas()
+  const visitsQuery = useVisitas(advisorId)
   const manageVisit = useManageVisit()
   const tasks = tasksQuery.data?.items ?? []
   const totalTasks = tasksQuery.data?.total ?? 0
   const pageCount = Math.max(1, Math.ceil(totalTasks / pageSize))
-  useEffect(() => setSelectedIds([]), [query, status, priority, page])
+  useEffect(() => setSelectedIds([]), [query, status, priority, advisorId, page])
   const periodVisits = (visitsQuery.data ?? []).filter((visit) => {
     const date = new Date(visit.fechaProgramada)
     return date >= new Date(from) && date < new Date(to)
   })
   const calendarDays = useMemo(() => getCalendarDays(anchor, view), [anchor, view])
   const calendarItems = useMemo(() => {
-    const tasks = (tasksQuery.data?.items ?? []).map((task) => ({
+    const tasks = (calendarTasksQuery.data ?? []).map((task) => ({
       id: task.id, date: new Date(task.dueAt), title: task.title, kind: "Tarea", status: task.status,
     }))
     const visits = periodVisits.map((visit) => ({
       id: visit.id, date: new Date(visit.fechaProgramada), title: `Visita · inmueble ${visit.inmuebleId.slice(0, 8)}`, kind: "Visita", status: visit.estado,
     }))
     return [...tasks, ...visits]
-  }, [tasksQuery.data?.items, periodVisits])
+  }, [calendarTasksQuery.data, periodVisits])
 
   return (
     <div className="space-y-6">
@@ -84,6 +89,15 @@ export function CalendarPage() {
             </button>
           })}
         </div>
+        {calendarTasksQuery.isError && <p role="alert" className="p-4 text-sm text-destructive">No se pudieron cargar todas las tareas del calendario.</p>}
+        {isAdmin && <div className="border-b border-border px-4 py-3">
+          <label className="flex items-center gap-3 text-sm text-foreground">Agenda de
+            <select aria-label="Filtrar agenda por asesor" value={advisorId} onChange={(event) => { setAdvisorId(event.target.value); setPage(1) }} className="rounded border border-border bg-background px-3 py-2">
+              <option value="">Todo el equipo</option>
+              {advisors.data?.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
+            </select>
+          </label>
+        </div>}
         <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[minmax(0,1fr)_170px_150px_auto]">
           <input aria-label="Buscar tareas" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Buscar título o contacto" className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" />
           <select aria-label="Filtrar por estado" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }} className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">

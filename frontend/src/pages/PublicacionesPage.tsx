@@ -9,6 +9,7 @@ import {
 } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
 import { api } from "@/api/client"
+import { downloadPropertySheet, propertyWhatsappUrl, publicPropertyUrl } from "@/lib/propertySheet"
 import type {
   PropertyPublicationAdmin,
   PropertyPublicationInput,
@@ -19,6 +20,7 @@ import {
   Camera,
   CirclePause,
   ExternalLink,
+  FileDown,
   ImagePlus,
   Loader2,
   MapPin,
@@ -30,7 +32,6 @@ import {
 } from "lucide-react"
 
 type PublicationAction = "publish" | "pause" | "withdraw"
-const PUBLIC_SITE_URL = (import.meta.env.VITE_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "")
 
 const STATUS_LABELS: Record<PropertyPublicationAdmin["status"], string> = {
   Draft: "Borrador",
@@ -108,6 +109,8 @@ export function PublicacionesPage() {
   const { data: options } = usePublicationOptions()
   const changeStatus = useChangePublicationStatus()
   const [editor, setEditor] = useState<PropertyPublicationAdmin | "new" | null>(null)
+  const [sheetError, setSheetError] = useState("")
+  const [sheetLoadingId, setSheetLoadingId] = useState("")
   const published = publications.filter((item) => item.status === "Published").length
   const blocked = publications.filter((item) => item.photos.length < 3).length
 
@@ -117,6 +120,18 @@ export function PublicacionesPage() {
       await changeStatus.mutateAsync({ id: publication.id, action })
     } catch {
       // El error queda visible mediante el estado de la mutacion.
+    }
+  }
+
+  async function downloadSheet(publication: PropertyPublicationAdmin) {
+    setSheetError("")
+    setSheetLoadingId(publication.id)
+    try {
+      await downloadPropertySheet(publication.slug)
+    } catch {
+      setSheetError("La ficha ya no está disponible públicamente. Revisa el estado del inmueble y la publicación.")
+    } finally {
+      setSheetLoadingId("")
     }
   }
 
@@ -144,6 +159,7 @@ export function PublicacionesPage() {
       {isLoading && <StateMessage text="Cargando publicaciones…" />}
       {error && <StateMessage text={error.message} danger />}
       {changeStatus.error && <StateMessage text={changeStatus.error.message} danger />}
+      {sheetError && <StateMessage text={sheetError} danger />}
       {!isLoading && !error && publications.length === 0 && (
         <StateMessage text="No hay publicaciones. Crea el primer borrador desde un inmueble activo." />
       )}
@@ -206,14 +222,19 @@ export function PublicacionesPage() {
                   </button>
                 )}
                 {publication.status === "Published" && (
-                  <a className="publication-action" href={`${PUBLIC_SITE_URL}/inmuebles/${publication.slug}`} target="_blank" rel="noreferrer">
+                  <a className="publication-action" href={publicPropertyUrl(publication.slug)} target="_blank" rel="noreferrer">
                     <ExternalLink className="h-4 w-4" /> Ver
                   </a>
                 )}
                 {publication.status === "Published" && (
+                  <button className="publication-action" disabled={sheetLoadingId === publication.id} onClick={() => void downloadSheet(publication)}>
+                    <FileDown className="h-4 w-4" /> Ficha PDF
+                  </button>
+                )}
+                {publication.status === "Published" && (
                   <a
                     className="publication-action"
-                    href={`https://wa.me/?text=${encodeURIComponent(`${publication.publicTitle} ${PUBLIC_SITE_URL}/inmuebles/${encodeURIComponent(publication.slug)}`)}`}
+                    href={propertyWhatsappUrl(publication.publicTitle, publication.slug)}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Compartir ${publication.publicTitle} por WhatsApp`}

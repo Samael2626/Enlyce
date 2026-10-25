@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Download, Mail, Phone, Search, UserRound } f
 import { api } from "@/api/client"
 import { useContact, useContacts, useCreateContact, useCreateCommercialTask, useCompleteCommercialTask, useCancelCommercialTask, useCommercialTaskHistory, useAddCommercialTaskComment, useCreateCustomerDemand, useUpdateCustomerDemand, useDeleteCustomerDemand, useCustomerDemands, useDemandMatches, useCustomerDemandCross, useLinkDemandProperty, useSetDemandPropertyStatus, useUpdateContact, useSetContactEmailPermission } from "@/hooks/useApi"
 import { useAuthStore } from "@/stores/authStore"
+import { findClientImportColumn } from "@/lib/clientImportColumns"
 import type { ContactSummary } from "@/lib/types"
 
 const splitFeatures = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean)
@@ -286,6 +287,7 @@ export function ContactsPage() {
   const [taskAdvisorId, setTaskAdvisorId] = useState("")
   const [taskDescription, setTaskDescription] = useState("")
   const [taskReminderAt, setTaskReminderAt] = useState("")
+  const [taskReminderOffset, setTaskReminderOffset] = useState("")
   const [taskComment, setTaskComment] = useState("")
   const [taskType, setTaskType] = useState("FollowUp")
   const [taskPriority, setTaskPriority] = useState("Normal")
@@ -649,7 +651,8 @@ export function ContactsPage() {
 
       <section className="crm-panel p-5">
         <h2 className="font-display text-xl text-foreground">Importar clientes</h2>
-        <p className="mt-1 text-sm text-muted-foreground">CSV, XLS o XLSX. Hasta 10 MB. El nombre es obligatorio; email y teléfono son opcionales y se valida su formato cuando se informan.</p>
+        <p className="mt-1 text-sm text-muted-foreground">CSV, XLS o XLSX. Hasta 10 MB. El nombre es obligatorio; email y teléfono son opcionales y se valida su formato cuando se informan. Si el archivo trae etapas personalizadas de Wasi, créalas en Configuración antes de confirmar la importación.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Revisa los teléfonos guardados como números en Excel: los ceros iniciales perdidos en el archivo no pueden recuperarse.</p>
         <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={async (event) => {
           event.preventDefault()
           if (!importFile) return
@@ -661,35 +664,27 @@ export function ContactsPage() {
             setImportColumns(preview.sourceColumns)
             setImportPreview(importColumns.length ? preview : null)
             if (!importColumns.length) {
-              const normalizeHeader = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
-              const findColumn = (terms: string[]) => {
-                const aliases = terms.map(normalizeHeader)
-                const exact = preview.sourceColumns.findIndex((column) => aliases.includes(normalizeHeader(column)))
-                return exact >= 0 ? exact : preview.sourceColumns.findIndex((column) => {
-                  const header = normalizeHeader(column)
-                  return aliases.some((term) => term.length >= 5 && term !== "telefono" && header.includes(term))
-                })
-              }
+              const findColumn = (terms: string[]) => findClientImportColumn(preview.sourceColumns, terms)
               const nameIndex = findColumn(["nombre", "name"])
               setNameColumn(nameIndex < 0 ? "" : String(nameIndex))
               const surnameIndex = findColumn(["apellido", "surname", "last name"])
               const emailIndex = findColumn(["email", "correo"])
-              const phoneIndex = findColumn(["telefono movil", "telefono", "celular", "phone", "mobile"])
+              const phoneIndex = findColumn(["movil", "telefono movil", "celular", "mobile", "phone", "telefono"])
               const consentIndex = findColumn(["recibe correo", "email consent", "email permission"])
               const typeIndex = findColumn(["tipo de cliente", "tipo cliente", "customer type"])
               const labelsIndex = findColumn(["etiqueta", "labels", "tags"])
               const funnelIndex = findColumn(["embudo", "funnel"])
-              const statusIndex = findColumn(["estado del cliente", "estado cliente", "customer status"])
+              const statusIndex = findColumn(["estado del cliente", "estado cliente", "customer status", "estado"])
               const addressIndex = findColumn(["direccion", "dirección", "address"])
               const countryIndex = findColumn(["pais", "país", "country"])
               const departmentIndex = findColumn(["departamento", "department"])
               const cityIndex = findColumn(["ciudad", "city"])
-              const landlineIndex = findColumn(["telefono fijo", "teléfono fijo", "landline"])
+              const landlineIndex = findColumn(["telefono fijo", "teléfono fijo", "landline", "telefono"])
               const dateOfBirthIndex = findColumn(["fecha de nacimiento", "nacimiento", "birth"])
               const identificationIndex = findColumn(["identificacion", "identificación", "documento", "identification"])
-              const referredByIndex = findColumn(["referido por", "referred by"])
+              const referredByIndex = findColumn(["referido por", "referido", "referred by"])
               const acquisitionIndex = findColumn(["medio de captacion", "medio de captación", "acquisition"])
-              const additionalDataIndex = findColumn(["datos adicionales", "additional data"])
+              const additionalDataIndex = findColumn(["observaciones adicionales", "datos adicionales", "additional data"])
               setSurnameColumn(surnameIndex < 0 ? "" : String(surnameIndex))
               setEmailColumn(emailIndex < 0 ? "" : String(emailIndex))
               setPhoneColumn(phoneIndex < 0 ? "" : String(phoneIndex))
@@ -702,7 +697,7 @@ export function ContactsPage() {
               setCountryColumn(countryIndex < 0 ? "" : String(countryIndex))
               setDepartmentColumn(departmentIndex < 0 ? "" : String(departmentIndex))
               setCityColumn(cityIndex < 0 ? "" : String(cityIndex))
-              setLandlineColumn(landlineIndex < 0 ? "" : String(landlineIndex))
+              setLandlineColumn(landlineIndex < 0 || landlineIndex === phoneIndex ? "" : String(landlineIndex))
               setDateOfBirthColumn(dateOfBirthIndex < 0 ? "" : String(dateOfBirthIndex))
               setIdentificationNumberColumn(identificationIndex < 0 ? "" : String(identificationIndex))
               setReferredByColumn(referredByIndex < 0 ? "" : String(referredByIndex))
@@ -1121,6 +1116,12 @@ export function ContactsPage() {
                       className="flex flex-wrap items-end gap-2"
                       onSubmit={(event) => {
                         event.preventDefault()
+                        const dueAt = new Date(taskDueAt)
+                        const reminderAt = taskReminderOffset === "custom"
+                          ? taskReminderAt ? new Date(taskReminderAt) : undefined
+                          : taskReminderOffset !== ""
+                            ? new Date(dueAt.getTime() - Number(taskReminderOffset) * 60_000)
+                            : undefined
                         createTask.mutate({
                           contactId: contact.id,
                           advisorId: user?.rol === "Administrador"
@@ -1129,10 +1130,10 @@ export function ContactsPage() {
                           type: taskType,
                           title: taskTitle,
                           description: taskDescription || undefined,
-                          dueAt: new Date(taskDueAt).toISOString(),
-                          reminderAt: taskReminderAt ? new Date(taskReminderAt).toISOString() : undefined,
+                          dueAt: dueAt.toISOString(),
+                          reminderAt: reminderAt?.toISOString(),
                           priority: taskPriority,
-                        }, { onSuccess: () => { setTaskTitle(""); setTaskDescription(""); setTaskReminderAt("") } })
+                        }, { onSuccess: () => { setTaskTitle(""); setTaskDescription(""); setTaskReminderAt(""); setTaskReminderOffset("") } })
                       }}
                     >
                       <label className="text-xs text-muted-foreground">Compromiso
@@ -1152,9 +1153,19 @@ export function ContactsPage() {
                           {advisors.map((advisor) => <option key={advisor.id} value={advisor.id}>{advisor.name}</option>)}
                         </select>
                       </label>}
-                      <label className="text-xs text-muted-foreground">Recordatorio opcional
-                        <input type="datetime-local" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskReminderAt} onChange={(event) => setTaskReminderAt(event.target.value)} />
+                      <label className="text-xs text-muted-foreground">Aviso en Enlyce
+                        <select className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskReminderOffset} onChange={(event) => setTaskReminderOffset(event.target.value)}>
+                          <option value="">Ninguno</option><option value="0">A la hora de la tarea</option>
+                          <option value="5">5 minutos antes</option><option value="10">10 minutos antes</option>
+                          <option value="15">15 minutos antes</option><option value="30">30 minutos antes</option>
+                          <option value="60">1 hora antes</option><option value="120">2 horas antes</option>
+                          <option value="1440">1 día antes</option><option value="2880">2 días antes</option>
+                          <option value="custom">Fecha personalizada</option>
+                        </select>
                       </label>
+                      {taskReminderOffset === "custom" && <label className="text-xs text-muted-foreground">Fecha del aviso
+                        <input type="datetime-local" className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskReminderAt} onChange={(event) => setTaskReminderAt(event.target.value)} required />
+                      </label>}
                       <label className="text-xs text-muted-foreground sm:col-span-2">Notas
                         <input className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" value={taskDescription} onChange={(event) => setTaskDescription(event.target.value)} maxLength={2000} />
                       </label>

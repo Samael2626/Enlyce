@@ -12,6 +12,76 @@ public sealed class TaskListBulkEndpointTests(TestWebApplicationFactory factory)
     : IClassFixture<TestWebApplicationFactory>
 {
     [Fact]
+    public async Task AdminCanFilterTeamCalendarAndAdvisorCannotSelectAnotherAdvisor()
+    {
+        var (advisorClient, advisor) = factory.CreateAuthenticatedClient("Asesor");
+        var (otherClient, otherAdvisor) = factory.CreateAuthenticatedClient("Asesor");
+        var (adminClient, _) = factory.CreateAuthenticatedClient("Administrador");
+        using (advisorClient)
+        using (otherClient)
+        using (adminClient)
+        {
+            var dueAt = DateTime.UtcNow.AddDays(3);
+            var ownId = SeedTask(advisor.Id, "Agenda propia", "Contacto propio", dueAt,
+                CommercialTaskPriority.Normal);
+            var otherId = SeedTask(otherAdvisor.Id, "Agenda ajena", "Contacto ajeno", dueAt,
+                CommercialTaskPriority.Normal);
+            var from = Uri.EscapeDataString(dueAt.AddDays(-1).ToString("O"));
+            var to = Uri.EscapeDataString(dueAt.AddDays(1).ToString("O"));
+            var filter = $"advisorId={otherAdvisor.Id}&from={from}&to={to}";
+
+            var calendar = await adminClient.GetFromJsonAsync<TaskItem[]>($"/api/tareas/calendario?{filter}");
+            Assert.Contains(calendar!, item => item.Id == otherId);
+            Assert.DoesNotContain(calendar!, item => item.Id == ownId);
+
+            var list = await adminClient.GetFromJsonAsync<TaskSearchResponse>($"/api/tareas?{filter}");
+            Assert.Contains(list!.Items, item => item.Id == otherId);
+            Assert.DoesNotContain(list.Items, item => item.Id == ownId);
+
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await advisorClient.GetAsync($"/api/tareas/calendario?{filter}")).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await advisorClient.GetAsync($"/api/tareas?{filter}")).StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task CalendarReturnsMoreThanOnePageWithoutExposingOtherAdvisorsTasks()
+    {
+        var (client, advisor) = factory.CreateAuthenticatedClient("Asesor");
+        var (otherClient, otherAdvisor) = factory.CreateAuthenticatedClient("Asesor");
+        using (client)
+        using (otherClient)
+        {
+            var dueAt = DateTime.UtcNow.AddDays(2);
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<EnlyceDbContext>();
+                var contact = Contact.Create("Contacto agenda", Email.Create($"{Guid.NewGuid():N}@test.com"));
+                db.Contacts.Add(contact);
+                for (var index = 0; index < 101; index++)
+                    db.CommercialTasks.Add(CommercialTask.Create(contact.Id, null, advisor.Id,
+                        CommercialTaskType.Call, $"Calendario {index}", null,
+                        dueAt.AddMinutes(index), null, CommercialTaskPriority.Normal));
+                db.CommercialTasks.Add(CommercialTask.Create(contact.Id, null, otherAdvisor.Id,
+                    CommercialTaskType.Call, "Calendario ajeno", null, dueAt,
+                    null, CommercialTaskPriority.Normal));
+                await db.SaveChangesAsync();
+            }
+
+            var from = Uri.EscapeDataString(dueAt.AddDays(-1).ToString("O"));
+            var to = Uri.EscapeDataString(dueAt.AddDays(1).ToString("O"));
+            using var response = await client.GetAsync(
+                $"/api/tareas/calendario?from={from}&to={to}&query=Calendario");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var items = await response.Content.ReadFromJsonAsync<TaskItem[]>();
+            Assert.NotNull(items);
+            Assert.Equal(101, items.Length);
+            Assert.All(items, item => Assert.Equal(advisor.Id, item.AdvisorId));
+        }
+    }
+
+    [Fact]
     public async Task ListFiltersSearchByContactAndTitleAndPaginatesWithinAdvisorScope()
     {
         var (client, advisor) = factory.CreateAuthenticatedClient("Asesor");

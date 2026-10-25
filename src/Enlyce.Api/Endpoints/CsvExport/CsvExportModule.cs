@@ -66,9 +66,9 @@ public static class CsvExportModule
             ILeadRepository leads,
             CancellationToken ct) =>
         {
-            var export = await BuildContactsCsvAsync(q, from, to, customerType, customerStatus, customerFunnel,
+            var export = await GetContactsForExportAsync(q, from, to, customerType, customerStatus, customerFunnel,
                 customerLabel, advisorId, http, contacts, leads, ct);
-            return export.Error ?? Results.File(export.Content!, "text/csv; charset=utf-8", "clientes-enlyce.csv");
+            return export.Error ?? Results.File(BuildContactsCsv(export.Rows!), "text/csv; charset=utf-8", "clientes-enlyce.csv");
         })
         .RequireAuthorization()
         .WithName("ExportContactsCsv")
@@ -126,20 +126,21 @@ public static class CsvExportModule
             if (!MailAddress.TryCreate(recipient, out var recipientAddress))
                 return Results.BadRequest(new { error = "La cuenta no tiene correo asociado." });
 
-            var export = await BuildContactsCsvAsync(q, from, to, customerType, customerStatus, customerFunnel,
+            var export = await GetContactsForExportAsync(q, from, to, customerType, customerStatus, customerFunnel,
                 customerLabel, advisorId, http, contacts, leads, ct);
             if (export.Error is not null)
                 return export.Error;
             if (export.Count == 0)
                 return Results.BadRequest(new { error = "No hay clientes para exportar." });
-            if (export.Content!.Length > 20_000_000)
+            var content = BuildContactsXlsx(export.Rows!);
+            if (content.Length > 20_000_000)
                 return Results.Problem("El archivo supera el limite de 20 MB para envio por correo.",
                     statusCode: StatusCodes.Status413PayloadTooLarge);
 
-            var fileName = $"clientes-enlyce-{DateTime.UtcNow:yyyyMMdd}.csv";
+            var fileName = $"clientes-enlyce-{DateTime.UtcNow:yyyyMMdd}.xlsx";
             var sent = await email.SendAttachmentAsync(recipientAddress.Address, "Exportacion de clientes Enlyce",
-                $"Archivo CSV con {export.Count} clientes visibles para tu cuenta.", fileName,
-                "text/csv; charset=utf-8", export.Content, ct);
+                $"Archivo Excel con {export.Count} clientes visibles para tu cuenta.", fileName,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", content, ct);
             return sent
                 ? Results.Ok(new { sent = true, count = export.Count })
                 : Results.Problem("No se pudo enviar el archivo. Revisa la configuracion del correo.",
@@ -231,6 +232,11 @@ public static class CsvExportModule
             string.Join(", ", property.ExternalFeatures)
         }));
 
+        return BuildXlsx(rows, "Inmuebles");
+    }
+
+    private static byte[] BuildXlsx(IReadOnlyList<object?[]> rows, string sheetName)
+    {
         using var stream = new MemoryStream();
         using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
@@ -242,9 +248,9 @@ public static class CsvExportModule
                 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>
                 """);
-            WriteZipEntry(archive, "xl/workbook.xml", """
+            WriteZipEntry(archive, "xl/workbook.xml", $"""
                 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Inmuebles" sheetId="1" r:id="rId1"/></sheets></workbook>
+                <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="{sheetName}" sheetId="1" r:id="rId1"/></sheets></workbook>
                 """);
             WriteZipEntry(archive, "xl/_rels/workbook.xml.rels", """
                 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -337,7 +343,7 @@ public static class CsvExportModule
         return first.Length > 0 && first[0] is '=' or '+' or '-' or '@' ? $"'{value}" : value;
     }
 
-    private static async Task<ContactCsvExport> BuildContactsCsvAsync(string? q, DateOnly? from, DateOnly? to,
+    private static async Task<ContactExport> GetContactsForExportAsync(string? q, DateOnly? from, DateOnly? to,
         string? customerType, string? customerStatus, string? customerFunnel, string? customerLabel, Guid? advisorId,
         HttpContext http, IContactRepository contacts, ILeadRepository leads, CancellationToken ct)
     {
@@ -388,18 +394,31 @@ public static class CsvExportModule
             skip += result.Items.Count;
         } while (skip < total);
 
-        return new(BuildContactsCsv(allContacts), allContacts.Count, null);
+        return new(allContacts, allContacts.Count, null);
     }
 
     private static byte[] BuildContactsCsv(IReadOnlyCollection<Contact> contacts)
     {
         var csv = new StringBuilder();
-        AppendRow(csv, ["nombre", "apellidos", "correo", "telefono_movil", "telefono_fijo", "tipos_cliente",
+        foreach (var row in BuildContactRows(contacts))
+            AppendRow(csv, row.Select(value => value?.ToString() ?? string.Empty));
+        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+    }
+
+    private static byte[] BuildContactsXlsx(IReadOnlyCollection<Contact> contacts) =>
+        BuildXlsx(BuildContactRows(contacts), "Clientes");
+
+    private static List<object?[]> BuildContactRows(IReadOnlyCollection<Contact> contacts)
+    {
+        var rows = new List<object?[]>
+        {
+            new object?[] { "nombre", "apellidos", "correo", "telefono_movil", "telefono_fijo", "tipos_cliente",
             "etiquetas", "estado", "embudo", "direccion", "pais", "departamento", "ciudad",
             "fecha_nacimiento", "numero_identificacion", "referido_por", "medio_captacion", "datos_adicionales",
-            "permiso_correo_automatizado", "asesor_id", "creado", "actualizado"]);
+            "permiso_correo_automatizado", "asesor_id", "creado", "actualizado" }
+        };
         foreach (var contact in contacts)
-            AppendRow(csv, [contact.Name, contact.Surname ?? string.Empty, contact.Email ?? string.Empty,
+            rows.Add([contact.Name, contact.Surname ?? string.Empty, contact.Email ?? string.Empty,
                 contact.Phone?.Value ?? string.Empty, contact.Landline?.Value ?? string.Empty,
                 string.Join(", ", contact.CustomerTypes), string.Join(", ", contact.CustomerLabels),
                 contact.CustomerStatus, contact.CustomerFunnel, contact.Address ?? string.Empty, contact.Country,
@@ -410,10 +429,10 @@ public static class CsvExportModule
                 contact.CanReceiveAutomatedEmail ? "true" : "false", contact.OwnerAdvisorId?.ToString() ?? string.Empty,
                 contact.CreatedAt.ToString("O", CultureInfo.InvariantCulture),
                 contact.UpdatedAt.ToString("O", CultureInfo.InvariantCulture)]);
-        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+        return rows;
     }
 
-    private sealed record ContactCsvExport(byte[]? Content, int Count, IResult? Error);
+    private sealed record ContactExport(IReadOnlyCollection<Contact>? Rows, int Count, IResult? Error);
 
     private static async Task<IReadOnlyCollection<Guid>> GetAdvisorContactIdsAsync(
         Guid advisorId, IContactRepository contacts, ILeadRepository leads)

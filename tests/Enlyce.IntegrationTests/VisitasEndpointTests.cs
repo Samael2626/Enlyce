@@ -57,6 +57,24 @@ public sealed class VisitasEndpointTests : IClassFixture<TestWebApplicationFacto
     }
 
     [Fact]
+    public async Task GetVisits_AdminCanFilterAdvisorAndAdvisorCannotFilterAnother()
+    {
+        var data = SeedVisits();
+        using var admin = await AuthenticatedClientAsync(data.Admin.Correo.Value);
+        using var advisor = await AuthenticatedClientAsync(data.FirstAdvisor.Correo.Value);
+
+        var response = await admin.GetAsync($"/api/visitas?advisorId={data.SecondAdvisor.Id}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var visits = json.RootElement.EnumerateArray().ToList();
+        Assert.Contains(visits, visit => visit.GetProperty("id").GetGuid() == data.SecondVisit.Id);
+        Assert.DoesNotContain(visits, visit => visit.GetProperty("id").GetGuid() == data.FirstVisit.Id);
+
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await advisor.GetAsync($"/api/visitas?advisorId={data.SecondAdvisor.Id}")).StatusCode);
+    }
+
+    [Fact]
     public async Task GetVisits_WithoutAuthenticationReturnsUnauthorized()
     {
         using var client = _factory.CreateClient();

@@ -26,4 +26,8 @@
     <ProjectReference Include="..\..\src\Enlyce.Api\Enlyce.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Imports\Fixtures\*.xls" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
