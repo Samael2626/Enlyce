@@ -42,5 +42,16 @@ public class EnlyceDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EnlyceDbContext).Assembly);
+
+        if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+        {
+            foreach (var property in modelBuilder.Model.GetEntityTypes()
+                         .SelectMany(entity => entity.GetProperties())
+                         .Where(property => property.ClrType == typeof(string[])))
+            {
+                property.SetColumnType("TEXT");
+                property.SetDefaultValueSql("'[]'");
+            }
+        }
     }
 }

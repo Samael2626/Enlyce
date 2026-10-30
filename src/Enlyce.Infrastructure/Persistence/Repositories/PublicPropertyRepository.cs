@@ -1,16 +1,56 @@
 using Enlyce.Application.PublicCatalog;
 using Enlyce.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Enlyce.Infrastructure.Persistence.Repositories;
 
-public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicPropertyReadRepository
+public sealed class PublicPropertyRepository(EnlyceDbContext context, IConfiguration? configuration = null) : IPublicPropertyReadRepository
 {
+    // Cierre temporal hasta completar la validacion y autorizacion comercial.
+    private bool PublishingEnabled => configuration?.GetValue<bool>("PublicCatalog:Enabled") == true;
+
+    private IQueryable<PropertyPublication> VisiblePublications() => context.PropertyPublications.AsNoTracking()
+        .Where(publication => publication.Status == PublicationStatus.Published &&
+            publication.PublicPriceAmount > 0 && publication.PublicPriceCurrency != null &&
+            publication.PublicTitle != "" && publication.PublicDescription != "" &&
+            publication.Municipality != null && publication.Municipality != "" &&
+            publication.Neighborhood != null && publication.Neighborhood != "" &&
+            publication.ApproximateLatitude != null && publication.ApproximateLongitude != null &&
+            publication.PublishedAt != null &&
+            context.PropertyPhotos.Count(photo => photo.PublicationId == publication.Id) >= 3 &&
+            context.PropertyPhotos.Count(photo => photo.PublicationId == publication.Id && photo.IsCover) == 1 &&
+            context.Asesores.Any(advisor => advisor.Id == publication.AdvisorId && advisor.Activo &&
+                advisor.Correo.Value != "asesor.demo@enlyce.test") &&
+            !context.Inmuebles.Any(property => property.Id == publication.PropertyId &&
+                context.Propietarios.Any(owner => owner.Id == property.PropietarioId &&
+                    owner.Email.Value == "catalogo.demo@enlyce.test")));
+
+    public async Task<string?> GetVisibleSlugByPropertyIdAsync(Guid propertyId, CancellationToken ct = default)
+    {
+        if (!PublishingEnabled) return null;
+        var isVisible = await context.Inmuebles.AsNoTracking()
+            .AnyAsync(property => property.Id == propertyId && property.Activo &&
+                property.Estado == EstadoInmueble.Disponible, ct);
+        if (!isVisible)
+            return null;
+
+        return await VisiblePublications()
+            .Where(publication => publication.PropertyId == propertyId)
+            .Select(publication => publication.Slug)
+            .SingleOrDefaultAsync(ct);
+    }
+
     public async Task<PublicPropertyPageData> SearchAsync(
         PublicPropertySearchCriteria criteria,
         CancellationToken ct = default)
     {
-        var properties = context.Inmuebles.AsNoTracking().Where(property => property.Activo);
+        if (!PublishingEnabled) return new PublicPropertyPageData(0, []);
+        var visible = VisiblePublications();
+        var properties = context.Inmuebles.AsNoTracking()
+            .Where(property => property.Activo &&
+                property.Estado == EstadoInmueble.Disponible &&
+                visible.Any(publication => publication.PropertyId == property.Id));
 
         if (criteria.Operation.HasValue)
             properties = properties.Where(property => property.Modalidad == criteria.Operation.Value);
@@ -19,18 +59,21 @@ public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicP
         if (criteria.Municipality is not null)
         {
             var municipality = criteria.Municipality.ToLower();
-            properties = properties.Where(property => property.Direccion.Ciudad.ToLower() == municipality);
+            properties = properties.Where(property => visible.Any(publication =>
+                publication.PropertyId == property.Id && publication.Municipality!.ToLower() == municipality));
         }
         if (criteria.Neighborhood is not null)
         {
             var neighborhood = criteria.Neighborhood.ToLower();
-            properties = properties.Where(property =>
-                (property.Direccion.Barrio ?? property.Direccion.Ciudad).ToLower() == neighborhood);
+            properties = properties.Where(property => visible.Any(publication =>
+                publication.PropertyId == property.Id && publication.Neighborhood!.ToLower() == neighborhood));
         }
         if (criteria.MinPrice.HasValue)
-            properties = properties.Where(property => property.Precio.Monto >= criteria.MinPrice.Value);
+            properties = properties.Where(property => visible.Any(publication =>
+                publication.PropertyId == property.Id && publication.PublicPriceAmount >= criteria.MinPrice.Value));
         if (criteria.MaxPrice.HasValue)
-            properties = properties.Where(property => property.Precio.Monto <= criteria.MaxPrice.Value);
+            properties = properties.Where(property => visible.Any(publication =>
+                publication.PropertyId == property.Id && publication.PublicPriceAmount <= criteria.MaxPrice.Value));
         if (criteria.MinArea.HasValue)
             properties = properties.Where(property => property.MetrosCuadrados >= criteria.MinArea.Value);
         if (criteria.MaxArea.HasValue)
@@ -45,9 +88,11 @@ public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicP
         var total = await properties.CountAsync(ct);
         var ordered = criteria.Sort switch
         {
-            PublicPropertySort.PriceAscending => properties.OrderBy(property => property.Precio.Monto)
+            PublicPropertySort.PriceAscending => properties.OrderBy(property => visible
+                .Where(publication => publication.PropertyId == property.Id).Select(publication => publication.PublicPriceAmount).First())
                 .ThenBy(property => property.Id),
-            PublicPropertySort.PriceDescending => properties.OrderByDescending(property => property.Precio.Monto)
+            PublicPropertySort.PriceDescending => properties.OrderByDescending(property => visible
+                .Where(publication => publication.PropertyId == property.Id).Select(publication => publication.PublicPriceAmount).First())
                 .ThenBy(property => property.Id),
             _ => properties.OrderByDescending(property => property.FechaCreacion).ThenBy(property => property.Id)
         };
@@ -68,25 +113,25 @@ public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicP
 
         var items = page.Select(property =>
         {
-            publications.TryGetValue(property.Id, out var publication);
+            var publication = publications[property.Id];
             return new PublicPropertyListData(
                 property.Id,
-                publication?.Slug ?? BuildCrmSlug(property.Id),
-                publication?.PublicTitle ?? property.Nombre,
+                publication.Slug,
+                publication.PublicTitle,
                 property.Tipo,
                 property.Modalidad,
-                publication?.PublicPriceAmount ?? property.Precio.Monto,
-                publication?.PublicPriceCurrency ?? property.Precio.Moneda,
-                publication?.Municipality ?? property.Direccion.Ciudad,
-                publication?.Neighborhood ?? property.Direccion.Barrio ?? property.Direccion.Ciudad,
-                publication?.ApproximateLatitude,
-                publication?.ApproximateLongitude,
+                publication.PublicPriceAmount!.Value,
+                publication.PublicPriceCurrency!,
+                publication.Municipality!,
+                publication.Neighborhood!,
+                publication.ApproximateLatitude,
+                publication.ApproximateLongitude,
                 property.MetrosCuadrados,
                 property.Habitaciones,
                 property.Banos,
                 property.Parqueaderos,
-                publication is not null ? covers.GetValueOrDefault(publication.Id) : null,
-                publication?.PublishedAt ?? property.FechaCreacion);
+                covers.GetValueOrDefault(publication.Id),
+                publication.PublishedAt!.Value);
         }).ToList();
 
         return new PublicPropertyPageData(total, items);
@@ -94,12 +139,14 @@ public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicP
 
     public async Task<PublicPropertyDetailData?> GetBySlugAsync(string slug, CancellationToken ct = default)
     {
+        if (!PublishingEnabled) return null;
         var published = await (
-            from publication in context.PropertyPublications.AsNoTracking()
+            from publication in VisiblePublications()
             join property in context.Inmuebles.AsNoTracking() on publication.PropertyId equals property.Id
             join advisor in context.Asesores.AsNoTracking() on publication.AdvisorId equals advisor.Id into advisors
             from advisor in advisors.DefaultIfEmpty()
-            where publication.Status == PublicationStatus.Published && publication.Slug == slug && property.Activo
+            where publication.Status == PublicationStatus.Published && publication.Slug == slug &&
+                  property.Activo && property.Estado == EstadoInmueble.Disponible
             select new PublicPropertyDetailData(
                 property.Id, publication.Slug, publication.PublicTitle, publication.PublicDescription,
                 property.Tipo, property.Modalidad, publication.PublicPriceAmount!.Value,
@@ -111,25 +158,10 @@ public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicP
             .SingleOrDefaultAsync(ct);
 
         if (published is not null)
+        {
             return await AddPhotosAsync(published, published.PublicationId!.Value, ct);
-
-        if (!TryParseCrmSlug(slug, out var propertyId))
-            return null;
-
-        var propertyRecord = await context.Inmuebles.AsNoTracking()
-            .SingleOrDefaultAsync(property => property.Id == propertyId && property.Activo, ct);
-        if (propertyRecord is null)
-            return null;
-
-        var detail = new PublicPropertyDetailData(
-            propertyRecord.Id, slug, propertyRecord.Nombre, propertyRecord.Descripcion,
-            propertyRecord.Tipo, propertyRecord.Modalidad, propertyRecord.Precio.Monto,
-            propertyRecord.Precio.Moneda, propertyRecord.Direccion.Ciudad,
-            propertyRecord.Direccion.Barrio ?? propertyRecord.Direccion.Ciudad,
-            null, null, propertyRecord.MetrosCuadrados, propertyRecord.Habitaciones,
-            propertyRecord.Banos, propertyRecord.Parqueaderos, [], null, null, null,
-            propertyRecord.FechaCreacion);
-        return detail;
+        }
+        return null;
     }
 
     private async Task<PublicPropertyDetailData> AddPhotosAsync(
@@ -143,12 +175,4 @@ public sealed class PublicPropertyRepository(EnlyceDbContext context) : IPublicP
         return detail with { Photos = photos };
     }
 
-    private static string BuildCrmSlug(Guid id) => $"crm-{id:N}";
-
-    private static bool TryParseCrmSlug(string slug, out Guid id)
-    {
-        id = Guid.Empty;
-        return slug.StartsWith("crm-", StringComparison.Ordinal) &&
-               Guid.TryParseExact(slug.AsSpan(4), "N", out id);
-    }
 }
