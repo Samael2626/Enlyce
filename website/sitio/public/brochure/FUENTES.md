@@ -5,3 +5,5 @@
 - `interior-lujo.jpg`: Max Vakhtbovych, Pexels, foto 7534563.
 
 Descargadas bajo la licencia gratuita publicada por Pexels. Deben reemplazarse por fotografías autorizadas del inventario real de L&C cuando estén disponibles.
+
+Las versiones `.webp` son derivados redimensionados (1200 px, calidad 72) de las mismas fotos, usados por el CSS para reducir el peso de carga.

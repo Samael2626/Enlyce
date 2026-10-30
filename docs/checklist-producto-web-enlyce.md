@@ -91,7 +91,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Aplicar correcciones WCAG puntuales en filtros, consentimiento, mapa y brochure.
 - [x] Corregir contraste de textos dorados: de 3,14:1 a 5,30:1 sobre blanco y 4,91:1 sobre fondo claro.
 - [ ] Auditoría completa WCAG AA: teclado, foco, labels, contraste y lector de pantalla. Avance: axe AA en las 14 rutas públicas (escritorio y móvil), enlace de salto y foco visible verificados en `tests/e2e/wcag-audit.spec.ts`; corregidos contraste de WhatsApp y miniaturas del brochure y anillos de foco tenues. Falta prueba manual con lector de pantalla (NVDA/VoiceOver).
-- [ ] Medir y corregir Core Web Vitals: LCP, CLS e INP (sin métricas de navegador aún).
+- [ ] Medir y corregir Core Web Vitals: LCP, CLS e INP. Avance: medición de laboratorio con `npm run perf:vitals` (móvil 4G lenta + CPU 4x y escritorio) sobre 9 rutas; 17 de 18 en «bueno». Corregido CLS del brochure (0.70 → 0), LCP brochure móvil 6.2 s → 2.65 s y `/propietarios` escritorio 2.1 s → 0.47 s. Pendiente: brochure móvil sigue 0.15 s sobre el umbral por el repintado de page-flip, y falta medir en campo (CrUX/RUM) en producción.
 - [ ] Correo de confirmación real y notificación inmediata al asesor responsable.
 - [x] Guardar y mostrar al administrador el historial de transiciones de estado Wompi con fecha; replay idempotente.
 - [x] Modelo multiempresa y suscripciones de venta: fuera del alcance del CRM interno.

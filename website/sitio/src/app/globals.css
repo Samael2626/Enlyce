@@ -431,7 +431,7 @@ h1, h2, h3 {
 .owners-hero-visual {
   position: relative;
   min-height: 34rem;
-  background: linear-gradient(180deg, rgb(15 26 61 / 10%), rgb(15 26 61 / 72%)), url('/medellin-hero.png') center / cover no-repeat;
+  background: linear-gradient(180deg, rgb(15 26 61 / 10%), rgb(15 26 61 / 72%)), url('/medellin-hero.webp') center / cover no-repeat;
 }
 .owners-hero-visual::before { position: absolute; inset: 0; border-left: 1px solid rgb(227 190 101 / 42%); content: ''; }
 .owners-hero-visual blockquote {
@@ -794,6 +794,16 @@ h1, h2, h3 {
 .brochure-book-shell-back { transform: translateX(25%) scale(var(--brochure-zoom, 1)); }
 .brochure-book { position: relative; z-index: 1; }
 .brochure-book .stf__parent { margin-inline: auto; }
+/* Antes de iniciar page-flip se reserva el tamano final del libro y solo se
+   muestra la portada, para evitar el cambio de diseno (CLS) al montarlo. */
+.brochure-book-shell { container-type: inline-size; }
+.brochure-book:not([data-ready]) { width: 100%; max-width: 1040px; margin-inline: auto; aspect-ratio: 1040 / 700; }
+.brochure-book:not([data-ready]) > .brochure-leaf { display: none; }
+.brochure-book:not([data-ready]) > .brochure-leaf:first-child { position: absolute; display: flex; inset: 0 0 0 50%; }
+@container (max-width: 579.98px) {
+  .brochure-book:not([data-ready]) { max-width: 520px; aspect-ratio: 520 / 700; }
+  .brochure-book:not([data-ready]) > .brochure-leaf:first-child { inset: 0; }
+}
 .brochure-book .stf__wrapper { filter: drop-shadow(0 22px 30px rgb(15 23 42 / 19%)); }
 
 .brochure-leaf {
@@ -814,7 +824,7 @@ h1, h2, h3 {
 .brochure-folio-light { color: white; }
 .brochure-leaf h2 { position: relative; z-index: 1; font-size: clamp(2rem, 3.3vw, 3.7rem); line-height: .96; }
 
-.brochure-cover { justify-content: space-between; padding: clamp(2rem, 4vw, 4rem); background: url('/brochure/casa-contemporanea.jpg') 58% center / cover; color: white; }
+.brochure-cover { justify-content: space-between; padding: clamp(2rem, 4vw, 4rem); background: url('/brochure/casa-contemporanea.webp') 58% center / cover; color: white; }
 .brochure-cover-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(5 11 31 / 18%), rgb(5 11 31 / 24%) 40%, rgb(5 11 31 / 94%)); }
 .brochure-cover-logo { position: relative; z-index: 1; width: clamp(5rem, 8vw, 7rem); height: auto; object-fit: contain; filter: drop-shadow(0 8px 18px rgb(0 0 0 / 25%)); }
 .brochure-cover-brand { position: relative; z-index: 1; max-width: 28rem; margin-top: auto; padding-bottom: 4rem; }
@@ -826,7 +836,7 @@ h1, h2, h3 {
 .brochure-opening-copy { display: flex; min-height: 55%; flex-direction: column; justify-content: center; padding: clamp(2rem, 4vw, 4rem); }
 .brochure-opening-copy h2 { max-width: 26rem; margin-top: 1rem; }
 .brochure-opening-copy p { max-width: 26rem; margin-top: 1.3rem; color: var(--book-muted); font-size: clamp(.72rem, .95vw, .92rem); line-height: 1.7; }
-.brochure-opening-photo { min-height: 45%; background: linear-gradient(rgb(11 22 52 / 14%), rgb(11 22 52 / 14%)), url('/medellin-hero.png') center 64% / cover; }
+.brochure-opening-photo { min-height: 45%; background: linear-gradient(rgb(11 22 52 / 14%), rgb(11 22 52 / 14%)), url('/medellin-hero.webp') center 64% / cover; }
 
 .brochure-services { justify-content: center; background: #f3ecdf; }
 .brochure-services > h2 { max-width: 27rem; margin-top: .9rem; }
@@ -837,7 +847,7 @@ h1, h2, h3 {
 .brochure-service-list p { margin-top: .25rem; color: var(--book-muted); font-size: .65rem; line-height: 1.45; }
 
 .brochure-photo-page { justify-content: end; color: white; }
-.brochure-photo-facade { background: linear-gradient(180deg, transparent 35%, rgb(5 11 31 / 88%)), url('/brochure/fachada-cristal.jpg') center / cover; }
+.brochure-photo-facade { background: linear-gradient(180deg, transparent 35%, rgb(5 11 31 / 88%)), url('/brochure/fachada-cristal.webp') center / cover; }
 .brochure-photo-caption { position: relative; z-index: 1; max-width: 28rem; }
 .brochure-photo-caption h2 { margin-top: .85rem; }
 
@@ -850,12 +860,12 @@ h1, h2, h3 {
 .brochure-route li strong { color: var(--book-ink); }
 
 .brochure-interior { padding: 0; background: #fff; }
-.brochure-interior-photo { width: 84%; min-height: 54%; background: url('/brochure/interior-lujo.jpg') center / cover; }
+.brochure-interior-photo { width: 84%; min-height: 54%; background: url('/brochure/interior-lujo.webp') center / cover; }
 .brochure-interior-copy { z-index: 1; width: 85%; margin: -2.3rem 0 0 auto; padding: 2rem 2.4rem; background: var(--book-ink); color: white; }
 .brochure-interior-copy h2 { margin-top: .9rem; font-size: clamp(1.9rem, 3vw, 3.25rem); }
 .brochure-interior-copy p { margin-top: 1rem; color: rgb(255 255 255 / 66%); font-size: .72rem; line-height: 1.6; }
 
-.brochure-territory { justify-content: end; background: linear-gradient(180deg, rgb(5 11 31 / 10%), rgb(5 11 31 / 90%)), url('/medellin-hero.png') center / cover; color: white; }
+.brochure-territory { justify-content: end; background: linear-gradient(180deg, rgb(5 11 31 / 10%), rgb(5 11 31 / 90%)), url('/medellin-hero.webp') center / cover; color: white; }
 .brochure-territory::before { position: absolute; top: 10%; right: 8%; width: 47%; height: 34%; border: 1px solid rgb(255 255 255 / 40%); border-radius: 50% 42% 55% 38%; content: ''; transform: rotate(-11deg); }
 .brochure-territory-copy { position: relative; z-index: 1; }
 .brochure-territory-copy h2 { max-width: 28rem; margin-top: .9rem; }

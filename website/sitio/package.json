@@ -9,7 +9,8 @@
     "lint": "eslint",
     "api:types": "openapi-typescript openapi.json -o src/lib/api/schema.d.ts",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "perf:vitals": "node tests/perf/web-vitals.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

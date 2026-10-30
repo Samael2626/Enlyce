@@ -26,6 +26,9 @@ const VALUATION_URL =
   "/propietarios?servicio=avaluar&utm_source=brochure&utm_medium=interactive&utm_campaign=brochure_2026#solicitud";
 const WHATSAPP_URL =
   "https://wa.me/573246266362?text=Hola%2C%20vi%20el%20brochure%20institucional%202026%20y%20quiero%20solicitar%20una%20valoraci%C3%B3n%20con%20L%26C%20Propiedad%20Ra%C3%ADz.";
+// Descarga page-flip en cuanto se evalua el modulo en el navegador, sin esperar
+// a la hidratacion: el libro se monta antes y baja el LCP en movil.
+const pageFlipModule = typeof window === "undefined" ? null : import("page-flip");
 const subscribeToHydration = () => () => undefined;
 const getClientHydrationSnapshot = () => true;
 const getServerHydrationSnapshot = () => false;
@@ -51,7 +54,7 @@ export function BrochureBook() {
     async function initializeBook() {
       if (!bookRef.current || pageFlipRef.current) return;
 
-      const { PageFlip: PageFlipConstructor } = await import("page-flip");
+      const { PageFlip: PageFlipConstructor } = await (pageFlipModule ?? import("page-flip"));
       if (cancelled || !bookRef.current) return;
 
       const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -75,6 +78,8 @@ export function BrochureBook() {
 
       const leaves = Array.from(bookRef.current.querySelectorAll<HTMLElement>(".brochure-leaf"));
       instance.loadFromHTML(leaves);
+      // Libera el marcador de tamano reservado en CSS en el mismo ciclo de pintado.
+      bookRef.current.dataset.ready = "true";
       instance.on("flip", (event) => setCurrentPage(Number(event.data)));
       pageFlipRef.current = instance;
     }
