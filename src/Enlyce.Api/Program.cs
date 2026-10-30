@@ -261,6 +261,8 @@ if (trustForwardedHeaders)
 
 var app = builder.Build();
 
+app.UseMiddleware<TraceMethodBlockingMiddleware>();
+
 if (trustForwardedHeaders)
     app.UseForwardedHeaders();
 

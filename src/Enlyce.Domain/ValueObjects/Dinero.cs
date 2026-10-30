@@ -1,9 +1,14 @@
+using System.Globalization;
 using Enlyce.Domain.Errors;
 
 namespace Enlyce.Domain.ValueObjects;
 
 public sealed record Dinero
 {
+    // Formato colombiano fijo (punto de miles): no depende de la cultura del
+    // servidor, que en contenedores Linux suele ser invariante.
+    private static readonly NumberFormatInfo FormatoMiles = new() { NumberGroupSeparator = ".", NumberDecimalSeparator = "," };
+
     public decimal Monto { get; private set; }
     public string Moneda { get; private set; }
 
@@ -25,5 +30,5 @@ public sealed record Dinero
         return new Dinero(monto, moneda.ToUpperInvariant());
     }
 
-    public override string ToString() => $"{Moneda} {Monto:N0}";
+    public override string ToString() => $"{Moneda} {Monto.ToString("N0", FormatoMiles)}";
 }

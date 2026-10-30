@@ -65,11 +65,11 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [x] Reconstruir la web de producción local en `3100` y confirmar sus cabeceras con Nmap y Burp.
 - [x] Limitar PostgreSQL 17 nativo a loopback y comprobar que `5432` no responde por la IP LAN.
 - [x] Limitar las webs locales `3000/3100` y PostgreSQL Docker `5436` a `127.0.0.1`.
-- [ ] Bloquear `TRACE` en el proxy de staging y verificar respuesta `405`; localmente no reflejó la solicitud.
-- [ ] Crear staging de ENLYCE y repetir migraciones, smoke y ZAP sobre la configuración remota.
+- [x] Bloquear `TRACE` y verificar respuesta `405`: `TraceMethodBlockingMiddleware` en la API (Railway no tiene proxy configurable); verificado en el ensayo. Repetir `smoke-staging.sh` contra el staging remoto.
+- [ ] Crear staging de ENLYCE y repetir migraciones, smoke y ZAP sobre la configuración remota. Avance: ensayo completo automatizado y aprobado en contenedores (`tools/staging/ensayo-staging.sh`); falta crear el entorno remoto en Railway.
 - [x] Probar localmente en PostgreSQL 17 efímero la migración de precisión: `NULL`/3 decimales válidos y mayor precisión rechazada.
 - [ ] En staging, probar `20261009224818_EnforcePublicCoordinatePrecision`: confirmar historial EF y restricciones PostgreSQL; aceptar `NULL` y 3 decimales, rechazar mayor precisión y conservar datos.
-- [ ] Definir y ejecutar runbook de salida: backup restaurable, migraciones, smoke posterior, rollback verificado y monitoreo de errores.
+- [ ] Definir y ejecutar runbook de salida: backup restaurable, migraciones, smoke posterior, rollback verificado y monitoreo de errores. Avance: backup, restore, migraciones, smoke y rollback ensayados y aprobados; falta monitoreo de errores y ejecutarlo en remoto.
 - [x] Guardar secreto de backup cifrado con DPAPI fuera del repositorio; tarea diaria de Windows ejecutada con éxito el 11-oct-2026.
 - [x] Descargar dump remoto `enlyce-20261011-020005.dump` (62.165 bytes), comprobar firma/ETag y restaurar en PostgreSQL 17 aislado: `pg_restore` OK, 24 tablas y ~25 filas vivas.
 - [ ] Definir retención remota y alerta de fallo; hoy los objetos Supabase se acumulan y el error solo queda en log local.

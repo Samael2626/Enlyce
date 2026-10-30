@@ -47,6 +47,22 @@ public sealed class SecurityHardeningTests : IClassFixture<TestWebApplicationFac
         Assert.Equal(HttpStatusCode.Unauthorized, (await attacker.GetAsync("/api/auth/me")).StatusCode);
     }
 
+    [Theory]
+    [InlineData("TRACE", "/")]
+    [InlineData("TRACE", "/api/public/inmuebles")]
+    [InlineData("TRACK", "/health")]
+    public async Task TraceAndTrack_AreRejectedWithoutEcho(string method, string path)
+    {
+        var client = _factory.CreateClient();
+        using var request = new HttpRequestMessage(new HttpMethod(method), path);
+        request.Headers.Add("X-Eco-Prueba", "no-debe-reflejarse");
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
+        Assert.DoesNotContain("no-debe-reflejarse", await response.Content.ReadAsStringAsync());
+    }
+
     [Fact]
     public async Task Login_BlocksRepeatedFailures()
     {

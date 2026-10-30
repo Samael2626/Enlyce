@@ -67,3 +67,6 @@ graphify-out/
 
 # Informes privados de inventario; no publicar ni versionar datos comerciales.
 .local/catalogo-revision/
+
+## Salida del ensayo de staging (incluye backups .dump)
+tools/staging/out/

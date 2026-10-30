@@ -51,6 +51,7 @@ Características técnicas del script:
 - Transacciones delimitadas (`START TRANSACTION; ... COMMIT;`) por cada migración.
 - Registro automático en la tabla `__EFMigrationsHistory`.
 - Libre de dependencias destructivas (`DROP TABLE` o eliminación de columnas); todas las modificaciones son estrictamente aditivas o de compatibilidad hacia adelante.
+- **Corregido 2026-10-30:** el bloque de `20261015052059_AddCustomerFunnelStages` no terminaba en `;` y el script fallaba con error de sintaxis (se detenia en la migracion 38 de 43). Verificado de punta a punta con `tools/staging/ensayo-staging.sh`; ejecutar ese ensayo antes de cada pase.
 
 ---
 
