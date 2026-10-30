@@ -56,7 +56,8 @@ export function PropertyGallery({ photos }: { photos: Photo[] }) {
                 src={photo.url}
                 alt={photo.altText}
                 fill
-                priority={position === 0}
+                loading={position === 0 ? "eager" : "lazy"}
+                fetchPriority={position === 0 ? "high" : "auto"}
                 sizes="(max-width: 1024px) 100vw, 1024px"
                 className="object-cover"
               />

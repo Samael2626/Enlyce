@@ -4,7 +4,8 @@ import type { PropertyListItem } from "@/lib/api/client";
 import { formatArea, formatOperation, formatPropertyPrice, propertyPath } from "@/lib/format";
 import { FavoriteToggle } from "./FavoriteToggle";
 
-export function PropertyCard({ property }: { property: PropertyListItem }) {
+// eager: la primera tarjeta visible suele ser el LCP del listado.
+export function PropertyCard({ property, eager = false }: { property: PropertyListItem; eager?: boolean }) {
   return (
     <article className="property-card group relative overflow-hidden rounded-sheet bg-surface shadow-card transition hover:shadow-raised">
       <div className="property-card-media relative aspect-4/3 bg-line">
@@ -13,6 +14,8 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
             src={property.coverPhoto.url}
             alt={property.coverPhoto.altText}
             fill
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover"
           />

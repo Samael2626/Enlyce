@@ -9,7 +9,7 @@
   --color-ink: #0f1a3d;
   --color-muted: #555e6e;
   --color-line: #ded9ca;
-  --color-whatsapp: #1d8f5d;
+  --color-whatsapp: #17784e;
   --color-whatsapp-strong: #157047;
   --color-facebook: #1877f2;
   --gradient-instagram: linear-gradient(145deg, #6d28a8 4%, #b72f7d 48%, #db684b 78%, #dba342 100%);
@@ -165,7 +165,7 @@ h1, h2, h3 {
 }
 
 .property-search-field input:focus,
-.property-search-field select:focus { border-color: var(--color-accent); outline: 0; box-shadow: 0 0 0 3px rgb(183 138 45 / 13%); }
+.property-search-field select:focus { border-color: var(--color-accent); outline: 0; box-shadow: 0 0 0 2px var(--color-accent); }
 .property-search-control { position: relative; display: block; }
 .property-search-control svg { position: absolute; top: 50%; left: .8rem; width: 1.15rem; height: 1.15rem; color: var(--color-accent-strong); transform: translateY(-50%); pointer-events: none; }
 .property-search-control input { padding-left: 2.45rem; }
@@ -222,7 +222,7 @@ h1, h2, h3 {
 .catalog-filter-form { display: grid; max-height: calc(100vh - 6rem); gap: 1.15rem; overflow-y: auto; padding: 1.15rem; }
 .catalog-filter-form > label > span, .catalog-filter-form legend, .catalog-filter-features label > span { display: block; margin-bottom: .45rem; color: var(--color-ink); font-size: .7rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
 .catalog-filter-control { width: 100%; min-height: 2.8rem; border: 1px solid var(--color-line); border-radius: 5px; background: var(--color-surface); padding: .65rem .75rem; color: var(--color-ink); font-size: .8rem; }
-.catalog-filter-control:focus { border-color: var(--color-accent); outline: 0; box-shadow: 0 0 0 3px rgb(183 138 45 / 12%); }
+.catalog-filter-control:focus { border-color: var(--color-accent); outline: 0; box-shadow: 0 0 0 2px var(--color-accent); }
 .catalog-filter-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; }
 .catalog-filter-options input { position: absolute; opacity: 0; pointer-events: none; }
 .catalog-filter-options span { display: grid; min-height: 2.45rem; place-items: center; border: 1px solid var(--color-line); border-radius: 4px; color: var(--color-muted); font-size: .72rem; font-weight: 700; cursor: pointer; }
@@ -238,7 +238,7 @@ h1, h2, h3 {
 .catalog-location-search { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; border: 1px solid var(--color-line); border-radius: 5px; }
 .catalog-location-search svg { width: 1.2rem; height: 1.2rem; margin-left: .8rem; color: var(--color-muted); }
 .catalog-location-search input { min-width: 0; padding: .75rem; outline: 0; }
-.catalog-location-search:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgb(183 138 45 / 12%); }
+.catalog-location-search:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 2px var(--color-accent); }
 .catalog-location-search button { height: 100%; padding-inline: 1rem; background: var(--color-ink); color: white; font-size: .76rem; font-weight: 800; }
 .catalog-toolbar-meta { display: flex; align-items: center; gap: .8rem; }
 .catalog-toolbar-meta strong { white-space: nowrap; font-family: var(--font-display); font-size: 1.05rem; }
@@ -894,6 +894,8 @@ h1, h2, h3 {
 .brochure-thumbnail-photo { background: linear-gradient(150deg, #8898a7, #27344f 62%, #101a38); color: white; }
 .brochure-thumbnail-navy { background: var(--book-ink); color: white; }
 .brochure-thumbnail span { position: relative; z-index: 1; color: var(--book-gold); font-family: var(--font-display); font-size: .78rem; }
+/* Dorado oscurecido sobre papel claro para cumplir contraste 4.5:1. */
+.brochure-thumbnail-paper span { color: #7d5a14; }
 .brochure-thumbnail small { position: relative; z-index: 1; font-size: .5rem; font-weight: 800; line-height: 1.15; }
 .brochure-thumbnail:hover { border-color: var(--book-gold); transform: translateY(-2px); }
 .brochure-thumbnail[aria-current='page'] { border-color: var(--book-gold); box-shadow: inset 0 0 0 1px var(--book-gold); }

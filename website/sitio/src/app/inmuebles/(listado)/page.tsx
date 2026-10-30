@@ -70,13 +70,13 @@ export default async function InmueblesPage({ searchParams }: PageProps) {
             }))}
           >
             <ul className="catalog-results" aria-label="Publicaciones de esta página">
-              {page.items.map((property) => (
+              {page.items.map((property, position) => (
                 <li
                   key={property.id}
                   id={`catalog-property-${property.slug}`}
                   data-catalog-slug={property.slug}
                 >
-                  <PropertyCard property={property} />
+                  <PropertyCard property={property} eager={position === 0} />
                 </li>
               ))}
             </ul>
