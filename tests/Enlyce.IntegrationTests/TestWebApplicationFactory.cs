@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 
 namespace Enlyce.IntegrationTests;
 
@@ -24,6 +25,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         _connection = new SqliteConnection("Data Source=:memory:");
         _connection.Open();
+        _connection.CreateFunction<string?, int>("char_length", value => value?.Length ?? 0);
     }
 
     public (HttpClient Client, Asesor User) CreateAuthenticatedClient(string role = "Administrador")
@@ -46,6 +48,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
+        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
+            new Dictionary<string, string?> { ["PublicCatalog:Enabled"] = "true" }));
         builder.ConfigureServices(services =>
         {
             var descriptors = services.Where(d =>

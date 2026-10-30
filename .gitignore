@@ -64,3 +64,6 @@ tools/plantuml/*.jar
 # Reportes locales de escaneo ofensivo
 security-reports/
 graphify-out/
+
+# Informes privados de inventario; no publicar ni versionar datos comerciales.
+.local/catalogo-revision/

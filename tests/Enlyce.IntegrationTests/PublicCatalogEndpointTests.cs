@@ -99,6 +99,7 @@ public sealed class PublicCatalogEndpointTests : IClassFixture<TestWebApplicatio
             root,
             "id",
             "slug",
+            "publicationId",
             "publicTitle",
             "publicDescription",
             "propertyType",
