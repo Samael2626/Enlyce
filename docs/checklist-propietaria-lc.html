@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L&C · Checklist para habilitar el catálogo web</title>
+<style>
+:root{--ink:#17332e;--green:#265f50;--paper:#fffefa;--line:#d9dfd8;--muted:#5d6c65}*{box-sizing:border-box}body{margin:0;background:#eaece6;color:var(--ink);font:16px/1.55 Arial,sans-serif}main{max-width:960px;margin:32px auto;background:var(--paper);padding:48px 56px}header{border-top:8px solid var(--green);padding-top:22px}small,.eyebrow{letter-spacing:.12em;text-transform:uppercase;font-size:12px;font-weight:bold;color:var(--green)}h1{font:normal 38px/1.15 Georgia,serif;max-width:700px;margin:14px 0}h2{font:normal 26px/1.2 Georgia,serif;margin:0 0 12px}p{margin:10px 0}.intro{font-size:18px;color:var(--muted)}.note{background:#edf2ea;border-left:4px solid var(--green);padding:16px 20px;margin:22px 0}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}button{background:var(--green);color:white;border:0;border-radius:4px;padding:11px 16px;font:inherit;cursor:pointer}button.secondary{background:white;color:var(--ink);border:1px solid var(--line)}section{border-top:1px solid var(--line);padding:26px 0 8px;margin-top:22px}.num{color:var(--green);font:bold 12px Arial;display:block;margin-bottom:7px}.question{margin:20px 0}.question>label,.label{display:block;font-weight:bold;margin-bottom:8px}.choices{display:flex;gap:12px 22px;flex-wrap:wrap}.choices label,.check{font-weight:normal;display:flex;gap:9px;align-items:flex-start}.check{margin:11px 0}input[type=checkbox],input[type=radio]{accent-color:var(--green);width:18px;height:18px;flex-shrink:0;margin:3px 0}input[type=text],input[type=date],textarea{width:100%;border:1px solid #aab8ad;border-radius:3px;padding:10px;background:white;color:var(--ink);font:inherit}textarea{min-height:72px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.hint{font-size:14px;color:var(--muted)}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:11px 8px;text-align:left;vertical-align:top}th{background:#edf2ea}td input[type=text]{min-width:100px}.table-wrap{overflow:auto}footer{border-top:2px solid var(--green);margin-top:32px;padding-top:16px;font-size:13px;color:var(--muted)}ol{padding-left:22px}li{margin:9px 0}@media(max-width:650px){main{margin:0;padding:25px 20px}h1{font-size:31px}.grid{grid-template-columns:1fr}}@media print{@page{size:A4;margin:15mm}body{background:white;font-size:11pt}main{max-width:none;margin:0;padding:0}.toolbar,.browser-note{display:none}h1{font-size:28pt}h2{font-size:19pt}section{margin-top:15px;padding-top:18px}.question,.note,tr,.grid{break-inside:avoid}textarea{min-height:58px}input,textarea{background:white!important;color:black!important}header{border-top-width:5px}a{color:inherit}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="eyebrow">L&C Propiedad Raíz · Preparación para entrega</div><h1>Qué necesitamos confirmar antes de publicar los inmuebles</h1><p class="intro">Checklist para la propietaria o dirección de la inmobiliaria.</p><p>Para entregar una web comercial confiable, necesitamos identificar qué inmuebles están autorizados y quién confirma su información. Este documento recoge decisiones y datos que el equipo de desarrollo todavía no conoce.</p></header>
+<div class="note"><strong>Regla propuesta para confirmar:</strong> un inmueble entra a la web únicamente cuando está disponible, tiene información y material revisados, cuenta con autorización verificable y recibe aprobación de L&C. Estar registrado en CRM o WASI no basta.</div>
+<p><strong>Cómo responder:</strong> marque lo que pueda confirmar y complete los espacios. Si un dato no está definido, elija “Pendiente” o indíquelo en observaciones. Las casillas sin marcar no cuentan como confirmación.</p>
+<div class="toolbar"><button type="button" id="print">Imprimir / guardar PDF</button><button type="button" id="download">Descargar HTML con respuestas</button></div>
+<p class="hint browser-note">Las respuestas permanecen en esta página mientras esté abierta. Para conservarlas y enviarlas, descargue el HTML con respuestas o guarde un PDF. Este formulario no envía información a ningún servidor.</p>
+<div class="grid"><div><label class="label" for="name">Nombre de quien responde</label><input id="name" type="text"></div><div><label class="label" for="date">Fecha de respuesta</label><input id="date" type="date"></div></div>
+
+<section><span class="num">01 · INVENTARIO</span><h2>¿De dónde sale la lista oficial?</h2>
+<div class="question"><span class="label">¿Cuál será la fuente principal para confirmar los inmuebles?</span><div class="choices"><label><input type="radio" name="source" value="crm"> CRM interno</label><label><input type="radio" name="source" value="wasi"> WASI</label><label><input type="radio" name="source" value="other"> Otra fuente</label><label><input type="radio" name="source" value="pending"> Pendiente de definir</label></div></div>
+<div class="question"><label for="inventory-owner">¿Quién administra y puede entregar ese inventario? Indicar nombre y cargo.</label><input id="inventory-owner" type="text"></div>
+<label class="check"><input type="checkbox"> Podemos entregar una lista inicial de los inmuebles que L&C desea ofrecer en la web.</label>
+<label class="check"><input type="checkbox"> Podemos identificar cuáles están vendidos, arrendados, retirados o duplicados.</label>
+<div class="question"><label for="first-batch">¿Cuáles priorizamos para el lanzamiento? Indicar códigos, sectores o cantidad aproximada.</label><textarea id="first-batch"></textarea></div></section>
+
+<section><span class="num">02 · AUTORIZACIÓN</span><h2>¿Qué respaldo permite publicar?</h2>
+<div class="question"><span class="label">¿Existe autorización documentada para publicar los inmuebles?</span><div class="choices"><label><input type="radio" name="permission" value="all"> Para todos los del lote inicial</label><label><input type="radio" name="permission" value="some"> Solo para algunos</label><label><input type="radio" name="permission" value="none"> No está documentada</label><label><input type="radio" name="permission" value="pending"> No lo sabemos todavía</label></div></div>
+<div class="question"><label for="permission-proof">¿Qué soporte se utiliza y quién lo custodia? Por ejemplo: contrato, formato firmado o comunicación verificable.</label><textarea id="permission-proof"></textarea></div>
+<label class="check"><input type="checkbox"> Podemos comprobar que el permiso incluye la publicación en la web de L&C.</label>
+<label class="check"><input type="checkbox"> Cuando autoriza un representante, podemos verificar su facultad para hacerlo.</label>
+<label class="check"><input type="checkbox"> Podemos comprobar el permiso de uso de las fotografías.</label>
+<div class="question"><label for="revocation">¿Quién recibe y atiende una solicitud del propietario para retirar un anuncio?</label><input id="revocation" type="text"></div>
+<p class="hint">Indicar dónde está el soporte; no incluir cédulas, contratos ni datos privados de propietarios en este checklist. La aprobación interna no sustituye el permiso del propietario o de un representante facultado.</p></section>
+
+<section><span class="num">03 · INFORMACIÓN COMERCIAL</span><h2>¿Quién confirma los datos?</h2>
+<p>Marque únicamente lo que L&C pueda comprobar para cada inmueble del lote inicial.</p>
+<label class="check"><input type="checkbox"> Estado y disponibilidad actual: puede ofrecerse en venta o arriendo.</label>
+<label class="check"><input type="checkbox"> Precio y moneda confirmados con el propietario o representante.</label>
+<label class="check"><input type="checkbox"> Administración y otros valores relevantes: monto y si están incluidos.</label>
+<label class="check"><input type="checkbox"> Municipio, barrio o sector correctos.</label>
+<label class="check"><input type="checkbox"> Tipo de inmueble, área y características verificadas según corresponda.</label>
+<label class="check"><input type="checkbox"> Título y descripción fieles al inmueble.</label>
+<label class="check"><input type="checkbox"> Asesor responsable y canal comercial asignados.</label>
+<div class="question"><label for="commercial-validator">Nombre o cargo de quien confirma estos datos</label><input id="commercial-validator" type="text"></div>
+<div class="question"><label for="refresh">¿Cada cuánto deben reconfirmarse precio y disponibilidad? Indicar plazo para venta y para arriendo.</label><input id="refresh" type="text" placeholder="Por definir con L&C"></div>
+<div class="question"><span class="label">Ubicación que se mostrará al público</span><div class="choices"><label><input type="radio" name="location" value="sector"> Municipio y sector, con mapa aproximado</label><label><input type="radio" name="location" value="case"> Definir por inmueble</label><label><input type="radio" name="location" value="pending"> Pendiente</label></div><p class="hint">Propuesta inicial: mantener privada la dirección exacta.</p></div></section>
+
+<section><span class="num">04 · FOTOGRAFÍAS</span><h2>¿Está disponible el material correcto?</h2>
+<label class="check"><input type="checkbox"> Las imágenes corresponden al inmueble y representan su estado actual.</label>
+<label class="check"><input type="checkbox"> Cubren sus espacios o características principales y tienen calidad comercial.</label>
+<label class="check"><input type="checkbox"> Hay una fotografía de portada definida.</label>
+<label class="check"><input type="checkbox"> No exponen documentos, datos privados ni personas identificables sin resolver sus permisos.</label>
+<div class="question"><label for="photos-location">¿Dónde están los archivos y quién puede entregarlos o revisarlos?</label><textarea id="photos-location"></textarea></div>
+<div class="question"><label for="photos-minimum">¿Qué mínimo de fotos aprueba L&C por tipo de inmueble?</label><input id="photos-minimum" type="text" placeholder="Propuesta por confirmar: 5 para vivienda/local y 3 para lote"></div>
+<p class="hint">La cantidad no reemplaza la calidad, la cobertura ni el permiso de uso.</p></section>
+
+<section><span class="num">05 · RESPONSABLES</span><h2>¿Quién decide y quién actúa?</h2>
+<div class="table-wrap"><table><thead><tr><th>Actividad</th><th>Nombre o cargo</th><th>Tiempo de respuesta acordado</th></tr></thead><tbody>
+<tr><td>Confirmar datos y disponibilidad</td><td><input type="text" aria-label="Responsable de datos"></td><td><input type="text" aria-label="Plazo de datos"></td></tr>
+<tr><td>Revisar autorización y casos dudosos</td><td><input type="text" aria-label="Responsable de autorización"></td><td><input type="text" aria-label="Plazo de autorización"></td></tr>
+<tr><td>Revisar fotos y contenido</td><td><input type="text" aria-label="Responsable de contenido"></td><td><input type="text" aria-label="Plazo de contenido"></td></tr>
+<tr><td>Aprobar publicación final</td><td><input type="text" aria-label="Responsable de aprobación"></td><td><input type="text" aria-label="Plazo de aprobación"></td></tr>
+<tr><td>Reportar cierres y solicitar bajas</td><td><input type="text" aria-label="Responsable de bajas"></td><td><input type="text" aria-label="Plazo de bajas"></td></tr>
+<tr><td>Recibir consultas de la web</td><td><input type="text" aria-label="Responsable de consultas"></td><td><input type="text" aria-label="Plazo de consultas"></td></tr>
+</tbody></table></div><p class="hint">Una persona puede asumir varias actividades. Conviene que alguien distinto revise la aprobación final.</p></section>
+
+<section><span class="num">06 · DECISIONES PARA LA WEB</span><h2>Confirmar la regla de publicación</h2><p>Marcar significa que L&C está de acuerdo con aplicar esta regla.</p>
+<label class="check"><input type="checkbox"> Importar desde CRM o WASI no publica automáticamente.</label>
+<label class="check"><input type="checkbox"> Sin autorización verificable, el inmueble queda fuera de la web.</label>
+<label class="check"><input type="checkbox"> Información incompleta, precio dudoso o fotos inválidas bloquean la publicación.</label>
+<label class="check"><input type="checkbox"> Toda publicación requiere una aprobación final identificable.</label>
+<label class="check"><input type="checkbox"> Cambios de precio, condiciones o material requieren nueva revisión antes de mostrarse.</label>
+<label class="check"><input type="checkbox"> Venta, arriendo cerrado, retiro o revocación del permiso obligan a retirar el anuncio.</label>
+<label class="check"><input type="checkbox"> Si vence el plazo acordado para reconfirmar datos, el anuncio se pausa hasta revisión.</label>
+<div class="question"><label for="exceptions">Observaciones, desacuerdos o decisiones pendientes</label><textarea id="exceptions"></textarea></div></section>
+
+<section><span class="num">07 · PRIMER LOTE</span><h2>Lista inicial para revisar</h2><p>Usar códigos internos o referencias. La clasificación no equivale a autorización de publicación.</p>
+<p class="hint"><strong>Estados:</strong> LISTO · NO LISTO · REVISAR FOTOS · REVISAR PRECIO · REVISAR LEGAL · DUPLICADO · INACTIVO. Si hay varios problemas, anotar todos.</p>
+<div class="table-wrap"><table><thead><tr><th>Código / referencia</th><th>Estado y qué falta</th><th>Responsable</th></tr></thead><tbody id="batch">
+<tr><td><input type="text" aria-label="Inmueble 1"></td><td><input type="text" aria-label="Pendientes inmueble 1"></td><td><input type="text" aria-label="Responsable inmueble 1"></td></tr>
+<tr><td><input type="text" aria-label="Inmueble 2"></td><td><input type="text" aria-label="Pendientes inmueble 2"></td><td><input type="text" aria-label="Responsable inmueble 2"></td></tr>
+<tr><td><input type="text" aria-label="Inmueble 3"></td><td><input type="text" aria-label="Pendientes inmueble 3"></td><td><input type="text" aria-label="Responsable inmueble 3"></td></tr>
+<tr><td><input type="text" aria-label="Inmueble 4"></td><td><input type="text" aria-label="Pendientes inmueble 4"></td><td><input type="text" aria-label="Responsable inmueble 4"></td></tr>
+<tr><td><input type="text" aria-label="Inmueble 5"></td><td><input type="text" aria-label="Pendientes inmueble 5"></td><td><input type="text" aria-label="Responsable inmueble 5"></td></tr>
+</tbody></table></div></section>
+
+<section><span class="num">08 · ENTREGA</span><h2>Cinco pasos para salir con confianza</h2><ol><li><strong>Elegir el inventario:</strong> entregar la lista inicial y designar quién responde por ella.</li><li><strong>Completar soportes:</strong> confirmar permisos, disponibilidad, precios, ubicación y fotografías.</li><li><strong>Revisar y aprobar:</strong> validar cada ficha tal como la verá el cliente.</li><li><strong>Probar el recorrido:</strong> comprobar anuncios, contacto y retiro de inmuebles.</li><li><strong>Asignar el mantenimiento:</strong> acordar responsables y plazos de actualización.</li></ol>
+<div class="question"><label for="missing">¿Qué información falta conseguir y quién la entregará?</label><textarea id="missing"></textarea></div>
+<div class="grid"><div><label class="label" for="next-owner">Responsable del siguiente paso</label><input id="next-owner" type="text"></div><div><label class="label" for="next-date">Fecha acordada para responder pendientes</label><input id="next-date" type="date"></div></div></section>
+<footer>L&C Propiedad Raíz · Documento de levantamiento de información y decisiones. Completar este checklist no publica inmuebles ni sustituye los soportes de autorización.</footer>
+</main>
+<script>
+document.getElementById('print').addEventListener('click',()=>window.print());
+document.getElementById('download').addEventListener('click',()=>{
+ const copy=document.documentElement.cloneNode(true);
+ const current=document.querySelectorAll('input,textarea');
+ const cloned=copy.querySelectorAll('input,textarea');
+ current.forEach((field,index)=>{
+  const target=cloned[index];
+  if(field.type==='checkbox'||field.type==='radio'){
+   if(field.checked)target.setAttribute('checked','');else target.removeAttribute('checked');
+  }else if(field.tagName==='TEXTAREA')target.textContent=field.value;
+  else target.setAttribute('value',field.value);
+ });
+ const blob=new Blob(['<!doctype html>\n'+copy.outerHTML],{type:'text/html;charset=utf-8'});
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');link.href=url;link.download='L-C-checklist-respuestas.html';link.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+</script>
+</body>
+</html>
