@@ -35,6 +35,7 @@ using Enlyce.Api.Endpoints.WebsiteConfig;
 using Enlyce.Api.Hubs;
 using Enlyce.Api.Endpoints.Visitas;
 using Enlyce.Api.Middleware;
+using Enlyce.Api.Observability;
 using Enlyce.Api.Security;
 using Enlyce.Application;
 using Enlyce.Application.Auth;
@@ -63,6 +64,8 @@ builder.WebHost.ConfigureKestrel(options =>
 
 if (int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var railwayPort) && railwayPort is > 0 and <= 65535)
     builder.WebHost.UseUrls($"http://0.0.0.0:{railwayPort}");
+
+builder.AddErrorMonitoring();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
