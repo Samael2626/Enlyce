@@ -7,4 +7,3 @@ function New-TestBackup([string] $Date) {
         metadata = @{ size = 100 }
     }
 }
-
