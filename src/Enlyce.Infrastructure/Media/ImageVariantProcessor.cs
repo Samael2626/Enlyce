@@ -1,10 +1,7 @@
 using System.Security.Cryptography;
 using Enlyce.Domain.Errors;
 using Enlyce.Domain.Media;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
 namespace Enlyce.Infrastructure.Media;
 
@@ -47,51 +44,56 @@ public sealed class ImageVariantProcessor
         if (buffer.Length != upload.SizeBytes)
             MediaConstraints.ValidateDescriptor(upload.ContentType, buffer.Length);
 
-        using var image = await LoadAsync(buffer, ct);
-        MediaConstraints.ValidateDimensions(image.Width, image.Height);
+        // Se leen las dimensiones del encabezado antes de decodificar los pixeles:
+        // una imagen enorme se rechaza sin reservar su memoria.
+        buffer.Position = 0;
+        using var codec = OpenCodec(buffer);
+        MediaConstraints.ValidateDimensions(codec.Info.Width, codec.Info.Height);
+        using var image = Decode(codec);
 
         var fingerprint = Convert.ToHexString(SHA256.HashData(buffer.ToArray()))[..16].ToLowerInvariant();
 
-        // Sin FileFormat explicito ImageSharp puede salir sin perdida y los
-        // archivos se van a megabytes, que es justo lo que se quiere evitar.
-        var encoder = new WebpEncoder
-        {
-            Quality = quality,
-            FileFormat = WebpFileFormatType.Lossy
-        };
+        // Skia codifica WebP con perdida cuando la calidad es menor que 100.
+        var webpQuality = Math.Clamp(quality, 1, 99);
+        var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
 
         var variants = new List<ProcessedVariant>(widths.Length);
         foreach (var width in widths)
         {
-            // Max preserva la relacion de aspecto y nunca agranda la original.
-            var target = Math.Min(width, image.Width);
-            using var variant = image.Clone(context => context.Resize(new ResizeOptions
-            {
-                Size = new Size(target, 0),
-                Mode = ResizeMode.Max
-            }));
+            ct.ThrowIfCancellationRequested();
 
-            using var output = new MemoryStream();
-            await variant.SaveAsWebpAsync(output, encoder, ct);
-            variants.Add(new ProcessedVariant(variant.Width, variant.Height, output.ToArray()));
+            // Preserva la relacion de aspecto y nunca agranda la original.
+            var targetWidth = Math.Min(width, image.Width);
+            var targetHeight = Math.Max(1, (int)Math.Round((double)image.Height * targetWidth / image.Width));
+            using var variant = targetWidth == image.Width
+                ? image.Copy()
+                : image.Resize(new SKImageInfo(targetWidth, targetHeight, image.ColorType, image.AlphaType), sampling);
+            if (variant is null)
+                throw new DomainError("La imagen esta corrupta o no se puede leer.");
+
+            using var data = variant.Encode(SKEncodedImageFormat.Webp, webpQuality);
+            variants.Add(new ProcessedVariant(variant.Width, variant.Height, data.ToArray()));
         }
 
         return new ProcessedImage(fingerprint, image.Width, image.Height, variants);
     }
 
-    private static async Task<Image> LoadAsync(Stream content, CancellationToken ct)
+    private static SKCodec OpenCodec(Stream content)
     {
-        try
-        {
-            return await Image.LoadAsync(new DecoderOptions { MaxFrames = 1 }, content, ct);
-        }
-        catch (UnknownImageFormatException)
-        {
-            throw new DomainError("El archivo no es una imagen valida.");
-        }
-        catch (InvalidImageContentException)
-        {
-            throw new DomainError("La imagen esta corrupta o no se puede leer.");
-        }
+        var codec = SKCodec.Create(new SKManagedStream(content, disposeManagedStream: false));
+        return codec ?? throw new DomainError("El archivo no es una imagen valida.");
+    }
+
+    // Decodifica solo el primer cuadro (GIF/WebP animados incluidos).
+    private static SKBitmap Decode(SKCodec codec)
+    {
+        var info = codec.Info.WithColorType(SKColorType.Rgba8888).WithAlphaType(SKAlphaType.Premul);
+        var bitmap = new SKBitmap(info);
+        var result = codec.GetPixels(info, bitmap.GetPixels());
+        if (result == SKCodecResult.Success)
+            return bitmap;
+
+        bitmap.Dispose();
+        throw new DomainError("La imagen esta corrupta o no se puede leer.");
     }
 }

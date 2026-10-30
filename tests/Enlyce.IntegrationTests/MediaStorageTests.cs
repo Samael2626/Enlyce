@@ -9,9 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 using Xunit;
 
 namespace Enlyce.IntegrationTests;
@@ -23,10 +21,9 @@ public class ImageVariantProcessorTests
 
     private static byte[] CreatePng(int width, int height)
     {
-        using var image = new Image<Rgba32>(width, height);
-        using var buffer = new MemoryStream();
-        image.Save(buffer, new PngEncoder());
-        return buffer.ToArray();
+        using var bitmap = new SKBitmap(width, height);
+        using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
     }
 
     private static bool IsWebp(byte[] data)
