@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Install', 'Run')]
+    [ValidateSet('Install', 'Run', 'ConfigureMonitoring')]
     [string] $Mode = 'Install'
 )
 
@@ -10,6 +10,8 @@ $root = Join-Path $env:LOCALAPPDATA 'Enlyce\Backups'
 $secretPath = Join-Path $root 'supabase-key.dpapi'
 $taskName = 'Enlyce-Postgres-Backup'
 $identityPath = Join-Path $HOME '.ssh\id_ed25519_enlyce'
+$monitorPath = Join-Path $root 'healthchecks-url.dpapi'
+. (Join-Path $PSScriptRoot 'Backup-Storage.ps1')
 
 function Write-BackupLog([string] $Message) {
     $path = Join-Path $root 'backup.log'
@@ -61,20 +63,57 @@ function Install-Backup {
     $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$scriptPath`" -Mode Run"
     $trigger = New-ScheduledTaskTrigger -Daily -At '2:00 AM'
     $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew
     Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
     Write-Host "Tarea diaria instalada: $taskName, 2:00 AM (hora local)."
     Write-Host 'Windows debe estar encendido y tu sesion abierta para ejecutar el respaldo.'
 }
 
+function Set-BackupMonitoring {
+    New-Item -ItemType Directory -Path $root -Force | Out-Null
+    $secureUrl = Read-Host 'Pega la URL HTTPS hc-ping.com del check (no se mostrara)' -AsSecureString
+    $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureUrl)
+    try { $plainUrl = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) }
+    finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
+    if (-not (Test-BackupPingUrl $plainUrl)) { throw 'Usa la URL HTTPS hc-ping.com con UUID, sin query ni sufijo.' }
+    $secureUrl | ConvertFrom-SecureString | Set-Content -LiteralPath $monitorPath -Encoding ASCII
+    $plainUrl = $null
+    Write-Host 'Monitoreo guardado. Configura horario y alertas en healthchecks.io y comprueba la primera ejecucion.'
+}
+
+function Get-BackupMonitoring {
+    if (-not (Test-Path -LiteralPath $monitorPath)) { return $null }
+    $secureUrl = ConvertTo-SecureString (Get-Content -LiteralPath $monitorPath -Raw).Trim()
+    $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureUrl)
+    try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) }
+    finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
+}
+
 function Invoke-Backup {
     New-Item -ItemType Directory -Path $root -Force | Out-Null
-    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $mutex = New-Object Threading.Mutex($false, 'Local\EnlycePostgresBackup')
+    $locked = $false
+    try {
+        try { $locked = $mutex.WaitOne(0) }
+        catch [Threading.AbandonedMutexException] { $locked = $true }
+        if (-not $locked) { throw 'Ya hay un respaldo de Enlyce en ejecucion.' }
+        Invoke-MonitoredBackup -PingUrl (Get-BackupMonitoring) -Work { Invoke-BackupCore }
+    }
+    finally {
+        if ($locked) { $mutex.ReleaseMutex() }
+        $mutex.Dispose()
+    }
+}
+
+function Invoke-BackupCore {
+    New-Item -ItemType Directory -Path $root -Force | Out-Null
+    $stamp = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')
     $dumpPath = Join-Path $root "enlyce-$stamp.dump"
     $errorPath = Join-Path $root "enlyce-$stamp.stderr.log"
     $remoteKeyAdded = $false
     $railway = $null
     $fingerprint = $null
+    $stage = 'dump'
 
     try {
         if (-not (Test-Path -LiteralPath $identityPath)) { throw 'Falta la clave SSH de Railway.' }
@@ -99,8 +138,7 @@ function Invoke-Backup {
             $command = '"{0}" ssh --service Postgres --environment production -i "{1}" -- pg_dump --format=custom --no-owner --dbname=$DATABASE_URL > "{2}" 2> "{3}"' -f $railway, $identityPath, $dumpPath, $errorPath
             & $env:ComSpec /d /s /c $command
             if ($LASTEXITCODE -ne 0) {
-                $detail = if (Test-Path -LiteralPath $errorPath) { (Get-Content -LiteralPath $errorPath -Raw).Trim() } else { 'sin detalle' }
-                throw "Railway pg_dump fallo: $detail"
+                throw 'Railway pg_dump fallo.'
             }
         }
         finally {
@@ -125,27 +163,29 @@ function Invoke-Backup {
         finally { $stream.Dispose() }
 
         $apiKey = Get-SupabaseKey
-        $headers = @{ apikey = $apiKey; 'Content-Type' = 'application/octet-stream'; 'x-upsert' = 'false' }
-        if (-not $apiKey.StartsWith('sb_secret_')) { $headers.Authorization = "Bearer $apiKey" }
-        $objectName = [Uri]::EscapeDataString($file.Name)
-        $uploadUrl = "$projectUrl/storage/v1/object/$bucket/$objectName"
-        Invoke-WebRequest -Uri $uploadUrl -Method Post -Headers $headers -InFile $dumpPath -UseBasicParsing | Out-Null
+        $stage = 'subida y retencion remota'
+        $plan = Publish-BackupArtifact -ProjectUrl $projectUrl -Bucket $bucket -ApiKey $apiKey -File $file
         $apiKey = $null
-        Write-BackupLog "OK $($file.Name) $($file.Length) bytes uploaded"
+        Write-BackupLog "OK $($file.Name) $($file.Length) bytes uploaded; retenidos $($plan.Keep.Count); eliminados $($plan.Delete.Count)"
 
+        $stage = 'limpieza local'
         Get-ChildItem -LiteralPath $root -Filter 'enlyce-*.dump' -File |
             Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) |
             Remove-Item -Force
         Remove-Item -LiteralPath $errorPath -Force -ErrorAction SilentlyContinue
     }
     catch {
-        Write-BackupLog "ERROR $($_.Exception.Message)"
-        throw
+        Write-BackupLog "ERROR Fallo en etapa: $stage"
+        throw "El respaldo fallo en etapa: $stage. Consulte backup.log; no se registran respuestas ni secretos."
     }
     finally {
+        $apiKey = $null
         if (Test-Path -LiteralPath $errorPath) { Remove-Item -LiteralPath $errorPath -Force -ErrorAction SilentlyContinue }
     }
 }
 
-if ($Mode -eq 'Install') { Install-Backup }
-else { Invoke-Backup }
+if ($MyInvocation.InvocationName -ne '.') {
+    if ($Mode -eq 'Install') { Install-Backup }
+    elseif ($Mode -eq 'ConfigureMonitoring') { Set-BackupMonitoring }
+    else { Invoke-Backup }
+}

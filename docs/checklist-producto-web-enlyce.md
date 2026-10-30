@@ -71,6 +71,7 @@ Relacionado: [[Enlyce-MOC]] · [[Plan-Web-Publica-LYC]] · [[Checklist-Enlace-CR
 - [ ] En staging, probar `20261009224818_EnforcePublicCoordinatePrecision`: confirmar historial EF y restricciones PostgreSQL; aceptar `NULL` y 3 decimales, rechazar mayor precisión y conservar datos.
 - [ ] Definir y ejecutar runbook de salida: backup restaurable, migraciones, smoke posterior, rollback verificado y monitoreo de errores. Avance: backup, restore, migraciones, smoke y rollback ensayados y aprobados; falta monitoreo de errores y ejecutarlo en remoto.
 - [x] Guardar secreto de backup cifrado con DPAPI fuera del repositorio; tarea diaria de Windows ejecutada con éxito el 11-oct-2026.
+- [ ] Activar y comprobar retención remota y alerta externa de backups. Código y 24 pruebas simuladas listos; falta actualizar la tarea instalada, configurar el check de healthchecks.io y verificar recepción y aviso por ausencia. Ver `tools/backup/README.md`. No se han borrado copias reales durante estas pruebas.
 - [x] Descargar dump remoto `enlyce-20261011-020005.dump` (62.165 bytes), comprobar firma/ETag y restaurar en PostgreSQL 17 aislado: `pg_restore` OK, 24 tablas y ~25 filas vivas.
 - [ ] Definir retención remota y alerta de fallo; hoy los objetos Supabase se acumulan y el error solo queda en log local.
 - [x] Verificar en PostgreSQL de Railway, en transacción de solo lectura, migración SLA aplicada y regla global activa de 45 minutos (11-oct-2026).
